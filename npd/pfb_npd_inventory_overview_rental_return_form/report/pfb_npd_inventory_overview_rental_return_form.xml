@@ -406,7 +406,7 @@
                 <span t-esc="days_used"/> x
 
                 <span t-set="rental_per_day"
-                      t-value="float('{0:.2f}'.format((doc.sale_id.amount_total + doc.sale_id.total_rental_discount) / (1 if (doc.end_x_date == doc.start_x_date) else (doc.end_x_date - doc.start_x_date).days)))"/>
+                      t-value="round((doc.sale_id.amount_untaxed / (1 if (doc.end_x_date == doc.start_x_date) else (doc.end_x_date - doc.start_x_date).days)) * 1.07, 2)"/>
                 <span t-esc="'{0:,.2f}'.format(rental_per_day)"/> =
 
                 <span t-set="total_rent" t-value="rental_per_day * days_used"/>
@@ -541,7 +541,7 @@
                            t-value="1 if (doc.end_x_date == doc.start_x_date) else (doc.end_x_date - doc.start_x_date).days"/>
 
                         <t t-set="rental_per_day"
-                           t-value="float('{0:.2f}'.format(doc.sale_id.amount_total / billed_days))"/>
+                           t-value="round((doc.sale_id.amount_untaxed / billed_days) * 1.07, 2)"/>
 
                         <t t-set="total_rent" t-value="rental_per_day * days_used"/>
 
