@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_custom_fields_administrator,custom.fields.administrator,model_custom_fields,pfb_custom_fields.custom_fields_group_administrator,1,1,1,1
+access_custom_fields_user,custom.fields.user,model_custom_fields,pfb_custom_fields.custom_fields_group_user,1,0,0,0
+access_custom_field_widgets_administrator,custom.field.widgets.administrator,model_custom_field_widgets,pfb_custom_fields.custom_fields_group_administrator,1,1,1,1

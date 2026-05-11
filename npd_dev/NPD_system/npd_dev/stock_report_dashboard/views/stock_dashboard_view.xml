@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!--  เมนูหลัก "รายงานรวม" -->
+        <menuitem id="menu_stock_dashboard_root"
+                  name="รายงานรวม"
+                  sequence="1"
+                  web_icon="stock_report_dashboard/static/description/icon.png" />
+
+        <!--  เมนูย่อย "รายงานสต๊อกทั้งหมด" -->
+        <menuitem id="menu_stock_reports"
+                  name="รายงานสต๊อกทั้งหมด"
+                  parent="menu_stock_dashboard_root"
+                  sequence="2" />
+
+        <!--  เมนูย่อย "Partner Ageing" -->
+        <menuitem id="menu_partner_ageing"
+                  name="ลูกหนี้"
+                  parent="menu_stock_dashboard_root"
+                  action="account_dynamic_reports.action_ins_partner_ageing_wizard"
+                  sequence="3"/>
+
+        <!--  Action ของ Customers Invoices -->
+        <record id="action_customers_invoices" model="ir.actions.act_window">
+            <field name="name">Customers Invoices</field>
+            <field name="res_model">account.move</field>
+            <field name="domain">[('move_type', '=', 'out_invoice')]</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{'create': False, 'edit': False, 'delete': False}</field>
+        </record>
+
+
+        <!--  เพิ่มเมนู Customers Invoices -->
+        <menuitem id="menu_customers_invoices"
+                  name="Customers Invoices"
+                  parent="menu_stock_dashboard_root"
+                  action="action_customers_invoices"
+                  sequence="4"/>  <!-- ลำดับให้แสดงหลัง Partner Ageing -->
+
+        <!--  Action ของ Customer Payments -->
+        <record id="action_customer_payments" model="ir.actions.act_window">
+            <field name="name">Customer Payments</field>
+            <field name="res_model">account.payment</field>
+            <field name="domain">[('payment_type', '=', 'inbound')]</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{'create': False, 'edit': False, 'delete': False}</field>
+        </record>
+
+        <!--  เพิ่มเมนู Customer Payments -->
+        <menuitem id="menu_customer_payments"
+                  name="Customer Payments"
+                  parent="menu_stock_dashboard_root"
+                  action="action_customer_payments"
+                  sequence="5"/>  <!-- แสดงหลัง Customers Invoices -->
+
+        <!--  Action สำหรับรายงานสต๊อก -->
+        <record id="action_current_inventory_report" model="ir.actions.act_window">
+            <field name="name">สินค้าคงเหลือปัจจุบัน</field>
+            <field name="res_model">stock.quant</field>
+            <field name="view_mode">tree,pivot,graph</field>
+            <field name="context">{'create': False, 'edit': False, 'delete': False}</field>
+        </record>
+
+        <record id="action_inventory_valuation_report" model="ir.actions.act_window">
+            <field name="name">มูลค่าคงเหลือของสต๊อก</field>
+            <field name="res_model">stock.valuation.layer</field>
+            <field name="view_mode">tree,pivot,graph</field>
+            <field name="context">{'create': False, 'edit': False, 'delete': False}</field>
+        </record>
+
+        <record id="action_stock_moves_report" model="ir.actions.act_window">
+            <field name="name">การเคลื่อนไหวของสต๊อก</field>
+            <field name="res_model">stock.move</field>
+            <field name="view_mode">tree,pivot,graph</field>
+            <field name="context">{'create': False, 'edit': False, 'delete': False}</field>
+        </record>
+
+        <record id="action_forecasted_inventory_report" model="ir.actions.act_window">
+            <field name="name">สินค้าคาดการณ์</field>
+            <field name="res_model">stock.quant</field>
+            <field name="view_mode">tree,pivot,graph</field>
+            <field name="context">{'create': False, 'edit': False, 'delete': False}</field>
+        </record>
+        <!--  Action ของ Scrap Orders -->
+        <record id="action_scrap_orders_report" model="ir.actions.act_window">
+            <field name="name">แตกหักเสียหาย</field>
+            <field name="res_model">stock.scrap</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{'create': False, 'edit': False, 'delete': False}</field>
+        </record>
+
+<!--        &lt;!&ndash; Action ของ รายงานสินค้าเช่า &ndash;&gt;-->
+<!--        <record id="action_dev_rental_product_report" model="ir.actions.act_window">-->
+<!--            <field name="name">รายงานสินค้าเช่า</field>-->
+<!--            <field name="res_model">dev_rental.product.report</field>-->
+<!--            <field name="view_mode">tree</field>-->
+
+<!--        </record>-->
+
+        <!--  เมนูย่อยสำหรับรายงานสต๊อก -->
+        <menuitem id="menu_current_inventory"
+                  name="สินค้าคงเหลือปัจจุบัน"
+                  parent="menu_stock_reports"
+                  action="action_current_inventory_report"
+                  sequence="6"/>
+
+        <menuitem id="menu_inventory_valuation"
+                  name="มูลค่าคงเหลือของสต๊อก"
+                  parent="menu_stock_reports"
+                  action="action_inventory_valuation_report"
+                  sequence="7"/>
+
+        <menuitem id="menu_stock_moves"
+                  name="การเคลื่อนไหวของสต๊อก"
+                  parent="menu_stock_reports"
+                  action="action_stock_moves_report"
+                  sequence="8"/>
+
+        <menuitem id="menu_forecasted_inventory"
+                  name="สินค้าคาดการณ์"
+                  parent="menu_stock_reports"
+                  action="action_forecasted_inventory_report"
+                  sequence="9"/>
+
+        <!--  เพิ่มเมนู Scrap Orders ภายใต้ "รายงานสต๊อกทั้งหมด" -->
+        <menuitem id="menu_scrap_orders"
+                  name="แตกหักเสียหาย"
+                  parent="menu_stock_reports"
+                  action="action_scrap_orders_report"
+                  sequence="10"/>
+
+        <!-- เพิ่มเมนู รายงานสินค้าเช่า หลัง "แตกหักเสียหาย" -->
+<!--        <menuitem id="menu_dev_rental_product_report"-->
+<!--                  name="รายงานสินค้าเช่า"-->
+<!--                  parent="menu_stock_reports"-->
+<!--                  action="action_dev_rental_product_report"-->
+<!--                  sequence="11"/>-->
+
+    </data>
+</odoo>

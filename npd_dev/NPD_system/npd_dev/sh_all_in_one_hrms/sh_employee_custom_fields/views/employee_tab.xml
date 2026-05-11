@@ -1,0 +1,100 @@
+<?xml version ="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 	 Button Click -->
+    <record id="sh_he_employee_custom_tab_wizrd_view" model="ir.ui.view">
+        <field name="name">sh.dynamic.tab.employee.form</field>
+        <field name="model">sh.custom.tab.employee</field>
+        <field name="arch" type="xml">
+            <form string="Custom Tab">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" required="1" />
+                            <field name="label" required="1" />
+                        </group>
+                        <group>
+                            <field name="groups" widget="many2many_tags" /> <field name="invisible_tab" invisible="1" />
+                            <field name="tab_list" attrs="{'invisible':[('invisible_tab','=',True)]}" />
+                            <field name="sh_position" attrs="{'invisible':[('invisible_tab','=',True)]}" />
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="create_tab" string="Create Tab" type="object" class="oe_highlight" />
+                    <button string="Cancel" class="oe_link" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="sh_action_employee_custom_tab">
+        <field name="name">Employee Custom Tab</field>
+        <field name="res_model">sh.custom.tab.employee</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="sh_he_employee_custom_tab_wizrd_view" />
+        <field name="type">ir.actions.act_window</field>
+        <field name="target">new</field>
+    </record>
+
+    <record id="sh_employee_dynamic_tab_form_view_inherit" model="ir.ui.view">
+        <field name="name">employee.tab.fields.form.inherit</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="%(sh_action_employee_custom_tab)d" groups="sh_all_in_one_hrms.group_employee_custom_field" string="Add Custom Tab" type="action" class="oe_highlight" />
+            </xpath>
+        </field>
+    </record>
+
+    <!--   	Menu Action   -->
+
+    <record id="sh_employee_form_custom_tab_form_view" model="ir.ui.view">
+        <field name="name">sh.custom.tab.employee.form.view</field>
+        <field name="model">sh.custom.tab.employee</field>
+        <field name="arch" type="xml">
+            <form string="Custom Tabs" create="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1" />
+                            <field name="label" required="1" />
+                        </group>
+                        <group>
+                            <field name="groups" widget="many2many_tags" /><field name="invisible_tab" invisible="1" /> <field name="tab_list" attrs="{'invisible':[('invisible_tab','=',True)]}" />
+                            <field name="sh_position" attrs="{'invisible':[('invisible_tab','=',True)]}" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_employee_custom_tab_tree_view" model="ir.ui.view">
+        <field name="name">sh.custom.tab.employee.tree.view</field>
+        <field name="model">sh.custom.tab.employee</field>
+        <field name="arch" type="xml">
+            <tree create="false">
+                <field name="name" />
+                <field name="label" />
+            </tree>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="sh_action_employee_custom_tab_form">
+        <field name="name">Employee Custom Tab</field>
+        <field name="res_model">sh.custom.tab.employee</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="sh_employee_custom_tab_tree_view" />
+        <field name="type">ir.actions.act_window</field>
+    </record>
+
+    <menuitem
+        id="sh_employee_custom_tab_action_menu"
+        name="Employee Custom Tabs"
+        parent="hr.menu_human_resources_configuration"
+        groups="sh_all_in_one_hrms.group_employee_custom_field"
+        sequence="15"
+        action="sh_action_employee_custom_tab_form"
+    />
+</odoo>

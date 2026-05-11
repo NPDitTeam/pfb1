@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<odoo>
+    <!-- complain resolve views and action -->
+    <record id="sh_complain_resolve_wizard_form_view" model="ir.ui.view">
+        <field name="name">sh.complain.resolve.wizard.form</field>
+        <field name="model">sh.complain.resolve.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Complain">
+                <group>
+                    <group>
+                        <field name="priority" widget="priority" />
+                        <field name="res_comment" placeholder="Enter Resolve Comment" />
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_ok" string="Ok" type="object" class="btn-primary" />
+
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="sh_complain_resolve_wizard_view_actions" model="ir.actions.act_window">
+        <field name="name">resolve Comment</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.complain.resolve.wizard</field>
+        <field name="view_mode">form</field>
+    </record>
+</odoo>

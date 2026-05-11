@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- View res.bank form -->
+    <record id="view_res_bank_form_detail" model="ir.ui.view">
+        <field name="name">view.res.bank.form.detail</field>
+        <field name="model">res.bank</field>
+        <field name="inherit_id" ref="base.view_res_bank_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="before">
+                <field name="bank_number" />
+            </xpath>
+             <xpath expr="//field[@name='name']" position="after">
+                <field name="short_name" />
+                <field name="branch_ref" />
+                <field name="branch_name" />
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,77 @@
+<odoo>
+    <data>
+
+        <!-- ✅ Tree View -->
+        <record id="view_tree_dev_rental_product_report" model="ir.ui.view">
+            <field name="name">dev.rental.product.report.tree</field>
+            <field name="model">dev_rental.product.report</field>
+            <field name="arch" type="xml">
+                <tree string="รายงานสินค้าเช่า" >
+                    <field name="product_code"/>
+                    <field name="product_name"/>
+                    <field name="stock_initial"/>
+                    <field name="stock_available"/>
+                    <field name="available_quantity"/>
+                    <field name="stock_in"/>
+                    <field name="stock_out"/>
+                     <field name="damaged_product"/>
+                    <field name="rental_price_day"/>
+                    <field name="rental_price_month"/>
+                    <field name="insurance"/>
+                    <field name="sale_penalty"/>
+                    <field name="weight"/>
+                    <field name="branch"/>
+<!--                    <field name="location_id"/>-->
+<!--                    <field name="total_rental_value_day"/>-->
+<!--                    <field name="total_insurance_value"/>-->
+<!--                    <field name="total_weight"/>-->
+                </tree>
+            </field>
+        </record>
+
+        <!-- ✅ Form View พร้อมปุ่ม -->
+        <record id="view_form_dev_rental_product_report" model="ir.ui.view">
+    <field name="name">dev.rental.product.report.form</field>
+    <field name="model">dev_rental.product.report</field>
+    <field name="arch" type="xml">
+        <form string="รายงานสินค้าเช่า" >
+            <header>
+                <button name="generate_report_data"
+                        type="object"
+                        string="📦 ดึงข้อมูลสินค้าเช่า"
+                        class="btn-primary"/>
+            </header>
+            <sheet>
+                <group>
+                    <div class="o_form_label">กดปุ่มด้านบนเพื่อดึงข้อมูลทั้งหมดเข้าสู่รายงานสินค้าเช่า</div>
+                </group>
+            </sheet>
+        </form>
+    </field>
+</record>
+
+
+        <!-- ✅ Action Window -->
+        <record id="action_dev_rental_product_report" model="ir.actions.act_window">
+            <field name="name">รายงานสินค้าเช่า</field>
+            <field name="res_model">dev_rental.product.report</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- ✅ Menu -->
+        <menuitem id="menu_dev_rental_product_report"
+                  name="รายงานสินค้าเช่า"
+                  parent="menu_stock_reports"
+                  action="action_dev_rental_product_report"
+                  sequence="11"/>
+
+        <!-- ✅ Server Action (optional หากอยากให้เรียกจาก action อื่น) -->
+        <record id="server_action_generate_rental_product_report" model="ir.actions.server">
+            <field name="name">ดึงข้อมูลสินค้าเช่า</field>
+            <field name="model_id" ref="model_dev_rental_product_report"/>
+            <field name="state">code</field>
+            <field name="code">model.generate_report_data()</field>
+        </record>
+
+    </data>
+</odoo>

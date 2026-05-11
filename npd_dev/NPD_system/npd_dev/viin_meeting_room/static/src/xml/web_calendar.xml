@@ -1,0 +1,7 @@
+<template>
+	<t t-name="calendar-box" t-inherit="web.calendar-box" t-inherit-mode="extension">
+		<xpath expr="//div[hasclass('o_event_title')]" position="after">
+			<div class="o_event_title pt4 pb4" t-if="record.room_id" t-esc="record.room_id[1]" />
+		</xpath>
+	</t>
+</template>

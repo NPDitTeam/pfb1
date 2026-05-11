@@ -1,0 +1,27 @@
+# -*- coding: utf-8 -*-
+# Part of Softhealer Technologies.
+from odoo import fields, models
+
+# sh Ot reject Wizard
+
+
+class ShOtRejectWizard(models.Model):
+    _name = 'sh.ot.reject.wizard'
+    _description = "Overtime Reject Wizard"
+
+    rej_comment = fields.Text('Comment')
+
+    def rej_action_ok(self):
+
+        context = dict(self._context or {})
+        active_id = context.get('active_id', False)
+        if active_id:
+            overtime = self.env['sh.hr.overtime'].browse(active_id)
+            overtime.write({
+                'reject_comment': self.rej_comment,
+            })
+
+        template = self.env.ref(
+            'sh_all_in_one_hrms.send_overtime_request_reject_notification')
+        template.sudo().send_mail(active_id, force_send=True,
+                                  notif_layout='mail.mail_notification_light')

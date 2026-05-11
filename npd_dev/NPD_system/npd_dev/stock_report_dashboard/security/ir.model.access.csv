@@ -1,0 +1,17 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dev_rental_product_report_user,dev.rental.product.report.user,model_dev_rental_product_report,base.group_user,1,1,1,1
+access_sale_order_rent_cash_report_user,sale.order.rent.cash.report.user,model_sale_order_rent_cash_report,base.group_user,1,0,0,0
+access_monthly_penalty_report_user,monthly.penalty.report.user,model_monthly_penalty_report,base.group_user,1,0,0,0
+
+access_monthly_penalty_report_may_user,monthly.penalty.report_may.user,model_monthly_penalty_report_may,base.group_user,1,0,0,0
+
+access_sale_order_report_rent,sale.order.report.rent,model_sale_order_report_rent,,1,1,1,1
+access_sale_order_report_invoice_detail_user,sale.order.report.invoice.detail.user,model_sale_order_report_invoice_detail,base.group_user,1,0,0,0
+access_sale_order_report_invoice_detail_branch_user,sale.order.report.invoice.detail.branch.user,model_sale_order_report_invoice_detail_branch,base.group_user,1,0,0,0
+
+access_sale_order_report_invoice_wizard,access_sale_order_report_invoice_wizard,model_sale_order_report_invoice_wizard,,1,1,1,1
+access_monthly_penalty_report_wizard,access_monthly_penalty_report_wizard,model_monthly_penalty_report_wizard,,1,1,1,1
+
+access_monthly_penalty_report_wizard_may,access_monthly_penalty_report_wizard_may,model_monthly_penalty_report_wizard_may,,1,1,1,1
+
+access_stock_report_wizard,access_stock_report_wizard,model_stock_report_wizard,,1,1,1,1

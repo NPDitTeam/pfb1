@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="withodling_tax_inherit_branch" model="ir.ui.view">
+        <field name="name">withholding.tax.cert.view.form.inherit</field>
+        <field name="model">withholding.tax.cert</field>
+        <field name="inherit_id" ref="l10n_th_withholding_tax_cert.view_withholding_tax_cert_form"/>
+        <field name="arch" type="xml">
+            <xpath expr='//field[@name="company_taxid"]' position="after">
+                <field name="branch_id" attrs="{'readonly': [('state', '!=', 'draft')]}" options="{'no_create_edit': True}"></field>
+            </xpath>
+        </field>
+    </record>
+    <!-- <record id="account_payment_invoice_inherit_account_payment_invoice" model="ir.ui.view">
+        <field name="name">account.payment.invoice.inherit</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account_payment_invoice.account_payment_invoice_inherit_invoice"/>
+        <field name="arch" type="xml">
+            <xpath  expr='//field[@name="wt_cert_ids"]' position="attributes">
+                <attribute name="context">{'default_supplier_partner_id': partner_id,'default_branch_id':branch_id}</attribute>
+            </xpath>
+        </field>
+    </record> -->
+</odoo>

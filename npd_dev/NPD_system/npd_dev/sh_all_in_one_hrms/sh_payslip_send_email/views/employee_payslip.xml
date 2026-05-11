@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_hr_employee_payslip_send_by_email_form_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.form</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//form/sheet//notebook//page[@name='hr_settings']//group//group//field[@name='user_id']" position="after">
+                <field name="send_payslip" string="Send Payslip ?" groups="sh_all_in_one_hrms.group_enable_sh_payslip_send_email" />
+            </xpath>
+        </field>
+    </record>
+
+    <record id="sh_hr_employee_payslip_send_by_email_form_view_inherit" model="ir.ui.view">
+        <field name="name">hr.payslip.form</field>
+        <field name="model">hr.payslip</field>
+        <field name="inherit_id" ref="sh_hr_payroll.view_hr_payslip_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//header/button[@name='action_payslip_done']" position="before">
+                <button name="send_payslip_email" string="Send By Email" type="object" class="oe_highlight" groups="sh_all_in_one_hrms.group_enable_sh_payslip_send_email" />
+            </xpath>
+        </field>
+    </record>
+
+    <record id="sh_hr_employee_payslip_send_mass_email_action" model="ir.actions.act_window">
+        <field name="name">Send Payslip</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">mass.hr.payslip.mail.send</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="groups_id" eval="[(4, ref('sh_all_in_one_hrms.group_enable_sh_payslip_send_email'))]" />
+        <field name="binding_model_id" ref="sh_all_in_one_hrms.model_hr_payslip" />
+    </record>
+
+    <record id="sh_hr_employee_payslip_send_mass_email_form" model="ir.ui.view">
+        <field name="name">mass.hr.payslip.mail.send.form</field>
+        <field name="model">mass.hr.payslip.mail.send</field>
+        <field name="arch" type="xml">
+            <form string="Mass Payslip Email">
+                <p>
+                    Mail will be sent to all selected Employee
+                </p>
+                <footer>
+                    <button string="Send Email" name="send_payslip_email_confirm" type="object" default_focus="1" class="btn-primary" />
+                    <button string="Cancel" class="btn-default" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

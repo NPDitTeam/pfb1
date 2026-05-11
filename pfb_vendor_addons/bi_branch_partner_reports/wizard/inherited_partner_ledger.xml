@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="bi_partner_ledger_report_form_partner_ledger_inherit_form_add_branch_field" model="ir.ui.view">
+            <field name="name">bi.partner.ledger.report.form.partner.ledger.inherit.form.add.branch.field
+            </field>
+            <field name="model">accounting_report.partner_ledger</field>
+            <field name="inherit_id" ref="bi_partner_ledger_report.bi_partner_ledger_report_form_partner_ledger"/>
+            <field name="arch" type="xml">
+                <field name="date_from" position="after">
+                    <field name="branch_ids" widget="many2many_tags"/>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>

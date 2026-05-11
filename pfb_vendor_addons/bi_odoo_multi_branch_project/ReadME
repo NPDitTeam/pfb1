@@ -1,0 +1,11 @@
+
+=> 05-04-2019 - 13.0.0.2 : Create index file according to new formate, Improve manifest file.
+
+Commit Date -22-05-2019 
+13.0.0.2 : Made changes in security file and overriden report with super().
+
+Version 13.0.0.3 :(27/01/20)
+		- Update security record rules.
+
+Version 13.0.0.4 :(28/01/20)
+		- Restrict user selection in project and task.

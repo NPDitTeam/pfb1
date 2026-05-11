@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="sh_dashboard_assets_backend" name="dashboard assets" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/css" href="/sh_all_in_one_hrms/static/src/css/sh_deshboard.css" />
+            <script type="text/javascript" src="/sh_all_in_one_hrms/static/src/js/hr_dashboard.js"></script>
+            <script type="text/javascript" src="/sh_all_in_one_hrms/static/src/js/hr_manager_dashboard.js"></script>
+        </xpath>
+    </template>
+
+    <record id="sh_action_hr_dashboard" model="ir.actions.client">
+        <field name="name">My Dashboard</field>
+        <field name="tag">hr_dashboard.dashboard</field>
+    </record>
+
+    <record id="sh_action_hr_manager_dashboard" model="ir.actions.client">
+        <field name="name">HR Dashboard</field>
+        <field name="tag">hr_manager_dashboard.dashboard</field>
+    </record>
+
+    <record model="ir.ui.view" id="sh_hr_dashboard_kanban">
+        <field name="name">sh.hr.dashboard.kanban</field>
+        <field name="model">sh.hr.dashboard</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_small_column o_hr_dashboard_kanban" create="0">
+                <field name="name" />
+                
+                <templates>
+                    
+                </templates>
+            </kanban>
+        </field>
+    </record>
+    <record id="sh_hr_dashboard_form" model="ir.ui.view">
+        <field name="name">sh.hr.dashboard.form</field>
+        <field name="model">sh.hr.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="HR Dashboard">
+                <group string="HR Dashboard">
+                    <group>
+                        <field name="name" />
+                    </group>
+                </group>
+            </form>
+        </field>
+    </record>
+    <record id="sh_hr_dashboard_tree" model="ir.ui.view">
+        <field name="name">sh.hr.dashboard.tree.view</field>
+        <field name="model">sh.hr.dashboard</field>
+        <field name="arch" type="xml">
+            <tree string="HR Dashboard">
+                <field name="name" />
+            </tree>
+        </field>
+    </record>
+    <!-- Actions -->
+    <record id="sh_hr_dashboard_action" model="ir.actions.act_window">
+        <field name="name">HR Dashboard</field>
+        <field name="res_model">sh.hr.dashboard</field>
+        <field name="res_id" ref="sh_all_in_one_hrms.sh_dahsboard_rec_1" />
+        <field name="view_mode">kanban</field>
+    </record>
+
+    <!-- Menus -->
+    <menuitem id="sh_hr_dashboard_action_menu" groups="sh_all_in_one_hrms.group_enable_hr_dashboard" web_icon="sh_all_in_one_hrms,static/description/icons/hrdashboard.png" name="My Dashboard" action="sh_action_hr_dashboard" sequence="10" />
+
+    <menuitem id="sh_hr_manager_dashboard_action_menu" groups="sh_all_in_one_hrms.group_enable_hr_dashboard" web_icon="sh_all_in_one_hrms,static/description/icons/hrdashboard.png" name="HR Dashboard" action="sh_action_hr_manager_dashboard" sequence="11" />
+</odoo>

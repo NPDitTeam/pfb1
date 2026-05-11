@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="40"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='default_taxes_setting_container']" position="after">
+                <h2>Account Config</h2>
+
+                <div class="row mt16 o_settings_container" name="default_account_setting_container">
+                    <div class="col-12 col-lg-6 o_setting_box" id="withholding_setting">
+                        <div class="o_setting_left_pane"/>
+                        <div class="o_setting_right_pane">
+                            <span class="o_form_label">Withholding Account Setting</span>
+                            <span class="fa fa-lg fa-building-o" title="Values set here are company-specific."
+                                  aria-label="Values set here are company-specific." groups="base.group_multi_company"
+                                  role="img"/>
+                            <div class="text-muted">
+                                setting account for create move line
+                            </div>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="account_withholding_tax_id" class="col-lg-3 o_light_label"/>
+                                    <field name="account_withholding_tax_id"
+                                           options="{'no_create_edit': True, 'no_open': True}"
+                                           context="{'active_test': False}"/>
+
+                                </div>
+                                <div class="row mt16">
+
+                                    <div class="d-flex">
+                                        <label for="account_pnd1_withholding_tax_id" class="col-lg-3 o_light_label"/>
+                                        <field name="account_pnd1_withholding_tax_id"
+                                               options="{'no_create_edit': True, 'no_open': True}"
+                                               context="{'active_test': False}"/>
+                                        <!-- <span class="o_form_label mx-3 oe_edit_only"
+                                         > Percent </span> -->
+                                        <!-- <field name="percent_pnd1" class="col-lg-1"/> -->
+                                    </div>
+                                </div>
+                                <div class="row mt16">
+
+                                    <div class="d-flex">
+                                        <label for="account_pnd1a_withholding_tax_id" class="col-lg-3 o_light_label"/>
+                                        <field name="account_pnd1a_withholding_tax_id"
+                                               options="{'no_create_edit': True, 'no_open': True}"
+                                               context="{'active_test': False}"/>
+                                        <!-- <span class="o_form_label mx-3 oe_edit_only"
+                                         > Percent </span> -->
+                                        <!-- <field name="percent_pnd1" class="col-lg-1"/> -->
+                                    </div>
+                                </div>
+                                <div class="row mt16">
+
+                                    <div class="d-flex">
+                                        <label for="account_pnd3_withholding_tax_id" class="col-lg-3 o_light_label"/>
+                                        <field name="account_pnd3_withholding_tax_id"
+                                               options="{'no_create_edit': True, 'no_open': True}"
+                                               context="{'active_test': False}"/>
+                                        <!-- <span class="o_form_label mx-3 oe_edit_only"
+                                         >Percent </span> -->
+                                        <!-- <field name="percent_pnd3" class="col-lg-1"/> -->
+                                    </div>
+
+                                </div>
+                                <div class="row mt16">
+
+                                    <div class="d-flex">
+                                        <label for="account_pnd3a_withholding_tax_id" class="col-lg-3 o_light_label"/>
+                                        <field name="account_pnd3a_withholding_tax_id"
+                                               options="{'no_create_edit': True, 'no_open': True}"
+                                               context="{'active_test': False}"/>
+                                        <!-- <span class="o_form_label mx-3 oe_edit_only"
+                                         >Percent </span> -->
+                                        <!-- <field name="percent_pnd3a" class="col-lg-1"/> -->
+                                    </div>
+
+                                </div>
+                                <div class="row mt16">
+
+                                    <div class="d-flex">
+                                        <label for="account_pnd53_withholding_tax_id" class="col-lg-3 o_light_label"/>
+                                        <field name="account_pnd53_withholding_tax_id"
+                                               options="{'no_create_edit': True, 'no_open': True}"
+                                               context="{'active_test': False}"/>
+                                        <!-- <span class="o_form_label mx-3 oe_edit_only"
+                                         >Percent </span> -->
+                                        <!-- <field name="percent_pnd53" class="col-lg-1"/> -->
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+
+</odoo>

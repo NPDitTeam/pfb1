@@ -1,0 +1,102 @@
+<odoo>
+	<data>
+		<record id="view_calendar_event_tree" model="ir.ui.view">
+			<field name="name">calendar.event.tree</field>
+			<field name="model">calendar.event</field>
+			<field name="inherit_id" ref="calendar.view_calendar_event_tree"></field>
+			<field name="arch" type="xml">
+				<xpath expr="//field[@name='partner_ids']" position="after">
+					<field name="room_id" />
+				</xpath>
+			</field>
+		</record>
+
+		<record id="view_calendar_event_form" model="ir.ui.view">
+			<field name="name">calendar.event.form</field>
+			<field name="model">calendar.event</field>
+			<field name="inherit_id" ref="calendar.view_calendar_event_form"></field>
+			<field name="arch" type="xml">
+				<xpath expr="//field[@name='location']" position="before">
+					<field name="room_id" />
+				</xpath>
+			</field>
+		</record>
+
+		<!-- Form view for calendar event -->
+    <record id="view_calendar_event_form_inherit" model="ir.ui.view">
+        <field name="name">calendar.event.form.inherit</field>
+        <field name="model">calendar.event</field>
+        <field name="inherit_id" ref="calendar.view_calendar_event_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_ids']" position="after">
+                <h4>Employee Attendees</h4>
+                <field name="employee_ids" widget="many2many_tags" options="{'no_create': True}" context="{'default_employee': True}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Calendar view to include employee_ids in pop-up -->
+    <record id="view_calendar_event_calendar_inherit" model="ir.ui.view">
+        <field name="name">calendar.event.calendar.inherit</field>
+        <field name="model">calendar.event</field>
+        <field name="inherit_id" ref="calendar.view_calendar_event_calendar"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='description']" position="before">
+                <field name="employee_ids"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- List view for calendar event -->
+    <record id="view_calendar_event_tree_inherit" model="ir.ui.view">
+        <field name="name">calendar.event.tree.inherit</field>
+        <field name="model">calendar.event</field>
+        <field name="inherit_id" ref="calendar.view_calendar_event_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_ids']" position="after">
+                <field name="employee_ids" widget="many2many_tags"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Search view for calendar event -->
+    <record id="view_calendar_event_search_inherit" model="ir.ui.view">
+        <field name="name">calendar.event.search.inherit</field>
+        <field name="model">calendar.event</field>
+        <field name="inherit_id" ref="calendar.view_calendar_event_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='user_id']" position="after">
+                <field name="employee_ids"/>
+            </xpath>
+        </field>
+    </record>
+
+
+		<record id="view_calendar_event_search" model="ir.ui.view">
+			<field name="name">calendar.event.search</field>
+			<field name="model">calendar.event</field>
+			<field name="inherit_id" ref="calendar.view_calendar_event_search"/>
+			<field name="arch" type="xml">
+				<xpath expr="//field[@name='user_id']" position="after">
+					<field name="room_id" />
+				</xpath>
+				<xpath expr="//filter[@name='availability']" position="after">
+					<filter name="grp_meeting_room" string="Meeting Room" context="{'group_by':'room_id'}" />
+				</xpath>
+			</field>
+		</record>
+
+		<record id="view_calendar_event_calendar" model="ir.ui.view">
+			<field name="name">calendar.event.calendar</field>
+			<field name="model">calendar.event</field>
+			<field name="inherit_id" ref="calendar.view_calendar_event_calendar"></field>
+			<field name="arch" type="xml">
+				<xpath expr="//field[@name='description']" position="before">
+					<field name="room_id" />
+				</xpath>
+			</field>
+		</record>
+
+		<menuitem id="calendar_event_menu_meeting_rooms" name="Meeting Rooms" parent="calendar_event_menu_config" action="calendar_meeting_room_action" groups="base.group_system" sequence="0" />
+	</data>
+</odoo>

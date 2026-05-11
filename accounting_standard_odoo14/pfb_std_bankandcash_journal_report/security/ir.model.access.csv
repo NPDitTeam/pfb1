@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pfb_std_bankandcash_journal_report_line,report_pfb_std_bankandcash_journal_report_line,model_report_pfb_std_bankandcash_journal_report_line,base.group_user,1,1,1,1
+access_report_search_move_line_temp,report_search_move_line_temp,model_report_search_move_line_temp,base.group_user,1,1,1,1
+
+

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="sh_project_project_update_wizard_form_view" model="ir.ui.view">
+        <field name="name">sh.project.project.mass.tag.wizard.form</field>
+        <field name="model">sh.project.project.mass.update.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Update Mass Wizard">
+                <group>
+                    <group string="Update Stage">
+                        <field name="update_stage_bool" />
+                        <field name="update_method_stages" attrs="{'invisible': [('update_stage_bool', '=', False)]}" widget="radio" />
+                        <field name="update_stages" attrs="{'invisible': [('update_stage_bool', '=', False)]}" widget="many2many_tags" />
+                    </group>
+                </group>
+                <footer>
+                    <button name="update_record" class="btn btn-primary" type="object" string="Done" />
+                    <button string="Cancel" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="sh_project_project_mass_stage_wizard_action" model="ir.actions.act_window">
+        <field name="name">Update Mass Stage</field>
+        <field name="res_model">sh.project.project.mass.update.wizard</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

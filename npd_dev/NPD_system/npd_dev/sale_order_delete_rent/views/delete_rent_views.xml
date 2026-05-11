@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Wizard Form View -->
+    <record id="view_delete_rent_order_wizard_form" model="ir.ui.view">
+        <field name="name">delete.rent.order.wizard.form</field>
+        <field name="model">delete.rent.order.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Delete Rent Orders">
+                <group>
+                    <div class="alert alert-danger" role="alert">
+                        <strong>⚠️ WARNING!</strong>
+                        <p>This action will permanently delete ALL Sale Orders with type "Rent" including:</p>
+                        <ul>
+                            <li>All related Invoices (will be cancelled and deleted)</li>
+                            <li>All related Stock Pickings (will be cancelled and deleted)</li>
+                            <li>The Sale Orders themselves</li>
+                        </ul>
+                        <p><strong>This action cannot be undone!</strong></p>
+                    </div>
+                </group>
+                <group>
+                    <field name="order_count" readonly="1"/>
+                </group>
+                <group string="Preview - Orders to be Deleted (max 100 shown)">
+                    <field name="preview_ids" nolabel="1" readonly="1">
+                        <tree>
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                            <field name="state"/>
+                            <field name="amount_total"/>
+                        </tree>
+                    </field>
+                </group>
+                <group>
+                    <field name="confirm_delete" widget="boolean_toggle"/>
+                    <div class="text-danger" attrs="{'invisible': [('confirm_delete', '=', True)]}">
+                        <strong>Please check the confirmation box above to proceed.</strong>
+                    </div>
+                </group>
+                <footer>
+                    <button name="action_delete_rent_orders" 
+                            string="🗑️ Delete All Rent Orders" 
+                            type="object" 
+                            class="btn-danger"
+                            attrs="{'invisible': [('confirm_delete', '=', False)]}"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Wizard Action -->
+    <record id="action_delete_rent_order_wizard" model="ir.actions.act_window">
+        <field name="name">Delete Rent Orders</field>
+        <field name="res_model">delete.rent.order.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_delete_rent_order_wizard_form"/>
+    </record>
+
+    <!-- Menu Item under Sales > Orders -->
+    <menuitem id="menu_delete_rent_orders"
+              name="🗑️ Delete Rent Orders"
+              parent="sale.sale_order_menu"
+              action="action_delete_rent_order_wizard"
+              sequence="99"
+              groups="sales_team.group_sale_manager"/>
+
+</odoo>

@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<odoo>
+<data>
+
+<template id="inherit_hr_payslip_bi_branch_hr_community" inherit_id="bi_hr_payroll.report_payslipdetails">
+	<xpath expr="//table[@class='table table-sm table-bordered']" position="before">
+	    <h2>Branch: <span t-esc="o.branch_id.name"/></h2>
+	</xpath>
+</template>
+
+<template id="inherit_hr_payslip_bi_branch_hr_community_details" inherit_id="bi_hr_payroll.report_payslip">
+    <xpath expr="//table[@class='table table-sm table-bordered']" position="before">
+        <h2>Branch: <span t-esc="o.branch_id.name"/></h2>
+    </xpath>
+</template>
+
+
+</data>
+</odoo>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_sale_order_form_inherit_fix" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.fix</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="replace">
+                <field name="partner_id"
+                       widget="res_partner_many2one"
+                       domain="[('customer','=',True),('parent_id','=',False)]"
+                       context="{'res_partner_search_mode': 'customer', 'show_address': 1, 'show_vat': True}"
+                       options='{"always_reload": True}'/>
+            </xpath>
+            <xpath expr="//field[@name='partner_invoice_id']" position="replace">
+                <field name='partner_invoice_id'
+                       domain="[('id', 'child_of', partner_id), ('parent_id', '!=', False), ('type', '=', 'invoice')]"
+                       context="{'show_only_child': True}"
+                       options='{"always_reload": True}'/>
+            </xpath>
+            <xpath expr="//field[@name='partner_shipping_id']" position="replace">
+                <field name='partner_shipping_id'
+                       domain="[('id', 'child_of', partner_id), ('parent_id', '!=', False), ('type', '=', 'delivery')]"
+                       context="{'show_only_child': True}"
+                       options='{"always_reload": True}'/>
+            </xpath>
+
+            <xpath expr="//field[@name='date_order']" position="attributes">
+                <attribute name="widget">date</attribute>
+            </xpath>
+            <xpath expr="//field[@name='commitment_date']" position="attributes">
+                <attribute name="widget">date</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,16 @@
+{
+    'name': 'Payment Slip Date AI',
+    'version': '14.0.1.0.0',
+    'category': 'Accounting',
+    'summary': 'AI-powered date extraction from payment slips',
+    'description': 'ใช้ AI (Gemini) อ่านวันที่จากสลิปการโอนเงินที่แนบในเอกสารแนบ แล้วเติมค่าลงในฟิลด์วันที่',
+    'author': 'NPD Dev',
+    'license': 'AGPL-3',
+    'depends': ['base', 'account', 'account_payment_invoice'],
+    'data': [
+        'views/account_payment_view.xml',
+    ],
+    'installable': True,
+    'auto_install': False,
+    'application': False,
+}

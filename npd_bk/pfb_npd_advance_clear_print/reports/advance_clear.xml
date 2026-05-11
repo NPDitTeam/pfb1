@@ -1,0 +1,445 @@
+<odoo>
+    <template id="external_layout_pv_standard">
+        <div t-attf-class="header o_company_#{company.id}_layout" t-att-style="report_header_style">
+        </div>
+        <div t-attf-class="article o_report_layout_standard o_company_#{company.id}_layout"
+             t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')" style="font-size: 22px;">
+            <div class="row">
+                <div class="col-12 text-center" style="font-size: 30px;">
+                    <b t-field="company.name" style="font-size:30px;"/>
+                    <br/>
+                    <b style="font-size:30px;">
+                        ใบเคลียร์เงินทดรองจ่าย
+                    </b>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-8">
+                    ผู้เบิก :
+                    <b>
+                        <t t-esc="o.employee_id.name"/>
+                    </b>
+
+                    <br/>
+                    ฝ่าย :
+                    <t t-esc="o.advance_id.employee_id.name"/>
+                    <br/>
+                    ยอดเงินทดรอง :
+                    <b>
+                        <t t-esc="'{0:,.2f}'.format(o.advance_id.advance_total)"/>
+                    </b>
+                    บาท
+                    <br/>
+                    Description :
+                    <t t-esc="o.description"/>
+                </div>
+                <div class="col-4">
+                    เลขที่เอกสาร :
+                    <span>
+                        <t t-esc="o.name"/>
+                    </span>
+                    <br/>
+                    วันที่ :
+                    <t t-set="year" t-value="(int((o.doc_date).strftime('%Y')))+543"/>
+                    <t t-set="doc_date"
+                       t-value="'%s/%s' %((o.doc_date).strftime('%d/%m'),year)"/>
+                    <t t-esc="doc_date"/>
+                    <br/>
+                    เลขที่ใบขอเบิก :
+                    <t t-esc="o.advance_id.name"/>
+                </div>
+            </div>
+            <t t-raw="0"/>
+        </div>
+        <div t-attf-class="footer o_standard_footer o_company_#{company.id}_layout">
+            <table width="100%">
+                <tr>
+                    <td width="20%" align="center">
+                        <br/>
+                        <br/>
+                        <b>____________________________</b>
+                        <br/>
+                        <b>Prepared By</b>
+                        <br/>
+                        <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/>
+                    </td>
+                    <td width="5%" style="color:white">_</td>
+                    <td width="20%" align="center">
+                        <br/>
+                        <br/>
+                        <b>____________________________</b>
+                        <br/>
+                        <b>Checked By</b>
+                    </td>
+                    <td width="5%" style="color:white">_</td>
+                    <td width="20%" align="center">
+                        <br/>
+                        <br/>
+                        <b>____________________________</b>
+                        <br/>
+                        <b>Approved By</b>
+                    </td>
+                    <td width="5%" style="color:white">_</td>
+                    <td width="20%" align="center">
+                        <br/>
+                        <br/>
+                        <b>____________________________</b>
+                        <br/>
+                        <b>Approved By</b>
+                    </td>
+                    <td width="5%" style="color:white">_</td>
+                </tr>
+            </table>
+            <div class="text-center" style="border-top: 1px solid black;">
+                <ul class="list-inline mb4">
+                    <!-- using the list-inline-item class from bootstrap causes weird behaviours in pdf report
+                         adding d-inline class fixes the problem-->
+                    <li t-if="company.phone" class="list-inline-item d-inline">
+                        <span class="o_force_ltr" t-field="company.phone"/>
+                    </li>
+                    <li t-if="company.email" class="list-inline-item d-inline">
+                        <span t-field="company.email"/>
+                    </li>
+                    <li t-if="company.website" class="list-inline-item d-inline">
+                        <span t-field="company.website"/>
+                    </li>
+                    <li t-if="company.vat" class="list-inline-item d-inline"><t
+                            t-esc="company.country_id.vat_label or 'Tax ID'"/>:
+                        <span t-field="company.vat"/>
+                    </li>
+                </ul>
+
+                <div name="financial_infos">
+                    <span t-field="company.report_footer"/>
+                </div>
+
+                <div t-if="report_type == 'pdf'" class="text-muted">
+                    Page:
+                    <span class="page"/>
+                    /
+                    <span class="topage"/>
+                </div>
+            </div>
+        </div>
+
+    </template>
+    <template id="external_layout_pv">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+
+        <t t-if="not company">
+            <!-- Multicompany -->
+            <t t-if="company_id">
+                <t t-set="company" t-value="company_id"/>
+            </t>
+            <t t-elif="o and 'company_id' in o">
+                <t t-set="company" t-value="o.company_id.sudo()"/>
+            </t>
+            <t t-else="else">
+                <t t-set="company" t-value="res_company"/>
+            </t>
+        </t>
+
+        <t t-call="pfb_npd_advance_clear_print.external_layout_pv_standard">
+            <t t-raw="0"/>
+        </t>
+    </template>
+    <template id="ksp_advance_clear_pdf">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="pfb_npd_advance_clear_print.external_layout_pv">
+                    <style>
+                        table, td, th {
+                        border: none;
+                        border-top: none;
+                        table-layout: fixed;
+                        width: 100%;
+                        }
+
+                        .table thead tr {
+                        border-top: none;
+                        border: none;
+
+                        }
+                        .table tbody td {
+                        border-top: none;
+                        border: none;
+                        }
+                        .table-bordered {
+                        border-top: none;
+                        border-bottom: none;
+                        }
+
+                        .column30{
+                        width:30px;
+                        }
+                        .column35{
+                        color: black;
+                        width:35px;
+                        }
+
+                        .column140{
+                        color: #090909;
+                        width:140px;
+                        }
+                        .column100 {
+                        color: #090909;
+                        width:100px;
+                        }
+                        .column200{
+                        color: #090909;
+                        width:200px;
+                        }
+                        .column260{
+                        color: #090909;
+                        width:260px;
+                        padding-left: 20px;
+                        }
+
+                        .column130{
+                        color: #090909;
+                        width:130px;
+                        font-size:16px;
+                        }
+                        .column120 {
+                        color: #090909;
+                        width:120px;
+                        }
+
+                        .column50 {
+                        color: #090909;
+                        width:50px;
+                        }
+                        .column60 {
+                        color: #090909;
+                        width:60px;
+                        }
+                        .column65 {
+                        color: #090909;
+                        width:65px;
+                        }
+                        .column70 {
+                        color: #090909;
+                        width:70px;
+                        }
+                        .column80 {
+                        color: #090909;
+                        width:80px;
+                        }
+
+                        .watermark1 {
+                        position: fixed;
+                        top: 298px;
+                        }
+                        .column170{
+                        color: #090909;
+                        width:170px;
+                        }
+                        .column190{
+                        color: #090909;
+                        width:190px;
+                        }
+                        .column180{
+                        width:180px;
+                        }
+                        .column50{
+                        width:50px;
+                        }
+                        .header_text {
+                        font-size:16px;
+                        }
+                        .header {
+                        border: none;
+                        padding: 2px;
+                        border-radius: none;
+                        }
+                        .header2 {
+                        border-left:none;
+                        }
+                        .header3 {
+                        text-align: center;
+                        border-top: none;
+                        height: 25px;
+                        }
+                        .line_ids {
+                        border-right: none;
+                        font-size: 20px !important;
+                        }
+                        .line_ids_right {
+                        border-right: none;
+                        }
+
+                    </style>
+                    <div class="page">
+                        <br/>
+                        <table class="table_asset table table-sm table-condensed"
+                               style="font-size: 22px; border-top: none; line-height: 1.2;">
+                            <thead style="border-top: none;">
+                                <tr style="border-bottom: 1px solid black; border-top: none;">
+                                    <td class="column35 header3"
+                                        style="vertical-align: middle;">
+                                        <span>No.</span>
+                                    </td>
+                                    <td class="column200 header3 text-left" style="vertical-align: middle;">
+                                        <span>Description</span>
+                                    </td>
+                                    <td class="column60 text-center header3" style="vertical-align: middle;">
+                                        <span>Invoice Date</span>
+                                    </td>
+                                    <td class="column60 text-center header3" style="vertical-align: middle;">
+                                        <span>Invoice No.</span>
+                                    </td>
+                                    <td class="column70 text-center header3" style="vertical-align: middle;">
+                                        <span>Analytic</span>
+                                    </td>
+                                    <td class="column70 text-center header3" style="vertical-align: middle;">
+                                        <span>Amount</span>
+                                    </td>
+                                </tr>
+                            </thead>
+                            <tbody name="line_body" class="line_body">
+                                <t t-set="count_line" t-value="0"/>
+                                <t t-set="discount" t-value="0"/>
+                                <t t-set="total_line" t-value="len(o.clear_ids)"/>
+                                <t t-foreach="o.clear_ids" t-as="line">
+                                    <tr>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="line_index+1"/>
+                                        </td>
+                                        <td class="text-left line_ids" style="vertical-align: middle;">
+                                            <span t-esc="line.name"/>
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <t t-if="line.invoice_date">
+                                                <t t-set="year"
+                                                   t-value="(int((line.invoice_date).strftime('%Y')))+543"/>
+                                                <t t-set="invoice_date"
+                                                   t-value="'%s/%s' %((line.invoice_date).strftime('%d/%m'),year)"/>
+                                                <span t-esc="invoice_date"/>
+                                            </t>
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="line.invoice_number"/>
+                                        </td>
+                                        <t t-if="line.account_analytic_id.name">
+                                            <td class="text-center line_ids" style="vertical-align: middle;">
+                                                <span t-esc="line.account_analytic_id.name"/>
+                                            </td>
+                                        </t>
+                                        <t t-else="">
+                                            <td class="text-center line_ids" style="vertical-align: middle;">
+                                                <t t-foreach="line.analytic_tag_ids" t-as="tag">
+                                                  <span t-esc="tag.name"/>
+                                                </t>
+                                            </td>
+                                        </t>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="'{0:,.2f}'.format(line.price_subtotal)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <t t-foreach="range(11-total_line)" t-as="x">
+                                    <tr>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span style="color: white;">|</span>
+                                        </td>
+                                        <td class="text-left line_ids" style="vertical-align: middle;">
+
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <tr style="border-top: 1px solid black !important; border-bottom: 1px solid black !important;">
+                                    <td colspan="2" rowspan="9" class="text-left">
+                                        <strong>หมายเหตุ :
+                                            <t t-esc="o.note"/>
+                                        </strong>
+                                    </td>
+                                </tr>
+                                <tr style="border-top: 1px solid black !important; border-bottom: 1px solid black !important;">
+                                    <td colspan="1" rowspan="9" class="text-left">
+
+                                    </td>
+                                </tr>
+                                <tr style="border-top: 1px solid black !important;">
+                                    <td colspan="2" class="text-left" style="border: none;">
+                                        จำนวนเงิน
+                                    </td>
+                                    <td class="text-right">
+                                        <span t-esc="'{0:,.2f}'.format(o.amount - o.tax_amount)"/>
+                                    </td>
+                                </tr>
+                                <tr style="border: none">
+                                    <td colspan="2" class="text-left" style="border: none;">
+                                        ภาษีมูลค่าเพิ่ม 7%
+                                    </td>
+                                    <td class="text-right" style="border: none;">
+                                        <span t-esc="'{0:,.2f}'.format(o.tax_amount)"/>
+                                    </td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid black !important;">
+                                    <td colspan="2" class="text-left"
+                                        style="border-bottom: 1px solid black !important;">
+                                        ยอดรวม
+                                    </td>
+                                    <td class="text-right" style="border-bottom: 1px solid black !important;">
+                                        <span t-esc="'{0:,.2f}'.format(o.amount)"/>
+                                    </td>
+                                </tr>
+                                <tr style="border: none">
+                                    <td colspan="2" class="text-left" style="border: none;">
+                                        หัก ณ ที่จ่าย
+                                    </td>
+                                    <td class="text-right" style="border: none;">
+                                        <span t-esc="'{0:,.2f}'.format(o.wht_amount)"/>
+                                    </td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid black;">
+                                    <td colspan="2" class="text-left"
+                                        style="border-bottom: 1px solid black;">
+                                        ยอดสุทธิ
+                                    </td>
+                                    <td class="text-right" style="border-bottom: 1px solid black;">
+                                        <span t-esc="'{0:,.2f}'.format(o.amount)"/>
+                                    </td>
+                                </tr>
+                                <tr style="border: none">
+                                    <td colspan="2" class="text-left" style="border: none;">
+                                        ยอดเบิกทดรอง
+                                    </td>
+                                    <td class="text-right" style="border: none;">
+                                        <span t-esc="'{0:,.2f}'.format(o.advance_amount)"/>
+                                    </td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid black !important;">
+                                    <td colspan="2" class="text-left"
+                                        style="border-bottom: 1px solid black !important;">
+                                        ยอดเคลียร์คืน(เบิกเพิ่ม)
+                                    </td>
+                                    <td class="text-right" style="border-bottom: 1px solid black !important;">
+                                        <strong>
+                                            <span t-esc="'{0:,.2f}'.format(o.clear_amount)"/>
+                                        </strong>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

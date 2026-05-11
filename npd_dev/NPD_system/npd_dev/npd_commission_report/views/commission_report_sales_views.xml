@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Form View - Wizard -->
+        <record id="view_npd_commission_report_sales_form" model="ir.ui.view">
+            <field name="name">npd.commission.report.sales.form</field>
+            <field name="model">npd.commission.report.sales</field>
+            <field name="arch" type="xml">
+                <form string="รายงานค่าคอม Sales">
+                    <group>
+                        <group>
+                            <field name="month"/>
+                            <field name="year"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="action_generate_report" string="ดูรายงาน" type="object" class="btn-primary"/>
+                        <button string="ยกเลิก" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Tree View -->
+        <record id="view_npd_commission_report_sales_line_tree" model="ir.ui.view">
+            <field name="name">npd.commission.report.sales.line.tree</field>
+            <field name="model">npd.commission.report.sales.line</field>
+            <field name="arch" type="xml">
+                <tree string="รายงานค่าคอม Sales" create="false" edit="false">
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                    <field name="sales_contact_id"/>
+                    <field name="branch_id"/>
+                    <field name="rental_amount" sum="รวมยอดเช่า"/>
+                    <field name="payment_received" sum="รวมรับชำระหนี้"/>
+                    <field name="outstanding_debt" sum="รวมหนี้ค้างชำระ"/>
+                    <field name="shipping_cost" sum="รวมค่าขนส่ง"/>
+                    <field name="net_rental" sum="รวมยอดเช่าสุทธิ"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Search View -->
+        <record id="view_npd_commission_report_sales_line_search" model="ir.ui.view">
+            <field name="name">npd.commission.report.sales.line.search</field>
+            <field name="model">npd.commission.report.sales.line</field>
+            <field name="arch" type="xml">
+                <search string="ค้นหา">
+                    <field name="sales_contact_id"/>
+                    <field name="branch_id"/>
+                    <group expand="0" string="จัดกลุ่มตาม">
+                        <filter string="Sales ที่ติดต่อ" name="group_by_sales" context="{'group_by': 'sales_contact_id'}"/>
+                        <filter string="สาขา" name="group_by_branch" context="{'group_by': 'branch_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record id="action_npd_commission_report_sales" model="ir.actions.act_window">
+            <field name="name">รายงานค่าคอม Sales</field>
+            <field name="res_model">npd.commission.report.sales</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <!-- Menu -->
+        <menuitem id="menu_npd_commission_report_sales"
+                  name="รายงานค่าคอม Sales"
+                  action="action_npd_commission_report_sales"
+                  parent="account.menu_finance_reports"
+                  sequence="1000"/>
+
+    </data>
+</odoo>

@@ -1,0 +1,291 @@
+<odoo>
+
+    <template
+            id="assets_backend"
+            name="stock_onhand_report assets"
+            inherit_id="web.assets_backend"
+    >
+        <xpath expr="." position="inside">
+            <link
+                    href="/pfb_stock_onhand/static/src/css/report.css"
+                    rel="stylesheet"
+            />
+            <script
+                    type="text/javascript"
+                    src="/pfb_stock_onhand/static/src/js/stock_onhand_report_backend.js"
+            />
+        </xpath>
+    </template>
+
+    <template id="pfb_stock_onhand.onhand_internal_layout">
+        <div class="article">
+            <link
+                    href="/pfb_stock_onhand/static/src/css/report.css"
+                    rel="stylesheet"
+            />
+            <t t-raw="0"/>
+        </div>
+        <div class="footer">
+            <div class="row">
+                <div class="col-6 custom_footer">
+                    <span
+                            t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d')"
+                    />
+                </div>
+                <div class="col-6 text-right custom_footer">
+                    <span class="page"/>/
+                    <span class="topage"/>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="report_buttons">
+        <div class="button_row">
+            <button class="o_stock_onhand_reports_print btn btn-sm oe_button"><span
+                    class="fa fa-print"
+            />Print
+            </button>
+            <button class="o_stock_onhand_reports_export btn btn-sm oe_button"><span
+                    class="fa fa-download"
+            />Export
+            </button>
+        </div>
+    </template>
+
+    <template id="report_stock_onhand_report_html">
+        <div class="o_stock_card_reports_page">
+            <t t-call="pfb_stock_onhand.report_buttons"/>
+            <t t-call="pfb_stock_onhand.report_stock_onhand_report_base"/>
+        </div>
+    </template>
+
+    <template id="pfb_stock_onhand.report_stock_onhand_report_pdf">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="pfb_stock_onhand.onhand_internal_layout">
+                    <t t-call="pfb_stock_onhand.report_stock_onhand_report_base"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="pfb_stock_onhand.report_stock_onhand_report_base">
+        <!-- <t t-foreach="o.product_ids" t-as="product"> -->
+        <div class="page">
+            <div class="row">
+                <!-- <t t-set="title">Stock Card - <t t-raw="product.name" /></t> -->
+                <h4 class="mt0" t-esc="title" style="text-align: center;"/>
+            </div>
+
+            <!-- Display filters -->
+            <t t-call="pfb_stock_onhand.report_stock_onhand_report_filters"/>
+            <!-- Display stock card table -->
+            <div class="act_as_table data_table mt4" style="width: 100%;">
+                <!-- Display header line-->
+                <t t-call="pfb_stock_onhand.report_stock_onhand_lines_header"/>
+                <!-- Display initial lines -->
+                <!-- <t
+                    t-set="initial"
+                    t-value="o._get_initial(o.results.filtered(lambda l: l.product_id == product and l.is_initial))"
+                /> -->
+                <!-- <div class="act_as_row lines">
+                    <div class="act_as_cell" />
+                    <div class="act_as_cell">
+                        Initial
+                    </div>
+                    <div class="act_as_cell" />
+                    <div class="act_as_cell" />
+                    <div class="act_as_cell right">
+                        <t t-esc="'{0:,.3f}'.format(initial)" />
+                    </div>
+                </div> -->
+                <!-- Display each lines -->
+                <t t-set="product_balance" t-value="0"/>
+                <t t-set="line_count" t-value="1"/>
+                <t
+                        t-foreach="o.results"
+                        t-as="product_line"
+                >
+                    <t
+                            t-set="product_balance"
+                            t-value="product_balance + product_line.product_in - product_line.product_out"
+                    />
+                    <t t-call="pfb_stock_onhand.report_stock_onhand_lines"/>
+                    <t t-set="line_count" t-value="line_count+1"/>
+                </t>
+            </div>
+            <p style="page-break-before:always;"/>
+        </div>
+        <!-- </t> -->
+    </template>
+
+    <template id="pfb_stock_onhand.report_stock_onhand_report_filters">
+        <div class="act_as_table data_table" style="width: 100%;">
+            <div t-attf-class="header">
+                <center>
+                    <h4>
+                        <span t-field="o.company_id"/>
+                    </h4>
+                    <h4>
+                        <b>รายงานของคงเหลือ</b>
+                    </h4>
+                    <h5>
+                        ณ วันที่
+                        <span t-field="o.date_to"/>
+                        <t t-esc="date_start"/>
+                        <table>
+                            <tr>
+                                <td style="width:240px;">
+                                    [<span style="color: white;">___</span> ]
+                                    <span>บัญชีวัตถุดิบ</span>
+                                </td>
+                                <td>
+                                    <span style="color: white;">___</span>
+                                    [<span style="color: white;">___</span> ]
+                                    <span>สินค้าสำเร็จรูป</span>
+                                </td>
+                                <td>
+                                    <span style="color: white;">___</span>
+                                    [<span style="color: white;">___</span> ]
+                                    <span>เครื่องจักร/เครื่องมือ/อุปกรณ์</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </h5>
+                </center>
+            </div>
+<!--            <div class="act_as_row labels">-->
+<!--                &lt;!&ndash; <div class="act_as_cell">Date From</div> &ndash;&gt;-->
+<!--                &lt;!&ndash; <div class="act_as_cell">ณ วันที่</div> &ndash;&gt;-->
+<!--                <div class="act_as_cell">สต็อก</div>-->
+<!--            </div>-->
+<!--            <div class="act_as_row">-->
+<!--                &lt;!&ndash; <div class="act_as_cell">-->
+<!--                    <span t-field="o.date_from" />-->
+<!--                </div> &ndash;&gt;-->
+<!--                &lt;!&ndash; <div class="act_as_cell">-->
+<!--                    <span t-field="o.date_to" />-->
+<!--                </div> &ndash;&gt;-->
+<!--                <div class="act_as_cell">-->
+<!--                    <span t-field="o.location_id"/>-->
+<!--                </div>-->
+<!--            </div>-->
+        </div>
+    </template>
+
+    <template id="pfb_stock_onhand.report_stock_onhand_lines_header">
+        <div class="act_as_thead">
+            <br/>
+            <br/>
+            <div class="act_as_row labels">
+                <div class="act_as_cell">ลำดับที่</div>
+                <div class="act_as_cell">เลขที่ใบขน<br/>สินค้าคำร้อง
+                </div>
+                <div class="act_as_cell">วันที่สถานะ<br/>ใบขนฯ ๐๔๐๙
+                </div>
+                <div class="act_as_cell">รหัสสินค้า/<br/>วัตถุดิบ
+                </div>
+                <div class="act_as_cell">รายละเอียดสินค้า</div>
+                <!-- <div class="act_as_cell">In</div>
+                <div class="act_as_cell">Out</div> -->
+                <div class="act_as_cell">ปริมาณ</div>
+                <div class="act_as_cell">หน่วยนับ</div>
+
+
+                <div class="act_as_cell">น้ำหนัก<br/>(KG.)
+                </div>
+                <div class="act_as_cell">มูลค่า<br/>(Bath.)
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="pfb_stock_onhand.report_stock_onhand_lines">
+        <div class="act_as_row lines">
+            <t
+                    t-set="lot_balance"
+                    t-value="product_line.product_in - product_line.product_out"
+            />
+            <t
+                    t-set="lot_secondary_balance"
+                    t-value="product_line.secondary_quantity_in - product_line.secondary_quantity_out"
+            />
+            <t
+                    t-set="total_value"
+                    t-value="product_line.value * lot_balance"
+            />
+            <div class="act_as_cell left">
+                <t t-esc="line_count"/>
+            </div>
+            <div class="act_as_cell left">
+                <t t-esc="product_line.lot_id.name"/>
+            </div>
+
+             <div  class="act_as_cell left">
+             
+                <t t-if="product_line.lot_id.picking_id.declaration_date" t-esc="product_line.lot_id.picking_id.declaration_date.strftime('%d-%m-%Y')" />
+               
+            </div>
+            <div class="act_as_cell left">
+                <t t-esc="product_line.product_id.default_code"/>
+            </div>
+            <div class="act_as_cell left">
+                <t t-esc="product_line.product_id.name"/>
+            </div>
+            <!-- <div class="act_as_cell right">
+                <t t-esc="'{0:,.3f}'.format(product_line.product_in)" />
+            </div>
+            <div class="act_as_cell right">
+                <t t-esc="'{0:,.3f}'.format(product_line.product_out)" />
+            </div> -->
+            <div class="act_as_cell right">
+                <t t-esc="'{0:,.3f}'.format(lot_balance)"/>
+            </div>
+            <div class="act_as_cell center">
+                <t t-esc="product_line.product_uom.name"/>
+            </div>
+            <div class="act_as_cell right">
+                <t t-esc="'{0:,.3f}'.format(lot_secondary_balance)"/>
+            </div>
+            <!-- <div class="act_as_cell center">
+                <t t-esc="product_line.product_id.secondary_uom_id.name" />
+            </div> -->
+            <div class="act_as_cell right">
+                <t t-esc="'{0:,.2f}'.format(total_value)"/>
+            </div>
+        </div>
+    </template>
+
+    <!-- <record id="stock_onhand_view_tree" model="ir.ui.view">
+        <field name="name">stock.onhand.view.view.tree</field>
+        <field name="model">stock.onhand.view</field>
+        <field name="arch" type="xml">
+            <tree string="Stock On Hand" editable="bottom">
+                <field name="product_id" />
+                <field name="location_id" />
+                <field name="product_qty" />
+                <field name="product_uom_qty" />
+                <field name="date" />
+                <field name="reference" />
+                <field name="picking_id" />
+                <field name="product_in" />
+                <field name="product_out" />
+            </tree>
+        </field>
+    </record>
+     <record id="action_stock_onhand_view" model="ir.actions.act_window">
+            <field name="name">Stock On Hand</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">stock.onhand.view</field>
+            <field name="view_id" ref="stock_onhand_view_tree"/>
+        </record> -->
+        <!-- <record id="stock_lot_inherit" model="ir.ui.view">
+            <field name="name">stock.production.lot.inherit</field>
+            <field name="model">stock.production.lot</field>
+            <field name="inherit_id" ref="stock.view_production_lot_form"/>
+            <field name="arch" type="xml">
+                <field name="product_qty" position="after"><field name="picking_id" /></field>
+            </field>
+        </record> -->
+</odoo>

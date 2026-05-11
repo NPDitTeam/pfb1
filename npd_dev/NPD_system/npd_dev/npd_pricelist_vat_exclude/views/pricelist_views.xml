@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!-- 1) เพิ่ม checkbox ถอด VAT 7% ใน pricelist settings -->
+    <record id="view_pricelist_form_inherit_vat_checkbox" model="ir.ui.view">
+        <field name="name">product.pricelist.form.inherit.vat.checkbox</field>
+        <field name="model">product.pricelist</field>
+        <field name="inherit_id" ref="product.product_pricelist_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='pricelist_settings']" position="inside">
+                <field name="exclude_vat"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 2) เพิ่มคอลัมน์ ราคาก่อนถอด VAT ใน item tree -->
+    <record id="view_pricelist_form_inherit_vat_item" model="ir.ui.view">
+        <field name="name">product.pricelist.form.inherit.vat.item</field>
+        <field name="model">product.pricelist</field>
+        <field name="inherit_id" ref="product.product_pricelist_view"/>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='item_ids']//tree//field[@name='min_quantity']" position="after">
+                <field name="exclude_vat" invisible="1"/>
+                <field name="price_before_vat" string="ราคาก่อนถอด VAT"
+                       readonly="1"
+                       attrs="{'column_invisible': [('parent.exclude_vat', '=', False)]}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

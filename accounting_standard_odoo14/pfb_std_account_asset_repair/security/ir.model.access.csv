@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_asset_repair_user,asset Repair user,model_asset_repair_order,base.group_user,1,1,1,1
+access_stock_production_lot_user,stock.production.lot user,stock.model_stock_production_lot,base.group_user,1,1,1,1
+access_asset_repair_line_user,asset.repair.line user,model_asset_repair_line,base.group_user,1,1,1,1
+access_asset_repair_report_user,asset.repair.report user,model_asset_repair_order_report,base.group_user,1,1,1,1

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_wizard_edit_sales_contact_form" model="ir.ui.view">
+            <field name="name">wizard.edit.sales.contact.form</field>
+            <field name="model">wizard.edit.sales.contact</field>
+            <field name="arch" type="xml">
+                <form string="แก้ไข Sales และ วันที่กำหนดจ่าย">
+                    <group>
+                        <field name="voucher_id" readonly="1"/>
+                    </group>
+                    <field name="line_ids">
+                        <tree string="Lines" editable="bottom">
+                            <field name="voucher_line_id" invisible="1"/>
+                            <field name="product_id"/>
+                            <field name="name"/>
+                            <field name="sales_contact_id"
+                                   options="{'no_quick_create':True,'no_create_edit':True,'no_open': True}"/>
+                            <field name="payment_date"/>
+                        </tree>
+                    </field>
+                    <footer>
+                        <button name="action_confirm" string="บันทึก" type="object" class="btn-primary"/>
+                        <button string="ยกเลิก" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_reports_designer_user,reports.designer user,model_reports_designer,base.group_user,1,1,1,1
+access_reports_designer_param_user,reports.designer.param user,model_reports_designer_param,base.group_user,1,1,1,1
+access_reports_designer_aggregate_user,reports.designer.aggregate user,model_reports_designer_aggregate,base.group_user,1,1,1,1
+access_reports_designer_section_user,reports.designer.section user,model_reports_designer_section,base.group_user,1,1,1,1
+access_reports_designer_fields_user,reports.designer.fields user,model_reports_designer_fields,base.group_user,1,1,1,1
+access_reports_designer_fields_sql_user,reports.designer.fields.sql user,model_reports_designer_fields_sql,base.group_user,1,1,1,1
+access_reports_designer_wizard_report_menu_create,access_reports_designer_wizard_report_menu_create,model_reports_designer_wizard_report_menu_create,base.group_user,1,1,1,1 
+access_reports_designer_gen,access_reports_designer_gen,model_reports_designer_gen,base.group_user,1,1,1,1 
+access_reports_designer_wizard,access_reports_designer_wizard,model_reports_designer_wizard,base.group_user,1,1,1,1 
+access_reports_designer_export_gen,access_reports_designer_export_gen,model_reports_designer_export_gen,base.group_user,1,1,1,1
+access_reports_designer_export_wizard,access_reports_designer_export_wizard,model_reports_designer_export_wizard,base.group_user,1,1,1,1
+access_reports_designer_import_wizard,access_reports_designer_import_wizard,model_reports_designer_import_wizard,base.group_user,1,1,1,1
+

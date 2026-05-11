@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="account_cheque_view_form_inherit_fix" model="ir.ui.view">
+        <field name="name">account.cheque.view.form.inherit.fix</field>
+        <field name="model">account.cheque</field>
+        <field name="inherit_id" ref="account_cheque.account_cheque_view_form"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="replace">
+                <field name="partner_id" readonly="False"/>
+            </field>
+            <field name="payee_id" position="replace">
+                <field name="payee_id" readonly="False" string="Payee Cheque"/>
+            </field>
+        </field>
+    </record>
+</odoo>

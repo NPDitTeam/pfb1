@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+     <record id="stock_scrap_branch_manager_rule" model="ir.rule">
+        <field name="name">Branch Access Manager</field>
+        <field name="model_id" ref="model_stock_scrap"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="groups" eval="[(4, ref('branch.group_branch_user_manager'))]"/>
+    </record>
+
+    <record id="stock_scrap_branch_user_rule" model="ir.rule">
+        <field name="name">Branch Access User</field>
+        <field name="model_id" ref="model_stock_scrap"/>
+        <field name="groups" eval="[(4, ref('branch.group_branch_user'))]"/>
+        <field name="domain_force">['|', '|', ('branch_id','=',False),('branch_id','=',user.branch_id.id), ('branch_id','in',user.branch_ids.ids)]</field>
+    </record>
+    
+</data>
+</odoo>

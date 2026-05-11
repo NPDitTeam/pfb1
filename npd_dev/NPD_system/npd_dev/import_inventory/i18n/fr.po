@@ -1,0 +1,232 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* import_inventory
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 13.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-06-15 05:29+0000\n"
+"PO-Revision-Date: 2021-06-15 05:29+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: import_inventory
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/models/stock.py:0
+#, python-format
+msgid "\"%s\" Location is not available."
+msgstr "\"%s\" L'emplacement n'est pas disponible."
+
+#. module: import_inventory
+#: code:addons/import_inventory/stock.py:0
+#: code:addons/import_inventory/stock.py:0
+#, python-format
+msgid "\"%s\" Product UOM category is not available."
+msgstr "\"%s\" La catégorie UdM du produit n'est pas disponible."
+
+#. module: import_inventory
+#: model_terms:ir.ui.view,arch_db:import_inventory.gen_inv_wizard_view
+msgid ""
+"<span style=\"font-size:20px; color:red;\" attrs=\"{'invisible': "
+"[('import_prod_option' ,'!=', 'name')]}\">Make sure that you have unique "
+"product name for all products Otherwise import doesn't work well</span>"
+msgstr ""
+
+#. module: import_inventory
+#: model_terms:ir.ui.view,arch_db:import_inventory.success_import_wizard
+msgid "<span>  records are imported successfully.</span>"
+msgstr "<span>  les enregistrements sont importés avec succès.</span>"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__location_id_option
+msgid "Allow to Import Location on inventory line from file"
+msgstr "Autoriser l'importation de l'emplacement sur la ligne d'inventaire à partir du fichier"
+
+#. module: import_inventory
+#: model:ir.model.fields.selection,name:import_inventory.selection__gen_inv__import_prod_option__barcode
+msgid "Barcode"
+msgstr "code à barre"
+
+#. module: import_inventory
+#: model:ir.model.fields.selection,name:import_inventory.selection__gen_inv__import_option__csv
+msgid "CSV File"
+msgstr "Fichier CSV"
+
+#. module: import_inventory
+#: model:ir.model.fields.selection,name:import_inventory.selection__gen_inv__import_prod_option__code
+msgid "Code"
+msgstr "Code"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv__product_counter_main
+msgid "Counter"
+msgstr "Compteur"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__create_uid
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv__create_uid
+msgid "Created by"
+msgstr "Créé par"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__create_date
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv__create_date
+msgid "Created on"
+msgstr "Créé sur"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__display_name
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv__display_name
+msgid "Display Name"
+msgstr "Afficher un nom"
+
+#. module: import_inventory
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/stock.py:0
+#, python-format
+msgid "Dont Use Charecter only use numbers"
+msgstr "N'utilisez pas de caractère, utilisez uniquement des chiffres"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__file
+msgid "File"
+msgstr "Déposer"
+
+#. module: import_inventory
+#: model_terms:ir.ui.view,arch_db:import_inventory.gen_inv_wizard_view
+msgid "Generate Inv"
+msgstr "Générer l'inv"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__id
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv__id
+msgid "ID"
+msgstr "identifiant"
+
+#. module: import_inventory
+#: model_terms:ir.ui.view,arch_db:import_inventory.gen_inv_wizard_view
+msgid "Import"
+msgstr "Importer"
+
+#. module: import_inventory
+#: model:ir.actions.act_window,name:import_inventory.gen_inv_wizard
+#: model:ir.ui.menu,name:import_inventory.gen_inv_wizard_import
+#: model:res.groups,name:import_inventory.group_import_inventory_access
+msgid "Import Inventory"
+msgstr "Importer l'inventaire"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__import_prod_option
+msgid "Import Product By "
+msgstr "Importer le produit par"
+
+#. module: import_inventory
+#: code:addons/import_inventory/models/stock.py:0
+#, python-format
+msgid "Invalid file!"
+msgstr "Fichier non valide!"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__inv_name
+msgid "Inventory Name"
+msgstr "Nom de l'inventaire"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv____last_update
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv____last_update
+msgid "Last Modified on"
+msgstr "Dernière modification le"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__write_uid
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv__write_uid
+msgid "Last Updated by"
+msgstr "Dernière mise à jour par"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__write_date
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv__write_date
+msgid "Last Updated on"
+msgstr "Dernière mise à jour le"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__location_ids
+msgid "Location"
+msgstr "Emplacement"
+
+#. module: import_inventory
+#: model:ir.model.fields.selection,name:import_inventory.selection__gen_inv__import_prod_option__name
+msgid "Name"
+msgstr "Nom"
+
+#. module: import_inventory
+#: code:addons/import_inventory/stock.py:0
+#, python-format
+msgid "Not a valid file!"
+msgstr "Ce n'est pas un fichier valide !"
+
+#. module: import_inventory
+#: model_terms:ir.ui.view,arch_db:import_inventory.success_import_wizard
+msgid "OK"
+msgstr "d'accord"
+
+#. module: import_inventory
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/models/stock.py:0
+#, python-format
+msgid "Please Select Location"
+msgstr "Veuillez sélectionner l'emplacement"
+
+#. module: import_inventory
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/models/stock.py:0
+#, python-format
+msgid "Product Not Found  \"%s\""
+msgstr "Produit non trouvé  \"%s\""
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__import_option
+msgid "Select"
+msgstr "Sélectionner"
+
+#. module: import_inventory
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/models/stock.py:0
+#: model_terms:ir.ui.view,arch_db:import_inventory.success_import_wizard
+#, python-format
+msgid "Success"
+msgstr "Succès"
+
+#. module: import_inventory
+#: code:addons/import_inventory/stock.py:0
+#, python-format
+msgid "User Error!"
+msgstr "Erreur d'utilisateur !"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__is_validate_inventory
+msgid "Validate Inventory"
+msgstr "Valider l'inventaire"
+
+#. module: import_inventory
+#: model:ir.model.fields.selection,name:import_inventory.selection__gen_inv__import_option__xls
+msgid "XLS File"
+msgstr "Fichier XLS"
+
+#. module: import_inventory
+#: model:ir.model,name:import_inventory.model_gen_inv
+msgid "gen.inv"
+msgstr ""
+
+#. module: import_inventory
+#: model:ir.model,name:import_inventory.model_generate_inv
+msgid "generate.inv"
+msgstr ""

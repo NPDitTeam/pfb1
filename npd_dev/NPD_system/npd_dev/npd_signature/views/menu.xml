@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================== ROOT MENU (แสดงที่หน้า App หลัก) ==================== -->
+    
+    <!-- เมนูหลัก: ลายเซ็น - แสดงให้ผู้ใช้ทุกคนเห็น -->
+    <menuitem id="menu_npd_signature_root"
+              name="ลายเซ็น"
+              sequence="1"
+              groups="base.group_user"
+              web_icon="npd_signature,static/description/icon.png"
+              action="action_npd_signature"/>
+
+</odoo>

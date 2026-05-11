@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<odoo>
+    <record id="model_mass_manager_update_tag_action" model="ir.actions.server">
+        <field name="name">Update Mass Manager</field>
+        <field name="model_id" ref="sh_all_in_one_hrms.model_hr_employee" />
+        <field name="binding_model_id" ref="hr.model_hr_employee" />
+        <field name="groups_id" eval="[(4, ref('sh_all_in_one_hrms.group_enable_mass_update'))]" />
+        <field name="state">code</field>
+        <field name="binding_view_types">list</field>
+        <field name="code"> action = model.action_manager_mass_tag_update()</field>
+    </record>
+</odoo>

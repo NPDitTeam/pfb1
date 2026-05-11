@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_project_task_milestone_inherit_form_view" model="ir.ui.view">
+        <field name="name">project.task.milestone.form</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2" />
+        <field name="arch" type="xml">
+            <field name="user_id" position="after">
+                <field name="milestone_id" domain="[('state','=','in_progress')]" options="{'no_create_edit': True}" />
+            </field>
+        </field>
+    </record>
+    <record id="sh_project_task_milestone_inherit_tree_view" model="ir.ui.view">
+        <field name="name">project.task.milestone.tree</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_tree2" />
+        <field name="arch" type="xml">
+            <field name="project_id" position="after">
+                <field name="milestone_id" />
+            </field>
+        </field>
+    </record>
+    <record id="sh_project_task_milestone_inherit_kanban_view" model="ir.ui.view">
+        <field name="name">project.task.milestone.kanban</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_kanban" />
+        <field name="arch" type="xml">
+            <field name="project_id" position="after">
+                <span class="oe_kanban_text_maroon">
+                    <br />
+                    <field name="milestone_id" />
+                </span>
+            </field>
+        </field>
+    </record>
+    <record id="sh_project_task_milestone_inherit_search_view" model="ir.ui.view">
+        <field name="name">project.task.milestone.search</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_search_form" />
+        <field name="arch" type="xml">
+            <field name="project_id" position="after">
+                <field name="milestone_id" />
+            </field>
+            <xpath expr="//group" position="inside">
+                <filter string="Milestone" name="milestone_id" context="{'group_by':'milestone_id'}" />
+            </xpath>
+        </field>
+    </record>
+</odoo>

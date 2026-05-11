@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- Inherit Form View to Modify it -->
+    <record id="account_asset_view_inherit_id" model="ir.ui.view">
+        <field name="name">account.asset.inherit</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset_management.account_asset_view_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='analytic_tag_ids']" position="after">
+                <field name="asset_owner_id"/>
+            </xpath>
+
+        </field>
+    </record>
+    <record id="account_asset_transfer_view_form" model="ir.ui.view">
+        <field name="name">std.account.asset.transfer.form</field>
+        <field name="model">std.account.asset.transfer</field>
+        <field name="arch" type="xml">
+            <form name="account_asset_transfer_view">
+                <header name="">
+                    <button name="act_submitted"
+                            class="oe_highlight"
+                            string="Submit To Manager"
+                            type="object"
+                            states="draft"/>
+                    <button name="act_approve"
+                            class="oe_highlight"
+                            string="Request approval"
+                            type="object"
+                            states="submitted"
+                           />
+                    <button name="act_done"
+                            class="oe_highlight"
+                            string="Done"
+                            type="object"
+                            states="approve"
+                    />
+                    <button name="act_cancel" string="Cancel" type="object" states="draft" groups="base.group_user"/>
+                    <button name="act_cancel_officer" string="Cancel" type="object" states="submitted,approve"
+                            groups="hr.group_hr_user"/>
+                    <button name="act_cancel_manager" string="Cancel" type="object" states="done"
+                            groups="hr.group_hr_manager"/>
+                    <button name="act_reset_draft" string="Set to Draft" type="object" states="cancelled"
+                            groups="hr.group_hr_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approve,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_title" name="h1_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group name="asset_info">
+                        <group name="transfer_dept">
+                            <field name="transferred_asset_ids" widget="many2many_tags_link"/>
+
+                            <field name="asset_transfer_type_id"/>
+                               <field name="asset_owner_id"/>
+                        </group>
+                        <group name="transfer_create">
+                            <field name="create_date"/>
+                            <field name="transferred_date"/>
+                            <field name="department_id" />
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string=" Other Info">
+                            <group>
+                                <group string="Location Information" name="location">
+                                    <field name="source_department_id"/>
+                                    <field name="destination_department_id"/>
+                                    <field name="source_partner_id"/>
+                                    <field name="destination_partner_id"/>
+                                    <field name="approved_date"  readonly="1"/>
+                                    <field name="approved_user_id"  readonly="1"/>
+                                    <field name="received_user_id" readonly="1"/>
+
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Reason For Transfer">
+                            <field name="reson" placeholder="Reason for transfer..."/>
+                        </page>
+                        <page string="Internal Note">
+                            <field name="internal_note"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="account_asset_transfer_view_tree" model="ir.ui.view">
+        <field name="name">std.account.asset.transfer.tree</field>
+        <field name="model">std.account.asset.transfer</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="source_department_id"/>
+                <field name="destination_department_id"/>
+                <field name="source_partner_id"/>
+                <field name="destination_partner_id"/>
+                <field name="asset_transfer_type_id"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+
+    <record id="account_asset_transfer" model="ir.actions.act_window">
+        <field name="name">Asset Transfer</field>
+        <field name="res_model">std.account.asset.transfer</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to add a new Asset Transfer.
+            </p>
+        </field>
+    </record>
+
+</odoo>

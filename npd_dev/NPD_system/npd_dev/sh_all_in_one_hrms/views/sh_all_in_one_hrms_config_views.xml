@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="hr_all_in_one_employee_config_setting_view" model="ir.ui.view">
+        <field name="name">hr.employee.config.setting.view</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="hr.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@data-key='hr']//div[1]" position="after">
+                <h2>All in one HRMS Configurations</h2>
+                <div class="row mt16 o_settings_container">
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_emp_sequence" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_emp_sequence" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_hr_dashboard" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_hr_dashboard" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_sh_complain" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_sh_complain" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_sh_idea" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_sh_idea" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_hide_menu_emp_medical" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_hide_menu_emp_medical" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_hide_menu_emp_passport" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_hide_menu_emp_passport" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_emp_leave_notification" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_emp_leave_notification" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_mass_approve_leave" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_mass_approve_leave" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_check_list" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_check_list" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_custom_check_list" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_custom_check_list" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_mass_update" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_mass_update" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_emp_extra_field" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_emp_extra_field" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_emp_hr_promotion" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_emp_hr_promotion" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_hide_menu_emp_mass_tag" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_hide_menu_emp_mass_tag" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_own_records" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_own_records" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_sh_payslip_dynamic_approval" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_sh_payslip_dynamic_approval" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_sh_payslip_dynamic_cheque" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_sh_payslip_dynamic_cheque" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_sh_payslip_send_email" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_sh_payslip_send_email" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="group_enable_sh_leave_attachment" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="group_enable_sh_leave_attachment" />
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

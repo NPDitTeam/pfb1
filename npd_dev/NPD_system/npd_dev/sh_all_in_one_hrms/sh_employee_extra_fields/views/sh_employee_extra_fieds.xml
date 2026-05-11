@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<odoo>
+    <!--sh employee extra field form view inherited-->
+    <record id="sh_employee_extra_field_form_view_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.inherit</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='work_location']" position="after">
+                <field name="work_country_id" groups="sh_all_in_one_hrms.group_enable_emp_extra_field"/>
+            </xpath>
+            <xpath expr="//field[@name='work_phone']" position="after">
+                <field name="reference_by_id" groups="sh_all_in_one_hrms.group_enable_emp_extra_field"/>
+            </xpath>
+            <field name="bank_account_id" position="after">
+                <field name="personal_email" groups="sh_all_in_one_hrms.group_enable_emp_extra_field"/>
+            </field>
+            <xpath expr="//page[@name='personal_information']//group[1]" position="after">
+                <group string="Employee Emergency Contact Details" groups="sh_all_in_one_hrms.group_enable_emp_extra_field">
+                    <field name="emergency_ids" nolabel="1">
+                        <form string="Employee Emergency Details">
+                            <sheet>
+                                <group>
+                                    <field name="name" />
+                                    <field name="relation_id" />
+                                    <field name="contact_number" />
+                                </group>
+                            </sheet>
+                        </form>
+                        <tree editable="bottom">
+                            <field name="name" />
+                            <field name="relation_id" />
+                            <field name="contact_number" />
+                        </tree>
+                    </field>
+                </group>
+            </xpath>
+            <xpath expr="//field[@name='country_id']" position="after">
+                <field name="previous_nationality_id" groups="sh_all_in_one_hrms.group_enable_emp_extra_field"/>
+            </xpath>
+            <xpath expr="//field[@name='passport_id']" position="after">
+                <field name="passport_country_id" groups="sh_all_in_one_hrms.group_enable_emp_extra_field"/>
+                <field name="passport_issue" groups="sh_all_in_one_hrms.group_enable_emp_extra_field"/>
+                <field name="passport_expiry" groups="sh_all_in_one_hrms.group_enable_emp_extra_field"/>
+            </xpath>
+            <xpath expr="//field[@name='marital']" position="after">
+                <field name="religion_id" groups="sh_all_in_one_hrms.group_enable_emp_extra_field"/>
+                <label for="height" groups="sh_all_in_one_hrms.group_enable_emp_extra_field"/>
+                <div groups="sh_all_in_one_hrms.group_enable_emp_extra_field"><field name="height" />Cm</div>
+                <label for="weight" groups="sh_all_in_one_hrms.group_enable_emp_extra_field"/>
+                <div groups="sh_all_in_one_hrms.group_enable_emp_extra_field"><field name="weight" />Kg</div>
+            </xpath>
+            <xpath expr="//field[@name='birthday']" position="after">
+                <field name="blood_group" groups="sh_all_in_one_hrms.group_enable_emp_extra_field"/>
+                <field name="age" groups="sh_all_in_one_hrms.group_enable_emp_extra_field"/>
+            </xpath>
+            <xpath expr="//page[@name='hr_settings']" position="after">
+                <page name="other_details" string="Other Details" groups="sh_all_in_one_hrms.group_enable_emp_extra_field">
+                    <group>
+                        <group string="Dates" name="dates">
+                            <field name="joining_date" />
+                            <field name="employment_date" />
+                            <field name="confirmation_date" />
+                            <field name="marriage_date" />
+                        </group>
+                        <group string="Others" name="others">
+                            <field name="is_part_time" />
+                            <field name="pf_acc_no" />
+                            <field name="facilities_cmp_ids" widget="many2many_tags" />
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Social Media" name="social_media">
+                            <field name="skype" placeholder="e.g. https://www.skype.com/" widget="url" />
+                            <field name="whatsapp" placeholder="e.g. https://web.whatsapp.com/" widget="url" />
+                            <field name="facebook" placeholder="e.g. https://www.facebook.com/" widget="url" />
+                            <field name="twitter" placeholder="e.g. https://twitter.com/" widget="url" />
+                            <field name="instagram" placeholder="e.g. https://www.instagram.com/" widget="url" />
+                        </group>
+                    </group>
+                    <group string="Certifications" name="certification">
+                        <field name="certification_ids" nolabel="1" widget="section_and_note_one2many">
+                            <tree editable="bottom">
+                                <field name="course" />
+                                <field name="level_completion" />
+                                <field name="comp_year" />
+                                <field name="certificate" />
+                            </tree>
+                        </field>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <menuitem id="sh_employee_religion_menu" groups="sh_all_in_one_hrms.group_enable_emp_extra_field" name="Religion" action="sh_employee_religion_view_actions" parent="hr.menu_human_resources_configuration" sequence="0" />
+
+    <menuitem id="sh_company_facilities_menu" groups="sh_all_in_one_hrms.group_enable_emp_extra_field" name="Company Facilities" action="sh_company_facilities_view_actions" parent="hr.menu_human_resources_configuration" sequence="1" />
+</odoo>

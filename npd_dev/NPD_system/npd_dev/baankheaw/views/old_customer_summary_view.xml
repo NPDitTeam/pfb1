@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Action -->
+    <record id="action_old_customer_summary" model="ir.actions.act_window">
+        <field name="name">ลูกค้าเก่า</field>
+        <field name="res_model">baankheaw.old_customer_summary</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p>📌 รายชื่อลูกค้าที่เคยเปิดบิล (สะสม) พร้อมวันล่าสุดที่เปิดบิล</p>
+        </field>
+    </record>
+
+    <!-- Menu (วางต่อจาก Stock เช่ารวม) -->
+    <menuitem id="menu_old_customer_summary"
+              name="ลูกค้าเก่า"
+              parent="baankheaw.baankheaw_menu_root"
+              action="action_old_customer_summary"
+              sequence="30"
+              groups="base.group_user"/>
+
+    <!-- Tree View -->
+    <record id="view_old_customer_summary_tree" model="ir.ui.view">
+        <field name="name">baankheaw.old_customer_summary.tree</field>
+        <field name="model">baankheaw.old_customer_summary</field>
+        <field name="arch" type="xml">
+            <tree string="ลูกค้าเก่า">
+                <field name="cus_id"/>
+                <field name="cus_fullname"/>
+                <field name="cus_cpnname"/>
+                <field name="cus_cpntel"/>
+                <field name="cus_adv"/>
+                <field name="cus_province"/>
+                <field name="branch_name"/>
+                <field name="total_rent"/>
+                <field name="latest_issue_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_old_customer_summary_form" model="ir.ui.view">
+        <field name="name">baankheaw.old_customer_summary.form</field>
+        <field name="model">baankheaw.old_customer_summary</field>
+        <field name="arch" type="xml">
+            <form string="รายละเอียดลูกค้าเก่า">
+                <header>
+                    <button name="action_update_old_customer_data"
+                            type="object"
+                            string="🔄 อัปเดตข้อมูลลูกค้าเก่า"
+                            class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="ข้อมูลลูกค้า">
+                            <field name="cus_id" readonly="1"/>
+                            <field name="cus_fullname" readonly="1"/>
+                            <field name="cus_cpnname" readonly="1"/>
+                            <field name="cus_cpntel" readonly="1"/>
+                            <field name="cus_adv" readonly="1"/>
+                        </group>
+                        <group string="ที่อยู่/สาขา">
+                            <field name="cus_address" readonly="1"/>
+                            <field name="cus_province" readonly="1"/>
+                            <field name="branch_name" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="สรุปการเปิดบิล">
+                        <field name="total_rent" readonly="1"/>
+                        <field name="latest_issue_date" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

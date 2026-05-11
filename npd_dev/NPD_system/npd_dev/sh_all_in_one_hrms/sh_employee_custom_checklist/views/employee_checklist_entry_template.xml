@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_employee_entry_custom_checklist_template_form_view" model="ir.ui.view">
+        <field name="name">employee.entry.custom.checklist.form</field>
+        <field name="model">employee.entry.custom.checklist.template</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                        </group>
+                        <group>
+                            <field name="entry_checklist_template" widget="many2many_tags" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="sh_employee_entry_custom_checklist_template_tree_view" model="ir.ui.view">
+        <field name="name">employee.entry.custom.checklist.tree</field>
+        <field name="model">employee.entry.custom.checklist.template</field>
+        <field name="arch" type="xml">
+            <tree multi_edit="1">
+                <field name="sequence" widget="handle" />
+                <field name="name" />
+                <field name="entry_checklist_template" widget="many2many_tags" optional="show" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="sh_entry_custom_checklist_template_search_view" model="ir.ui.view">
+        <field name="name">employee.entry.custom.checklist.template.view.search</field>
+        <field name="model">employee.entry.custom.checklist.template</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" />
+                <field name="entry_checklist_template" />
+                <filter string="Entry Checklist Template" name="entry_checklist_template" domain="[]" context="{'group_by': 'entry_checklist_template'}" />
+            </search>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="action_menu_employee_entry_custom_checklist_template">
+        <field name="name">Employee Entry Custom Checklist Template</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">employee.entry.custom.checklist.template</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <menuitem
+        id="menu_employee_entry_custom_checklist_template"
+        groups="sh_all_in_one_hrms.group_enable_custom_check_list"
+        name="Employee Entry Custom Checklist Template"
+        action="action_menu_employee_entry_custom_checklist_template"
+        parent="hr.menu_human_resources_configuration"
+        sequence="23"
+    />
+</odoo>

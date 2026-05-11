@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- 
+        ==============================================
+        Inherit view_purchase_receipt_form (Purchase Voucher Form)
+        - เพิ่ม sales_contact_id หลัง account_id ใน line_ids tree
+        - เพิ่มปุ่มแก้ไข Sales Contact
+        ==============================================
+        -->
+        <record id="view_purchase_receipt_form_sales_contact" model="ir.ui.view">
+            <field name="name">account.voucher.purchase.form.sales.contact</field>
+            <field name="model">account.voucher</field>
+            <field name="inherit_id" ref="account_voucher.view_purchase_receipt_form"/>
+            <field name="priority">20</field>
+            <field name="arch" type="xml">
+                <!-- Add field after account_id in line_ids tree -->
+                <xpath expr="//field[@name='line_ids']/tree/field[@name='account_id']" position="after">
+                    <field name="sales_contact_id"
+                           string="Sales ที่ติดต่อ"
+                           options="{'no_quick_create':True,'no_create_edit':True,'no_open': True}"/>
+                    <field name="payment_date"
+                           string="วันที่กำหนดจ่าย"
+                           required="1"/>
+                </xpath>
+                
+                <!-- Add button to edit sales contact when posted -->
+                <xpath expr="//button[@name='cancel_voucher'][@states='posted']" position="after">
+                    <button name="action_edit_sales_contact" 
+                            string="แก้ไข Sales ที่ติดต่อ/วันที่กำหนดจ่าย"
+                            type="object" 
+                            class="btn-secondary"
+                            attrs="{'invisible': [('state', '!=', 'posted')]}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- 
+        ==============================================
+        Inherit view_sale_receipt_form (Sale Receipt Form)
+        - เพิ่ม sales_contact_id หลัง account_id ใน line_ids tree
+        - เพิ่มปุ่มแก้ไข Sales Contact
+        ==============================================
+        -->
+        <record id="view_sale_receipt_form_sales_contact" model="ir.ui.view">
+            <field name="name">account.voucher.sale.form.sales.contact</field>
+            <field name="model">account.voucher</field>
+            <field name="inherit_id" ref="account_voucher.view_sale_receipt_form"/>
+            <field name="priority">20</field>
+            <field name="arch" type="xml">
+                <!-- Add field after account_id in line_ids tree -->
+                <xpath expr="//field[@name='line_ids']/tree/field[@name='account_id']" position="after">
+                    <field name="sales_contact_id"
+                           string="Sales ที่ติดต่อ"
+                           options="{'no_quick_create':True,'no_create_edit':True,'no_open': True}"/>
+                    <field name="payment_date"
+                           string="วันที่กำหนดจ่าย"
+                           required="1"/>
+                </xpath>
+                
+                <!-- Add button to edit sales contact when posted -->
+                <xpath expr="//button[@name='cancel_voucher'][@states='posted']" position="after">
+                    <button name="action_edit_sales_contact" 
+                            string="แก้ไข Sales ที่ติดต่อ" 
+                            type="object" 
+                            class="btn-secondary"
+                            attrs="{'invisible': [('state', '!=', 'posted')]}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- 
+        ==============================================
+        Inherit standalone Account Voucher Line Tree View (view_voucher_line_tree)
+        ==============================================
+        -->
+        <record id="view_voucher_line_tree_sales_contact" model="ir.ui.view">
+            <field name="name">account.voucher.line.tree.sales.contact</field>
+            <field name="model">account.voucher.line</field>
+            <field name="inherit_id" ref="account_voucher.view_voucher_line_tree"/>
+            <field name="priority">20</field>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='account_id']" position="after">
+                    <field name="sales_contact_id"
+                           string="Sales ที่ติดต่อ"
+                           options="{'no_quick_create':True,'no_create_edit':True,'no_open': True}"/>
+                    <field name="payment_date"
+                           string="วันที่กำหนดจ่าย"
+                           required="1"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- 
+        ==============================================
+        Inherit Account Voucher Line Form View (view_voucher_line_form)
+        ==============================================
+        -->
+        <record id="view_voucher_line_form_sales_contact" model="ir.ui.view">
+            <field name="name">account.voucher.line.form.sales.contact</field>
+            <field name="model">account.voucher.line</field>
+            <field name="inherit_id" ref="account_voucher.view_voucher_line_form"/>
+            <field name="priority">20</field>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='account_id']" position="after">
+                    <field name="sales_contact_id"
+                           string="Sales ที่ติดต่อ"
+                           options="{'no_quick_create':True,'no_create_edit':True,'no_open': True}"/>
+                    <field name="payment_date"
+                           string="วันที่กำหนดจ่าย"
+                           required="1"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

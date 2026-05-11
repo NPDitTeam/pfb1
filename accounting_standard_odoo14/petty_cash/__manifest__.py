@@ -1,0 +1,27 @@
+{
+    'name': 'Petty Cash',
+    'version': '14.0.1',
+    'description': 'Petty Cash',
+    'summary': 'Petty Cash',
+    "author": "Perfect Blending",
+    "website": "https://www.perfectblending.com",
+    "license": "AGPL-3",
+    'category': 'account',
+    'depends': [
+        'base',
+        'account',
+        'payment_method',
+        'l10n_th_withholding_tax_cert',
+        'withholding_tax_cert_amount',
+        'account_config',
+    ],
+    'data': [
+        'data/ir_sequence_data.xml',
+        'data/petty_cash_security.xml',
+        'security/petty_security.xml',
+        'security/ir.model.access.csv',
+        'views/petty_cash_view.xml',
+    ],
+    'auto_install': True,
+    'application': True,
+}

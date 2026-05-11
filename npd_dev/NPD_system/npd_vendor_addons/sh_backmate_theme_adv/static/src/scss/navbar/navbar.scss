@@ -1,0 +1,41 @@
+.o_main_navbar > ul > li > a, .o_main_navbar > ul > li > label,
+.o_main_navbar .o_menu_systray .sh_bookmark .o_user_bookmark_menu > a{color:$header_font_color;}
+.o_main_navbar>ul>li>a:hover,
+.o_main_navbar>ul>li>label:hover {
+	color: #fff;
+	background-color:$header_hover_color;
+}
+.o_main_navbar > a:focus, .o_main_navbar > a:active, .o_main_navbar > a:focus:active, .o_main_navbar > button:focus, .o_main_navbar > button:active, .o_main_navbar > button:focus:active{background-color: $header_active_color;}
+.o_main_navbar .show .dropdown-toggle{background-color: $header_active_color;}
+.o_main_navbar>a:hover,
+.o_main_navbar>a:focus,
+.o_main_navbar>button:hover,
+.o_main_navbar>button:focus {
+	background-color: $header_active_color;
+}
+
+.o_main_navbar .o_menu_systray .o_MessagingMenu.o-is-open > a.o_MessagingMenu_toggler,
+.o_main_navbar .o_menu_systray .o_mail_systray_item.show > a.dropdown-toggle,
+.o_main_navbar .o_menu_systray .o_user_bookmark_menu a.active,
+.o_main_navbar .o_menu_systray .o_switch_company_menu.show > a.dropdown-toggle{color: $primaryColor !important;}
+
+nav.o_main_navbar .sh_bookmark .o_user_bookmark_menu:hover{color: $header_hover_color;}
+nav.o_main_navbar .sh_bookmark .o_user_bookmark_menu i:active{color: $header_active_color !important;}
+.o_main_navbar .o_menu_systray .sh_bookmark.show .dropdown-menu.dropdown-menu-right.sh_wqm_quick_menu_submenu_list_cls .dropdown-item:hover{color: $primaryColor;}
+.o_main_navbar .o_menu_systray .sh_bookmark.show .dropdown-menu.dropdown-menu-right.sh_wqm_quick_menu_submenu_list_cls{border: 1px solid #dee2e6;}
+
+.o_main_navbar .o_menu_systray .sh_bookmark.active .o_user_bookmark_menu > a .fa{color: $primaryColor;}
+
+.o_main_navbar .o_menu_systray .sh_bookmark .sh_wqm_quick_menu_submenu_list_cls a.dropdown-item svg{margin-right: 8px;fill: #495057;}
+.o_main_navbar .o_menu_systray .sh_bookmark .sh_wqm_quick_menu_submenu_list_cls a.dropdown-item:hover svg{fill: $primaryColor;}
+
+/* ---- language selector menu -----*/ 
+.o_main_navbar .o_menu_systray .sh_language_icon svg{width: 15px;fill: $header_font_color;}
+.o_main_navbar .o_menu_systray .sh_language_icon:hover svg{fill: $header_hover_color;}
+.o_main_navbar .o_menu_systray .sh_language_icon.show svg{fill: $header_active_color;}
+.o_main_navbar .o_menu_systray .sh_language_icon .sh_user_language_list_cls.dropdown-menu {border: 1px solid #C9CCD2 !important;}
+.o_menu_systray .sh_language_icon .sh_user_language_list_cls .dropdown-item.active:not(.dropdown-item_active_noarrow):before, .o_menu_systray .sh_language_icon .sh_user_language_list_cls .dropdown-item.selected:not(.dropdown-item_active_noarrow):before{display: none;}
+.o_menu_systray .sh_language_icon .sh_user_language_list_cls img.sh_lang_flag{height: 25px;width: 25px;object-fit: cover;margin-right: 5px;}
+.o_web_client nav.o_main_navbar ul.o_menu_systray li.o_night_mode{padding: 0px 8px !important;}
+
+/* 10-11-2022 */

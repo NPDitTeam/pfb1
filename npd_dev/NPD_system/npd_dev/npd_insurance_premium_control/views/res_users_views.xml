@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- ขยาย Form View ของผู้ใช้เพื่อเพิ่มแถบสิทธิ์การแก้ไขค่าประกันที่ต้องการ -->
+        <record id="view_users_form_allow_edit_insurance_premium" model="ir.ui.view">
+            <field name="name">res.users.form.allow.edit.insurance.premium</field>
+            <field name="model">res.users</field>
+            <field name="inherit_id" ref="base.view_users_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='access_rights']" position="after">
+                    <page string="สิทธิ์แก้ไขค่าประกันที่ต้องการ" name="insurance_premium_edit_rights">
+                        <group string="สิทธิ์การแก้ไขค่าประกันที่ต้องการ">
+                            <field name="allow_edit_insurance_premium"/>
+                        </group>
+                        <group>
+                            <div class="alert alert-info" role="alert" style="margin-bottom:0px;">
+                                <p><strong>คำอธิบาย:</strong></p>
+                                <ul>
+                                    <li><strong>อนุญาตให้แก้ไขค่าประกันที่ต้องการ:</strong> อนุญาตให้ผู้ใช้แก้ไขฟิลด์ "กรอกจำนวนค่าประกันที่ต้องการ" ในใบสั่งขายได้</li>
+                                </ul>
+                                <p class="text-danger"><strong>หมายเหตุ:</strong> ผู้ดูแลระบบ (Administrator) มีสิทธิ์ทั้งหมดโดยอัตโนมัติ</p>
+                            </div>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

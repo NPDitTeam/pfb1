@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Tree View -->
+    <record id="baankheaw_employee_tree" model="ir.ui.view">
+        <field name="name">baankheaw.employee.tree</field>
+        <field name="model">baankheaw.employee</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="emp_code"/>
+                <field name="name"/>
+                <field name="phone"/>
+                <field name="department"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="baankheaw_employee_form" model="ir.ui.view">
+        <field name="name">baankheaw.employee.form</field>
+        <field name="model">baankheaw.employee</field>
+        <field name="arch" type="xml">
+            <form string="ข้อมูลพนักงาน">
+                <sheet>
+                    <group>
+                        <field name="emp_code"/>
+                        <field name="name"/>
+                        <field name="phone"/>
+                        <field name="department"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="baankheaw_employee_action" model="ir.actions.act_window">
+        <field name="name">พนักงานบ้านเขียว</field>
+        <field name="res_model">baankheaw.employee</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p>เพิ่มข้อมูลพนักงานบ้านเขียวที่นี่</p>
+        </field>
+    </record>
+
+  <!-- เมนูหลัก: บ้านเขียว (แก้ไขแล้ว) -->
+<menuitem id="baankheaw_menu_root"
+          name="บ้านเขียว"
+          sequence="1"
+          action="baankheaw.baankheaw_employee_action" />
+
+
+</odoo>

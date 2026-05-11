@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_customer_channel_user,customer.channel.user,model_customer_channel,base.group_user,1,1,1,1
+access_freelance_salesperson_user,freelance.salesperson.user,model_freelance_salesperson,base.group_user,1,1,1,1

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Purchase Voucher: เพิ่มปุ่ม สร้าง WHT อัตโนมัติ + คอลัมน์ WHT ใน lines -->
+    <record id="view_purchase_receipt_form_wht" model="ir.ui.view">
+        <field name="name">account.voucher.purchase.form.wht</field>
+        <field name="model">account.voucher</field>
+        <field name="inherit_id" ref="account_voucher.view_purchase_receipt_form"/>
+        <field name="arch" type="xml">
+            <!-- เพิ่มปุ่ม สร้าง WHT อัตโนมัติ: แสดงเมื่อ check_type_show_selection = false และ state = draft -->
+            <xpath expr="//button[@name='proforma_voucher']" position="before">
+                <button name="action_auto_create_wht_cert"
+                        string="สร้าง WHT อัตโนมัติ"
+                        type="object"
+                        class="btn-secondary"
+                        attrs="{'invisible': ['|', ('check_type_show_selection', '!=', 'false'), ('state', '!=', 'draft')]}"/>
+            </xpath>
+            <!-- เพิ่มคอลัมน์ WHT ใน line_ids -->
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='wht_total']" position="before">
+                <field name="wht_category_id" optional="show" options="{'no_create': True}"/>
+                <field name="wht_rate_display" optional="show"/>
+                <field name="is_deduct_vat"/>
+            </xpath>
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='wht_total']" position="after">
+                <field name="wht_status" widget="badge"
+                       decoration-success="wht_status == 'eligible'"
+                       decoration-muted="wht_status == 'no_category'"
+                       optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Sale Voucher: เพิ่มปุ่ม สร้าง WHT อัตโนมัติ + คอลัมน์ WHT ใน lines -->
+    <record id="view_sale_receipt_form_wht" model="ir.ui.view">
+        <field name="name">account.voucher.sale.form.wht</field>
+        <field name="model">account.voucher</field>
+        <field name="inherit_id" ref="account_voucher.view_sale_receipt_form"/>
+        <field name="arch" type="xml">
+            <!-- เพิ่ม field check_type_show_selection ที่ยังไม่มีใน sale form -->
+            <xpath expr="//field[@name='paid']" position="after">
+                <field name="check_type_show_selection" invisible="1"/>
+            </xpath>
+            <!-- เพิ่มปุ่ม สร้าง WHT อัตโนมัติ -->
+            <xpath expr="//button[@name='proforma_voucher']" position="before">
+                <button name="action_auto_create_wht_cert"
+                        string="สร้าง WHT อัตโนมัติ"
+                        type="object"
+                        class="btn-secondary"
+                        attrs="{'invisible': ['|', ('check_type_show_selection', '!=', 'false'), ('state', '!=', 'draft')]}"/>
+            </xpath>
+            <!-- เพิ่มคอลัมน์ WHT ใน line_ids (sale ไม่มี wht_total ต้องเพิ่มให้) -->
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='price_subtotal']" position="before">
+                <field name="wht_category_id" optional="show" options="{'no_create': True}"/>
+                <field name="wht_rate_display" optional="show"/>
+                <field name="wht_total"/>
+                <field name="wht_status" widget="badge"
+                       decoration-success="wht_status == 'eligible'"
+                       decoration-muted="wht_status == 'no_category'"
+                       optional="show"/>
+                <field name="is_deduct_vat"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

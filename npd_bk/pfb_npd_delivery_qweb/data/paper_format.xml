@@ -1,0 +1,30 @@
+<odoo>
+    <record id="paperformat_delivery_slip" model="report.paperformat">
+        <field name="name">Delivery Slip A4</field>
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">50</field>
+        <field name="margin_bottom">55</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False" />
+        <field name="header_spacing">47</field>
+        <field name="dpi">92</field>
+    </record>
+    <record id="paperformat_picking_operation" model="report.paperformat">
+        <field name="name">Picking Operation A4</field>
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">30</field>
+        <field name="margin_bottom">60</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False" />
+        <field name="header_spacing">25</field>
+        <field name="dpi">92</field>
+    </record>
+</odoo>

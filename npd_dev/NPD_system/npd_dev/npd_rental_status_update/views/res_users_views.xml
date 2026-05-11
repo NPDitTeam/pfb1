@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- เพิ่ม field ในหน้าตั้งค่าผู้ใช้ -->
+    <record id="view_users_form_rental_status" model="ir.ui.view">
+        <field name="name">res.users.form.rental.status</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='access_rights']" position="inside">
+                <group string="สิทธิ์การเช่า">
+                    <field name="allow_update_any_rental_status"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+
+		<record id="sh_project_task_email_template_form_inherit" model="ir.ui.view">
+			<field name="name">project.task.email.template.form</field>
+			<field name="model">project.task</field>
+			<field name="inherit_id" ref="project.view_task_form2" />
+			<field name="arch" type="xml">
+				<xpath expr="//field[@name='user_id']" position="after">
+					<field name="check_bool_enable_task_send_by_email" invisible="True" />
+				</xpath>
+				<xpath expr="//header" position="inside">
+					<button name="action_task_send_email" string="Send by Email" type="object" class="btn-primary" attrs="{'invisible': [('check_bool_enable_task_send_by_email', '=', False)]}" />
+				</xpath>
+
+			</field>
+		</record>
+
+	</data>
+</odoo>

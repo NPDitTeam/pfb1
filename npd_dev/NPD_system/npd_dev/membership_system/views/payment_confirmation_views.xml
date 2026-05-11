@@ -1,0 +1,69 @@
+<odoo>
+    <data>
+        <!-- Tree View -->
+        <record id="view_payment_confirmation_tree" model="ir.ui.view">
+            <field name="name">payment.confirmation.tree</field>
+            <field name="model">payment.confirmation</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="payment_id"/>
+                    <field name="package_id"/>
+                    <field name="package_name"/>
+                    <field name="amount"/>
+                    <field name="status"/>
+                    <field name="chk_status"/>
+                    <field name="package_expire_date"/>
+                    <field name="payment_date"/>
+                    <field name="remark"/>
+<!--                    <field name="end_date" invisible="1"/>-->
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form View -->
+        <record id="view_payment_confirmation_form" model="ir.ui.view">
+            <field name="name">payment.confirmation.form</field>
+            <field name="model">payment.confirmation</field>
+            <field name="arch" type="xml">
+                <form string="Payment Confirmation">
+                    <header>
+                        <button name="action_fetch_payment_data" type="object" string="Fetch from API" class="btn-primary"/>
+                        <field name="status" widget="statusbar" statusbar_visible="use,cancel"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="payment_id" readonly="1"/>
+                                <field name="package_id"/>
+                                <field name="package_name"/>
+                                <field name="amount"/>
+                            </group>
+                            <group>
+                                <field name="shop_id"/>
+                                <field name="status"/>
+                                <field name="chk_status"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="package_expire_date"/>
+                            <field name="payment_date"/>
+                        </group>
+                        <group>
+                            <field name="remark"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record id="action_payment_confirmation" model="ir.actions.act_window">
+            <field name="name">Payment Confirmations</field>
+            <field name="res_model">payment.confirmation</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- Menu Items -->
+        <menuitem id="menu_payment_confirmation_root" name="Payment Confirmations" parent="menu_membership_root" action="action_payment_confirmation" sequence="3"/>
+    </data>
+</odoo>

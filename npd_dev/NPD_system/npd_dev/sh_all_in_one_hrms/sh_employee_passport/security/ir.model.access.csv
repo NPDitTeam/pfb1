@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sh_employee_passport_user,access_sh_employee_passport_user,model_sh_employee_passport,base.group_user,1,1,1,1
+access_sh_employee_passport_officer,access_sh_employee_passport_officer,model_sh_employee_passport,hr.group_hr_user,1,1,1,1
+access_sh_employee_expired_passport_user,access_sh_employee_expired_user,model_sh_expired_hr_employee_passport,base.group_user,1,1,1,1
+access_sh_employee_expired_passport_officer,access_sh_employee_expired_officer,model_sh_expired_hr_employee_passport,hr.group_hr_user,1,1,1,1

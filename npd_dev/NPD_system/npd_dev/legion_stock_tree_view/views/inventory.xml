@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="product_template_tree_view_product_inherit" model="ir.ui.view">
+        <field name="name">product.template.inherit</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='default_code']" position="replace">
+                <field name="default_code" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='standard_price']" position="replace">
+                <field name="standard_price" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='categ_id']" position="replace">
+                <field name="categ_id" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='type']" position="replace">
+                <field name="type" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='virtual_available']" position="replace">
+                <field name="virtual_available" invisible="1"/>
+            </xpath>
+
+
+            <xpath expr="//field[@name='qty_available']" position="replace">
+                <field name="qty_available" readonly="0"/>
+            </xpath>
+
+
+        </field>
+    </record>
+
+    <record id="product_template_action_inherit_product" model="ir.actions.act_window">
+        <field name="name">Products</field>
+        <field name="res_model">product.template</field>
+<!--        <field name="view_type">form</field>-->
+        <field name="view_id" ref="product.product_template_action"/>
+        <field name="view_mode">tree,form,kanban</field>
+        <field name="context">{"search_default_consumable": 1, 'default_type': 'product'}</field>
+    </record>
+
+
+    <menuitem id="menu_stock_root"
+              name="Stock"
+              web_icon="legion_stock_tree_view,static/description/inventory.png"
+              sequence="1"/>
+
+    <menuitem id="menu_create_product_root"
+              name="Products"
+              parent="menu_stock_root"
+              action="stock.product_template_action_product"
+              sequence="10"/>
+
+
+</odoo>

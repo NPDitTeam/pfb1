@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================== MENU UNDER CRM ==================== -->
+    
+    <!-- Yalecom Sub Menu under CRM -->
+    <menuitem id="menu_yalecom_crm_parent"
+              name="📞 Yalecom"
+              parent="crm.crm_menu_root"
+              sequence="50"/>
+
+    <!-- Call Log Menu -->
+    <menuitem id="menu_yalecom_call_log"
+              name="ประวัติการโทร"
+              parent="menu_yalecom_crm_parent"
+              action="action_yalecom_call_log"
+              sequence="10"/>
+
+    <!-- Config Menu Parent -->
+    <menuitem id="menu_yalecom_config_parent"
+              name="การตั้งค่า"
+              parent="menu_yalecom_crm_parent"
+              sequence="90"/>
+
+    <!-- Config Menu -->
+    <menuitem id="menu_yalecom_config"
+              name="ตั้งค่า Yalecom"
+              parent="menu_yalecom_config_parent"
+              action="action_yalecom_config"
+              sequence="10"/>
+
+    <!-- Webhook Log Menu -->
+    <menuitem id="menu_yalecom_webhook_log"
+              name="Webhook Log (Debug)"
+              parent="menu_yalecom_config_parent"
+              action="action_yalecom_webhook_log"
+              groups="base.group_system"
+              sequence="20"/>
+
+</odoo>

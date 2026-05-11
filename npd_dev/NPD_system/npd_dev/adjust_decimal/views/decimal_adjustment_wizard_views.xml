@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_decimal_adjustment_wizard_form" model="ir.ui.view">
+        <field name="name">decimal.adjustment.wizard.form</field>
+        <field name="model">decimal.adjustment.wizard</field>
+        <field name="arch" type="xml">
+            <form string="แก้ไขทศนิยม">
+                <field name="move_id" invisible="1"/>
+                <field name="adjust_line_id" invisible="1"/>
+                <group>
+                    <group string="ยอดรวม">
+                        <field name="current_total"/>
+                        <field name="integer_part"/>
+                        <field name="new_decimal"/>
+                        <field name="target_total"/>
+                        <field name="difference"/>
+                    </group>
+                    <group string="รายการที่ปรับอัตโนมัติ">
+                        <field name="adjust_line_name"/>
+                        <field name="line_current_price"/>
+                        <field name="line_new_price"/>
+                    </group>
+                </group>
+                <separator string="รายการทั้งหมด (อ้างอิง)"/>
+                <field name="line_ids" readonly="1">
+                    <tree>
+                        <field name="product_name" string="สินค้า"/>
+                        <field name="quantity" string="จำนวน"/>
+                        <field name="current_price" string="ราคา"/>
+                        <field name="current_subtotal" string="รวม"/>
+                        <field name="move_line_id" invisible="1"/>
+                    </tree>
+                </field>
+                <footer>
+                    <button name="action_apply"
+                            string="ยืนยัน"
+                            type="object"
+                            class="btn-primary"/>
+                    <button string="ยกเลิก"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

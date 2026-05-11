@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+	<data noupdate="1">
+
+		<record id="template_project_task_overdue_notify_email" model="mail.template">
+			<field name="name">Project Task Overdue - Send Email</field>
+			<field name="email_from"></field>
+			<field name="email_to">${object.user_id.email}</field>
+			<field name="subject">${object.company_id.name} - Task Over Due Notification</field>
+			<field name="model_id" ref="sh_all_in_one_pms.model_project_task_overdue_email" />
+
+			<field name="body_html">
+				<![CDATA[
+            <p>Dear 
+            <b> ${object.user_id.name}, </b>
+            </p>
+			<html>            	
+				<head>Overdue Task List</head>						
+					<table border="1" bgcolor="#ffffff" style="border: 1px solid gray;width:100%" >
+						<thead style="background-color:#875A7B;text-decoration: none; color: #fff;font-size: 16px;">
+							<tr>
+								<th align="center">Project</th>
+								<th align="center">Task</th>
+								<th align="center">Deadline Date</th>
+							</tr>
+						</thead>
+						<tbody>
+							% for row in object.notify_ids :
+							<tr>
+								<td><span style="margin-left:5px"> ${row.project_id}</span></td>
+								<td><span style="margin-left:5px"> ${row.name}</span></td>
+								<td><span style="margin-left:5px"> ${row.date_deadline}</span></td>
+							</tr>
+							%endfor
+						</tbody>
+					</table>
+				</html>		
+				<br/>
+				<p>Thank you</p>												
+				]]>
+			</field>
+		</record>
+		
+		<record id="template_project_task_start_date_notify_email" model="mail.template">
+			<field name="name">Project Task Start Date Alert - Send Email</field>
+			<field name="email_from"></field>
+			<field name="email_to">${object.user_id.email}</field>
+			<field name="subject">${object.company_id.name} - Task Start Date Alert</field>
+			<field name="model_id" ref="sh_all_in_one_pms.model_project_task_overdue_email" />
+
+			<field name="body_html">
+				<![CDATA[
+            <p>Dear 
+            <b> ${object.user_id.name}, </b>
+            </p>
+			<html>            	
+				<head>Task Start Date List</head>					
+					<table border="1" bgcolor="#ffffff" style="border: 1px solid gray;width:100%" >
+						<thead style="background-color:#875A7B;text-decoration: none; color: #fff;font-size: 16px;">
+							<tr>
+								<th align="center">Project</th>
+								<th align="center">Task</th>
+								<th align="center">Start Date</th>
+							</tr>
+						</thead>
+						<tbody>
+							% for row in object.notify_ids :
+							<tr>
+								<td><span style="margin-left:5px"> ${row.project_id}</span></td>
+								<td><span style="margin-left:5px"> ${row.name}</span></td>
+								<td><span style="margin-left:5px"> ${row.start_date}</span></td>
+							</tr>
+							%endfor
+						</tbody>
+					</table>
+				</html>		
+				<br/>
+				<b> <p>Thank you</p> </b>												
+				]]>
+			</field>
+		</record>
+
+	</data>
+</odoo>	

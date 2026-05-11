@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Module Category -->
+        <record id="module_approval_app" model="ir.module.category">
+            <field name="name">Approval</field>
+            <field name="description">Approval User Access Right</field>
+            <field name="sequence">100</field>
+        </record>
+
+        <!-- User Group -->
+        <record id="group_approval_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="category_id" ref="module_approval_app"/>
+            <field name="implied_ids" eval="[(4, ref('bi_approval_app.group_approval_type_button'))]"/>
+            <field name="users" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <!-- Manager Group -->
+        <record id="group_approval_manager" model="res.groups">
+            <field name="name">Settings</field>
+            <field name="category_id" ref="module_approval_app"/>
+            <field name="implied_ids" eval="[(4, ref('bi_approval_app.group_approval_user'))]"/>
+            <field name="users" eval="[(4, ref('base.user_root')),(4, ref('base.user_admin'))]"/>
+        </record>
+
+        <!-- Approval Request Rules for User -->
+        <record id="approval_request_user_rule" model="ir.rule">
+            <field name="name">Approval Request - User Data</field>
+            <field name="model_id" ref="bi_approval_app.model_approval_request"/>
+            <field name="domain_force">['|', ('approver_ids', 'in', user.id), ('create_uid', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('bi_approval_app.group_approval_user'))]"/>
+        </record>
+
+        <!-- Approval Request Rules for Manager -->
+        <record id="approval_request_manager_rule" model="ir.rule">
+            <field name="name">Approval Request - Manager Data</field>
+            <field name="model_id" ref="bi_approval_app.model_approval_request"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('bi_approval_app.group_approval_manager'))]"/>
+        </record>
+
+        <!-- My Approval Rules -->
+        <record id="my_approval_user_rule" model="ir.rule">
+            <field name="name">Approval - User</field>
+            <field name="model_id" ref="bi_approval_app.model_my_approval"/>
+            <field name="domain_force">['|', ('user_ids', 'in', user.id), ('create_uid', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('bi_approval_app.group_approval_user'))]"/>
+        </record>
+
+        <!-- My Approval Rules for Manager -->
+        <record id="my_approval_manager_rule" model="ir.rule">
+            <field name="name">Approval - Manager</field>
+            <field name="model_id" ref="bi_approval_app.model_my_approval"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('bi_approval_app.group_approval_manager'))]"/>
+        </record>
+
+        <!-- Access control for Attachments -->
+<!--        <record id="attachment_user_rule" model="ir.rule">-->
+<!--            <field name="name">Attachment - User Data</field>-->
+<!--            <field name="model_id" ref="base.model_ir_attachment"/>-->
+<!--            <field name="domain_force">['|', ('res_model', '=', 'approval.request'), ('res_model', '=', 'my.approval'), ('create_uid', '=', user.id)]</field>-->
+<!--            <field name="groups" eval="[(4, ref('bi_approval_app.group_approval_user'))]"/>-->
+<!--        </record>-->
+
+<!--        <record id="attachment_manager_rule" model="ir.rule">-->
+<!--            <field name="name">Attachment - Manager Data</field>-->
+<!--            <field name="model_id" ref="base.model_ir_attachment"/>-->
+<!--            <field name="domain_force">['|', ('res_model', '=', 'approval.request'), ('res_model', '=', 'my.approval'), (1, '=', 1)]</field>-->
+<!--            <field name="groups" eval="[(4, ref('bi_approval_app.group_approval_manager'))]"/>-->
+<!--        </record>-->
+
+<!--        <record id="ir_attachment_rule_user" model="ir.rule">-->
+<!--            <field name="name">User Attachment Access</field>-->
+<!--            <field name="model_id" ref="base.model_ir_attachment"/>-->
+<!--            <field name="domain_force">[('res_model', '!=', False)]</field>-->
+<!--            <field name="groups" eval="[(4, ref('base.group_user'))]"/>-->
+<!--        </record>-->
+    </data>
+</odoo>

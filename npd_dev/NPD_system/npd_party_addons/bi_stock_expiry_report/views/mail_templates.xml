@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record model="ir.cron" id="report_generated_cron">
+				<field name="name">Stock Expiry Report Generate</field>
+				<field name="model_id" ref="model_stock_expiry_report"/>
+				<field name="interval_number">1</field>
+				<field name="interval_type">days</field>
+				<field name="numbercall">-1</field>
+				<field name="doall" eval="False"/>
+				<field name="state">code</field>
+				<field name="code">model.stock_expiry_report_send()</field>
+			</record>
+
+        <record id="email_template_stock_expired_remainder_all" model="mail.template">
+            <field name="name">Stock Expiry Report</field>
+            <field name="subject">Stock Expiry Report</field>
+            <field name="report_template" ref="bi_stock_expiry_report.report_expiry_print_all"/>
+			<field name="report_name">Stock Expiry Report for all type</field>
+            <field name="model_id" ref="bi_stock_expiry_report.model_stock_expiry_report"/>
+            <field name="auto_delete" eval="True"/>
+            <field name="body_html"><![CDATA[
+                <p>Hello,</p>
+               <p>
+                Please find the Stock Expiry Report.
+                </p>
+
+                ]]></field>
+        </record>
+
+
+        <record id="email_template_stock_expired_remainder_location" model="mail.template">
+            <field name="name">Stock Expiry Report</field>
+            <field name="subject">Stock Expiry Report</field>
+            <field name="report_template" ref="bi_stock_expiry_report.report_expiry_print_location"/>
+			<field name="report_name">Stock Expiry Report for locations</field>
+            <field name="model_id" ref="bi_stock_expiry_report.model_stock_expiry_report"/>
+            <field name="auto_delete" eval="True"/>
+            <field name="body_html"><![CDATA[
+                <p>Hello,</p>
+               <p>
+                Please find the Stock Expiry Report.
+                </p>
+
+                ]]></field>
+        </record>
+
+        <record id="email_template_stock_expired_remainder_warehouse" model="mail.template">
+            <field name="name">Stock Expiry Report</field>
+            <field name="subject">Stock Expiry Report</field>
+            <field name="report_template" ref="bi_stock_expiry_report.report_expiry_print_warehouse"/>
+			<field name="report_name">Expiry Report for warehouses</field>
+            <field name="model_id" ref="bi_stock_expiry_report.model_stock_expiry_report"/>
+            <field name="auto_delete" eval="True"/>
+            <field name="body_html"><![CDATA[
+                <p>Hello,</p>
+               <p>
+                Please find the Stock Expiry Report.
+                </p>
+
+                ]]></field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_partner_form_email_required_inherit" model="ir.ui.view">
+    <field name="name">res.partner.form.email.required.inherit</field>
+    <field name="model">res.partner</field>
+    <field name="inherit_id" ref="base.view_partner_form"/>
+    <field name="arch" type="xml">
+      <!-- ทำให้ field email เป็น required เสมอ -->
+      <xpath expr="//field[@name='email']" position="attributes">
+        <attribute name="required">1</attribute>
+      </xpath>
+    </field>
+  </record>
+</odoo>

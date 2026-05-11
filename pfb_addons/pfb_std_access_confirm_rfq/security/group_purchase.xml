@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="group_convert_rfq" model="res.groups">
+        <field name="name">Can Be Convert Order</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">Access Can Be Convert Order.</field>
+    </record>
+    <record id="group_confirm_po" model="res.groups">
+        <field name="name">Can Be Confirm Order</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">Access Can Be Confirm Order.</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================ -->
+    <!-- เพิ่ม checkbox "ดำเนินการรับชำระใหม่"        -->
+    <!-- ในหน้าผู้ใช้ > แท็บสิทธิ์การเข้าถึง           -->
+    <!-- ============================================ -->
+    <record id="view_users_form_reprocess_permission" model="ir.ui.view">
+        <field name="name">res.users.form.reprocess.permission</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='access_rights']" position="inside">
+                <group string="สิทธิ์ดำเนินการรับชำระใหม่">
+                    <field name="allow_payment_reprocess"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

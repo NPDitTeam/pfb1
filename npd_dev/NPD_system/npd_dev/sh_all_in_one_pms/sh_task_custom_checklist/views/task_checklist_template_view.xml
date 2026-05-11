@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_task_checklist_template_form_view" model="ir.ui.view">
+        <field name="name">sh.task.checklist.template.form</field>
+        <field name="model">sh.task.checklist.template</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                        </group>
+                        <group>
+                            <field name="checklist_ids" widget="many2many_tags" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_task_checklist_template_tree_view" model="ir.ui.view">
+        <field name="name">sh.task.checklist.template.tree</field>
+        <field name="model">sh.task.checklist.template</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+                <field name="checklist_ids" />
+            </tree>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="action_task_checklist_template">
+        <field name="name">Task Custom Checklist Template</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.task.checklist.template</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    
+    <menuitem id="menu_task_check_list_template" sequence="25" name="Task Custom Checklist Template" action="action_task_checklist_template" parent="project.menu_project_config" groups="sh_all_in_one_pms.group_enable_task_custom_checklist" />
+</odoo>

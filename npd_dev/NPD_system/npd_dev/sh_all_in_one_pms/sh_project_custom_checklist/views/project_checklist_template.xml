@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_project_custom_checklist_template_form_view" model="ir.ui.view">
+        <field name="name">project.custom.checklist.template.form</field>
+        <field name="model">project.custom.checklist.template</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                        </group>
+                        <group>
+                            <field name="checklist_template_ids" widget="many2many_tags" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="sh_project_custom_checklist_template_tree_view" model="ir.ui.view">
+        <field name="name">project.custom.checklist.tree</field>
+        <field name="model">project.custom.checklist.template</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+                <field name="checklist_template_ids" />
+            </tree>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="action_menu_project_custom_checklist_template">
+        <field name="name">Project Custom Checklist Template</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">project.custom.checklist.template</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_project_custom_checklist_template" sequence="20" groups="sh_all_in_one_pms.group_project_custom_checklist" name="Project Custom Checklist Template" action="action_menu_project_custom_checklist_template" parent="project.menu_project_config" />
+</odoo>

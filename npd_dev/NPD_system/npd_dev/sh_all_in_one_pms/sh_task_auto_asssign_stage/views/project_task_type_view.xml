@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="sh_project_task_auto_assign_form_view_inherit" model="ir.ui.view">
+            <field name="name">project.task.auto.assign.form.view</field>
+            <field name="model">project.task.type</field>
+            <field name="inherit_id" ref="project.task_type_edit" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='mail_template_id']" position="after">
+                    <field name="assign_to" />
+                </xpath>
+                <xpath expr="//field[@name='assign_to']" position="after">
+                    <field name="assign_multi_user_ids" widget="many2many_tags" />
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

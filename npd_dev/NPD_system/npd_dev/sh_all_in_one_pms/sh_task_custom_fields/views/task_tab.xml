@@ -1,0 +1,102 @@
+<?xml version ="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+
+<!-- 	 Button Click -->
+		<record id="sh_project_task_custom_tab_wizrd_view" model="ir.ui.view">
+ 			<field name="name">sh.dynamic.tab.project.task.form</field>
+			<field name="model">sh.custom.tab.task</field>
+        	<field name="arch" type="xml">
+	            <form string="Custom Tab">
+	                <sheet>
+	                    <group>
+	                        <group>
+	                            <field name="name" required="1"/>
+	                            <field name="label" required="1"/>
+	                        </group>
+	                        <group>
+	                            <field name="groups" widget="many2many_tags"/> <field name="invisible_tab" invisible="1"/>
+	                            <field name="tab_list" attrs="{'invisible':[('invisible_tab','=',True)]}"/>
+	                            <field name="sh_position" attrs="{'invisible':[('invisible_tab','=',True)]}"/>
+	                        </group>
+	                    </group>
+	    	        </sheet>
+	                <footer>
+                    	<button name="create_tab" string="Create Tab" type="object" class="oe_highlight"/>
+                    	<button string="Cancel" class="oe_link" special="cancel" />
+                	</footer>
+            	</form>
+    	    </field>
+    	</record>
+         
+	      <record model='ir.actions.act_window' id='sh_action_project_task_custom_tab'>
+	        <field name="name">Project Custom Tab</field>
+	        <field name="res_model">sh.custom.tab.task</field>
+	        <field name="view_mode">form</field>
+	        <field name="view_id" ref="sh_project_task_custom_tab_wizrd_view"/>	        
+            <field name="type">ir.actions.act_window</field>
+            <field name="target">new</field>
+	    </record>
+	    
+   		<record id="sh_project_task_dynamic_tab_form_view_inherit" model="ir.ui.view">
+			<field name="name">project.task.tab.fields.form.inherit</field>
+			<field name="model">project.task</field>
+			<field name="inherit_id" ref="project.view_task_form2"/>
+			<field name="arch" type="xml">
+ 				<xpath expr="//form//header" position="inside">
+					<button name="%(sh_action_project_task_custom_tab)d" groups="sh_all_in_one_pms.group_task_custom_field" string="Add Custom Tab" type="action" class="oe_highlight"/>
+				</xpath>				
+			</field>
+		</record> 
+		
+		
+		
+<!--   	Menu Action   -->
+
+	 	<record id="sh_project_task_form_custom_tab_form_view" model="ir.ui.view">
+ 			<field name="name">sh.custom.tab.project.task.form.view</field>
+			<field name="model">sh.custom.tab.task</field>
+        	<field name="arch" type="xml">
+	            <form string="Custom Tabs" create="false">
+	                <sheet>
+	                    <group>
+	                        <group>
+	                            <field name="name" readonly="1"/>
+	                            <field name="label" required="1"/>
+	                        </group>
+	                        <group>
+	                            <field name="groups" widget="many2many_tags"/><field name="invisible_tab" invisible="1"/>
+	                            <field name="tab_list" attrs="{'invisible':[('invisible_tab','=',True)]}"/><field name="sh_position" attrs="{'invisible':[('invisible_tab','=',True)]}"/>
+	                        </group>
+	                    </group>
+	                   
+	    	        </sheet>	    	        
+            	</form>
+    	    </field>
+    	</record>
+
+ 	  <record id="sh_project_task_custom_tab_tree_view" model="ir.ui.view">
+ 			<field name="name">sh.custom.tab.project.task.tree.view</field>
+			<field name="model">sh.custom.tab.task</field>
+        	<field name="arch" type="xml">
+ 				<tree create="false">
+	                <field name="name"/>
+	                <field name="label"/>
+ 				</tree>
+ 			</field>
+		</record>
+		 				
+         <record model='ir.actions.act_window' id='sh_action_project_task_custom_tab_form'>
+	        <field name="name">Task Custom Tab</field>
+	        <field name="res_model">sh.custom.tab.task</field>
+	        <field name="view_mode">tree,form</field>
+	        <field name="view_id" ref="sh_project_task_custom_tab_tree_view"/>	        
+            <field name="type">ir.actions.act_window</field>
+	    </record>
+
+	</data>
+	
+     <menuitem id="sh_task_custom_tab_action_menu" 
+    name="Task Custom Tabs" parent="project.menu_project_config" groups="sh_all_in_one_pms.group_task_custom_field"
+	sequence="15" action="sh_action_project_task_custom_tab_form"/> 	
+</odoo>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Trial balance Inherit Form View to Modify it -->
+        <record id="account_trail_balance_inherit_form_add_print_excel_button" model="ir.ui.view">
+            <field name="name">account.trail.balance.inherit.form.add.print.excel.button</field>
+            <field name="model">accounting.report.bi</field>
+            <field name="inherit_id" ref="bi_financial_pdf_reports.account_trail_balance_form"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//footer/button[@name='print_trial_balance']" position="after">
+                    <!-- Add your fields or attributes here -->
+                    <button name="print_trial_balance" string="Print Excel" type="object" default_focus="1"
+                            class="oe_highlight" context="{'report_type':'excel'}"/>
+                </xpath>
+
+            </field>
+        </record>
+    </data>
+</odoo>

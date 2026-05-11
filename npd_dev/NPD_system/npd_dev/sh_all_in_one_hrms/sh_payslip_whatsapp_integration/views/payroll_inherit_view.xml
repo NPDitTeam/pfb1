@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_inherit_hr_payslip_form" model="ir.ui.view">
+        <field name="name">hr.payslip.form</field>
+        <field name="model">hr.payslip</field>
+        <field name="inherit_id" ref="sh_hr_payroll.view_hr_payslip_form" />
+        <field name="arch" type="xml">
+            <button name="action_payslip_cancel" position="after">
+                <button
+                    type="action"
+                    name="%(sh_all_in_one_hrms.sh_payslip_whatsapp_integration_send_whatsapp_message_action)d"
+                    class="oe_highlight"
+                    string="Send By Whatsapp"
+                    context="{'default_employee_ids':employee_id,'default_message':text_message}"
+                    groups="sh_all_in_one_hrms.group_hr_payroll_whatsapp_feature"
+                />
+                <button name="send_by_whatsapp_direct" class="oe_highlight" string="Send By Whatsapp Direct" type="object" groups="sh_all_in_one_hrms.group_hr_payroll_whatsapp_feature" />
+            </button>
+            <field name="note" position="after">
+                <field name="text_message" invisible="1" />
+            </field>
+        </field>
+    </record>
+    <record id="view_inherit_hr_employee_form_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.form</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='work_email']" position="after">
+                <label for="mobile" string="Personal Mobile" />
+                <div class="o_row">
+                    <field name="mobile" widget="phone" />
+                    <button
+                        type="action"
+                        name="%(sh_all_in_one_hrms.sh_payslip_whatsapp_integration_send_whatsapp_message_action)d"
+                        class="btn-sm btn-link mb4 fa fa-whatsapp"
+                        aria-label="Send Whatsapp Message"
+                        title="Send Whatsapp Message"
+                        attrs="{'invisible':[('mobile', '=', False)]}"
+                        context="{'default_employee_ids':active_id, 'mobile': True}"
+                        groups="sh_all_in_one_hrms.group_hr_payroll_whatsapp_feature"
+                    />
+                </div>
+            </xpath>
+
+            <xpath expr="//field[@name='mobile_phone']" position="replace">
+                <label for="mobile_phone" string="Work Mobile" />
+                <div class="o_row">
+                    <field name="mobile_phone" widget="phone" />
+                    <button
+                        type="action"
+                        name="%(sh_all_in_one_hrms.sh_payslip_whatsapp_integration_send_whatsapp_message_action)d"
+                        class="btn-sm btn-link mb4 fa fa-whatsapp"
+                        aria-label="Send By Whatsapp"
+                        title="Send By Whatsapp"
+                        attrs="{'invisible':[('mobile_phone', '=', False)]}"
+                        context="{'default_employee_ids':active_id,'work_mobile': True}"
+                        groups="sh_all_in_one_hrms.group_hr_payroll_whatsapp_feature"
+                    />
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,8 @@
+<odoo>
+    <data noupdate="1">
+        <record id="ir_config_param_timezone" model="ir.config_parameter">
+            <field name="key">timezone</field>
+            <field name="value">Asia/Bangkok</field>
+        </record>
+    </data>
+</odoo>

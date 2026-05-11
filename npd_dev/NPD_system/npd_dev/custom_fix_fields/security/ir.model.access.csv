@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sale_order_fix_all,Access sale.order fix,sale.model_sale_order,,1,1,1,0
+access_account_move_fix_all,Access account.move fix,account.model_account_move,,1,1,1,0

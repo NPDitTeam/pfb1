@@ -1,0 +1,14 @@
+
+
+1) v 13.0.0.1
+Fixed issue of unreserve for stock move cancel
+
+
+2)13.0.0.2",
+The On Hand quantity is correct in both the source and destination location, but the quantity is still reserved on the source location...
+
+3)13.0.0.3 ,
+related journal entries is not getting cancelled 
+
+13.0.0.4 ==>fixed issue of unreserve functionality in stock picking.
+13.0.0.5 ==>fixed issue of unreverse functionality when product quantity is less and fixed issue of on-hand quantity after cancel picking in done stage.

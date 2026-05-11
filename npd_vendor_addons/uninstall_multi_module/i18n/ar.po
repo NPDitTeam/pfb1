@@ -1,0 +1,87 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* uninstall_multi_module
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0-20211110\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-11-15 14:36+0000\n"
+"PO-Revision-Date: 2021-11-15 17:38+0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar\n"
+"X-Generator: Poedit 3.0\n"
+
+#. module: uninstall_multi_module
+#: model_terms:ir.ui.view,arch_db:uninstall_multi_module.multi_module_uninstall_form_wizard
+msgid "Are you sure that you want to uninstall all selected modules?"
+msgstr "هل تريد بالتأكيد إلغاء تثبيت كافة التطبيقات المحددة؟"
+
+#. module: uninstall_multi_module
+#: model_terms:ir.ui.view,arch_db:uninstall_multi_module.multi_module_uninstall_form_wizard
+msgid "Cancel"
+msgstr "إلغاء"
+
+#. module: uninstall_multi_module
+#: model:ir.model.fields,field_description:uninstall_multi_module.field_ir_module_module_multi_uninstall_wizard__create_uid
+msgid "Created by"
+msgstr "أنشئ بواسطة"
+
+#. module: uninstall_multi_module
+#: model:ir.model.fields,field_description:uninstall_multi_module.field_ir_module_module_multi_uninstall_wizard__create_date
+msgid "Created on"
+msgstr "أنشئ في"
+
+#. module: uninstall_multi_module
+#: model:ir.model.fields,field_description:uninstall_multi_module.field_ir_module_module_multi_uninstall_wizard__display_name
+msgid "Display Name"
+msgstr "الاسم المعروض"
+
+#. module: uninstall_multi_module
+#: model:ir.model.fields,field_description:uninstall_multi_module.field_ir_module_module_multi_uninstall_wizard__id
+msgid "ID"
+msgstr "المعرف"
+
+#. module: uninstall_multi_module
+#: model:ir.model.fields,field_description:uninstall_multi_module.field_ir_module_module_multi_uninstall_wizard____last_update
+msgid "Last Modified on"
+msgstr "آخر تعديل في"
+
+#. module: uninstall_multi_module
+#: model:ir.model.fields,field_description:uninstall_multi_module.field_ir_module_module_multi_uninstall_wizard__write_uid
+msgid "Last Updated by"
+msgstr "آخر تحديث بواسطة"
+
+#. module: uninstall_multi_module
+#: model:ir.model.fields,field_description:uninstall_multi_module.field_ir_module_module_multi_uninstall_wizard__write_date
+msgid "Last Updated on"
+msgstr "آخر تحديث في"
+
+#. module: uninstall_multi_module
+#: model_terms:ir.ui.view,arch_db:uninstall_multi_module.multi_module_uninstall_form_wizard
+msgid "Note: all selected module not in installed state will be ignored."
+msgstr "ملاحظة: سيتم تجاهل جميع التطبيقات الغير المثبتة."
+
+#. module: uninstall_multi_module
+#: model_terms:ir.ui.view,arch_db:uninstall_multi_module.multi_module_uninstall_form_wizard
+msgid "Uninstall"
+msgstr "إلغاء تثبيت"
+
+#. module: uninstall_multi_module
+#: model:ir.actions.act_window,name:uninstall_multi_module.action_multi_module_uninstall
+msgid "Uninstall Modules"
+msgstr "إلغاء تثبيت التطبيقات"
+
+#. module: uninstall_multi_module
+#: model:ir.model,name:uninstall_multi_module.model_ir_module_module_multi_uninstall_wizard
+msgid "ir.module.module.multi.uninstall.wizard"
+msgstr ""
+
+#. module: uninstall_multi_module
+#: model_terms:ir.ui.view,arch_db:uninstall_multi_module.multi_module_uninstall_form_wizard
+msgid "or"
+msgstr "أو"

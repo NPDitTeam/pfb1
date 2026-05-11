@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+##############################################################################
+#
+#    ไฟล์: res_users_views.xml
+#    วัตถุประสงค์: เพิ่มฟิลด์ "สามารถสร้างสินค้าได้" ในหน้าผู้ใช้งาน
+#
+#    ตำแหน่งที่แสดง:
+#    ตั้งค่า > ผู้ใช้และบริษัท > ผู้ใช้งาน > แถบ "สิทธิ์การเข้าใช้งาน"
+#
+#    คำอธิบาย:
+#    - ใช้ xpath เพื่อค้นหาตำแหน่งที่จะเพิ่มฟิลด์
+#    - เพิ่มฟิลด์ภายใน group ใหม่ในแถบ "สิทธิ์การเข้าใช้งาน" (access_rights)
+#    - ไม่กระทบกับ view หรือฟิลด์อื่นๆ ที่มีอยู่
+#
+##############################################################################
+-->
+<odoo>
+    <data>
+        
+        <!-- 
+        ขยาย Form View ของผู้ใช้งาน (res.users)
+        เพื่อเพิ่มฟิลด์ "สามารถสร้างสินค้าได้" ในแถบสิทธิ์การเข้าใช้งาน
+        -->
+        <record id="view_users_form_product_create_permission" model="ir.ui.view">
+            
+            <!-- ชื่อ view (ใช้สำหรับอ้างอิง) -->
+            <field name="name">res.users.form.product.create.permission</field>
+            
+            <!-- โมเดลที่จะแสดง view นี้ -->
+            <field name="model">res.users</field>
+            
+            <!-- 
+            inherit_id: ระบุ view ที่จะสืบทอด
+            base.view_users_form คือ view หลักของหน้าผู้ใช้งาน
+            -->
+            <field name="inherit_id" ref="base.view_users_form"/>
+            
+            <!-- 
+            arch: โครงสร้าง XML ที่จะเพิ่มเข้าไป
+            -->
+            <field name="arch" type="xml">
+                
+                <!--
+                xpath: ใช้ค้นหาตำแหน่งที่จะเพิ่มฟิลด์
+                expr: ค้นหา page ที่มี name="access_rights" (แถบสิทธิ์การเข้าใช้งาน)
+                position="inside": เพิ่มเนื้อหาภายใน element ที่ค้นพบ
+                -->
+                <xpath expr="//page[@name='access_rights']" position="inside">
+                    
+                    <!-- 
+                    group: สร้างกลุ่มใหม่สำหรับแสดงฟิลด์
+                    string: ชื่อหัวข้อของกลุ่ม
+                    -->
+                    <group string="สิทธิ์การสร้างสินค้า">
+                        
+                        <!-- 
+                        แสดงฟิลด์ can_create_product (checkbox)
+                        ฟิลด์นี้ถูกกำหนดไว้ในไฟล์ models/res_users.py
+                        -->
+                        <field name="can_create_product"/>
+                        
+                    </group>
+                    
+                </xpath>
+                
+            </field>
+        </record>
+        
+    </data>
+</odoo>

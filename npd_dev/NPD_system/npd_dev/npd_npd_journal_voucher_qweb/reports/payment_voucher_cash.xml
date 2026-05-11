@@ -1,0 +1,557 @@
+<odoo>
+    <!-- Header -->
+    <template id="external_layout_standard">
+        <div t-attf-class="header o_company_#{company.id}_layout" t-att-style="report_header_style"
+             style="margin-bottom: 0px !important;">
+            <style>
+                table, td, th {
+                border: none !important;
+                font-size: 22px;
+
+                }
+                .table-border{
+                border: 1px solid #000000 !important;
+                border-collapse: collapse;
+                }
+
+                .column140{
+                color: #090909;
+                width:140px;
+                }
+                .column100 {
+                color: #090909;
+                width:100px;
+                }
+                .column260{
+                color: #090909;
+                width:260px;
+                padding-left: 20px;
+                }
+                .column550{
+                width:550px;
+                }
+                .column410{
+                color: #090909;
+                width:475px;
+                }
+                .column130{
+                color: #090909;
+                width:130px;
+                font-size:16px;
+                }
+                .column120 {
+                color: #090909;
+                width:120px;
+                }
+                .column320{
+                width:320px;
+                }
+                .column290 {
+                color: #090909;
+                width:290px;
+                }
+                .column50 {
+                color: #090909;
+                width:50px;
+                }
+                .column60 {
+                color: #090909;
+                width:60px;
+                }
+                .column70 {
+                color: #090909;
+                width:70px;
+                }
+                .column80 {
+                color: #090909;
+                width:80px;
+                }
+                .column420{
+                width:420px;
+                }
+                .column330{
+                width:330px;
+                }
+                .column350{
+                width:350px;
+                }
+                .watermark1 {
+                position: fixed;
+                top:220px;
+                left: 15px;
+                }
+                .column170{
+                color: #090909;
+                width:170px;
+                }
+                .column190{
+                color: #090909;
+                width:190px;
+                }
+                .column180{
+                width:180px;
+                }
+                .column50{
+                width:50px;
+                }
+                .header_text {
+                font-size:24px;
+                }
+
+                .header2 {
+                border-left:2px solid white;
+                }
+
+                .header3 {
+                display: block;
+                width: 80px;
+                border:2px solid black;
+                font-size:24px;
+                }
+            </style>
+            <table class="table table-sm" style="margin-bottom: 0px !important;">
+                <tr>
+                    <td class="text-left column50">
+                        <br/>
+                        <img t-if="company.logo" t-att-src="image_data_uri(company.logo)"
+                             style="max-height: 90px;"
+                             alt="Logo"/>
+                    </td>
+                    <td class="header2 text-left">
+                        <h4>
+                            <br/>
+                            <b>
+                                <t t-esc="o_value['header']"/>
+                                <br/>
+                                <span t-field="company.street"/>
+                                <span t-field="company.street2"/>
+                                <span t-field="company.city"/>
+                                <br/>
+                                <span t-field="company.state_id.name"/>
+                                <span t-field="company.zip"/>
+                            </b>
+                        </h4>
+                    </td>
+                </tr>
+                <tr class="text-center" style="font-size: 40px;">
+                    <td colspan="2">
+                        <strong>
+                            <t t-esc="o_value['header2']"/>
+                        </strong>
+                    </td>
+                </tr>
+            </table>
+
+            <div class="row" style="margin-bottom: 10px !important;">
+                <div class="col-8">
+                    <table class="table table-sm o_main_table">
+                        <tr>
+                            <td class="text-left">
+                                <span>คู่ค้า :</span>
+                                <span style="color: white;">_</span>
+                                <t t-esc="o_value['partner']"/>
+                                <!--                                <span t-field="o.partner_id.name"/>-->
+                                <br/>
+                                <span>คำอธิบาย :</span>
+                                <span style="color: white;">_</span>
+                                <t t-if="o_value['bank_partner']">
+                                    <t t-foreach="o_value['bank_partner']" t-as="line">
+                                        <t t-esc="line.bank_id.name"/>-<t t-esc="line.acc_number"/><br/>
+                                    </t>
+                                </t>
+                                <t t-else="">
+                                    <t t-esc="o_value['ref']"/>
+                                </t>
+                                <!--                                <span t-field="o.partner_id.name"/>-->
+                                <br/>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-4">
+                    <table class="table table-sm o_main_table" style="margin-bottom: 0px !important;"
+                    >
+                        <tr>
+                            <td class="text-left">
+                                <span>เลขที่เอกสาร :</span>
+                                <span style="color: white;">_</span>
+                                <t t-esc="o_value['name']"/>
+                                <!--                                <span t-field="o.name"/>-->
+                                <br/>
+                                <span>วันที่ :</span>
+                                <span style="color: white;">_</span>
+                                <t t-esc="o_value['date']"/>
+                                <!--                                <t t-if="o.invoice_date">-->
+                                <!--                                    <span t-field="o.invoice_date" t-options='{"widget": "date"}'/>-->
+                                <!--                                </t>-->
+                                <br/>
+                                <span>เลขที่สมุดรายวัน :</span>
+                                <span style="color: white;">_</span>
+                                <t t-esc="o_value['name']"/>
+                                <!--                                <span t-field="o.currency_id"/>-->
+                            </td>
+                        </tr>
+
+                    </table>
+                </div>
+            </div>
+
+        </div>
+        <div t-attf-class="article o_report_layout_standard o_company_#{company.id}_layout"
+             t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <t t-raw="0"/>
+        </div>
+        <div t-attf-class="footer  o_company_#{company.id}_layout">
+            <style>
+                table, td, th {
+                border: none !important;
+                }
+                .table-border tr td{
+                border: 1px solid #000000 !important;
+                border-collapse: collapse;
+                }
+                .column70 {
+                width:70px;
+                }
+                .column370 {
+                width:370px;
+                }
+                .column320 {
+                width:320px;
+                }
+                .column120 {
+                width:120px;
+                }
+                .no_border{
+                border-bottom: 2px solid white;
+                }
+                .no_border tr{
+                border-top: 2px solid white;
+                border-bottom: 2px solid white;
+                }
+                .no_border td{
+                border-left: 2px solid white;
+                border-right: 2px solid white;
+                }
+            </style>
+            <table class="last-page table table-sm table-condensed "
+                   style="table-layout: fixed; width: 100%;font-size: 24px">
+                <tr>
+                    <td class="text-center">
+                        <b>___________________________________</b><br/>
+                        <b>(___________________________________)</b><br/>
+                        <b>
+                            ผู้จัดทำ
+                        </b><br/>
+                        <b>
+                            วันที่
+                            _______________________________
+                        </b>
+                    </td>
+                    <td class="text-center">
+                        <b>___________________________________</b><br/>
+                        <b>(___________________________________)</b><br/>
+                        <b>
+                            ผู้ตรวจสอบ
+                        </b><br/>
+                        <b>
+                            วันที่
+                            _______________________________
+                        </b>
+                    </td>
+                </tr>
+            </table>
+            <table class="table table-sm  o_main_table">
+                <tr>
+                    <td class="text-left">
+                    </td>
+                    <td class="text-right">
+                        <div t-if="report_type == 'pdf'" class="text-right" style="vertical-align: bottom;">
+                            หน้าที่:
+                            <span class="page"/>
+                            /
+                            <span class="topage"/>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </template>
+    <template id="external_layout">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+
+        <t t-if="not company">
+            <!-- Multicompany -->
+            <t t-if="company_id">
+                <t t-set="company" t-value="company_id"/>
+            </t>
+            <t t-elif="o and 'company_id' in o">
+                <t t-set="company" t-value="o.company_id.sudo()"/>
+            </t>
+            <t t-else="else">
+                <t t-set="company" t-value="res_company"/>
+            </t>
+        </t>
+
+        <t t-call="npd_npd_journal_voucher_qweb.external_layout_standard">
+            <t t-raw="0"/>
+        </t>
+    </template>
+       <!--    ใบสำคัญรับ(สด)-->
+    <template id="receipt_cash_voucher_pdf">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="npd_npd_journal_voucher_qweb.external_layout">
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <br/>
+                    <div class="container" style="font-size:20px;">
+                        <strong>รายการรับชำระ</strong>
+                        <table width="100%">
+                            <thead align="center">
+                                <tr>
+                                    <th width="15%" style=" border-bottom: 1px solid black;">วันที่
+                                        <br/>
+                                    </th>
+                                    <th width="16%" style=" border-bottom: 1px solid black;">
+                                        เลขที่เอกสาร
+                                    </th>
+                                    <!--                                    <th width="17%" style=" border-bottom: 1px solid black;">-->
+                                    <!--                                        เลขที่เอกสารการตั้งหนี้-->
+                                    <!--                                    </th>-->
+                                    <th width="41%" style=" border-bottom: 1px solid black;">รายละเอียด</th>
+                                    <!--                                    <th width="13%" style=" border-bottom: 1px solid black;">ใบวางบิล</th>-->
+                                    <th width="31%" style=" border-bottom: 1px solid black;">จำนวนเงิน</th>
+                                </tr>
+                            </thead>
+<!--                            <tbody valign="top">-->
+<!--                                <br/>-->
+<!--                                <t t-set="sum_inv" t-value="0"/>-->
+<!--                                <t t-if="o_value['group_inv']">-->
+<!--                                    <t t-foreach="o_value['group_inv']" t-as="line_inv">-->
+<!--                                        <tr>-->
+<!--                                            <td align="center">-->
+<!--                                                <t t-set="year"-->
+<!--                                                   t-value="(int((line_inv.invoice_date).strftime('%Y')))+543"/>-->
+<!--                                                <t t-set="re_date"-->
+<!--                                                   t-value="'%s/%s' %((line_inv.invoice_date).strftime('%d/%m'),year)"/>-->
+<!--                                                <t t-esc="re_date"/>-->
+<!--                                            </td>-->
+<!--                                            <td>6666666666-->
+<!--                                                <t t-esc="line_inv.name"/>-->
+<!--                                            </td>-->
+<!--                                            <td style="display: inline-block;width:500px;">-->
+<!--                                               <t t-esc="line_inv.ref"/>-->
+<!--                                            </td>-->
+<!--                                            &lt;!&ndash;                                            <td width="15%" style="color: white">.</td>&ndash;&gt;-->
+<!--                                            <td align="right">-->
+<!--                                                <t t-set="sum_inv" t-value="sum_inv + line_inv.amount_total"/>-->
+<!--                                                <t t-esc="'{0:,.2f}'.format(line_inv.amount_total)"/>-->
+<!--                                            </td>-->
+
+<!--                                        </tr>-->
+<!--                                    </t>-->
+<!--                                </t>-->
+<!--                                <tr>-->
+<!--                                    <td colspan="3" align="right">รวม</td>-->
+<!--                                    <td align="right"-->
+<!--                                        style="border-bottom: double;border-top: 1px solid black;">-->
+<!--                                        <t t-if="sum_inv != 0">-->
+<!--                                            <t t-esc="'{:,.2f}'.format(sum_inv)"/>-->
+<!--                                        </t>-->
+<!--                                        <t t-else="">-->
+<!--                                            <p>&lt;!&ndash;.&ndash;&gt;</p>-->
+<!--                                        </t>-->
+<!--                                    </td>-->
+<!--                                </tr>-->
+<!--                            </tbody>-->
+                        </table>
+                    </div>
+                    <div class="container" style="font-size:20px;">
+                        <br/>
+                        <strong>รายละเอียดการชำระเงิน / Payment method</strong>
+                        <br/>
+                        [<span style="color: white;">X</span>]<span style="color: white;">X</span><span>เงินสด</span>
+                        <span style="color: white;">XX</span> [<span style="color: white;">X</span>]<span
+                            style="color: white;">X</span><span>เช็ค</span>
+                        <span style="color: white;">XX</span> [<span style="color: white;">X</span>]<span
+                            style="color: white;">X</span><span>เงินโอน</span>
+                        <span style="color: white;">XX</span> [<span style="color: white;">X</span>]<span
+                            style="color: white;">X</span><span>บัตรเครดิต</span>
+                        <br/>
+                   <span>
+                            ธนาคาร ..............................................................เช็คเลขที่..........................................................วันที่ชำระ.....................................ยอดชำระ............................................</span>
+
+                        <!--                        <table width="100%">-->
+                        <!--                            <thead align="left">-->
+                        <!--                                <tr>-->
+                        <!--                                    <th width="31%" style=" border-bottom: 2px solid black;">เลขที่เช็ค</th>-->
+                        <!--                                    <th width="22%" style=" border-bottom: 2px solid black;">ลงวันที่</th>-->
+                        <!--                                    <th width="30%" style=" border-bottom: 2px solid black;">ธนาคาร</th>-->
+                        <!--                                    <th align="right" style=" border-bottom: 2px solid black;">จำนวนเงิน</th>-->
+                        <!--                                </tr>-->
+                        <!--                            </thead>-->
+                        <!--                            <tbody valign="top">-->
+                        <!--                                <t t-set="count" t-value="0"/>-->
+                        <!--                                <t t-foreach="o_value['group_cheque']" t-as="cheque">-->
+                        <!--                                    <tr style=" vertical-align: top;">-->
+
+                        <!--                                        <td align="left">-->
+                        <!--                                            <t t-esc="cheque.name"/>-->
+                        <!--                                        </td>-->
+                        <!--                                        <td align="left">-->
+                        <!--                                            <t t-esc="cheque.date_cheque"/>-->
+                        <!--                                        </td>-->
+                        <!--                                        <td align="left">-->
+                        <!--                                            <t t-esc="cheque.bank_id.name"/>-->
+                        <!--                                        </td>-->
+                        <!--                                        <td align="right">-->
+                        <!--                                            <t t-if="cheque.cheque_total > 0 ">-->
+                        <!--                                                <span t-esc="'{0:,.2f}'.format(cheque.cheque_total)"/>-->
+                        <!--                                            </t>-->
+                        <!--                                            <t t-else="">-->
+                        <!--                                                <br/>-->
+                        <!--                                            </t>-->
+                        <!--                                        </td>-->
+                        <!--                                    </tr>-->
+                        <!--                                </t>-->
+                        <!--                            </tbody>-->
+                        <!--                        </table>-->
+                    </div>
+                    <div class="container" style="font-size:20px;">
+                        <br/>
+                        <strong>ภาษีหัก ณ ที่จ่าย</strong>
+                        <table width="100%">
+                            <thead align="center">
+                                <tr>
+                                    <th width="10%" style=" border-bottom: 1px solid black;">วันที่</th>
+                                    <th width="15%" style=" border-bottom: 1px solid black;padding-left:20px;">
+                                        เลขที่
+                                    </th>
+                                    <th width="35%" style=" border-bottom: 1px solid black;padding-left:10px;">
+                                        รายละเอียด
+                                    </th>
+                                    <th width="10%" style=" border-bottom: 1px solid black;padding-left:10px;">
+                                        ฐานภาษี
+                                    </th>
+                                    <th width="10%" style=" border-bottom: 1px solid black;">ภาษี</th>
+                                </tr>
+                            </thead>
+                            <tbody valign="top">
+                                <t t-set="count" t-value="0"/>
+                                <t t-set="sum_amount_wt" t-value="0"/>
+                                <t t-foreach="o_value['group_wt']" t-as="wt">
+                                    <tr style=" vertical-align: top;">
+
+                                        <td align="center">
+                                            <t t-esc="wt.cert_id.date"/>
+                                        </td>
+
+                                        <td align="center">
+                                            <t t-esc="wt.cert_id.name"/>
+                                        </td>
+
+                                        <td align="left">
+                                            <t t-esc="wt.wt_cert_income_desc"/>
+                                        </td>
+
+                                        <td align="right">
+                                            <t t-esc="'{0:,.2f}'.format(wt.amount)"/>
+                                        </td>
+
+                                        <td align="right">
+                                            <t t-set="sum_amount_wt" t-value="sum_amount_wt + wt.base"/>
+                                            <t t-esc="'{0:,.2f}'.format(wt.base)"/>
+                                        </td>
+
+                                    </tr>
+                                </t>
+                                <tr>
+                                    <t t-if="sum_amount_wt > 0 ">
+                                        <td colspan="4" align="right" style="padding-right:5px;">รวม</td>
+                                        <td align="right"
+                                            style="border-bottom: double;border-top: 1px solid black;">
+                                            <span t-esc="'{0:,.2f}'.format(sum_amount_wt)"/>
+                                        </td>
+                                    </t>
+                                    <t t-else="">
+                                        <br/>
+                                        <td colspan="4" align="right" style="padding-right:5px;">รวม</td>
+                                        <td align="right"
+                                            style="border-bottom: double;border-top: 1px solid black;">
+                                        </td>
+                                    </t>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="container" style="font-size:20px;">
+                        <br/>
+                        <strong>รายการบันทึกบัญชี</strong>
+                        <table width="100%">
+                            <thead align="center">
+                                <tr>
+                                    <th width="10%" align="center" style=" border-bottom: 1px solid black">รหัส</th>
+                                    <th width="35%" align="center"
+                                        style=" border-bottom: 1px solid black;padding-left:5px;">ชื่อบัญชี
+                                    </th>
+                                    <th align="center" width="15%" style=" border-bottom: 1px solid black">งบโครงการ
+                                    </th>
+                                    <th align="center" width="10%" style=" border-bottom: 1px solid black">เดบิต</th>
+                                    <th align="center" width="10%" style=" border-bottom: 1px solid black">เครดิต</th>
+                                </tr>
+                            </thead>
+                            <tbody valign="top">
+                                <t t-set="count_num" t-value="0"/>
+                                <t t-foreach="o_value['line_ids']" t-as="line">
+                                    <tr style=" vertical-align: top; ">
+                                        <td align="center">
+                                            <span t-esc="line_value['account_code']"/>
+                                        </td>
+                                        <td align="left">
+                                            <span t-esc="line_value['name']"/>
+                                        </td>
+                                        <td align="center" style="color: white;">
+                                            0.0
+                                        </td>
+                                        <td align="right">
+                                            <span t-esc="'{0:,.2f}'.format(line_value['debit'])"/>
+                                        </td>
+                                        <td align="right">
+                                            <span t-esc="'{0:,.2f}'.format(line_value['credit'])"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <tr>
+                                    <td colspan="3" align="right" style="padding-right:5px;"></td>
+                                    <td align="right"
+                                        style=" border-bottom: double;border-top: 1px solid black;">
+                                        <span t-esc="'{0:,.2f}'.format(o_value['sum_debit'])"/>
+                                    </td>
+                                    <td align="right"
+                                        style="border-bottom: double;border-top: 1px solid black;">
+                                        <span t-esc="'{0:,.2f}'.format(o_value['sum_credit'])"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <br/>
+                        <br/>
+                        <p>หมายเหตุ :
+                            <span t-esc="o_value['narration']"/>
+                        </p>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+
+</odoo>

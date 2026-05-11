@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- เพิ่มฟิลด์ในหน้า Access Rights -->
+    <record id="view_users_form_inherit_voucher_edit" model="ir.ui.view">
+        <field name="name">res.users.form.inherit.voucher.edit</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='access_rights']" position="inside">
+                <group string="สิทธิ์การแก้ไข Voucher" col="4">
+                    <div class="o_row">
+                        <field name="can_edit_voucher_lines"/>
+                        <label for="can_edit_voucher_lines" string="อนุญาตให้แก้ไข คืนเงินประกันค่าเช่า"/>
+                    </div>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,174 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* sh_base_whatsapp_integration
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-12-08 12:54+0000\n"
+"PO-Revision-Date: 2021-12-08 12:54+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: sh_base_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:sh_base_whatsapp_integration.sh_base_whatsapp_integration_send_whatsapp_message_form
+#: model_terms:ir.ui.view,arch_db:sh_base_whatsapp_integration.sh_base_whatsapp_integration_send_whatsapp_number_form
+msgid ""
+"<strong>Note:</strong><br/>\n"
+"                            1) Use *text* to make text bold.<br/>\n"
+"                            2) Use _text_ to make text italic.<br/>\n"
+"                            3) Use %0A after/before Text if you want to add blank line.<br/>\n"
+"                            4) use %20 after/before any Text if you want to give space.<br/>\n"
+"                            5) go to users =&gt; preferences to add signature."
+msgstr ""
+"<strong>筆記:</strong><br/>\n"
+"                            1) 使用* text *使文本粗體。<br/>\n"
+"                            2) 使用_text_製作文本斜體。<br/>\n"
+"                            3) 如果要添加空行，則在文本之後/之前使用％0a。<br/>\n"
+"                            4) 如果您想給出空間，則在任何文本之後使用％20。<br/>\n"
+"                            5) 轉到用戶=＆gt;偏好添加簽名。"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_message_wizard__attachment_ids
+msgid "Attachments"
+msgstr "附件"
+
+#. module: sh_base_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:sh_base_whatsapp_integration.sh_base_whatsapp_integration_send_whatsapp_message_form
+#: model_terms:ir.ui.view,arch_db:sh_base_whatsapp_integration.sh_base_whatsapp_integration_send_whatsapp_number_form
+msgid "Cancel"
+msgstr "取消"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_message_wizard__create_uid
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_number_wizard__create_uid
+msgid "Created by"
+msgstr "由...製作"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_message_wizard__create_date
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_number_wizard__create_date
+msgid "Created on"
+msgstr "創建於"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_mail_compose_message__display_name
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_res_users__display_name
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_message_wizard__display_name
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_number_wizard__display_name
+msgid "Display Name"
+msgstr "顯示名稱"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model,name:sh_base_whatsapp_integration.model_mail_compose_message
+msgid "Email composition wizard"
+msgstr "電子郵件組成巫師"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_mail_compose_message__id
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_res_users__id
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_message_wizard__id
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_number_wizard__id
+msgid "ID"
+msgstr "ID"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_mail_compose_message__is_wp
+msgid "Is whatsapp ?"
+msgstr "是whatsapp？"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_mail_compose_message____last_update
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_res_users____last_update
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_message_wizard____last_update
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_number_wizard____last_update
+msgid "Last Modified on"
+msgstr "最後修改了"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_message_wizard__write_uid
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_number_wizard__write_uid
+msgid "Last Updated by"
+msgstr "最後更新"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_message_wizard__write_date
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_number_wizard__write_date
+msgid "Last Updated on"
+msgstr "上次更新了"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_message_wizard__message
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_number_wizard__message
+msgid "Message"
+msgstr "信息"
+
+#. module: sh_base_whatsapp_integration
+#: code:addons/sh_base_whatsapp_integration/wizard/send_whatsapp_message.py:0
+#, python-format
+msgid "Partner Mobile Number Not Exist"
+msgstr "夥伴手機號碼不存在"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_message_wizard__partner_ids
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_number_wizard__partner_ids
+msgid "Recipients"
+msgstr "收件人"
+
+#. module: sh_base_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:sh_base_whatsapp_integration.sh_base_whatsapp_integration_send_whatsapp_message_form
+#: model_terms:ir.ui.view,arch_db:sh_base_whatsapp_integration.sh_base_whatsapp_integration_send_whatsapp_number_form
+msgid "Send"
+msgstr "發送"
+
+#. module: sh_base_whatsapp_integration
+#: model_terms:ir.ui.view,arch_db:sh_base_whatsapp_integration.sh_email_compose_form_mass_mailing
+msgid "Send By Whatsapp"
+msgstr "發送whatsapp."
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.ui.menu,name:sh_base_whatsapp_integration.menu_subwhatsapp_number
+#: model:ir.ui.menu,name:sh_base_whatsapp_integration.menu_whatsapp_number
+#: model:ir.ui.menu,name:sh_base_whatsapp_integration.submenu_whatsapp_number
+msgid "Send Whatsapp"
+msgstr "發送whatsapp."
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.actions.act_window,name:sh_base_whatsapp_integration.sh_base_whatsapp_integration_send_whatsapp_message_action
+#: model_terms:ir.ui.view,arch_db:sh_base_whatsapp_integration.sh_base_whatsapp_integration_send_whatsapp_message_form
+#: model_terms:ir.ui.view,arch_db:sh_base_whatsapp_integration.sh_whatsapp_integration_partner_form
+msgid "Send Whatsapp Message"
+msgstr "發送whatsapp消息"
+
+#. module: sh_base_whatsapp_integration
+#: model:res.groups,name:sh_base_whatsapp_integration.group_send_whatsapp_quick
+msgid "Send Whatsapp Quick"
+msgstr "快速發送whatsapp."
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model,name:sh_base_whatsapp_integration.model_sh_base_send_whatsapp_message_wizard
+#: model:ir.model,name:sh_base_whatsapp_integration.model_sh_base_send_whatsapp_number_wizard
+msgid "Send whatsapp message wizard"
+msgstr "發送whatsapp消息嚮導"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_res_users__sign
+msgid "Signature"
+msgstr "簽名"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.model,name:sh_base_whatsapp_integration.model_res_users
+msgid "Users"
+msgstr "用戶"
+
+#. module: sh_base_whatsapp_integration
+#: model:ir.actions.act_window,name:sh_base_whatsapp_integration.sh_base_whatsapp_integration_send_whatsapp_number_action
+#: model:ir.model.fields,field_description:sh_base_whatsapp_integration.field_sh_base_send_whatsapp_number_wizard__whatsapp_mobile
+#: model_terms:ir.ui.view,arch_db:sh_base_whatsapp_integration.sh_base_whatsapp_integration_send_whatsapp_number_form
+msgid "Whatsapp Number"
+msgstr "Whatsapp號碼"

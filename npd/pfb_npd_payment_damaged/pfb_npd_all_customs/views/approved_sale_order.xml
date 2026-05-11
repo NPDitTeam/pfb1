@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- Inherit Sale Order Form -->
+<record id="view_order_form_inherit" model="ir.ui.view">
+    <field name="name">view.order.form.inherit</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.view_order_form" />
+    <field name="arch" type="xml">
+        <xpath expr="/form/sheet/div[@class='oe_title']" position="before">
+            <widget name="web_ribbon" title="Approved" bg_color="bg-success" attrs="{'invisible': [('state_sale', '!=', 'approved')]}"/>
+            <widget name="web_ribbon" title="Reject" bg_color="bg-warning" attrs="{'invisible': [('state_sale', '!=', 'reject')]}"/>
+            <widget name="web_ribbon" title="Waiting To Approve" bg_color="bg-info" attrs="{'invisible': [('state_sale', '!=', 'waiting_to_approve')]}"/>
+        </xpath>
+    </field>
+</record>
+
+</odoo>

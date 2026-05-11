@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="inherit_view_account_asset_view_form" model="ir.ui.view">
+        <field name="name">account.asset.form</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset_management.account_asset_view_form"/>
+        <field name="arch" type="xml">
+            <field name="code" position="replace">
+                <label for="code" />
+                <div>
+                    <field name="code" style="width:250px"/>
+                    <button
+                            name="account_asset_sequence"
+                            string="RUN"
+                            type="object"
+                            class="btn-secondary"
+                    />
+                </div>
+            </field>
+        </field>
+    </record>
+
+</odoo>

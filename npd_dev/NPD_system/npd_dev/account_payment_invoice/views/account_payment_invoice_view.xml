@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="account_payment_invoice_inherit_invoice" model="ir.ui.view">
+        <field name="name">account.payment.invoice.view.form.inherit</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+             <xpath expr="//field[@name='currency_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="options">{'always_reload': True}</attribute>
+                <attribute name="context">{'search_default_customer':1, 'show_address': 1}</attribute>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="after">
+		<field name="search_invoice_name" />
+                <field name="is_multi_currency" invisible="1"/>
+                <!--                <field name="is_payment_multi" attrs="{'readonly': ['|',('state','=','posted'),('is_multi_currency','=',True)]}" />-->
+                <field name="is_payment_multi" attrs="{'readonly': [('state','=','posted')]}" />
+                  <field name="currency_id" string="Payment Currency" options="{'no_create': True}"
+                                               groups="base.group_multi_currency"
+                                                attrs="{'readonly': [('state','=','posted')]}"
+                                               />
+
+                <field name="payment_method_one_id"
+                       attrs="{'invisible': [('is_payment_multi','=',True)],'required':[('is_payment_multi','=',False)],'readonly': [('state','=','posted')]}" options="{'no_quick_create':True,'no_create_edit':True,'no_open': True,}"/>
+
+                <field name="voucher_source_id"
+                       readonly="1" invisible="1"/>
+
+                <field name="cheque_id"
+                       domain="[('partner_id','=', partner_id),('state','in',['draft','assigned'])]"
+                       attrs="{'invisible': ['|',('type','!=','cheque'),('is_payment_multi','!=',False)],'required':[('type','=','cheque'),('is_payment_multi','=',False)]}"
+                        context="{'default_cheque_type': payment_type,'default_payment_method_id': payment_method_one_id, 'default_journal_id': journal_id }"
+                />
+                <field name="type" invisible="1"/>
+
+                <field name="payment_account_id" invisible="1"/>
+                <field name="available_partner_bank_ids" invisible="1"/>
+                <field name="cash_status"
+                       readonly="1"
+                       decoration-success="cash_status == 'returned'"/>
+
+		<field name="overpaid_refund_status"
+                       readonly="1"
+                       decoration-success="overpaid_refund_status == 'overpaid_refund'"/>
+                <field name="wtax_refund_status"
+                       readonly="1"
+                       decoration-success="wtax_refund_status == 'wtax_refund'"/>
+
+		<field name="rental_difference_status"
+                       readonly="1"
+                       decoration-success="rental_difference_status == 'rental_difference'"/>
+
+		<field name="cash_invoice_id"
+                       readonly="1" invisible="1"/>
+            </xpath>
+
+            <xpath expr="//field[@name='payment_type']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='partner_type']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//label[@for='amount']" position="attributes">
+           <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='amount']" position="attributes">
+                  <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='company_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='is_internal_transfer']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='destination_account_id']" position="attributes">
+              <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='partner_bank_id']" position="attributes">
+                <attribute name="attrs">{'invisible': [('is_payment_multi','=',True)],'readonly': [('state','=','posted')]}</attribute>
+            </xpath>
+            <xpath expr="//field[@name='date']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='ref']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="required">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='journal_id']" position="before">
+                <field name="date"/>
+            </xpath>
+            <xpath expr="//field[@name='move_id']" position="after">
+                <field name="ref"/>
+            </xpath>
+
+            <xpath expr="/form/sheet/group"  position="inside">
+                <group colspan="4">
+                <notebook>
+                    <page string="Invoice">
+                        <field name="invoice_ids" attrs="{'readonly': [('state','=','posted')]}">
+                            <tree editable="bottom" string="Invoice" create="0" delete="1">
+
+                                <field name="invoice_id" readonly="True" force_save="1"/>
+                                <field name="name" readonly="True" force_save="1"/>
+                                <field name="invoice_date" readonly="True" force_save="1"/>
+                                <field name="threshold_date" readonly="True" force_save="1"/>
+                                <field name="currency_id" readonly="True" force_save="1" groups="base.group_multi_currency" options="{'no_open': True,}"/>
+                                <field name="amount_total" readonly="True" force_save="1"/>
+                                <field name="amount_due" readonly="True" force_save="1"/>
+                                <field name="invoice_currency_total" invisible="1"/>
+                                <field name="paid_currency_total" invisible="1"/>
+                                <field name="paid_total" />
+                                <field name="state" readonly="1" force_save="1" widget="badge" decoration-success="state == 'posted'" decoration-info="state == 'draft'" decoration-danger="state == 'cancel'" />
+                                <field name="payment_state" widget="badge" decoration-success="payment_state == 'paid'" decoration-info="payment_state == 'not_paid'" decoration-danger="payment_state == 'reversed'" decoration-warning="payment_state == 'in_payment'" />
+                                <field name="paid" invisible="0"/>
+                             </tree>
+                        </field>
+                        <group>
+                            <group col="6" class="mt-2 mt-md-0" string="Payment Information" attrs="{'invisible': [('is_payment_multi','!=',True)]}">
+                                <field name="paid_ids"
+                                       nolabel="1" mode="tree" context="{'default_total': paid_amount - amount - wht_amount}" attrs="{'invisible': [('is_payment_multi','!=',True)],'readonly': [('state','=','posted')]}">
+                                    <tree editable="bottom" string="Payment" create="1" delete="1">
+                                        <field name="payment_method_id" options="{'no_quick_create':True,'no_create_edit':True,'no_open': True,}"/>
+                                        <field name="bank_account_id"  attrs="{'invisible': [('type','not in', ['cheque','bank'])],'required': [('type','=', 'cheque')]}" />
+                                        <field name="ref" />
+                                        <field name="total" />
+                                        <field name="type" invisible="True"/>
+                                         <field name="cheque_id" attrs="{'invisible': [('type','!=', 'cheque')],'required': [('type','=', 'cheque')]}"
+                                                domain="[('partner_id','=', parent.partner_id),('state','in',['draft','assigned'])]"
+                                                context="{'default_cheque_type': parent.payment_type,'default_payment_method_id': payment_method_id, 'default_journal_id': parent.journal_id, 'default_bank_partner_id': bank_account_id}"/>
+                                        <field name="is_write_off"/>
+                                         <field name="analytic_account_id" options="{'no_quick_create':True,'no_create_edit':True}"/>
+                                          <field name="analytic_tag_ids" string="Tag Analytic" options="{'no_quick_create':True,'no_create_edit':True}" widget="many2many_tags"/>
+                                    </tree>
+                                </field>
+                            </group>
+                            <group class="oe_subtotal_footer oe_right" colspan="2">
+                                <field name="paid_amount" string="Invoice Amount" />
+                                <field name="wht_base_amount" invisible="1"/>
+                                <field name="wht_amount"/>
+                                <field name="write_off_amount"/>
+                                <field name="total_amount" />
+                                <field name="amount" string="Payment Amount" readonly="1" force_save="1" invisible="1"/>
+                                <field name="payment_amount" string="Payment Amount"/>
+                                <field name="amount_currency" invisible="1"/>
+                                    <!-- <div class="oe_subtotal_footer_separator oe_inline o_td_label">
+                                        <label for="payment_amount" />
+                                    </div>
+
+                                    <field name="payment_amount" class="oe_subtotal_footer_separator" nolabel="1" widget='monetary' options="{'currency_field': 'currency_id'}"/> -->
+
+                            </group>
+                        </group>
+                    </page>
+                    <page string="Withholding Tax" >
+                        <field name="wt_cert_ids"
+                               attrs="{'readonly': [('state','=','posted')]}"
+                                 context="{'default_supplier_partner_id': partner_id}"
+                        >
+                            <tree string="WHT Line" >
+                                <field name="income_tax_form" />
+                                <field name="name" />
+                                <field name="date" />
+                                <field name="supplier_partner_id" />
+                                <field name="state" />
+                                <field name="base_amount" />
+                                <field name="tax_amount" />
+                            </tree>
+                        </field>
+                    </page>
+                </notebook>
+                </group>
+            </xpath>
+        </field>
+    </record>
+        <record id="view_account_payment_form" model="ir.ui.view">
+        <field name="name">account.payment.view.form.inherit</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="l10n_th_tax_invoice.view_account_payment_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='tax_invoice_move_id']" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </xpath>
+            <xpath expr="//button[@name='clear_tax_cash_basis']" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </xpath>
+
+        </field>
+        </record>
+
+        <record id="view_move_form_payment" model="ir.ui.view">
+        <field name="name">account.move.form.payment.register.button</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+
+
+              <xpath expr="//field[@name='invoice_origin']" position="after">
+                <field name="payment_id" force_save="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 🔒 จำกัดวันที่ ±1 วัน ถ้า user ไม่มีสิทธิ์ (can_edit_date=False) -->
+    <!-- ถ้า user มีสิทธิ์ (can_edit_date=True) → แก้วันที่ได้อิสระไม่จำกัด -->
+<record id="view_account_payment_form_lock_date" model="ir.ui.view">
+    <field name="name">account.payment.form.lock.date</field>
+    <field name="model">account.payment</field>
+    <field name="inherit_id" ref="account.view_account_payment_form"/>
+    <field name="arch" type="xml">
+
+        <!-- ✅ ซ่อนฟิลด์ที่ใช้ในการตรวจสอบ -->
+        <field name="date" position="after">
+            <field name="can_edit_date" invisible="1"/>
+            <field name="min_allowed_date" invisible="1"/>
+            <field name="max_allowed_date" invisible="1"/>
+        </field>
+    </field>
+</record>
+
+</odoo>

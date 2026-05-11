@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ซ่อนฟิลด์และเปลี่ยนชื่อใน Sale Order Form -->
+    <record id="view_order_form_hide_fields" model="ir.ui.view">
+        <field name="name">sale.order.form.hide.fields</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">999</field>
+        <field name="arch" type="xml">
+            <!-- ซ่อน Delivery Block Reason -->
+            <xpath expr="//field[@name='delivery_block_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <!-- ซ่อน ประเภทการรับชำระหนี้ -->
+            <xpath expr="//field[@name='debt_payment_type']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <!-- ซ่อน Ignore Exceptions -->
+            <xpath expr="//field[@name='ignore_exception']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <!-- ซ่อน Discount Applies to -->
+            <xpath expr="//field[@name='discount_type']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <!-- ซ่อน Sale Type (npd_so_type) -->
+<!--            <xpath expr="//field[@name='npd_so_type']" position="attributes">-->
+<!--                <attribute name="invisible">1</attribute>-->
+<!--            </xpath>-->
+            <!-- เปลี่ยนชื่อ Delivery Date เป็น วันที่จัดส่ง (sale.order) -->
+            <xpath expr="//group//field[@name='commitment_date']" position="attributes">
+                <attribute name="string">วันที่จัดส่ง</attribute>
+            </xpath>
+            
+            <!-- เปลี่ยน label ของ Delivery Date -->
+            <xpath expr="//label[@for='commitment_date']" position="attributes">
+                <attribute name="string">วันที่จัดส่ง</attribute>
+            </xpath>
+
+            <!-- ===== แก้ไขฟิลด์ใน Sale Order Line ===== -->
+            
+            <!-- เปลี่ยนชื่อ Day of Rent เป็น จํานวนวันที่เช่า -->
+            <xpath expr="//field[@name='order_line']/tree//field[@name='pfb_date_of_rent']" position="attributes">
+                <attribute name="string">จํานวนวันที่เช่า</attribute>
+            </xpath>
+
+            <!-- เปลี่ยนชื่อ Quantity Rent เป็น จํานวนสินค้า -->
+            <xpath expr="//field[@name='order_line']/tree//field[@name='pfb_quantity']" position="attributes">
+                <attribute name="string">จํานวนสินค้า</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='order_line']/tree//field[@name='product_uom_qty']" position="attributes">
+                <attribute name="string">จํานวนสินค้ารวม</attribute>
+            </xpath>
+
+            <!-- ซ่อนฟิลด์ จํานวน (product_uom_qty) -->
+<!--            <xpath expr="//field[@name='order_line']/tree//field[@name='product_uom_qty']" position="attributes">-->
+<!--                <attribute name="invisible">1</attribute>-->
+<!--            </xpath>-->
+
+            <!-- เปลี่ยนชื่อ Insurance เป็น ค่าประกัน -->
+            <xpath expr="//field[@name='order_line']/tree//field[@name='pfb_insurance_price']" position="attributes">
+                <attribute name="string">ค่าประกัน</attribute>
+            </xpath>
+
+            <!-- เปลี่ยนชื่อ Secondary Qty เป็น น้ําหนักต่อหน่วย -->
+            <xpath expr="//field[@name='order_line']/tree//field[@name='second_uom_qty']" position="attributes">
+                <attribute name="string">น้ําหนักต่อหน่วย</attribute>
+            </xpath>
+
+            <!-- ซ่อนฟิลด์ Secondary UOM -->
+            <xpath expr="//field[@name='order_line']/tree//field[@name='second_uom_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- เปลี่ยนชื่อ Discount Method เป็น ประเภทการลดราคา -->
+            <xpath expr="//field[@name='order_line']/tree//field[@name='discount_method']" position="attributes">
+                <attribute name="string">ประเภทการลดราคา</attribute>
+            </xpath>
+
+            <!-- ซ่อนฟิลด์ หีบห่อ (product_packaging) -->
+            <xpath expr="//field[@name='order_line']/tree//field[@name='product_packaging']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- เปลี่ยนชื่อ Discount Amount เป็น ยอดส่วนลด -->
+            <xpath expr="//field[@name='order_line']/tree//field[@name='discount_amount']" position="attributes">
+                <attribute name="string">ยอดส่วนลด</attribute>
+            </xpath>
+
+            <!-- เปลี่ยนชื่อ Delivery Date (line) เป็น วันที่จัดส่งสินค้า -->
+            <xpath expr="//field[@name='order_line']/tree//field[@name='commitment_date']" position="attributes">
+                <attribute name="string">วันที่จัดส่งสินค้า</attribute>
+            </xpath>
+
+            <!-- ซ่อนฟิลด์ Second Price -->
+            <xpath expr="//field[@name='order_line']/tree//field[@name='second_price']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- เปลี่ยนชื่อ Subtotal without Discount เป็น ยอดหลังหักส่วนลด -->
+            <xpath expr="//field[@name='order_line']/tree//field[@name='price_subtotal_without_discount']" position="attributes">
+                <attribute name="string">ยอดหลังหักส่วนลด</attribute>
+            </xpath>
+
+            <!-- เปลี่ยนชื่อ ประเภทส่วนลด -->
+            <xpath expr="//field[@name='order_line']/tree//field[@name='discount_type_selection']" position="attributes">
+                <attribute name="string">ประเภทส่วนลด</attribute>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

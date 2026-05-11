@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- แสดงสิทธิ์ในหน้าตั้งค่าผู้ใช้ -->
+    <record id="view_users_form_voucher_cancel_access" model="ir.ui.view">
+        <field name="name">res.users.form.voucher.cancel.access</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='access_rights']" position="inside">
+                <group string="สิทธิ์คืนเงินประกันค่าเช่า" name="voucher_cancel_access">
+                    <field name="allow_cancel_voucher"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

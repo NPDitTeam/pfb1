@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_create,perm_write,perm_unlink
+access_res_users_edit_insurance_premium,res_users_edit_insurance_premium,base.model_res_users,,1,0,1,0

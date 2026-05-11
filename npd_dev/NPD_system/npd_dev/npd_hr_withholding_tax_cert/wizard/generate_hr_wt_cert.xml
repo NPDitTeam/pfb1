@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Wizard Form View -->
+    <record id="view_generate_hr_wt_cert_form" model="ir.ui.view">
+        <field name="name">generate.hr.wt.cert.form</field>
+        <field name="model">generate.hr.wt.cert</field>
+        <field name="arch" type="xml">
+            <form string="สร้าง WT Certificates ทั้งหมด">
+                <group>
+                    <p class="text-muted" colspan="2">
+                        ระบบจะค้นหาพนักงานทุกคนที่มีข้อมูลเงินเดือนในปีที่เลือก
+                        แล้วสร้าง/อัพเดท WT Certificate ให้อัตโนมัติ
+                        โดยรวมเงินสุทธิทั้งปีเป็น Base Amount
+                    </p>
+                    <field name="year"/>
+                </group>
+                <footer>
+                    <button name="action_generate_all"
+                            string="สร้างทั้งหมด"
+                            type="object"
+                            class="btn-primary"/>
+                    <button string="ยกเลิก" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open wizard -->
+    <record id="action_generate_hr_wt_cert_wizard" model="ir.actions.act_window">
+        <field name="name">สร้าง WT Certificates ทั้งหมด</field>
+        <field name="res_model">generate.hr.wt.cert</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_generate_hr_wt_cert_form"/>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

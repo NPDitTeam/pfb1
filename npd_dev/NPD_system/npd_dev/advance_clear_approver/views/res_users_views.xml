@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extend User Form View to add approver checkbox in Access Rights tab -->
+    <record id="view_users_form_approver" model="ir.ui.view">
+        <field name="name">res.users.form.approver</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='access_rights']" position="inside">
+                <group string="การตั้งค่าผู้ตรวจสอบ Advance Clear">
+                    <field name="is_advance_clear_approver" 
+                           widget="boolean_toggle"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

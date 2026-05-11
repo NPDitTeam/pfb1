@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_users_form_rental_extension" model="ir.ui.view">
+            <field name="name">res.users.form.rental.extension</field>
+            <field name="model">res.users</field>
+            <field name="inherit_id" ref="base.view_users_form"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//page[@name='access_rights']" position="inside">
+                    <group name="rental_permissions" string="สิทธิ์การใช้งาน Rental &amp; Stock" groups="base.group_system">
+                        <group>
+                            <field name="can_edit_force_date"
+                                   widget="boolean_toggle"
+                                   string="แก้ไขวันที่คืนใน Stock Picking"/>
+                        </group>
+                    </group>
+                </xpath>
+
+            </field>
+        </record>
+
+    </data>
+</odoo>

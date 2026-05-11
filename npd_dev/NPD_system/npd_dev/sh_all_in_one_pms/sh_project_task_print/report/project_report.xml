@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="sh_project_report_doc">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-foreach="docs" t-as="p">
+                    <div class="page" style="border: 2px solid #000;">
+                        <div class="row">
+                            <div class="col-12" style="text-align: center; line-height: 2;">
+                                <span style="font-size: 24px; font-weight: bold;" t-field="p.name" />
+                            </div>
+                        </div>
+                        <hr style="border-top: 2px solid #000; margin: 0px;" />
+                        <div class="row" style="margins: 0px; padding: 0px;">
+                            <div class="col-12">
+                                <table class="table table-borderless" style="margin: 0rem;">
+                                    <tbody>
+                                        <tr style="text-align: center;">
+                                            <td>
+                                                <span style="font-size: 18px; font-weight: bold;">Project Manager:</span>
+                                            </td>
+                                            <td style="text-align: left;">
+                                                <span style="font-size: 18px;" t-field="p.user_id" />
+                                            </td>
+                                            <td>
+                                                <span style="font-size: 18px; font-weight: bold;">Customer:</span>
+                                            </td>
+                                            <td>
+                                                <span style="font-size: 18px;" t-field="p.partner_id" />
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <table class="table table-borderless" style="margin: 0rem;">
+                                    <thead>
+                                        <tr>
+                                            <td colspan="8" style="text-align: center; background-color: aliceblue; font-size: 22px; font-weight: bold;">
+                                                <span t-field="p.label_tasks" />
+                                            </td>
+                                        </tr>
+                                    </thead>
+                                    <thead>
+                                        <tr style="vertical-align: top;">
+                                            <th>Task Name</th>
+                                            <th>Planned Hours</th>
+                                            <th>Spent Hours</th>
+                                            <th>Remaining Hours</th>
+                                            <th>Assign To</th>
+                                            <th>Assign Date</th>
+                                            <th>Deadline</th>
+                                            <th>Stage</th>
+                                        </tr>
+                                    </thead>
+                                    <t t-if="p.task_ids">
+                                        <t t-foreach="p.task_ids.filtered(lambda t: not t.parent_id)" t-as="task">
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <p style="font-size: 18px;" t-field="task.name" />
+                                                    </td>
+                                                    <td>
+                                                        <p style="font-size: 18px;" t-field="task.planned_hours" />
+                                                    </td>
+                                                    <td>
+                                                        <p style="font-size: 18px;" t-field="task.effective_hours" />
+                                                    </td>
+                                                    <td>
+                                                        <p style="font-size: 18px;" t-field="task.remaining_hours" />
+                                                    </td>
+                                                    <td>
+                                                        <p style="font-size: 18px;" t-field="task.user_id" />
+                                                    </td>
+                                                    <td>
+                                                        <p style="font-size: 18px;" t-field="task.date_assign" />
+                                                    </td>
+                                                    <td>
+                                                        <p style="font-size: 18px;" t-field="task.date_deadline" />
+                                                    </td>
+                                                    <td>
+                                                        <p style="font-size: 18px;" t-field="task.stage_id" />
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </t>
+                                    </t>
+                                </table>
+                            </div>
+                        </div>
+                        <hr style="border-top: 2px solid #000; margin: 0px;" groups="sh_all_in_one_pms.group_project_custom_checklist" />
+                        <br />
+
+                        <div class="row" groups="sh_all_in_one_pms.group_project_custom_checklist">
+                            <div class="col-12">
+                                <table class="table table-borderless" style="margin: 0rem;">
+                                    <thead>
+                                        <tr>
+                                            <td colspan="8" style="text-align: center; background-color: aliceblue; font-size: 22px; font-weight: bold;">
+                                                <span>Checklist</span>
+                                            </td>
+                                        </tr>
+                                        <tr style="text-align: center;">
+                                            <td>
+                                                <span style="font-size: 18px; font-weight: bold;">Completed Checklist :</span>
+                                            </td>
+                                            <td style="text-align: left;">
+                                                <span style="font-size: 18px;" t-field="p.custom_checklist" />
+                                            </td>
+                                        </tr>
+                                        <tr style="vertical-align: top;">
+                                            <th>Name</th>
+                                            <th>Description</th>
+                                            <th>Date</th>
+                                            <th>State</th>
+                                        </tr>
+                                    </thead>
+                                    <t t-if="p.custom_checklist_ids">
+                                        <t t-foreach="p.custom_checklist_ids" t-as="project">
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <p style="font-size: 18px;" t-field="project.name" />
+                                                    </td>
+                                                    <td>
+                                                        <p style="font-size: 18px;" t-field="project.description" />
+                                                    </td>
+                                                    <td>
+                                                        <p style="font-size: 18px;" t-field="project.updated_date" />
+                                                    </td>
+                                                    <td>
+                                                        <p style="font-size: 18px;" t-field="project.state" />
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </t>
+                                    </t>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="sh_project_report" model="ir.actions.report">
+        <field name="name">Project Detail</field>
+        <field name="model">project.project</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">sh_all_in_one_pms.sh_project_report_doc</field>
+        <field name="report_file">sh_all_in_one_pms.sh_project_report_doc</field>
+        <field name="binding_model_id" ref="model_project_project" />
+        <field name="binding_type">report</field>
+        <field name="print_report_name">'Projec Detail'</field>
+    </record>
+</odoo>

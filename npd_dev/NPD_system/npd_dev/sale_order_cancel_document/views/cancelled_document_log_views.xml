@@ -1,0 +1,160 @@
+<odoo>
+    <!-- ============================================= -->
+    <!-- Tree View - Cancelled Document Log -->
+    <!-- ============================================= -->
+    <record id="view_cancelled_document_log_tree" model="ir.ui.view">
+        <field name="name">cancelled.document.log.tree</field>
+        <field name="model">cancelled.document.log</field>
+        <field name="arch" type="xml">
+            <tree string="รายการเอกสารที่ยกเลิก" create="false" edit="false" delete="false">
+                <field name="cancelled_date" string="วันที่ยกเลิก"/>
+                <field name="sale_order_name" string="เลขใบเช่า"/>
+                <field name="document_type" string="ประเภทเอกสาร"/>
+                <field name="document_name" string="เลขเอกสาร"/>
+                <field name="partner_id" string="ลูกค้า"/>
+                <field name="reason" string="เหตุผล"/>
+                <field name="cancelled_by" string="ผู้ยกเลิก"/>
+                <field name="branch_id" string="สาขา"/>
+                <field name="is_restored" string="กู้คืนแล้ว" widget="boolean"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ============================================= -->
+    <!-- Form View - Cancelled Document Log -->
+    <!-- ============================================= -->
+    <record id="view_cancelled_document_log_form" model="ir.ui.view">
+        <field name="name">cancelled.document.log.form</field>
+        <field name="model">cancelled.document.log</field>
+        <field name="arch" type="xml">
+            <form string="รายละเอียดเอกสารที่ยกเลิก" create="false" edit="false" delete="false">
+                <header>
+                    <button name="action_restore_to_draft"
+                            type="object"
+                            string="กู้คืนเป็นฉบับร่าง"
+                            icon="fa-undo"
+                            class="btn-primary"
+                            confirm="คุณแน่ใจหรือไม่ที่จะกู้คืนเอกสารนี้กลับเป็นฉบับร่าง?"
+                            attrs="{'invisible': [('is_restored', '=', True)]}"/>
+                    <field name="is_restored" widget="statusbar"
+                           statusbar_visible="False,True"
+                           attrs="{'invisible': [('is_restored', '=', False)]}"/>
+                </header>
+                <div class="alert alert-success" role="alert"
+                     attrs="{'invisible': [('is_restored', '=', False)]}">
+                    <strong>เอกสารนี้ถูกกู้คืนเป็นฉบับร่างแล้ว</strong>
+                    โดย <field name="restored_by" readonly="1" class="oe_inline"/>
+                    เมื่อ <field name="restored_date" readonly="1" class="oe_inline"/>
+                </div>
+                <sheet>
+                    <group>
+                        <group string="ข้อมูลเอกสาร">
+                            <field name="sale_order_id"/>
+                            <field name="sale_order_name"/>
+                            <field name="document_type"/>
+                            <field name="document_name"/>
+                            <field name="partner_id"/>
+                        </group>
+                        <group string="ข้อมูลการยกเลิก">
+                            <field name="cancelled_date"/>
+                            <field name="cancelled_by"/>
+                            <field name="branch_id"/>
+                        </group>
+                    </group>
+                    <group string="เหตุผลในการยกเลิก">
+                        <field name="reason" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================= -->
+    <!-- Search View -->
+    <!-- ============================================= -->
+    <record id="view_cancelled_document_log_search" model="ir.ui.view">
+        <field name="name">cancelled.document.log.search</field>
+        <field name="model">cancelled.document.log</field>
+        <field name="arch" type="xml">
+            <search string="ค้นหาเอกสารที่ยกเลิก">
+                <field name="sale_order_name" string="เลขใบเช่า"/>
+                <field name="document_name" string="เลขเอกสาร"/>
+                <field name="partner_id" string="ลูกค้า"/>
+                <field name="cancelled_by" string="ผู้ยกเลิก"/>
+                <field name="reason" string="เหตุผล"/>
+                <separator/>
+                <filter string="วันนี้" name="filter_today"
+                        domain="[('cancelled_date', '>=', (context_today()).strftime('%%Y-%%m-%%d 00:00:00')),
+                                 ('cancelled_date', '&lt;=', (context_today()).strftime('%%Y-%%m-%%d 23:59:59'))]"/>
+                <filter string="สัปดาห์นี้" name="filter_this_week"
+                        domain="[('cancelled_date', '>=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%%Y-%%m-%%d 00:00:00'))]"/>
+                <filter string="เดือนนี้" name="filter_this_month"
+                        domain="[('cancelled_date', '>=', context_today().strftime('%%Y-%%m-01 00:00:00'))]"/>
+                <separator/>
+                <group expand="0" string="จัดกลุ่มตาม">
+                    <filter string="ประเภทเอกสาร" name="group_doc_type" context="{'group_by': 'document_type'}"/>
+                    <filter string="สาขา" name="group_branch" context="{'group_by': 'branch_id'}"/>
+                    <filter string="ผู้ยกเลิก" name="group_user" context="{'group_by': 'cancelled_by'}"/>
+                    <filter string="วันที่ยกเลิก" name="group_date" context="{'group_by': 'cancelled_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================= -->
+    <!-- Action -->
+    <!-- ============================================= -->
+    <record id="action_cancelled_document_log" model="ir.actions.act_window">
+        <field name="name">เอกสารที่ยกเลิก</field>
+        <field name="res_model">cancelled.document.log</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_cancelled_document_log_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ยังไม่มีเอกสารที่ถูกยกเลิก
+            </p>
+        </field>
+    </record>
+
+    <!-- ============================================= -->
+    <!-- Record Rule - แสดงเฉพาะเอกสารตามสาขาของ User -->
+    <!-- ============================================= -->
+    <record id="cancelled_document_log_branch_rule" model="ir.rule">
+        <field name="name">Cancelled Document Log: Branch Filter</field>
+        <field name="model_id" ref="model_cancelled_document_log"/>
+        <field name="domain_force">[
+            '|',
+            ('branch_id', '=', False),
+            ('branch_id', '=', user.branch_id.id)
+        ]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- ============================================= -->
+    <!-- Server Action - กู้คืนหลายรายการ (เมนูการดำเนินการ) -->
+    <!-- ============================================= -->
+    <record id="action_server_restore_multi" model="ir.actions.server">
+        <field name="name">กู้คืนเป็นฉบับร่าง</field>
+        <field name="model_id" ref="model_cancelled_document_log"/>
+        <field name="binding_model_id" ref="model_cancelled_document_log"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="state">code</field>
+        <field name="code">
+action = records.action_restore_multi()
+        </field>
+    </record>
+
+    <!-- ============================================= -->
+    <!-- Menu - อยู่ภายใต้เมนู Sales -->
+    <!-- ============================================= -->
+    <menuitem id="menu_cancelled_document_log"
+              name="เอกสารที่ยกเลิก"
+              parent="sale.sale_menu_root"
+              action="action_cancelled_document_log"
+              sequence="99"/>
+
+</odoo>

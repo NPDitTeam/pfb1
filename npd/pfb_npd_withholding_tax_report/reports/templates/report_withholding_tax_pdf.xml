@@ -1,0 +1,1123 @@
+<odoo>
+    <!--                   Customs                     -->
+    <template id="pnd_qweb">
+        <t t-call="web.html_container">
+            <t t-if="income_tax_form.income_tax_form == 'pnd3'">
+                <t t-call="pfb_npd_withholding_tax_report.pnd3_report_view2"/>
+                <t t-call="pfb_npd_withholding_tax_report.pnd3_report_view"/>
+            </t>
+            <t t-if="income_tax_form.income_tax_form == 'pnd53'">
+                <t t-call="pfb_npd_withholding_tax_report.pnd53_report_view2"/>
+                <t t-call="pfb_npd_withholding_tax_report.pnd53_report_view"/>
+            </t>
+        </t>
+    </template>
+
+    <template id="pnd3_report_view">
+        <t t-call="web.html_container">
+        <!-- Initialize Counters -->
+        <t t-set="count_for" t-value="len(docs)"/>
+        <t t-set="record_per_page" t-value="6"/>
+        <t t-set="page_amount" t-value="(count_for + record_per_page - 1) // record_per_page"/>
+        <t t-set="current_page" t-value="0"/>
+        <t t-set="sum_base2" t-value="0"/>
+        <t t-set="sum_amount2" t-value="0"/>
+
+        <!-- Sum Totals -->
+        <t t-foreach="docs" t-as="co">
+            <t t-set="sum_base2" t-value="sum_base2 + co.base"/>
+            <t t-set="sum_amount2" t-value="sum_amount2 + co.amount"/>
+        </t>
+
+        <!-- Generate Pages -->
+        <t t-foreach="range(int(page_amount))" t-as="rpa">
+            <t t-set="current_page" t-value="current_page + 1"/>
+            <div class="article">
+                <style>
+                    .o_without_tax_from {
+                        font-family: 'THSarabunNew';
+                        font-size: 20px;
+                    }
+                    .o_without_tax_from .rotated {
+                        display: block;
+                        filter: flipv fliph;
+                        transform: rotate(90deg);
+                        position: fixed;
+                    }
+                    .address1_pnd3 { top: 0.5cm; right: 4.1cm; }
+                    .address2_pnd3 { top: 4.8cm; right: 6.4cm; }
+                    .dynamic-font {
+                        font-family: 'Kinnari' !important;
+                        font-size: 16px;
+                        max-width: 300px; /* Adjust based on the maximum width of the container */
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                    .dynamic-font.adjusted-font {
+                        font-size: 10px;
+                    }
+                </style>
+                <div class="row">
+                    <div class="page_number" style="position: absolute; z-index: 120; right: 80px; top: 95px;">
+                        <t t-esc="'%s/%s' % (current_page, int(page_amount))"/>
+                    </div>
+                    <t t-set="i" t-value="rpa * record_per_page"/>
+                    <t t-set="j" t-value="min(i + record_per_page, count_for)"/>
+                    <t t-set="item_count" t-value="0"/>
+                    <t t-set="sum_base" t-value="0"/>
+                    <t t-set="sum_amount" t-value="0"/>
+
+                    <!-- Display Records for Current Page -->
+                    <t t-foreach="docs[i:j]" t-as="cc">
+                        <div style="position:relative; z-index: 100;">
+                            <table t-attf-style="position:absolute; left: 65px; top: {{224 + (item_count*86)}}px; font-family: 'THSarabunNew'">
+                                <tbody>
+                                    <tr>
+                                        <p style="position: fixed; right: 465px; top: 64px;"><span t-esc="company.vat"/></p>
+                                    </tr>
+                                    <tr>
+                                        <td style="position:absolute;  top: 20px;font-family: 'Kinnari' !important;font-size: 16px;">
+                                            <t t-set="item_count" t-value="item_count + 1"/>
+                                            <t t-esc="i + item_count"/>
+                                        </td>
+                                        <td style="position:absolute;  left: 70px;font-family: 'Kinnari' !important;font-size: 16px;">
+                                            <t t-esc="cc.cert_id.supplier_partner_id.vat"/>
+                                        </td>
+                                        <td width="1000px" style="position:absolute;  left: 60px; top: 5px;font-family: 'Kinnari' !important;font-size: 16px;">
+                                            <br/>
+                                            <t t-set="name" t-value="str(cc.cert_id.supplier_partner_id.name).split(' ', 1)"/>
+                                            <t t-set="type_name" t-value="name[0]"/>
+                                            <t t-set="first_name" t-value="name[1].split(' ', 1)[0]"/>
+                                            <t t-esc="type_name"/>
+                                            <t t-esc="first_name"/>
+                                            <t t-set="name" t-value="str(cc.cert_id.supplier_partner_id.name).split(' ', 2)"/>
+                                            <t t-set="last_name" t-value="name[2]"/>
+                                            <span style="margin-left: 200px;">
+                                                <t t-esc="last_name"/>
+                                            </span>
+                                            <br/>
+<!--                                            <t t-if="cc.cert_id.supplier_partner_id.street">-->
+<!--                                              <t t-set="full_address" t-value="cc.cert_id.supplier_partner_id.street + ' ' + cc.cert_id.supplier_partner_id.street2 + ' ' + cc.cert_id.supplier_partner_id.city + ' ' + cc.cert_id.supplier_partner_id.zip"/>-->
+<!--                                             <t t-if="full_address">-->
+<!--                                                <span t-attf-class="dynamic-font #{'adjusted-font' if len(full_address) > 100 else ''}">-->
+<!--                                                  <t t-esc="full_address"/>-->
+<!--                                                  <t t-esc="len(full_address)"/>-->
+<!--                                                </span>-->
+<!--                                             </t>-->
+<!--                                            </t>-->
+                                            <t t-if="cc.cert_id.supplier_partner_id.street">
+                                              <t t-set="full_address" t-value="cc.cert_id.supplier_partner_id.street + ' ' + cc.cert_id.supplier_partner_id.street2 + ' ' + cc.cert_id.supplier_partner_id.city + ' ' + cc.cert_id.supplier_partner_id.zip"/>
+                                              <t t-if="full_address">
+                                                <t t-set="final_address" t-value="full_address[:-1] if full_address.isdigit() else full_address"/>
+                                                <span t-attf-class="dynamic-font #{'adjusted-font' if len(final_address) > 100 else ''}">
+                                                  <t t-esc="final_address"/>
+                                                </span>
+                                              </t>
+                                            </t>
+
+                                        </td>
+                                        <td style="position:absolute;  left: 420px;font-family: 'Kinnari' !important;font-size: 16px;">
+                                            <span t-field="cc.cert_id.supplier_partner_id.branch"/>
+                                        </td>
+                                        <td style="position:absolute;  top: 20px; left: 580px;font-family: 'Kinnari' !important;font-size: 16px;">
+                                            <t t-set="year" t-value="(int((cc.cert_id.date).strftime('%Y')))+543"/>
+                                            <t t-set="date_wt" t-value="'%s/%s' %((cc.cert_id.date).strftime('%d/%m'),year)"/>
+                                            <t t-esc="date_wt"/>
+                                        </td>
+                                        <td width="180px" style="position:absolute;  top: 10px; left: 680px; font-family: 'Kinnari' !important; font-size: 14px; word-wrap: break-word;">
+                                            <t t-if="cc.wt_cert_income_desc == '6 อื่นๆ (ระบุ)'">
+                                                <span t-field="cc.comment"/>
+                                            </t>
+                                            <t t-else="">
+                                                <span t-field="cc.wt_cert_income_type"/>
+                                            </t>
+                                        </td>
+                                        <td style="position:absolute;  top: 20px; left: 865px;font-family: 'Kinnari' !important;font-size: 14px;">
+                                            <t t-esc="'{0:,.0f}'.format(cc.wt_percent)"/><span>%</span>
+                                        </td>
+                                        <td style="position:absolute;  top: 20px; left: 940px;font-family: 'Kinnari' !important;font-size: 16px;">
+                                            <t t-esc="'{0:,.2f}'.format(cc.base)"/>
+                                            <t t-set="sum_base" t-value="sum_base + cc.base"/>
+                                        </td>
+                                        <td style="position:absolute;  top: 20px; left: 1090px;font-family: 'Kinnari' !important;font-size: 16px;">
+                                            <t t-esc="'{0:,.2f}'.format(cc.amount)"/>
+                                            <t t-set="sum_amount" t-value="sum_amount + cc.amount"/>
+                                        </td>
+                                        <td style="position:absolute;  top: 20px; left: 1180px;font-family: 'Kinnari' !important;font-size: 16px;">
+                                            <p>1</p>
+                                        </td>
+                                    </tr>
+                                    <!--Display Totals for the Page -->
+                                    <t t-if="(item_count == record_per_page) and (current_page != page_amount)">
+                                        <tr>
+                                            <td style="position:absolute; top: 93px; left: 945px;font-family: 'Kinnari' !important;font-size: 16px;">
+                                                <span t-esc="'{0:,.2f}'.format(sum_base)"/>
+                                            </td>
+                                            <td style="position:absolute; top: 93px; left: 1080px;font-family: 'Kinnari' !important;font-size: 16px;">
+                                                <span t-esc="'{0:,.2f}'.format(sum_amount)"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+
+                                     <!--Display Overall Totals on Last Page -->
+                                    <t t-elif="current_page == page_amount">
+                                        <tr>
+                                            <td style="position:fixed;  top: 745px; left: 990px;font-family: 'Kinnari' !important;font-size: 16px;">
+                                                <span t-esc="'{0:,.2f}'.format(sum_base2)"/>
+                                            </td>
+                                            <td style="position:fixed;  top: 745px; left: 1120px;font-family: 'Kinnari' !important;font-size: 16px;">
+                                                <span t-esc="'{0:,.2f}'.format(sum_amount2)"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </t>
+
+
+                   <img src="/pfb_std_withholding_tax_report/static/img/pnd3.png" style="position:absolute; z-index: -9999; width: 100%;"/>
+                    </div>
+                </div>
+                <t t-set="i" t-value="i + record_per_page"/>
+            </t>
+        </t>
+    </template>
+
+    <template id="pnd3_report_view2">
+        <t t-call="web.html_container">
+            <div class="article">
+                <style>
+            .o_without_tax_from {
+                font-family: 'THSarabunNew';
+                font-size: 18px;
+            }
+
+            .o_without_tax_from div {
+                display: block;
+                filter: flipv fliph;
+                -webkit-transform: rotate(90deg);
+                -moz-transform: rotate(90deg);
+                transform: rotate(90deg);
+                position: fixed;
+            }
+
+            .address1_pnd3 {
+                width: 20px;
+                white-space: nowrap;
+                font-size: 20px;
+                right: 6.4cm;
+                top: 1.5 cm;
+            }
+
+            .address2_pnd3 {
+                top: 4.8cm;
+                right: 6.4cm;
+            }
+
+            .address3_pnd3 {
+                top: 12.3cm;
+                right: 5.1cm;
+            }
+
+            .address4_pnd3 {
+                top: 4.6cm;
+                right: 9cm;
+            }
+
+            .address5_pnd3 {
+                top: 9.9cm;
+                right: 1.5cm;
+            }
+
+            .address6_pnd3 {
+                top: 3cm;
+                right: 7.8cm;
+            }
+
+            .address7_pnd3 {
+                top: 9.4cm;
+                right: 7.2cm;
+            }
+
+            .address8_pnd3 {
+                top: 3.2cm;
+                right: 8cm;
+            }
+
+            .address9_pnd3 {
+                top: 9.3cm;
+                right: 8.1cm;
+            }
+
+            .address10_pnd3 {
+                top: 4.2cm;
+                right: 7.8cm;
+            }
+
+            .address11_pnd3 {
+                top: 11cm;
+                right: 7.5cm;
+            }
+
+            .address12_pnd3 {
+                top: 21.5cm;
+                right: 14.3cm;
+            }
+
+            .address13_pnd3 {
+                top: 21.5cm;
+                right: 14.9cm;
+            }
+
+            .address14_pnd3, .address15_pnd3, .address17_pnd3 {
+                width: 10%;
+                text-align: right;
+            }
+
+            .address14_pnd3 {
+                top: 19.4cm;
+                right: 19cm;
+            }
+
+            .address15_pnd3 {
+                top: 19.4cm;
+                right: 19.8cm;
+            }
+
+            .address16_pnd3 {
+                top: 11.2cm;
+                right: 14.2cm;
+            }
+
+            .address161_pnd3 {
+                top: 14.7cm;
+                right: 12.9cm;
+            }
+
+            .address17_pnd3 {
+                top: 19.4cm;
+                right: 21.2cm;
+            }
+
+            .mount0_pnd3 {
+                top: 21.9cm;
+                right: 5.1cm;
+            }
+
+            .mount1_pnd3 {
+                top: 13.8cm;
+                right: 6.6cm;
+            }
+
+            .mount2_pnd3 {
+                top: 13.8cm;
+                right: 7.5cm;
+            }
+
+            .mount3_pnd3 {
+                top: 13.8cm;
+                right: 8.5cm;
+            }
+
+            .mount4_pnd3 {
+                top: 16.1cm;
+                right: 6.6cm;
+            }
+
+            .mount5_pnd3 {
+                top: 16.1cm;
+                right: 7.5cm;
+            }
+
+            .mount6_pnd3 {
+                top: 16.1cm;
+                right: 8.5cm;
+            }
+
+            .mount7_pnd3 {
+                top: 18.5cm;
+                right: 6.6cm;
+            }
+
+            .mount8_pnd3 {
+                top: 18.5cm;
+                right: 7.5cm;
+            }
+
+            .mount9_pnd3 {
+                top: 18.5cm;
+                right: 8.5cm;
+            }
+
+            .mount10_pnd3 {
+                top: 20.8cm;
+                right: 6.6cm;
+            }
+
+            .mount11_pnd3 {
+                top: 20.8cm;
+                right: 7.5cm;
+            }
+
+            .mount12_pnd3 {
+                top: 20.8cm;
+                right: 8.5cm;
+            }
+
+            .checked {
+                font-size: 30px;
+            }
+        </style>
+                <img src="/pfb_std_withholding_tax_report/static/img/pnd32.png"
+                     style="position:absolute; z-index: -9999; width: 100%;"/>
+                <div class="o_without_tax_from" style="position: absolute; z-index: 120; right: 90px; top: 90px;">
+                    <!--box 1-->
+                    <div class="address1_pnd3">
+                        <t t-esc="company.name"/>
+                    </div>
+                    <div class="address2_pnd3">
+<!--                        ลาดพร้าวฮิลล์-->
+                    </div>
+                    <div class="address3_pnd3">
+                        <span>0</span>
+                        <span style="padding-left:6px;">0</span>
+                        <span style="padding-left:6px;">0</span>
+                        <span style="padding-left:6px;">0</span>
+                        <span style="padding-left:6px;">0</span>
+                    </div>
+                    <div class="address4_pnd3">
+                        <span><t t-esc="str(company.zip)[0:1]"/></span>
+                        <span style="padding-left:4px;"><t t-esc="str(company.zip)[1:2]"/></span>
+                        <span style="padding-left:4px;"><t t-esc="str(company.zip)[2:3]"/></span>
+                        <span style="padding-left:4px;"><t t-esc="str(company.zip)[3:4]"/></span>
+                        <span style="padding-left:4px;"><t t-esc="str(company.zip)[4:5]"/></span>
+                    </div>
+                    <div class="address5_pnd3">
+                        <span><t t-esc="str(company.vat)[0:1]"/></span>
+                        <span style="padding-left:14px;"><t t-esc="str(company.vat)[1:2]"/></span>
+                        <span style="padding-left:7px;"><t t-esc="str(company.vat)[2:3]"/></span>
+                        <span style="padding-left:7px;"><t t-esc="str(company.vat)[3:4]"/></span>
+                        <span style="padding-left:7px;"><t t-esc="str(company.vat)[4:5]"/></span>
+                        <span style="padding-left:14px;"><t t-esc="str(company.vat)[5:6]"/></span>
+                        <span style="padding-left:7px;"><t t-esc="str(company.vat)[6:7]"/></span>
+                        <span style="padding-left:7px;"><t t-esc="str(company.vat)[7:8]"/></span>
+                        <span style="padding-left:7px;"><t t-esc="str(company.vat)[8:9]"/></span>
+                        <span style="padding-left:7px;"><t t-esc="str(company.vat)[9:10]"/></span>
+                        <span style="padding-left:14px;"><t t-esc="str(company.vat)[10:11]"/></span>
+                        <span style="padding-left:7px;"><t t-esc="str(company.vat)[11:12]"/></span>
+                        <span style="padding-left:14px;"><t t-esc="str(company.vat)[12:13]"/></span>
+                    </div>
+                    <div class="address6_pnd3">
+<!--                        110/1-->
+                    </div>
+                    <div class="address7_pnd3">
+<!--                        ลาดพร้าว 26-->
+                    </div>
+                    <div class="address8_pnd3">
+<!--                        ลาดพร้าว-->
+                    </div>
+                    <div class="address9_pnd3">
+<!--                        จอมพล-->
+                    </div>
+                    <div class="address10_pnd3">
+                        <t t-esc="company.city"/>
+                    </div>
+                    <div class="address11_pnd3">
+                        <t t-esc="company.state_id.name"/>
+                    </div>
+                    <!-- end box 1-->
+                    <t t-set="count" t-value="0"/>
+                    <t t-set="mount" t-value=""/>
+                    <t t-foreach="docs" t-as="doc">
+                        <t t-set="count" t-value="count+1"/>
+                        <t t-set="mount" t-value="str(doc.cert_id.date)"/>
+                    </t>
+                    <!--Box 3-->
+                    <div class="address13_pnd3">
+                        <t t-set="record_per_page" t-value="6"/>
+                        <t t-set="page_amount" t-value="1"/>
+                        <t t-if="count > record_per_page">
+                            <t t-set="page_amount" t-value="count / record_per_page"/>
+                            <t t-if="page_amount > int(page_amount)">
+                                <t t-set="page_amount" t-value="page_amount + 1"/>
+                            </t>
+                        </t>
+                        <t t-esc="int(page_amount)"/>
+                    </div>
+                    <div class="address12_pnd3">
+                        <t t-set="count_partner" t-value=""/>
+                        <t t-set="array" t-value="[]"/>
+                        <t t-set="count_partner2" t-value="0"/>
+                        <t t-foreach="docs" t-as="doc">
+                            <!--                                 <t t-if="doc.supplier not in array">-->
+                            <t t-esc="array.append(doc.cert_id.supplier_partner_id)"/>
+                            <!--                                 </t>-->
+                        </t>
+                        <t t-esc="len(array)"/>
+                    </div>
+                    <!-- end box 3-->
+                    <!--Box 4-->
+                    <!-- end box 4-->
+                    <t t-set="sum_base2" t-value="0"/>
+                    <t t-set="sum_amount2" t-value="0"/>
+                    <t t-foreach="docs" t-as="doc">
+                        <t t-set="sum_base2" t-value="sum_base2+doc.base"/>
+                        <t t-set="sum_amount2" t-value="sum_amount2+doc.amount"/>
+                    </t>
+                    <div class="address14_pnd3">
+                        <t t-esc="'{0:,.2f}'.format(sum_base2)"/>
+                    </div>
+                    <div class="address15_pnd3">
+                        <t t-esc="'{0:,.2f}'.format(sum_amount2)"/>
+                    </div>
+                    <div class="address16_pnd3"><span style="font-size: 30px">&#10004;</span></div>
+                    <div class="address161_pnd3"><span style="font-size: 30px">&#10004;</span></div>
+                    <div class="address17_pnd3">
+                        <t t-esc="'{0:,.2f}'.format(sum_amount2)"/>
+                    </div>
+                    <div class="mount0_pnd3">
+                        <t t-if="mount[0:4]">
+                            <span><t t-esc="int(mount[0:4]) + 543" /></span>
+                        </t>
+                    </div>
+
+                    <t t-if="mount[5:7] == '01'">
+                        <div class="mount1_pnd3">
+                            <p>&#10004;</p>
+                        </div>
+                    </t>
+                    <t t-if="mount[5:7] == '02'">
+                        <div class="mount2_pnd3">
+                            <p>&#10004;</p>
+                        </div>
+                    </t>
+                    <t t-if="mount[5:7] == '03'">
+                        <div class="mount3_pnd3">
+                            <p>&#10004;</p>
+                        </div>
+                    </t>
+                    <t t-if="mount[5:7] == '04'">
+                        <div class="mount4_pnd3">
+                            <p>&#10004;</p>
+                        </div>
+                    </t>
+                    <t t-if="mount[5:7] == '05'">
+                        <div class="mount5_pnd3">
+                            <p>&#10004;</p>
+                        </div>
+                    </t>
+                    <t t-if="mount[5:7] == '06'">
+                        <div class="mount6_pnd3">
+                            <p>&#10004;</p>
+                        </div>
+                    </t>
+                    <t t-if="mount[5:7] == '07'">
+                        <div class="mount7_pnd3">
+                            <p>&#10004;</p>
+                        </div>
+                    </t>
+                    <t t-if="mount[5:7] == '08'">
+                        <div class="mount8_pnd3">
+                            <p>&#10004;</p>
+                        </div>
+                    </t>
+                    <t t-if="mount[5:7] == '09'">
+                        <div class="mount9_pnd3">
+                            <p>&#10004;</p>
+                        </div>
+                    </t>
+                    <t t-if="mount[5:7] == '10'">
+                        <div class="mount10_pnd3">
+                            <p>&#10004;</p>
+                        </div>
+                    </t>
+                    <t t-if="mount[5:7] == '11'">
+                        <div class="mount11_pnd3">
+                            <p>&#10004;</p>
+                        </div>
+                    </t>
+                    <t t-if="mount[5:7] == '12'">
+                        <div class="mount12_pnd3">
+                            <p>&#10004;</p>
+                        </div>
+                    </t>
+
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="pnd53_report_view">
+        <t t-call="web.html_container">
+            <t t-set="count_for" t-value="0"/>
+            <t t-foreach="docs" t-as="doc">
+                <t t-set="count_for" t-value="count_for+1"/>
+            </t>
+            <t t-set="i" t-value="0"/>
+            <t t-set="record_per_page" t-value="5"/>
+            <t t-set="page_amount" t-value="1"/>
+            <t t-if="count_for &gt; record_per_page">
+                <t t-set="page_amount" t-value="count_for / record_per_page"/>
+                <t t-if="page_amount &gt; int(page_amount)">
+                    <t t-set="page_amount" t-value="page_amount + 1"/>
+                </t>
+            </t>
+            <t t-set="current_page" t-value="0"/>
+            <t t-set="count_number" t-value="0"/>
+            <t t-set="sum_base" t-value="0"/>
+            <t t-set="sum_amount" t-value="0"/>
+            <t t-set="sum_base2" t-value="0"/>
+            <t t-set="sum_amount2" t-value="0"/>
+            <t t-foreach="docs" t-as="co">
+                <t t-set="sum_base2" t-value="sum_base2+co.base"/>
+                <t t-set="sum_amount2" t-value="sum_amount2+co.amount"/>
+            </t>
+            <t t-foreach="range(int(page_amount))" t-as="rpa">
+                <t t-set="current_page" t-value="current_page + 1"/>
+                <div class="article" style="font-family: 'Kinnari';">
+                    <style>
+                .o_without_tax_from {
+                    font-family: 'THSarabunNew';
+                    font-size: 20px;
+                }
+                .o_without_tax_from .address1_pnd53,
+                .o_without_tax_from .address2_pnd53,
+                .o_without_tax_from .address3_pnd53,
+                .o_without_tax_from .address4_pnd53,
+                .o_without_tax_from .address5_pnd53,
+                .o_without_tax_from .address6_pnd53,
+                .o_without_tax_from .address7_pnd53,
+                .o_without_tax_from .address8_pnd53,
+                .o_without_tax_from .address9_pnd53,
+                .o_without_tax_from .address10_pnd53,
+                .o_without_tax_from .address11_pnd53,
+                .o_without_tax_from .address12_pnd53,
+                .o_without_tax_from .address13_pnd53,
+                .o_without_tax_from .address14_pnd53,
+                .o_without_tax_from .address15_pnd53,
+                .o_without_tax_from .address16_pnd53,
+                .o_without_tax_from .address161_pnd53,
+                .o_without_tax_from .address17_pnd53,
+                .o_without_tax_from .mount1_pnd53,
+                .o_without_tax_from .mount2_pnd53,
+                .o_without_tax_from .mount3_pnd53,
+                .o_without_tax_from .mount4_pnd53,
+                .o_without_tax_from .mount5_pnd53,
+                .o_without_tax_from .mount6_pnd53,
+                .o_without_tax_from .mount7_pnd53,
+                .o_without_tax_from .mount8_pnd53,
+                .o_without_tax_from .mount9_pnd53,
+                .o_without_tax_from .mount10_pnd53,
+                .o_without_tax_from .mount11_pnd53,
+                .o_without_tax_from .mount12_pnd53,
+                .o_without_tax_from .year_pnd53 {
+                    display: block;
+                    filter: flipv fliph;
+                    -webkit-transform: rotate(90deg);
+                    -moz-transform: rotate(90deg);
+                    transform: rotate(90deg);
+                    position: fixed;
+                }
+                .o_without_tax_from .address1_pnd53 { top: 0.5cm; right: 6.5cm; }
+                .o_without_tax_from .address2_pnd53 { top: 5cm; right: 6.5cm; }
+                .o_without_tax_from .address3_pnd53 { top: 12cm; right: 5.3cm; }
+                .o_without_tax_from .address4_pnd53 { top: 4.7cm; right: 8.9cm; }
+                .o_without_tax_from .address5_pnd53 { top: 9.7cm; right: 1.72cm; }
+                .o_without_tax_from .address6_pnd53 { top: 3cm; right: 7.9cm; }
+                .o_without_tax_from .address7_pnd53 { top: 9.2cm; right: 7.4cm; }
+                .o_without_tax_from .address8_pnd53 { top: 3.2cm; right: 8cm; }
+                .o_without_tax_from .address9_pnd53 { top: 9cm; right: 8.2cm; }
+                .o_without_tax_from .address10_pnd53 { top: 3.8cm; right: 8.8cm; }
+                .o_without_tax_from .address11_pnd53 { top: 10cm; right: 8.2cm; }
+                .o_without_tax_from .address12_pnd53 { top: 20.5cm; right: 13.6cm; }
+                .o_without_tax_from .address13_pnd53 { top: 20.5cm; right: 14.15cm; }
+                .o_without_tax_from .address14_pnd53 { top: 18cm; right: 18.2cm; }
+                .o_without_tax_from .address15_pnd53 { top: 18cm; right: 18.9cm; }
+                .o_without_tax_from .address16_pnd53 { top: 10.8cm; right: 13.5cm; }
+                .o_without_tax_from .address161_pnd53 { top: 14.9cm; right: 7.1cm; }
+                .o_without_tax_from .address17_pnd53 { top: 18cm; right: 20.5cm; }
+                .o_without_tax_from .mount1_pnd53 { top: 1.5cm; right: 11.7cm; }
+                .o_without_tax_from .mount2_pnd53 { top: 1.5cm; right: 12.3cm; }
+                .o_without_tax_from .mount3_pnd53 { top: 1.5cm; right: 12.8cm; }
+                .o_without_tax_from .mount4_pnd53 { top: 4.5cm; right: 11.7cm; }
+                .o_without_tax_from .mount5_pnd53 { top: 4.5cm; right: 12.3cm; }
+                .o_without_tax_from .mount6_pnd53 { top: 4.5cm; right: 12.8cm; }
+                .o_without_tax_from .mount7_pnd53 { top: 7.6cm; right: 11.7cm; }
+                .o_without_tax_from .mount8_pnd53 { top: 7.6cm; right: 12.3cm; }
+                .o_without_tax_from .mount9_pnd53 { top: 7.6cm; right: 12.8cm; }
+                .o_without_tax_from .mount10_pnd53 { top: 10.5cm; right: 11.7cm; }
+                .o_without_tax_from .year_pnd53 { top: 12.5cm; right: 10.7cm; }
+                .o_without_tax_from .mount11_pnd53 { top: 10.5cm; right: 12.3cm; }
+                .o_without_tax_from .mount12_pnd53 { top: 10.5cm; right: 12.8cm; }
+
+                .dynamic-font {
+                        font-family: 'Kinnari' !important;
+                        font-size: 16px;
+                        max-width: 300px; /* Adjust based on the maximum width of the container */
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                    .dynamic-font.adjusted-font {
+                        font-size: 10px;
+                    }
+            </style>
+                    <img src="/pfb_std_withholding_tax_report/static/img/PND53.png" style="position:absolute; z-index: -9999; width: 100%;"/>
+                    <div class="row">
+                        <div class="page_number" style="position: absolute; z-index: 120; right: 75px; top: 85px;">
+                            <t t-esc="current_page"/>
+                            <span style="padding-left: 65px;"/>
+                            <t t-esc="int(page_amount)"/>
+                        </div>
+                        <t t-set="j" t-value="i + record_per_page"/>
+                        <t t-set="item_count" t-value="0"/>
+
+                        <t t-foreach="docs[i:j]" t-as="cc">
+                            <div style="position:relative; z-index: 100;">
+                                <table t-attf-style="position:absolute; left: 65px; top: {{210 + (item_count*110)}}px; font-family: 'THSarabunNew'">
+                                    <tbody>
+                                        <tr>
+                                            <p style="position: fixed; right: 450px; top: 52px;"><span t-esc="company.vat"/></p>
+                                        </tr>
+                                        <tr>
+                                            <td style="position:absolute;  top: 40px; font-family: 'Kinnari' !important;font-size: 16px;">
+                                                <t t-set="count_number" t-value="count_number+1"/>
+                                                <span t-esc="count_number"/>
+                                                <t t-set="item_count" t-value="item_count+1"/>
+                                            </td>
+                                            <td style="position:absolute;  left: 100px;font-family: 'Kinnari' !important;">
+                                                <t t-esc="cc.cert_id.supplier_partner_id.vat"/>
+                                            </td>
+                                            <td width="1000px" style="position:absolute;  left: 70px; top: 10px;font-family: 'Kinnari' !important;font-size: 14px;">
+                                                <br/>
+                                                <span t-field="cc.cert_id.supplier_partner_id.name"/><br/>
+                                                <span t-field="cc.cert_id.supplier_partner_id.street"/><br/>
+                                                <span t-field="cc.cert_id.supplier_partner_id.street2"/>
+                                                <span t-field="cc.cert_id.supplier_partner_id.city"/>
+                                                <span t-field="cc.cert_id.supplier_partner_id.zip"/><br/>
+                                            </td>
+                                            <td style="position:absolute;  left: 480px; font-family: 'Kinnari' !important;font-size: 14px;">
+                                                <span t-field="cc.cert_id.supplier_partner_id.branch"/>
+                                            </td>
+                                            <td style="position:absolute;  top: 40px; left: 605px; font-family: 'Kinnari' !important;font-size: 14px;">
+                                                <t t-set="year" t-value="(int((cc.cert_id.date).strftime('%Y')))+543"/>
+                                                <t t-set="date_wt" t-value="'%s/%s' %((cc.cert_id.date).strftime('%d/%m'),year)"/>
+                                                <t t-esc="date_wt"/>
+                                            </td>
+                                            <td width="180px" style="position:absolute;  top: 40px; left: 705px; font-family: 'Kinnari' !important; font-size: 14px; word-wrap: break-word;">
+                                                <t t-if="cc.wt_cert_income_desc == '6 อื่นๆ (ระบุ)'">
+                                                    <span t-field="cc.comment"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <span t-field="cc.wt_cert_income_type"/>
+                                                </t>
+                                            </td>
+                                            <td style="position:absolute;  top: 40px; left: 890px; font-family: 'Kinnari' !important;font-size: 14px;">
+                                                <span t-field="cc.wt_percent"/><span>%</span>
+                                            </td>
+                                            <td style="position:absolute;  top: 40px; left: 950px; font-family: 'Kinnari' !important;font-size: 14px;">
+                                                <t t-esc="'{0:,.2f}'.format(cc.base)"/>
+                                                <t t-set="sum_base" t-value="sum_base+cc.base"/>
+                                            </td>
+                                            <td style="position:absolute;  top: 40px; left: 1100px; font-family: 'Kinnari' !important;font-size: 14px;">
+                                                <t t-esc="'{0:,.2f}'.format(cc.amount)"/>
+                                                <t t-set="sum_amount" t-value="sum_amount+cc.amount"/>
+                                            </td>
+                                            <td style="position:absolute;  top: 40px; left: 1210px; font-family: 'Kinnari' !important;font-size: 14px;">
+                                                <p>1</p>
+                                                <!--                                              <t t-if="cc.wt_cert_income_type">-->
+                                                <!--                                                  <span t-esc="cc.wt_cert_income_type[:1]"/>-->
+                                                <!--                                              </t>-->
+                                            </td>
+                                        </tr>
+                                        <t t-if="(item_count+1 &gt; 5) and len(docs[i:j]) == 5">
+                                            <tr>
+                                                <td style="position:absolute;  top: 113px; left: 950px;font-family: 'Kinnari' !important;">
+                                                    <span t-esc="'{0:,.2f}'.format(sum_base)"/>
+                                                </td>
+                                                <td style="position:absolute;  top: 113px; left: 1090px;font-family: 'Kinnari' !important;">
+                                                    <span t-esc="'{0:,.2f}'.format(sum_amount)"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <t t-if=" len(docs[i:j]) &lt; 5 and ((item_count) == len(docs[i:j]))">
+                                            <tr>
+                                                <td style="position:fixed;  top: 750px; left: 990px;font-family: 'Kinnari' !important;">
+                                                    <span t-esc="'{0:,.2f}'.format(sum_base2)"/>
+                                                    <t t-set="sum_base2" t-value="0"/>
+                                                </td>
+                                                <td style="position:fixed;  top: 750px; left: 1150px;font-family: 'Kinnari' !important;">
+                                                    <span t-esc="'{0:,.2f}'.format(sum_amount2)"/>
+                                                    <t t-set="sum_amount2" t-value="0"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <!-- END amount_total -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+                <t t-set="i" t-value="i + record_per_page"/>
+            </t>
+        </t>
+    </template>
+    <template id="pnd53_report_view2">
+        <t t-call="web.html_container">
+        <div class="article" style="font-family: 'Kinnari' !important;">
+            <style>
+                .o_without_tax_from {
+                    font-family: 'THSarabunNew';
+                    font-size: 20px;
+                }
+                .address1_pnd53, .address2_pnd53, .address3_pnd53, .address4_pnd53,
+                .address5_pnd53, .address6_pnd53, .address7_pnd53, .address8_pnd53,
+                .address9_pnd53, .address10_pnd53, .address11_pnd53, .address12_pnd53,
+                .address13_pnd53, .address14_pnd53, .address15_pnd53, .address16_pnd53,
+                .address161_pnd53, .address17_pnd53, .mount1_pnd53, .mount2_pnd53,
+                .mount3_pnd53, .mount4_pnd53, .mount5_pnd53, .mount6_pnd53,
+                .mount7_pnd53, .mount8_pnd53, .mount9_pnd53, .mount10_pnd53,
+                .year_pnd53, .mount11_pnd53, .mount12_pnd53 {
+                    display: block;
+                    filter: flipv fliph;
+                    -webkit-transform: rotate(90deg);
+                    -moz-transform: rotate(90deg);
+                    transform: rotate(90deg);
+                    position: fixed;
+                    font-family: 'THSarabunNew';
+                    font-size: 20px;
+                }
+                .address1_pnd53 {
+                    width: 20px;
+                    white-space: nowrap;
+                    margin-right: 4.1cm;
+                    top: 3cm;
+                    right: 90px; /* Adjust as per your layout */
+                }
+                .address2_pnd53 {
+                    top: 5cm;
+                    right: 6.5cm;
+                }
+                .address3_pnd53 {
+                    top: 12cm;
+                    right: 5.3cm;
+                    font-size: 18px;
+                }
+                .address4_pnd53 {
+                    top: 4.7cm;
+                    right: 9cm;
+                    font-size: 18px;
+                }
+                .address5_pnd53 {
+                    top: 9.7cm;
+                    right: 1.8cm;
+                    font-size: 18px;
+                }
+                .address6_pnd53 {
+                    top: 3cm;
+                    right: 7.9cm;
+                }
+                .address7_pnd53 {
+                    top: 9.2cm;
+                    right: 7.4cm;
+                }
+                .address8_pnd53 {
+                    top: 3.2cm;
+                    right: 8cm;
+                }
+                .address9_pnd53 {
+                    top: 9cm;
+                    right: 8.2cm;
+                }
+                .address10_pnd53 {
+                    top: 3.8cm;
+                    right: 8.8cm;
+                }
+                .address11_pnd53 {
+                    top: 10cm;
+                    right: 8.2cm;
+                }
+                .address12_pnd53 {
+                    top: 20.5cm;
+                    right: 13.6cm;
+                }
+                .address13_pnd53 {
+                    top: 20.5cm;
+                    right: 14.15cm;
+                }
+                .address14_pnd53 {
+                    width: 10%;
+                    text-align: right;
+                    top: 18cm;
+                    right: 18.2cm;
+                }
+                .address15_pnd53 {
+                    width: 10%;
+                    text-align: right;
+                    top: 18cm;
+                    right: 18.9cm;
+                }
+                .address16_pnd53 {
+                    top: 10.8cm;
+                    right: 13.5cm;
+                }
+                .address161_pnd53 {
+                    top: 14.9cm;
+                    right: 7.1cm;
+                }
+                .address17_pnd53 {
+                    width: 10%;
+                    text-align: right;
+                    top: 18cm;
+                    right: 20.5cm;
+                }
+                .mount1_pnd53 {
+                    top: 1.5cm;
+                    right: 11.5cm;
+                }
+                .mount2_pnd53 {
+                    top: 1.5cm;
+                    right: 12.1cm;
+                }
+                .mount3_pnd53 {
+                    top: 1.5cm;
+                    right: 12.6cm;
+                }
+                .mount4_pnd53 {
+                    top: 4.5cm;
+                    right: 11.5cm;
+                }
+                .mount5_pnd53 {
+                    top: 4.5cm;
+                    right: 12.1cm;
+                }
+                .mount6_pnd53 {
+                    top: 4.5cm;
+                    right: 12.8cm;
+                }
+                .mount7_pnd53 {
+                    top: 7.6cm;
+                    right: 11.5cm;
+                }
+                .mount8_pnd53 {
+                    top: 7.6cm;
+                    right: 12.1cm;
+                }
+                .mount9_pnd53 {
+                    top: 7.6cm;
+                    right: 12.6cm;
+                }
+                .mount10_pnd53 {
+                    top: 10.5cm;
+                    right: 11.5cm;
+                }
+                .year_pnd53 {
+                    top: 12.7cm;
+                    right: 10.6cm;
+                    font-size: 14px;
+                }
+                .mount11_pnd53 {
+                    top: 10.6cm;
+                    right: 12.2cm;
+                }
+                .mount12_pnd53 {
+                    top: 10.5cm;
+                    right: 12.6cm;
+                }
+            </style>
+            <img src="/pfb_std_withholding_tax_report/static/img/PND532.png"
+                 style="position: absolute; z-index: -9999; width: 100%;"/>
+            <div class="o_without_tax_from" style="position: absolute; z-index: 120; right: 90px; top: 90px;">
+                <!--box 1-->
+                <div class="address1_pnd53">
+                    <t t-esc="company.name"/>
+                </div>
+                <div class="address2_pnd53">
+                    <!--ลาดพร้าวฮิลล์-->
+                </div>
+                <div class="address3_pnd53">
+                    <span>0</span>
+                    <span style="padding-left:6px;">0</span>
+                    <span style="padding-left:6px;">0</span>
+                    <span style="padding-left:6px;">0</span>
+                    <span style="padding-left:6px;">0</span>
+                </div>
+                <div class="address4_pnd53">
+                    <span><t t-esc="str(company.zip)[0:1]"/></span>
+                        <span style="padding-left:6px;"><t t-esc="str(company.zip)[1:2]"/></span>
+                        <span style="padding-left:6px;"><t t-esc="str(company.zip)[2:3]"/></span>
+                        <span style="padding-left:6px;"><t t-esc="str(company.zip)[3:4]"/></span>
+                        <span style="padding-left:6px;"><t t-esc="str(company.zip)[4:5]"/></span>
+                </div>
+                <div class="address5_pnd53">
+                    <span><t t-esc="str(company.vat)[0:1]"/></span>
+                    <span style="padding-left:14px;"><t t-esc="str(company.vat)[1:2]"/></span>
+                    <span style="padding-left:6px;"><t t-esc="str(company.vat)[2:3]"/></span>
+                    <span style="padding-left:6px;"><t t-esc="str(company.vat)[3:4]"/></span>
+                    <span style="padding-left:6px;"><t t-esc="str(company.vat)[4:5]"/></span>
+                    <span style="padding-left:14px;"><t t-esc="str(company.vat)[5:6]"/></span>
+                    <span style="padding-left:6px;"><t t-esc="str(company.vat)[6:7]"/></span>
+                    <span style="padding-left:6px;"><t t-esc="str(company.vat)[7:8]"/></span>
+                    <span style="padding-left:6px;"><t t-esc="str(company.vat)[8:9]"/></span>
+                    <span style="padding-left:6px;"><t t-esc="str(company.vat)[9:10]"/></span>
+                    <span style="padding-left:14px;"><t t-esc="str(company.vat)[10:11]"/></span>
+                    <span style="padding-left:6px;"><t t-esc="str(company.vat)[11:12]"/></span>
+                    <span style="padding-left:14px;"><t t-esc="str(company.vat)[12:13]"/></span>
+                </div>
+                <div class="address6_pnd53">
+                    <!--110/1-->
+                </div>
+                <div class="address7_pnd53">
+                    <!--ลาดพร้าว 26-->
+                </div>
+                <div class="address8_pnd53">
+                    <!--ลาดพร้าว-->
+                </div>
+                <div class="address9_pnd53">
+                    <!--จอมพล-->
+                </div>
+                <div class="address10_pnd53">
+                    <!--จตุจักร-->
+                </div>
+                <div class="address11_pnd53">
+                    <!--กรุงเทพมหานคร-->
+                </div>
+                <!-- end box 1-->
+                <t t-set="count" t-value="0"/>
+                <t t-set="mount" t-value=""/>
+                <t t-foreach="docs" t-as="doc">
+                    <t t-set="count" t-value="count+1"/>
+                    <t t-set="mount" t-value="str(doc.cert_id.date)"/>
+                </t>
+                <!--Box 3-->
+                <div class="address13_pnd53">
+                    <t t-set="record_per_page" t-value="5"/>
+                    <t t-set="page_amount" t-value="1"/>
+                    <t t-if="count > record_per_page">
+                        <t t-set="page_amount" t-value="count / record_per_page"/>
+                        <t t-if="page_amount > int(page_amount)">
+                            <t t-set="page_amount" t-value="page_amount + 1"/>
+                        </t>
+                    </t>
+                    <t t-esc="int(page_amount)"/>
+                </div>
+                <!--End box 3-->
+
+                <!--box 2-->
+                <div class="address12_pnd53">
+                    <t t-set="count_partner" t-value=""/>
+                    <t t-set="array" t-value="[]"/>
+                    <t t-set="count_partner2" t-value="0"/>
+                    <t t-foreach="docs" t-as="doc">
+                        <t t-esc="array.append(doc.cert_id.supplier_partner_id)"/>
+                    </t>
+                    <t t-esc="len(array)"/>
+                </div>
+                <!--end box 2-->
+                <t t-set="sum_base2" t-value="0"/>
+                <t t-set="sum_amount2" t-value="0"/>
+                <t t-set="year" t-value=""/>
+                <t t-foreach="docs" t-as="doc">
+                    <t t-set="year" t-value="(int((doc.cert_id.date).strftime('%Y')))+543"/>
+                    <t t-set="sum_base2" t-value="sum_base2+doc.base"/>
+                    <t t-set="sum_amount2" t-value="sum_amount2+doc.amount"/>
+                </t>
+                <!--Box 4-->
+                <div class="address14_pnd53">
+                    <t t-esc="'{0:,.2f}'.format(sum_base2)"/>
+                </div>
+                <!--End box 4-->
+
+                <!--Box 5-->
+                <div class="address15_pnd53">
+                    <t t-esc="'{0:,.2f}'.format(sum_amount2)"/>
+                </div>
+                <!--end Box 5-->
+
+                <div class="address16_pnd53">
+                    <span style="font-size: 30px">&#10004;</span>
+                </div>
+                <div class="address161_pnd53">
+                    <span style="font-size: 30px">&#10004;</span>
+                </div>
+                <!--end Box 6-->
+
+                <div class="address17_pnd53">
+                    <t t-esc="'{0:,.2f}'.format(sum_amount2)"/>
+                </div>
+                <!--End Box 7-->
+
+                <div class="address_rotate year_pnd53">
+                    <t t-esc="year"/>
+                </div>
+                <!--End Box 8-->
+                <t t-if="mount[5:7] == '01'">
+                    <div class="address_rotate mount1_pnd53">
+                        <p>&#10004;</p>
+                    </div>
+                </t>
+                <t t-if="mount[5:7] == '02'">
+                    <div class="address_rotate mount2_pnd53">
+                        <p>&#10004;</p>
+                    </div>
+                </t>
+                <t t-if="mount[5:7] == '03'">
+                    <div class="address_rotate mount3_pnd53">
+                        <p>&#10004;</p>
+                    </div>
+                </t>
+                <t t-if="mount[5:7] == '04'">
+                    <div class="address_rotate mount4_pnd53">
+                        <p>&#10004;</p>
+                    </div>
+                </t>
+                <t t-if="mount[5:7] == '05'">
+                    <div class="address_rotate mount5_pnd53">
+                        <p>&#10004;</p>
+                    </div>
+                </t>
+                <t t-if="mount[5:7] == '06'">
+                    <div class="address_rotate mount6_pnd53">
+                        <p>&#10004;</p>
+                    </div>
+                </t>
+                <t t-if="mount[5:7] == '07'">
+                    <div class="address_rotate mount7_pnd53">
+                        <p>&#10004;</p>
+                    </div>
+                </t>
+                <t t-if="mount[5:7] == '08'">
+                    <div class="address_rotate mount8_pnd53">
+                        <p>&#10004;</p>
+                    </div>
+                </t>
+                <t t-if="mount[5:7] == '09'">
+                    <div class="address_rotate mount9_pnd53">
+                        <p>&#10004;</p>
+                    </div>
+                </t>
+                <t t-if="mount[5:7] == '10'">
+                    <div class="address_rotate mount10_pnd53">
+                        <p>&#10004;</p>
+                    </div>
+                </t>
+                <t t-if="mount[5:7] == '11'">
+                    <div class="address_rotate mount11_pnd53">
+                        <p>&#10004;</p>
+                    </div>
+                </t>
+                <t t-if="mount[5:7] == '12'">
+                    <div class="address_rotate mount12_pnd53">
+                        <p>&#10004;</p>
+                    </div>
+                </t>
+                <!--End Box 9-->
+            </div>
+        </div>
+    </t>
+    </template>
+
+</odoo>

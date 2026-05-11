@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <template id="sh_report_simple_label">
+            <div style="width: 32%; display: inline-table; height:14rem;">
+                <table class="table table-bordered mb-0" style="border: 2px solid black;">
+                    <tr>
+                        <th class="table-active text-left" style="height: 4rem;">
+                            <strong t-field="product.display_name" />
+                        </th>
+                    </tr>
+                    <tr>
+                        <td style="height: 2rem">
+                            <strong>Price:</strong>
+                            <strong t-field="product.lst_price"
+                                t-options="{'widget': 'monetary', 'display_currency': product.company_id.currency_id}" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center align-middle" style="height: 6rem">
+                            <t t-if="product.sh_qr_code">
+                                <img alt="QR Code"
+                                    t-att-src="'/report/barcode/?type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('QR', product.sh_qr_code, 150, 150)"
+                                    style="width:4rem; height:4rem" />
+                                <br />
+                                <span t-field="product.sh_qr_code" />
+                            </t>
+                            <t t-else="">
+                                <span class="text-muted">No qrcode available</span>
+                            </t>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </template>
+
+        <template id="sh_report_productlabel">
+            <t t-call="web.basic_layout">
+                <div class="page">
+                    <t t-foreach="docs" t-as="product">
+                        <t t-call="sh_product_qrcode_generator.sh_report_simple_label">
+                            <t t-set="product" t-value="product" />
+                        </t>
+                    </t>
+                </div>
+            </t>
+        </template>
+
+        <template id="sh_report_simple_qrcode">
+            <div style="width: 32%; display: inline-table; height: 10rem;">
+                <table class="table table-bordered mb-0" style="border: 2px solid black;">
+                    <tr>
+                        <th class="table-active text-left" style="height: 4rem;">
+                            <strong t-field="product.display_name" />
+                        </th>
+                    </tr>
+                    <tr>
+                        <td class="text-center align-middle" style="height: 6rem;">
+                            <t t-if="product.sh_qr_code">
+                                <img alt="QR Code"
+                                    t-att-src="'/report/barcode/?type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('QR', product.sh_qr_code, 150, 150)"
+                                    style="width:4rem; height:4rem" />
+                                <br />
+                                <span t-field="product.sh_qr_code" />
+                            </t>
+                            <t t-else="">
+                                <span class="text-muted">No qrcode available</span>
+                            </t>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </template>
+
+        <template id="sh_report_productqrcode">
+            <t t-call="web.basic_layout">
+                <div class="page">
+                    <t t-foreach="docs" t-as="product">
+                        <t t-call="sh_product_qrcode_generator.sh_report_simple_qrcode">
+                            <t t-set="product" t-value="product" />
+                        </t>
+                    </t>
+                </div>
+            </t>
+        </template>
+    </data>
+</odoo>

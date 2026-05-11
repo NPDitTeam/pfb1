@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="hr_manager_dashboard.dashboard">
+        <section id="dashboard_counter">
+            <div class="row">
+                <div class="col-7">
+                    <h1 class="main_title"> Welcome <span class="user_name" />
+                    </h1>
+                </div>
+                <div class="col-5">
+                    <button
+                        class="btn open_cmp_policy_manager"
+                        style="
+                            background-color: #ffffff;
+                            float: right;
+                            border-radius: 30px;
+                            transition: transform 0.2s ease, box-shadow 0.2s ease;
+                            will-change: transform, box-shadow;
+                            box-shadow: 0 10px 40px 0 rgba(62, 57, 107, 0.07), 0 2px 9px 0 rgba(62, 57, 107, 0.06);
+                            border: 1px solid #4ec3b7;
+                            color: #757575;
+                            padding-top: 5px;
+                            color: #4ec3b7;
+                        "
+                        type="object"
+                    >
+                        Company Policy
+                    </button>
+                    <button
+                        class="btn open_department_policy"
+                        style="
+                            background-color: #ffffff;
+                            float: right;
+                            border-radius: 30px;
+                            transition: transform 0.2s ease, box-shadow 0.2s ease;
+                            will-change: transform, box-shadow;
+                            box-shadow: 0 10px 40px 0 rgba(62, 57, 107, 0.07), 0 2px 9px 0 rgba(62, 57, 107, 0.06);
+                            border: 1px solid #4ec3b7;
+                            color: #757575;
+                            margin-right: 5px;
+                            padding-top: 5px;
+                            color: #4ec3b7;
+                        "
+                        type="object"
+                    >
+                        Department Policy
+                    </button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col counter_col sh_box_col">
+                    <a class="row open_employee_leave sh_dashboard_single_box" name="open_employee_leave" type="object">
+                        <div class="col-8">
+                            <p class="counter_title">
+                                LEAVES</p>
+                            <h1 class="counter_count">
+                                <span class="leave_count_manager" /> / <span class="allocated_leave_count_manager" />
+                            </h1>
+                        </div>
+                        <div class="col-4 text-center">
+                            <img class="counter_img" src="sh_all_in_one_hrms/static/src/image/2.png"
+                                width="100%" alt="Leaves" />
+                        </div>
+                    </a>
+                </div>
+                <div class="col counter_col sh_box_col">
+                    <a class="row open_employee_attendnace sh_dashboard_single_box" name="open_employee_attendnace" type="object">
+                        <div class="col-8">
+                            <p class="counter_title">
+                                ATTENDANCE</p>
+                            <h1 class="counter_count">
+                                <span class="attendance_count_manager" />
+                            </h1>
+                        </div>
+                        <div class="col-4 text-center">
+                            <img class="counter_img" src="sh_all_in_one_hrms/static/src/image/3.png" width="100%" alt="Attendance" />
+                        </div>
+                    </a>
+                </div>
+                <div class="col counter_col sh_box_col">
+                    <a class="row open_employee_expense sh_dashboard_single_box" name="open_employee_expense" type="object">
+                        <div class="col-8">
+                            <p class="counter_title">
+                                EXPENCES</p>
+                            <h1 class="counter_count">
+                                <span class="expense_count_manager" />
+                            </h1>
+                        </div>
+                        <div class="col-4 text-center">
+                            <img class="counter_img" src="sh_all_in_one_hrms/static/src/image/4.png" width="100%" alt="Expences" />
+                        </div>
+                    </a>
+                </div>
+                <div class="col counter_col sh_box_col">
+                    <a class="row open_employee_contract sh_dashboard_single_box" name="open_employee_contract" type="object">
+                        <div class="col-8">
+                            <p class="counter_title">
+                                CONTRACTS</p>
+                            <h1 class="counter_count">
+                                <span class="contract_count_manager" />
+                            </h1>
+                        </div>
+                        <div class="col-4 text-center">
+                            <img class="counter_img" src="sh_all_in_one_hrms/static/src/image/5.png" width="100%" alt="Contracts" />
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div class="main_content">
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 main_content_birthday">
+                        <div class="main_birthday_container">
+                            <h3 class="birthday_title">
+                                BIRTHDAY</h3>
+                            <div class="birthday_box" id="js_id_sh_birthday_data_tbl_div"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 main_content_anniversary">
+                        <div class="main_anniversary_container">
+                            <h3 class="anniversary_title">
+                                ANNIVERSARY</h3>
+                            <div class="anniversary_box" id="js_id_sh_anniversary_data_tbl_div"></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 announcement_part">
+                        <div class="announcement_box">
+                            <h3 class="annoucement_title">
+                                ANNOUNCEMENT</h3>
+                            <div class="announcement_container" id="js_id_sh_annoucement_data_tbl_div"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section_table">
+                <div class="row">
+                    <div class="col-md-5 payslip_table">
+                        <div class="payslip_content">
+                            <div class="row expence_row">
+                                <div class="col-10">
+                                    <h3 class="payslip_title">
+                                        ATTENDANCE</h3>
+                                </div>
+                                <div class="col-2">
+                                    <button class="btn create_attendance_manager" type="object">
+                                        <i title="plus" class="fa fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="paylip_container" id="js_id_sh_attendance_manager_data_tbl_div"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-7 expence_table">
+                        <div class="expence_content">
+                            <div class="row expence_row">
+                                <div class="col-10">
+                                    <h3 class="expence_title">
+                                        LEAVES</h3>
+                                </div>
+                                <div class="col-2">
+                                    <button class="btn create_leave_manager" type="object">
+                                        <i title="plus" class="fa fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="expence_container" id="js_id_sh_leave_manager_data_tbl_div"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="section_table">
+                <div class="row">
+                    <div class="col-md-7 expence_table">
+                        <div class="expence_content">
+                            <div class="row expence_row">
+                                <div class="col-10">
+                                    <h3 class="expence_title">
+                                        EXPENCES</h3>
+                                </div>
+                                <div class="col-2">
+                                    <button class="btn create_expense_manager" type="object">
+                                        <i title="plus" class="fa fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="expence_container" id="js_id_sh_expense_manager_data_tbl_div"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </t>
+
+</templates>
+         

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_move_form_inherit" model="ir.ui.view">
+        <field name="name">account.move.form.inherit</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <field name="payment_reference" position="after">
+                <field name="pfb_so_type"/>
+<!--                <field name="pfb_date_of_rent"/>-->
+                <field name="pfb_objective_id"/>
+            </field>
+
+            <xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='name']" position="after">
+                <field name="pfb_so_rent_ok" invisible="1"/>
+<!--                <field name="pfb_date_of_rent" force_save="1" attrs="{'pfb_so_rent_ok': [('pfb_so_rent_ok', '=', 0)]}"/>-->
+                <field name="pfb_quantity" attrs="{'invisible': [('pfb_so_rent_ok', '=',0)]}" readonly='1' force_save="1"/>
+            </xpath>
+<!--            <xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='product_uom_id']" position="after">-->
+<!--                <field name="pfb_insurance_price" attrs="{'invisible': [('pfb_so_rent_ok', '=',0)]}" readonly='1' force_save="1"/>-->
+<!--            </xpath>-->
+
+        </field>
+    </record>
+</odoo>

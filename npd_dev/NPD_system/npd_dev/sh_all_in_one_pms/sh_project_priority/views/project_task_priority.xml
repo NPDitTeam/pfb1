@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="project_task_priority_inherit_view_form" model="ir.ui.view">
+        <field name="name">project.task.inherit.view.form</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2" />
+        <field name="arch" type="xml">
+            <field name="tag_ids" position="after">
+            	<field name="check_bool_project_priority" invisible="True" />
+                <field name="sh_priority" widget="priority" attrs="{'invisible': [('check_bool_project_priority','=',False)]}"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="project_task_priority_inherit_view_tree" model="ir.ui.view">
+        <field name="name">project.task.inherit.view.tree</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_tree2" />
+        <field name="arch" type="xml">
+            <field name="stage_id" position="after">
+            	<field name="check_bool_project_priority" invisible="True" />
+                <field name="sh_priority" widget="priority" attrs="{'invisible': [('check_bool_project_priority','=',False)]}"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="project_task_priority_inherit_view_search" model="ir.ui.view">
+        <field name="name">project.task.inherit.view.search</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_search_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//group//filter[1]" position="after">
+            	<field name="check_bool_project_priority" invisible="True" />
+                <filter string="Priority" name="priority" context="{'group_by': 'sh_priority'}" />
+            </xpath>
+        </field>
+    </record>
+</odoo>

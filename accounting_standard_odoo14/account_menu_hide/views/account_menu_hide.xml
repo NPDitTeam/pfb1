@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<menuitem id="main_menu_hide" 
+		name="Hide Menu"
+		sequence="90"
+		groups="base.group_system"
+		parent="base.menu_administration" />
+     <menuitem
+        id="bi_import_chart_of_accounts.menu_chart_of_account"
+        sequence="10"
+        
+         parent="main_menu_hide"
+        groups="base.group_no_one"
+    />
+    <menuitem
+        id="account.menu_action_move_in_receipt_type"
+        name="Paymentsss"
+        sequence="10"
+        parent="main_menu_hide"
+        action="account.action_move_in_receipt_type"
+        groups="base.group_no_one"
+    />
+    <menuitem
+        id="account.menu_action_move_out_receipt_type"
+         name="Receipts"
+        sequence="10"
+         action="account.action_move_out_receipt_type"
+     parent="main_menu_hide"
+         groups="base.group_no_one"
+    />
+      <menuitem
+        id="contract.menu_contract_contract_customer"
+        sequence="99"
+         parent="main_menu_hide"
+         action="contract.action_customer_contract"
+         
+        groups="base.group_no_one"
+    />
+     <menuitem
+        id="contract.menu_contract_contract_supplier"
+        sequence="99"
+          parent="main_menu_hide"
+               action="contract.action_supplier_contract"
+        groups="base.group_no_one"
+    />
+     <menuitem
+        id="contract.sale_contract_manually_create_invoice_menu"
+        sequence="99"
+        name="Create Sale invoice manual"
+          parent="main_menu_hide"
+        groups="base.group_no_one"
+    />
+      <menuitem
+        id="contract.purchase_contract_manually_create_invoice_menu"
+        sequence="99"
+        name="Create Purchase Invoice manual"
+          parent="main_menu_hide"
+        groups="base.group_no_one"
+    />
+
+        <menuitem id="account_dynamic_reports.account_reports_ins_wiz" 
+        sequence="15"
+        parent="main_menu_hide"
+        name="Accounting Reports" 
+        />
+        <!-- <menuitem  -->
+        <!-- id="hr_expense.menu_hr_expense_account_employee_expenses"  -->
+        <!-- name="Employee Expenses"  -->
+        <!-- sequence="22"    -->
+        <!-- parent="main_menu_hide" -->
+        <!-- groups="base.group_no_one"/> -->
+
+         <menuitem
+        id="account_payment_return.payment_return_menu"
+        name="Customer Payment Returns"
+        parent="main_menu_hide"
+        groups="base.group_no_one"/>
+
+    />
+
+</odoo>

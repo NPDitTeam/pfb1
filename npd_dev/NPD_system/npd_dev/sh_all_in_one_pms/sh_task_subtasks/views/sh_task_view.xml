@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_task_view_inherit" model="ir.ui.view">
+        <field name="name">sh.task.view.inherit</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2" />
+        <field name="arch" type="xml">
+            <xpath expr="//notebook/page[@name='extra_info']" position="after">
+                <page name="sub_task" string="Sub Task" attrs="{'invisible': [('check_bool_enable_task_sub_task', '=', False)]}">
+                    <field name="check_bool_enable_task_sub_task" invisible="True" />
+                    <field name="sh_sub_task_lines" context="{'default_project_id':project_id,'search_default_parent_id': active_id, 'default_name': name + ':'}" />
+                </page>
+            </xpath>
+
+            <xpath expr="//button[@name='action_subtask']" position="replace">
+                <button
+                    name="action_subtask"
+                    type="object"
+                    class="oe_stat_button"
+                    icon="fa-tasks"
+                    attrs="{'invisible' : ['|',('check_bool_enable_task_sub_task', '=', False),('parent_id', '!=', False)]}"
+                    context="{'project_id': subtask_project_id, 'name': name, 'partner_id': partner_id}"
+                    groups="project.group_subtask_project"
+                >
+                    <field string="Sub-tasks" name="subtask_count" widget="statinfo" />
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="sh_task_kanban_view_inherit" model="ir.ui.view">
+        <field name="name">sh.task.kanban.view.inherit</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_kanban" />
+        <field name="arch" type="xml">
+            <field name="rating_ids" position="after">
+                <field name="subtask_count" />
+            </field>
+            <!-- 			<xpath expr="//div[hasclass('oe_kanban_content')]//div[hasclass('oe_kanban_bottom_left')]" position="inside"> -->
+            <!-- 			<label for="subtask_count" style="margin-bottom:0px;">Sub Task</label> -->
+            <!--                      <field name="subtask_count"/> -->
+            <!-- 			</xpath>  -->
+            <xpath expr="//div[hasclass('o_kanban_record_top')]//div[hasclass('o_dropdown_kanban')]" position="before">
+                <!-- 				<label for="subtask_count" style="margin-bottom:0px;">Sub Task</label> -->
+                <field name="parent_id" invisible="True" />
+                <field name="check_bool_enable_task_sub_task" invisible="True" />
+                <a name="action_subtask" type="object" attrs="{'invisible' : ['|',('check_bool_enable_task_sub_task', '=', False),('parent_id', '!=', False)]}">
+                    <h3 style="border: 1px solid #e2dede;border-radius: 50%;padding: 4px;}">
+                        <field name="subtask_count" />
+                    </h3>
+                </a>
+            </xpath>
+        </field>
+    </record>
+</odoo>

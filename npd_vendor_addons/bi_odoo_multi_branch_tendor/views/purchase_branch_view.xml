@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+    <record id="view_purchase_requisition_form" model="ir.ui.view">
+        <field name="name">purchase.requisition.branch.form</field>
+        <field name="model">purchase.requisition</field>
+        <field name="inherit_id" ref="purchase_requisition.view_purchase_requisition_form" />
+        <field name="arch" type="xml">
+            <field name="vendor_id" position="after">
+                <field name="branch_id"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_purchase_requisition_kanban" model="ir.ui.view">
+        <field name="name">purchase.requisition.branch.kanban</field>
+        <field name="model">purchase.requisition</field>
+        <field name="inherit_id" ref="purchase_requisition.view_purchase_requisition_kanban" />
+        <field name="arch" type="xml">
+            <field name="type_id" position="after">
+                <field name="branch_id"/>
+            </field>
+            
+            <xpath expr="//div[@class='o_kanban_record_bottom']" position="after">
+                <div class="o_kanban_record_bottom">
+                    <div class="oe_kanban_bottom_left">
+                        <field name="branch_id"/>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+    
+    </data>
+</openerp>

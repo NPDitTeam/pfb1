@@ -1,0 +1,40 @@
+<odoo>
+    <!-- Tree View -->
+    <record id="view_commission_rate_config_tree" model="ir.ui.view">
+        <field name="name">commission.rate.config.tree</field>
+        <field name="model">commission.rate.config</field>
+        <field name="arch" type="xml">
+            <tree string="ตั้งค่าคอมมิชชั่น Sales" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="min_amount" string="ยอดขั้นต่ำ"/>
+                <field name="rate" string="อัตรา (%)"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_commission_rate_config_form" model="ir.ui.view">
+        <field name="name">commission.rate.config.form</field>
+        <field name="model">commission.rate.config</field>
+        <field name="arch" type="xml">
+            <form string="ตั้งค่าคอมมิชชั่น Sales">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="min_amount"/>
+                            <field name="rate"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_commission_rate_config" model="ir.actions.act_window">
+        <field name="name">ตั้งค่าคอมมิชชั่น Sales</field>
+        <field name="res_model">commission.rate.config</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_res_bank_form_view" model="ir.ui.view">
+        <field name="name">sh.res.bank.form.view</field>
+        <field name="model">res.bank</field>
+        <field name="inherit_id" ref="base.view_res_bank_form" />
+        <field name="arch" type="xml">
+            <field name="bic" position="after">
+                <field name="logo" widget="image" groups="sh_all_in_one_hrms.group_enable_sh_payslip_dynamic_cheque" />
+            </field>
+        </field>
+    </record>
+    <record id="sh_hr_payslip_form_view" model="ir.ui.view">
+        <field name="name">sh.hr.payslip.form.view</field>
+        <field name="model">hr.payslip</field>
+        <field name="inherit_id" ref="sh_hr_payroll.view_hr_payslip_form" />
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="sh_bank_id" groups="sh_all_in_one_hrms.group_enable_sh_payslip_dynamic_cheque" />
+                <field name="sh_account_no" groups="sh_all_in_one_hrms.group_enable_sh_payslip_dynamic_cheque" />
+                <field name="sh_cheque_format_id" groups="sh_all_in_one_hrms.group_enable_sh_payslip_dynamic_cheque" />
+                <field name="sh_partner_title" groups="sh_all_in_one_hrms.group_enable_sh_payslip_dynamic_cheque" />
+                <field name="sh_cheque_no" groups="sh_all_in_one_hrms.group_enable_sh_payslip_dynamic_cheque" />
+                <field name="sh_free_text" groups="sh_all_in_one_hrms.group_enable_sh_payslip_dynamic_cheque" />
+                <field name="sh_free_text_two" groups="sh_all_in_one_hrms.group_enable_sh_payslip_dynamic_cheque" />
+                <field name="sh_free_text_three" groups="sh_all_in_one_hrms.group_enable_sh_payslip_dynamic_cheque" />
+                <field name="sh_confirm_date" groups="sh_all_in_one_hrms.group_enable_sh_payslip_dynamic_cheque" />
+            </field>
+        </field>
+    </record>
+</odoo>

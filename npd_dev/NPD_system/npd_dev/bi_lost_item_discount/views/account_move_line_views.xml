@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extend Invoice Form - Invoice Lines Tab -->
+    <record id="view_move_form_invoice_lines_lost_item" model="ir.ui.view">
+        <field name="name">account.move.form.invoice.lines.lost.item</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <!-- เพิ่มหลัง price_subtotal_without_discount ในตาราง invoice_line_ids -->
+            <xpath expr="//field[@name='invoice_line_ids']/tree//field[@name='price_subtotal_without_discount']" position="after">
+                <field name="is_lost_item" invisible="1"/>
+                <field name="lost_item_amount"
+                       string="Lost Item Amount"
+                       sum="Total Lost Items"
+                       widget="monetary"
+                       optional="show"
+                       attrs="{'invisible': [('is_lost_item', '=', False)]}"/>
+            </xpath>
+        </field>
+    </record>
+
+
+<!--    <record id="view_account_invoice_discount_form" model="ir.ui.view">-->
+<!--            <field name="name">account.invoice.discount.form.view</field>-->
+<!--            <field name="model">account.move</field>-->
+<!--            <field name="inherit_id" ref="account.view_move_form"/>-->
+<!--            <field name="arch" type="xml">-->
+
+<!--                <field name="amount_untaxed" position="before">-->
+<!--                    <field name="x_discount_amt_line" widget="monetary" options="{'currency_field': 'currency_id'}" attrs="{'invisible': [('discount_type','=','global')]}"/>-->
+<!--                </field>-->
+
+<!--                 <xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='price_unit']" position="after">-->
+<!--                    <field name="x_discount_account"-->
+<!--                       string="Line Discount"-->
+<!--                       placeholder="ส่วนลดต่อบรรทัด"/>-->
+
+<!--                </xpath>-->
+<!--            </field>-->
+<!--        </record>-->
+</odoo>

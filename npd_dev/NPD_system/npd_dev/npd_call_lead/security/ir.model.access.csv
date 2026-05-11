@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_npd_call_lead_user,npd.call.lead.user,model_npd_call_lead,sales_team.group_sale_salesman,1,1,1,0
+access_npd_call_lead_manager,npd.call.lead.manager,model_npd_call_lead,sales_team.group_sale_manager,1,1,1,1
+access_npd_call_lead_log_user,npd.call.lead.log.user,model_npd_call_lead_log,sales_team.group_sale_salesman,1,1,1,0
+access_npd_call_lead_log_manager,npd.call.lead.log.manager,model_npd_call_lead_log,sales_team.group_sale_manager,1,1,1,1
+access_npd_call_lead_email_log_user,npd.call.lead.email.log.user,model_npd_call_lead_email_log,sales_team.group_sale_salesman,1,1,1,0
+access_npd_call_lead_email_log_manager,npd.call.lead.email.log.manager,model_npd_call_lead_email_log,sales_team.group_sale_manager,1,1,1,1
+access_npd_call_lead_send_email_wizard_user,npd.call.lead.send.email.wizard.user,model_npd_call_lead_send_email_wizard,sales_team.group_sale_salesman,1,1,1,1
+access_npd_call_lead_send_email_wizard_manager,npd.call.lead.send.email.wizard.manager,model_npd_call_lead_send_email_wizard,sales_team.group_sale_manager,1,1,1,1

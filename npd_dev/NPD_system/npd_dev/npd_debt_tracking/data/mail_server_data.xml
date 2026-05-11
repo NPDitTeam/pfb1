@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Outgoing Mail Server for Debt Tracking -->
+        <record id="mail_server_npdsgroup_gmail" model="ir.mail_server">
+            <field name="name">Gmail NPDS Group (Debt Tracking)</field>
+            <field name="smtp_host">smtp.gmail.com</field>
+            <field name="smtp_port">587</field>
+            <field name="smtp_encryption">starttls</field>
+            <field name="smtp_user">npdsgroup.official@gmail.com</field>
+            <field name="smtp_pass">ruag udjk onyt ovog</field>
+            <field name="sequence">10</field>
+        </record>
+    </data>
+</odoo>

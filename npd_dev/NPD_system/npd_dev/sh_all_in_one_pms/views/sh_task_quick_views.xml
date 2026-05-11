@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_project_task_quick_create_task_form_view_inherit" model="ir.ui.view">
+        <field name="name">project.task.overdue.form</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.quick_create_task_form" />
+        <field name="arch" type="xml">
+            <field name="name" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </field>
+            <field name="user_id" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </field>
+            <field name="project_id" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </field>
+
+            <xpath expr="//form/group" position="before">
+            	<header>
+                    <button name="action_task_completed" string="Task Completed" attrs="{'invisible': [('completed','!=',False)]}" type="object" class="oe_highlight" />
+                    <button name="action_task_send_email" string="Send by Email" type="object" class="btn-primary" attrs="{'invisible': [('check_bool_enable_task_send_by_email', '=', False)]}" />
+                    <button name="%(sh_action_project_task_custom_tab)d" groups="sh_all_in_one_pms.group_task_custom_field" string="Add Custom Tab" type="action" class="oe_highlight"/>
+                    <button name="%(sh_project_task_custom_fields)d" groups="sh_all_in_one_pms.group_task_custom_field" string="Add Custom Field" type="action" class="oe_highlight"/> 
+                    <field name="end_task_bool" invisible="1" />
+	                <field name="start_task_bool" invisible="1" />
+	                <button name="action_task_start" string="Start Task" attrs="{'invisible': ['|','|',('check_bool_enable_task_timer','=',False),('start_task_bool','=',False),('project_id','=',False)]}" type="object" class="oe_highlight" />
+	                <button name="action_task_end" string="End Task" attrs="{'invisible': ['|','|',('check_bool_enable_task_timer','=',False),('start_task_bool','=', True),('project_id','=',False)]}" type="object" class="oe_highlight" />
+                </header>
+                <sheet string="Task">
+                	<div class="oe_button_box" name="button_box">
+                        <button name="open_document" context="{'default_task_id': active_id}" class="oe_stat_button" icon="fa-files-o" type="object" groups="sh_all_in_one_pms.group_sh_task_document">
+		                    <field name="document_count" widget="statinfo" string="Documents" />
+		                </button>
+		                <button
+	                    	name="action_subtask"
+		                    type="object"
+		                    class="oe_stat_button"
+		                    icon="fa-tasks"
+		                    attrs="{'invisible' : ['|',('check_bool_enable_task_sub_task', '=', False),('parent_id', '!=', False)]}"
+		                    context="{'project_id': subtask_project_id, 'name': name, 'partner_id': partner_id}"
+		                    groups="project.group_subtask_project"
+		                >
+		                    <field string="Sub-tasks" name="subtask_count" widget="statinfo" />
+		                </button>
+                    </div>
+                	<group>
+	                    <group>
+	                        <field name="name" string="Task Title"/>
+	                        <field name="user_id" options="{'no_open': True,'no_create': True}" domain="[('share', '=', False)]"/>
+	                        <field name="sh_multi_user" invisible="1" />
+							<field name="sh_user_ids" widget="many2many_tags" attrs="{'invisible':[('sh_multi_user','=',False)]}" />
+	                        <field name="project_id" required="1" invisible="context.get('all_task', 1)"/>
+	                        <field name="completed" invisible="1" />
+	                        <field name="check_bool_enable_task_check_list" invisible="True" />
+	                        <field name="check_bool_enable_task_send_by_email" invisible="True" />
+	                        <field name="start_time" invisible="1" />
+                			<field name="is_user_working" invisible="1" />
+                			<field name="check_bool_enable_task_timer" invisible="True" />
+                			<field name="subtask_project_id" invisible="1"/>
+                			<field name="partner_id" widget="res_partner_many2one" class="o_task_customer_field" invisible="1"/>
+	                    </group>
+	                    <group>
+	                        <field name="start_date" />
+	                        <field name="check_bool_project_priority" invisible="True" />
+                			<field name="sh_priority" widget="priority" attrs="{'invisible': [('check_bool_project_priority','=',False)]}"/>
+	                    </group>
+	                </group>   
+	                <notebook>
+	                	<page name="checklist" string="Checklist" groups="sh_all_in_one_pms.group_enable_task_check_list">
+		                    <group>
+		                        <group>
+		                            <field name="checklist_ids" widget="many2many_checkboxes" />
+		                        </group>
+		                        <group>
+		                            <button name="%(action_menu_task_checklist)d" type="action" class="oe_stat_button" style="height: 40px; background: White;">
+		                                <field name="checklist" string="Checklist Completed" widget="percentpie" style="height: 30px; background: White;" />
+		                            </button>
+		                        </group>
+		                    </group>
+		                </page>
+		                <page name="custom_checklist" string="Checklist" groups="sh_all_in_one_pms.group_enable_task_custom_checklist">
+		                    <button name="%(action_menu_task_custom_checklist)d" type="action" class="oe_stat_button" style="height: 40px; background: White;">
+		                        <field name="custom_checklist" string="Checklist Completed" widget="percentpie" style="height: 30px; background: White;" />
+		                    </button>
+		                    <span style="padding-left: 50px;">Check List </span>
+		                    <field name="check_list" widget="many2many_tags" />
+		                    <field name="custom_checklist_ids">
+		                        <tree editable="bottom">
+		                            <field name="name" />
+		                            <field name="description" />
+		                            <field name="updated_date" />
+		                            <field name="state" />
+		                            <button string="Complete" name="btn_check" type="object" icon="fa-check" attrs="{'invisible':[('state','=','completed')]}" />
+		                            <button string="Cancel" name="btn_close" type="object" icon="fa-close" attrs="{'invisible':[('state','=','cancelled')]}" />
+		                        </tree>
+		                    </field>
+		                </page>
+		                <page name="sub_task" string="Sub Task" attrs="{'invisible': [('check_bool_enable_task_sub_task', '=', False)]}">
+		                    <field name="check_bool_enable_task_sub_task" invisible="True" />
+		                    <field name="sh_sub_task_lines" context="{'default_project_id':project_id,'search_default_parent_id': active_id, 'default_name': name + ':'}" />
+		                </page>
+	                </notebook> 
+                </sheet>
+            </xpath>
+        </field>
+    </record>
+</odoo>

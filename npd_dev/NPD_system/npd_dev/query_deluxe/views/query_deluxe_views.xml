@@ -1,0 +1,58 @@
+<odoo>
+    <record id="query_deluxe_view_form" model="ir.ui.view">
+        <field name="name">Type a query form</field>
+        <field name="model">querydeluxe</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="print_result" string="Print PDF" type="object" class="oe_highlight" attrs="{'invisible':[('raw_output','in',['',[],False])]}"/>
+                    <button name="execute_and_push" string="Execute and Push to Google Sheets" type="object" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group string="Examples">
+                        <label string="Examples :" for="tips"/>
+                        <div class="o_row">
+                            <field name="tips" widget="selection"/>
+                            <button name="copy_query" type="object" class="btn-danger" string="Copy" attrs="{'invisible':[('tips','=',False)]}"/>
+                        </div>
+                        <field name="tips_description" attrs="{'invisible':[('tips','=',False)]}"/>
+                    </group>
+                    <group string="Type a query">
+                        <label string="Query :" for="name"/>
+                        <div class="o_row">
+                            <field name="name" placeholder="SELECT * FROM res_partner" style="border-bottom: 1px solid blue"/>
+                        </div>
+                    </group>
+                    <group>
+                        <button name="execute" type="object" string="Execute" class="oe_highlight"/>
+                    </group>
+                    <group>
+                        <label string=" " for="rowcount"/>
+                        <div class="o_row">
+                            <field name="rowcount" readonly="1" nolabel="1"/>
+                        </div>
+                    </group>
+                    <group>
+                        <field name="html" readonly="1" nolabel="1"/>
+                    </group>
+                    <group>
+                        <field name="show_raw_output"/>
+                        <field name="raw_output" attrs="{'invisible':[('show_raw_output','=',False)]}"/>
+                    </group>
+                    <!-- New group for Google Sheets Export -->
+                    <group string="Google Sheets Export">
+                        <field name="email" placeholder="Your Google account email"/>
+                        <field name="json_file" filename="json_filename"/>
+                        <field name="sheet_name" placeholder="Sheet name in Google Sheets"/>
+                        <field name="url" placeholder="URL of the Google Sheets"/>
+                    </group>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="activity_ids" widget="mail_activity"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

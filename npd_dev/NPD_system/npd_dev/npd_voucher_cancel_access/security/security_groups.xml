@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- สร้าง Category ใหม่สำหรับสิทธิ์คืนเงินประกัน -->
+    <record id="module_category_voucher_cancel" model="ir.module.category">
+        <field name="name">สิทธิ์คืนเงินประกันค่าเช่า</field>
+        <field name="sequence">100</field>
+    </record>
+
+    <!-- สร้าง Security Group สำหรับยกเลิก Voucher -->
+    <record id="group_cancel_voucher" model="res.groups">
+        <field name="name">อนุญาตยกเลิกใบคืนเงินประกันค่าเช่า</field>
+        <field name="category_id" ref="module_category_voucher_cancel"/>
+    </record>
+
+</odoo>

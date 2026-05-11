@@ -1,0 +1,12 @@
+<odoo>
+	<template id="invitation_page_anonymous" name="Calendar Invitation Page for anonymous users" inherit_id="calendar.invitation_page_anonymous">
+		<xpath expr="//tr[3]" position="after">
+			<tr t-if="event.room_id">
+				<th>Meeting Room</th>
+				<td>
+					<t t-esc="event.room_id.name" />
+				</td>
+			</tr>
+		</xpath>
+	</template>
+</odoo>

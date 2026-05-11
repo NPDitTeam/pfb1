@@ -1,0 +1,149 @@
+<odoo>
+    <data>
+        <!-- Tree View -->
+        <record model="ir.ui.view" id="view_my_approval_tree">
+            <field name="name">my.approval.tree</field>
+            <field name="model">my.approval</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="My Approvals" create="false">
+                    <field name="name"/>
+                    <field name="request_by"/>
+                    <field name="request_date"/>
+                    <field name="user_ids" widget="many2many_tags" />
+                    <field name="next_approver_id"/>
+                    <field name="pending_approvers_count"/>
+                    <field name="approval_name_type_id"/>
+                    <field name="payment"/>
+                    <field name="state" widget="badge"
+                        decoration-warning="state == 'submit'"
+                        decoration-success="state == 'approve'"
+                        decoration-danger="state == 'cancel'"
+                        optional="show" on_change="1"
+                        modifiers="{'readonly':true,'required':true}"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form View for Users (Readonly) -->
+        <record id="view_my_approval_form_user" model="ir.ui.view">
+            <field name="name">my.approval.form.user</field>
+            <field name="model">my.approval</field>
+            <field name="arch" type="xml">
+                <form string="My Approvals" create="false" groups="bi_approval_app.group_approval_user">
+                    <header>
+                        <field name="is_approved" invisible="1"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,submit,approve,cancel"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title mb24">
+                            <h1>
+                                <field name="name" class="text-break" default_focus="1" />
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="request_by" />
+                                <field name="approval_name_id" />
+                                <field name="approval_name_type_id" />
+                                <field name="payment" />
+                                <field name="user_ids" widget="many2many_tags" />
+                                <field name="next_approver_id" />
+                                <field name="pending_approvers_count" />
+                                <field name="request_id" invisible="1"/>
+                            </group>
+                            <group>
+                                <field name="request_date" />
+                                <field name="product_id" />
+                                <field name="approved_ids" invisible="1"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page name="description_page" string="Description">
+                                <field name="description" type="html" options="{'collaborative': true}" />
+                            </page>
+                            <page name="attachments_page" string="Attachments">
+                                <field name="attachment_ids" widget="many2many_binary"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                        <field name="attachment_ids" widget="many2many_binary"/> <!-- เพิ่มฟิลด์นี้ -->
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- Form View for Managers (Editable) -->
+        <record id="view_my_approval_form_manager" model="ir.ui.view">
+            <field name="name">my.approval.form.manager</field>
+            <field name="model">my.approval</field>
+            <field name="arch" type="xml">
+                <form string="My Approvals" create="false" edit="true" groups="bi_approval_app.group_approval_manager">
+                    <header>
+                        <field name="is_approved" invisible="1"/>
+                        <button name="action_approve" string="Approve" class="oe_highlight" type="object" attrs="{'invisible': ['|',('state', 'in', ['draft', 'cancel', 'approve']), ('is_approved', '=', True)]}"/>
+                        <button name="action_refuse" string="Refuse" type="object" attrs="{'invisible':[('state', 'in', ['draft', 'cancel'])]}"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,submit,approve,cancel"/>
+
+                    </header>
+                    <sheet>
+                        <div class="oe_title mb24">
+                            <widget name="web_ribbon" title="Approved" bg_color="bg-success"
+                                attrs="{'invisible': [('state', '!=', 'approve')]}"/>
+                            <h1>
+                                <field name="name" class="text-break" default_focus="1"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="request_by"/>
+                                <field name="approval_name_id"/>
+                                <field name="approval_name_type_id"/>
+                                <field name="payment"/>
+                                <field name="user_ids" widget="many2many_tags"/>
+                                <field name="next_approver_id" />
+                                <field name="pending_approvers_count" />
+                                <field name="request_id" invisible="1"/>
+                            </group>
+                            <group>
+                                <field name="request_date"/>
+                                <field name="product_id"/>
+                                <field name="approved_ids" invisible="1"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page name="description_page" string="Description">
+                                <field name="description" type="html" options="{'collaborative': true}"/>
+                            </page>
+                            <page name="attachments_page" string="Attachments">
+                                <field name="attachment_ids" widget="many2many_binary"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                        <field name="attachment_ids" widget="many2many_binary"/> <!-- เพิ่มฟิลด์นี้ -->
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record model="ir.actions.act_window" id="action_my_approval_view">
+            <field name="name">My Approvals</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">my.approval</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_my_approval_tree"/>
+            <field name="domain">[('state', '!=', 'draft')]</field> <!-- Add domain here -->
+        </record>
+
+        <!-- Menuitem -->
+        <menuitem id="main_menu_approval_config" parent="bi_approval_app.root_menu_approval_mng" name="Approvals" sequence="2"/>
+<!--        <menuitem id="menu_my_approvals" name="To review" action="action_my_approval_view" parent="main_menu_approval_config" sequence="1"/>-->
+    </data>
+</odoo>

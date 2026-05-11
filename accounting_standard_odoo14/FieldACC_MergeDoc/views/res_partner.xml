@@ -1,0 +1,13 @@
+<odoo>
+    <record model="ir.ui.view" id="form_res_partner_add_field_inherit">
+        <field name="name">form.res.partner.add.field.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="l10n_th_partner.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='branch']" position="after">
+                <field name="tax_branch_name" attrs="{'invisible': [('is_company', '=', False)]}"/>
+                <field name="tax_branch_eng_name" attrs="{'invisible': [('is_company', '=', False)]}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

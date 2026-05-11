@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="purchase_order_form_access_rfq" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.access.rfq</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@id='draft_confirm']" position="attributes">
+                <attribute name="groups">pfb_std_access_confirm_rfq.group_confirm_po</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_convert_to_order']" position="attributes">
+                <attribute name="groups">pfb_std_access_confirm_rfq.group_convert_rfq</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

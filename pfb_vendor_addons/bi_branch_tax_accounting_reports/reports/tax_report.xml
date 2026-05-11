@@ -1,0 +1,33 @@
+<odoo>
+    <data>
+    	<template id="bi_report_account_tax_inherit" inherit_id="bi_account_tax_report.bi_report_account_tax">
+	   
+	    	<xpath expr="//div[@class='row']" position="replace">
+	    		<table style="width:100%;" >
+					<tr >
+						<td>
+							<t t-if="data['date_from']">
+								<strong>From</strong>
+								<div t-esc="data['date_from']"/>
+							</t>
+						</td>
+						<td>
+						<t t-if="data['date_to']">
+							<strong>To</strong>
+							<div t-esc="data['date_to']"/>
+						</t>
+						</td>
+						<td>
+						<strong>Branch : </strong>
+						<div t-esc="', '.join([ lt or '' for lt in data['custom_branch'] ])"/>
+						</td>
+					</tr>
+                </table>
+	    		<!--<div>
+	    			<strong>Branch:</strong>
+					<p t-esc="', '.join([ lt or '' for lt in data['custom_branch'] ])"/>
+				</div>-->
+	    	</xpath>
+    	</template>
+    </data>
+</odoo>

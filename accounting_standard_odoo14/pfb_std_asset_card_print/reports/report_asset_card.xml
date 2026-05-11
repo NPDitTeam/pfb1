@@ -1,0 +1,323 @@
+<odoo>
+    <!-- Header -->
+    <template id="external_layout_standard">
+        <div t-attf-class="header">
+            <center>
+
+                <h4>Asset Card</h4>
+            </center>
+
+        </div>
+
+        <div t-attf-class="article o_report_layout_standard o_company_#{company.id}_layout"
+             t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+
+            <t t-raw="0"/>
+        </div>
+
+    </template>
+
+    <template id="external_layout">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+
+        <t t-if="not company">
+            <!-- Multicompany -->
+            <t t-if="company_id">
+                <t t-set="company" t-value="company_id"/>
+            </t>
+            <t t-elif="o and 'company_id' in o">
+                <t t-set="company" t-value="o.company_id.sudo()"/>
+            </t>
+            <t t-else="else">
+                <t t-set="company" t-value="res_company"/>
+            </t>
+        </t>
+
+        <t t-call="pfb_std_asset_card_print.external_layout_standard">
+            <t t-raw="0"/>
+        </t>
+    </template>
+
+
+    <template id="report_asset_card">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="pfb_std_asset_card_print.external_layout">
+                    <div class="page">
+                        <div class="oe_structure"/>
+
+                        <style>
+                            table, td, th {
+                            border: 1px solid white;
+                            }
+                            #table_asset {
+                            border-collapse: separate;
+                            border-spacing: 2px;
+                            }
+
+                            .border_column {
+                            width:32%;
+                            border-top: 2px solid #090909;
+                            border-right: 2px solid #090909;
+                            border-left: 2px solid #090909;
+                            border-bottom: 2px solid #090909;
+                            }
+                            .border_column2 {
+                            width: 12%;
+                            border-top: 2px solid #090909;
+                            border-right: 2px solid #090909;
+                            border-left: 2px solid #090909;
+                            border-bottom: 2px solid #090909;
+                            }
+                        </style>
+
+                        <table id="table_asset" class="table-sm">
+                            <tr>
+                                <td class="text-right border_column1">Asset Code:</td>
+                                <td class="border_column">
+                                    <span t-field="o.code"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Asset Name:</td>
+                                <td colspan="4" class="border_column">
+                                    <span t-field="o.name"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Parent Asset:</td>
+                                <td class="border_column">
+                                    <span t-field="o.name"/>
+                                </td>
+                                <td rowspan="7" colspan="3" class="border_column">
+                                    <span style="color: white;">___________</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Class:</td>
+                                <td class="border_column"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Keeper:</td>
+                                <td class="border_column"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Account Code:</td>
+                                <td class="border_column">
+                                    <span t-field="o.profile_id.account_asset_id.name"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Depreciation Account Code:</td>
+                                <td class="border_column">
+                                    <span t-field="o.profile_id.account_expense_depreciation_id.name"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right" style="width: 200;">Accumulated Depreciation Account Code:</td>
+                                <td class="border_column">
+                                    <span t-field="o.profile_id.account_depreciation_id.name"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Project:</td>
+                                <td class="border_column"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Remark 1:</td>
+                                <td class="border_column" colspan="4">
+                                    <span t-field="o.note"/>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="text-right">Remark 2:</td>
+                                <td class="border_column" colspan="4">
+                                    <span t-field="o.note"/>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="text-right">Remark 3:</td>
+                                <td class="border_column" colspan="4">
+                                    <span t-field="o.note"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <b>Purchase Information</b>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Supplier Code:</td>
+                                <td class="border_column" colspan="4">
+                                    <span t-field="o.partner_id.name_company"/>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="text-right">Supplier Name:</td>
+                                <td class="border_column" colspan="4">
+                                    <span t-field="o.partner_id.name_company"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Brand:</td>
+                                <td class="border_column">
+                                    <span t-field="o.partner_id.branch"/>
+                                </td>
+                                <td class="text-right" colspan="2">Invoice No:</td>
+                                <td class="border_column2">
+                                    <span t-field="o.std_invoice"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">รุ่น(model):</td>
+                                <td class="border_column">
+                                    <span t-field="o.std_model"/>
+                                </td>
+
+                                <td class="text-right" colspan="2">Purchase Date:</td>
+                                <td class="border_column2">
+                                    <span t-field="o.std_purchase_date"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">serial No:</td>
+                                <td class="border_column">
+                                    <span t-field="o.std_serial_no"/>
+                                </td>
+
+                                <td class="text-right" colspan="2">Purchase Price:</td>
+                                <td class="border_column2">
+                                    <span t-field="o.std_purchase_price"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <b>Depreciation Information</b>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Calculated Value:</td>
+                                <td class="border_column">
+                                    <span t-field="o.depreciation_base"/>
+                                </td>
+
+                                <td colspan="2" class="text-right">Depreciation Method:</td>
+                                <td class="border_column2">
+                                    <span t-field="o.method"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Market Price:</td>
+                                <td class="border_column">
+                                    <span t-field="o.purchase_value"/>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="text-right">Other Expense:</td>
+                                <td class="border_column">
+                                    <span t-field="o.purchase_value"/>
+                                </td>
+                                <td colspan="2" class="text-right">
+                                    Book Type
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Depreciation Start Date:</td>
+                                <td class="border_column">
+                                    <span t-field="o.date_start"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td class="text-right">Rate:</td>
+                                <td class="border_column">
+                                    <span t-field="o.method_number"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Accumulated Depreciation:</td>
+                                <td class="border_column">
+                                    <span t-field="o.value_depreciated"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <b>Insurance</b>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Insurer:</td>
+                                <td class="border_column" colspan="4">
+                                    <span t-field="o.std_insurance"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Policy No:</td>
+                                <td class="border_column">
+                                    <span t-field="o.std_policy"/>
+                                </td>
+
+                                <td class="text-right" colspan="2">Warranty No:</td>
+                                <td class="border_column2">
+                                    <span t-field="o.std_warranty_no"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Premium:</td>
+                                <td class="border_column">
+                                    <span t-field="o.std_premium"/>
+                                </td>
+                                <td class="text-right" colspan="2">Warranty Time:</td>
+                                <td class="border_column2">
+                                    <span t-field="o.std_warranty_time"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Sum insure:</td>
+                                <td class="border_column">
+                                    <span t-field="o.std_sum_insure"/>
+                                </td>
+                                <td class="text-right" colspan="2">End of Warranty:</td>
+                                <td class="border_column2">
+                                    <span t-field="o.std_end_of_warranty"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <b>Disposal</b>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Salvage Value:</td>
+                                <td class="border_column">
+                                    <span t-field="o.salvage_value"/>
+                                </td>
+                                <td class="text-right" colspan="2">Dispose Date:</td>
+                                <td class="border_column2">
+                                    <span t-field="o.method_end"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">Document No:</td>
+                                <td class="border_column">
+                                    <span t-field="o.std_invoice"/>
+                                </td>
+
+                                <td class="text-right" colspan="2">Sale Price:</td>
+                                <td class="border_column2"></td>
+                            </tr>
+                        </table>
+                        <div class="oe_structure"/>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+</odoo>

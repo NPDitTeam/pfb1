@@ -1,0 +1,15 @@
+<odoo>
+    <!-- PDF REPORTS -->
+    <record id="bankandcash_journal_pdf_report" model="ir.actions.report">
+        <field name="name">รายงานสมุดรายวันธนาคารและเงินสด</field>
+        <field name="model">account.move.line</field>
+        <field name="report_name">pfb_std_bankandcash_journal_report.line</field>
+        <field name="report_file">pfb_std_bankandcash_journal_report.line</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="paperformat_id" ref="pfb_std_bankandcash_journal_report.paperformat_bankandcash_journal_print"/>
+        <field name="print_report_name">'[%s]' % object.display_name</field>
+        <field name="binding_model_id" ref="account.model_account_move_line"/>
+        <field name="binding_type">report</field>
+
+    </record>
+</odoo>

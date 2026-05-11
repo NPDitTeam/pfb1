@@ -1,0 +1,19 @@
+Version 14.0.0.1:
+	- Fixed traceback issue of wrong date format in sale order.
+	- Fixed traceback issue of wrong date format in purchase order.
+	- Fixed traceback issue of wrong date format in invoice.
+	- Improved code in import invoice for system generated sequence. 
+	- Fixed traceback issue of wrong date format in Picking.
+	- Fixed traceback issue of wrong date format in bank_statement.
+	- Fixed traceback issue of wrong date format in Payment.
+	- Fixed traceback issue of wrong date format in Pricelist.
+	- Improved code of importing invoice lines. 
+	- Fixed traceback issue of wrong date format in import inventory. 
+
+Version 14.0.0.2:
+	- Fixed issue in dashboard view. 	
+
+Version 14.0.0.3:
+	- Replaced the wrong xls file in importing journal entries. 	
+
+

@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<odoo>
+	<data>
+	
+        
+        <!-- Account Analytic Line form view -->
+        
+       <record id="view_account_analytic_line_form_inherit_bi_branch_budget_ent" model="ir.ui.view">
+            <field name="name">view.account.analytic.line.form.inherit.bi.branch.budget.ent</field>
+            <field name="model">account.analytic.line</field>
+            <field name="inherit_id" ref="analytic.view_account_analytic_line_form"/>
+            <field name="arch" type="xml">
+                 <xpath expr="//field[@name='company_id']" position="after">
+                     <field name="branch_id"/>
+                 </xpath>
+            </field>
+        </record>
+        
+        
+        <!-- Account Analytic Line List view -->
+        
+        <record id="view_account_analytic_line_tree_inherit_bi_branch_budget_ent" model="ir.ui.view">
+            <field name="name">view.account.analytic.line.tree.inherit.bi.branch.budget.ent</field>
+            <field name="model">account.analytic.line</field>
+            <field name="inherit_id" ref="analytic.view_account_analytic_line_tree"/>
+            <field name="arch" type="xml">
+                 <xpath expr="//field[@name='account_id']" position="after">
+                     <field name="branch_id"/>
+                 </xpath>
+            </field>
+        </record>
+        
+	</data>
+</odoo>

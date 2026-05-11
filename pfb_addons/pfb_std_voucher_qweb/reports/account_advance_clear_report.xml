@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+ <!-- Header -->
+    <template id="external_all_layout_standard_account_advance_clear_report_pdf">
+                    <!--header- -->
+                        <div class="header">
+                    <style>
+                        @font-face { 
+                            font-family: THSarabunNew;
+                        }                    
+                        span.checkbox {
+                                display: inline-block;
+                                border: solid 1px black;
+                                width: 16px;
+                                height: 16px;
+                            }   
+                     </style>                          
+                            <table style="width:100%;font-size:24px;" >
+                            <tr>
+                                <td style="width:28%" rowspan="3">
+                                    <img style="max-width:180px" t-att-src="'data:image/png;base64,%s' % to_text(env.company.logo)" alt="Company Image"/>
+                                    <!--<img style="max-width:180px" src="/pfb_std_voucher_qweb/static/src/img/pimrypielogo.png" alt="Company Image"/>-->
+                                </td>
+                                <td colspan="2" style="font-family: THSarabunNew;font-size:20px">
+                                เลขที่ <t t-esc="env.company.street"/>&amp;nbsp;
+                                <t t-esc="env.company.street2"/>&amp;nbsp;
+                                <t t-esc="env.company.city"/>&amp;nbsp;
+                                <t t-esc="env.company.state_id.name"/>&amp;nbsp;
+                                <t t-esc="env.company.zip"/>&amp;nbsp;
+                                <!--อาคารลาดพร้าวฮิลล์ ซ.ลาดพร้าว 4 ถ.ลาดพร้าว แขวงจอมพล เขตจตุจักร กรุงเทพ 10900-->
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width:52%;font-family: THSarabunNew;font-size:20px">โทรศัพท์:&amp;nbsp;<t t-esc="env.company.phone"/>
+                                </td>
+                                <td style="width:20%"></td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: top;font-family: THSarabunNew;font-size:20px">
+                                เลขประจำตัวผู้เสียภาษีอากร&amp;nbsp;<t t-esc="env.company.vat"/>
+                                </td>
+                                <td><h2>ต้นฉบับ</h2></td>
+                            </tr>   
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td style="font-family: THSarabunNew;font-size:20px">เลขที่&amp;nbsp;<t t-esc="o.name"/></td>
+                            </tr>     
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td style="font-family: THSarabunNew;font-size:20px">(Reference No.)</td>
+                            </tr>  
+                            <tr>
+                                <td></td>
+                                <td class="text-center" style="font-size:22px"><strong>ใบรับเงิน</strong></td>
+                                <td style="font-family: THSarabunNew;font-size:20px">วันที่&amp;nbsp;
+                                <t t-if="o.doc_date">
+                                    <t t-esc="o.doc_date.strftime('%d/%m/%Y')"/>
+                                </t>
+                                </td>
+                            </tr>                                     
+                            <tr>
+                                <td style="font-family: THSarabunNew;font-size:20px">
+                                <span class="checkbox" style="position: relative;bottom: -1px">
+                                    <t t-if="env.company.branch=='00000'">
+                                        <font style="font-family: THSarabunNew;font-size:30px;position:relative;left:4px;bottom:16px;"><strong>x</strong></font>
+                                    </t>
+                                </span>                                 
+                                 &amp;nbsp;&amp;nbsp;สำนักงานใหญ่ &amp;nbsp;&amp;nbsp;<span class="checkbox" style="position: relative;bottom: -1px"/>
+                                    <t t-if="env.company.branch !='00000'">
+                                        <font style="font-family: THSarabunNew;font-size:30px;position:relative;left:-16px;bottom:2px;"><strong>x</strong></font>
+                                    </t>
+                                 &amp;nbsp;สาขา</td>
+                                <td class="text-center" style="font-family: THSarabunNew;font-size:22px"><strong>CASH RECEIPT</strong></td>
+                                <td style="font-family: THSarabunNew;font-size:20px">(Date)</td>
+                            </tr>  
+                            <tr>
+                                <td colspan="3">&amp;nbsp;
+                                </td>
+                            </tr>     
+                            </table>                          
+                            <table style="width:100%">
+                            <tr>
+                                <td style="vertical-align: text-bottom;width:15%;font-family: THSarabunNew;font-size:20px;">ชื่อ-นามสกุล (Name)</td>
+                                <td style="border-bottom:1px dotted;"><t t-esc="o.employee_id.name"/>&amp;nbsp;</td>
+                                <!--...................................................................................................
+                                ...................................................................................................
+                                ........-->
+                            </tr>   
+                            <tr>
+                                <td style="vertical-align: text-bottom;width:15%;font-family: THSarabunNew;font-size:20px">ที่อยู่ (Address)&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</td>
+                                <td style="border-bottom:1px dotted;">&amp;nbsp;</td>
+                                <!--...................................................................................................
+                                ...................................................................................................
+                                ........-->
+                            </tr>                                                                                                                                                                                              
+                            </table>
+
+                        </div>
+    </template>
+<template id="external_all_layout_account_advance_clear_report_pdf">
+    <t t-if="not o" t-set="o" t-value="doc"/>
+
+    <t t-if="not company">
+        <!-- Multicompany -->
+        <t t-if="company_id">
+            <t t-set="company" t-value="company_id"/>
+        </t>
+        <t t-elif="o and 'company_id' in o">
+            <t t-set="company" t-value="o.company_id.sudo()"/>
+        </t>
+        <t t-else="else">
+            <t t-set="company" t-value="res_company"/>
+        </t>
+    </t>
+
+    <t t-call="pfb_std_voucher_qweb.external_all_layout_standard_account_advance_clear_report_pdf">
+        <t t-raw="0"/>
+    </t>
+</template>
+
+<template id="account_advance_clear_report_pdf">
+  <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                <t t-call="pfb_std_voucher_qweb.external_all_layout_account_advance_clear_report_pdf">
+                </t>
+                    <t t-call="web.external_layout">
+                        <div class="page">
+                    <style>
+                        @font-face { 
+                            font-family: THSarabunNew;
+                        }                    
+                        span.checkbox {
+                                display: inline-block;
+                                border: solid 1px black;
+                                width: 16px;
+                                height: 16px;
+                            }   
+                           
+                     </style>
+                            <table style="width:100%;font-size:20px" cellpadding="0" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" style="width:12%;border: 1px solid black!important;">
+                                            ลำดับ<br/>
+                                            No.
+                                        </th>                                       
+                                        <th class="text-center" style="width:66%;border: 1px solid black!important;">
+                                            รายการ<br/>
+                                            Description
+                                        </th>
+                                        <th class="text-center" style="width:22%;border: 1px solid black!important;">
+                                            จำนวนเงิน<br/>
+                                            Amount (Baht)
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                  <t t-set="count_line" t-value="0"/>
+                                  <t t-foreach="o.clear_ids" t-as="line">
+                                  <t t-set="count_line" t-value="count_line + 1"/>
+                                    <tr> 
+                                        <td class="text-center" style="border-left: 1px solid black!important;"><t t-esc="count_line"/></td>
+                                        <td style="border-left: 1px solid black!important;">&amp;nbsp;<t t-esc="line.name"/></td>
+                                        <td class="text-right" style="border-left: 1px solid black!important;border-right: 1px solid black!important;"><t t-esc="'{0:,.2f}'.format(line.price_subtotal)"/>&amp;nbsp;</td>
+                                    </tr> 
+                                   </t>
+                                   <tr> 
+                                    <td style="border-left: 1px solid black!important;">&amp;nbsp;</td>
+                                    <td style="border-left: 1px solid black!important;">&amp;nbsp;</td>
+                                    <td style="border-left: 1px solid black!important;border-right: 1px solid black!important;">&amp;nbsp;</td>
+                                   </tr>   
+                                   
+                                    <t t-foreach="14 - count_line" t-as="item">
+                                    <tr> 
+                                        <td style="border-left: 1px solid black!important;">&amp;nbsp;</td>
+                                        <td style="border-left: 1px solid black!important;">&amp;nbsp;</td>
+                                        <td style="border-left: 1px solid black!important;border-right: 1px solid black!important;">&amp;nbsp;</td>
+                                    </tr>   
+                                    </t>
+
+                                   <tr> 
+                                    <td colspan="2" style="border-top: 1px solid black!important;border-left: 1px solid black!important;border-bottom: 1px solid black!important;">
+                                    &amp;nbsp; รวมทั้งสิ้น (Grand Total)  
+                                    <span style="padding-left:100px;">
+                                    (<t t-esc="o.currency_id.with_context({'lang': 'th_TH'}).amount_to_text(o.amount)"/>)
+                                    </span>
+                                    <br/>&amp;nbsp; ตัวอักษร</td>
+                                    <td class="text-right" style="border-top: 1px solid black!important;border-left: 1px solid black!important;border-right: 1px solid black!important;;border-bottom: 1px solid black!important;"><t t-esc="'{0:,.2f}'.format(o.amount)"/>&amp;nbsp;</td>
+                                   </tr>                                                                       
+                                  </tbody>
+                            </table>
+                            <br/>
+                            <table style="width:100%;font-size:20px" cellpadding="0" cellspacing="0">
+                             <tr>
+                             <td style="width:35%">
+                             
+                             <span class="checkbox" style="position: relative;bottom: -1px">
+                                <font style="font-family: THSarabunNew;font-size:30px;position:relative;left:4px;bottom:16px;"><strong>x</strong></font>                             
+                             </span>
+                             
+                             &amp;nbsp;&amp;nbsp;เงินสด</td>
+                             <td style="width:35%"><span class="checkbox" style="position: relative;bottom: -1px"/>&amp;nbsp;&amp;nbsp;โอนเงินผ่านธนาคาร</td>
+                             <td style="width:30%"><span class="checkbox" style="position: relative;bottom: -1px"/>&amp;nbsp;&amp;nbsp;เช็คเลขที่</td>
+                             </tr>
+                             <tr>
+                             <td>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;(Cash)</td>
+                             <td>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;(Transfer)</td>
+                             <td>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;(Check No.)</td>
+                             </tr> 
+                             <!--<tr>
+                             <td>&amp;nbsp; </td>
+                             <td></td>
+                             <td></td>
+                             </tr>                                     
+                             -->
+                             <tr>
+                             <td><span class="checkbox" style="position: relative;bottom: -1px"/>&amp;nbsp;&amp;nbsp;ธนาคาร</td>
+                             <td><span class="checkbox" style="position: relative;bottom: -1px"/>&amp;nbsp;&amp;nbsp;สาขา</td>
+                             <td><span class="checkbox" style="position: relative;bottom: -1px"/>&amp;nbsp;&amp;nbsp;ลงวันที่</td>
+                             </tr>                                            
+                             <tr>
+                             <td>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;(Bank)</td>
+                             <td>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;(Branch)</td>
+                             <td>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;(Date)</td>
+                             </tr> 
+                             <!--<tr>
+                             <td></td>
+                             <td></td>
+                             <td></td>
+                             </tr>                                                                                                   
+                             -->
+                            </table>
+
+                            <div class="footer">
+                            <div class="last-page">
+                            <table class="table table-borderless" style="width:100%;font-size:20px;font-family: THSarabunNew;">
+                              <tr>
+                                <td class="text-center" style="width:40%">..................................................................................</td>
+                                <td class="text-center" style="width:20%"></td>
+                                <td class="text-center" style="width:40%">..................................................................................</td>
+                              </tr>
+                              <tr>
+                                <td class="text-center" style="width:40%">ผู้รับเงิน (Receiver Signature)</td>
+                                <td class="text-center" style="width:20%"></td>
+                                <td class="text-center" style="width:40%">ผู้มีอำนาจลงนาม (Authorized Signature)</td>
+                              </tr>       
+                              <tr>
+                                <td class="text-center" colspan="3">
+                                ใบรับเงินนี้จะสมบูรณ์ก็ต่อเมื่อมีลายมือชื่อผู้มีอำนาจและผู้รับเงิน ถ้าชำระด้วยเข็คจะสมบูรณ์เมื่อได้รับเงินตามเช็คเรียบร้อยแล้ว
+                                </td>
+
+                              </tr>                                                       
+                            </table>
+                            </div>
+                        
+                            </div>
+                        </div>
+                     </t>
+
+                </t>
+            </t>
+</template>
+
+</odoo>
+
+

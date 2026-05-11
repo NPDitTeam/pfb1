@@ -1,0 +1,114 @@
+<odoo>
+    <!-- Tree View -->
+    <record id="view_refund_payment_tree" model="ir.ui.view">
+        <field name="name">refund.payment.tree</field>
+        <field name="model">refund.payment</field>
+        <field name="arch" type="xml">
+            <tree string="โอนคืนเงินลูกค้า">
+                <field name="name"/>
+                <field name="transfer_type"/>
+                <field name="state"/>
+                <field name="payment_ids"/>
+                <field name="date"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_refund_payment_form" model="ir.ui.view">
+        <field name="name">refund.payment.form</field>
+        <field name="model">refund.payment</field>
+        <field name="arch" type="xml">
+            <form string="โอนคืนเงินลูกค้า" delete="false" duplicate="false">
+
+                <header>
+                    <button name="action_confirm"
+                            string="ยืนยัน"
+                            type="object"
+                            class="btn-primary"
+                            attrs="{'invisible': [('state', '=', 'confirmed')]}"/>
+
+                    <button name="action_reset_to_draft"
+                            string="ยกเลิกรับเป็นร่าง"
+                            type="object"
+                            class="btn-secondary"
+                            attrs="{'invisible': ['|', ('state', '=', 'draft'), ('show_fleet_refund_button', '=', False)]}"/>
+
+                    <button name="action_reverse_overpaid"
+                            string="คืนเงินโอนเกิน"
+                            type="object"
+                            class="btn-danger"
+                            attrs="{
+                                'invisible': [
+                                    '|','|',
+                                    ('transfer_type', '!=', 'overpaid_refund'),
+                                    ('state', '!=', 'confirmed'),
+                                    ('show_fleet_refund_button', '=', False)
+                                ]
+                            }"/>
+
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+                </header>
+
+                <sheet>
+                    <widget name="web_ribbon"
+            title="เสร็จสิ้น"
+            bg_color="bg-success"
+            attrs="{'invisible': [('show_state', '=', False)]}"/>
+                    <group>
+                        <field name="transfer_type" required="1"/>
+                        <field name="show_fleet_refund_button" invisible="1"/>
+                        <field name="show_state" invisible="1"/>
+                        <field name="name" readonly="1"/>
+                        <field name="branch_id" readonly="1"/>
+                        <field name="payment_ids"
+       widget="many2many_tags"
+       options="{'no_create_edit': True}"
+       attrs="{'readonly': [('state', '=', 'confirmed')]}"/>
+
+
+
+                        <field name="move_id" readonly="1"/>
+                        <field name="date" attrs="{'readonly': [('show_fleet_refund_button', '=', 'False')]}"/>
+                    </group>
+
+                    <notebook>
+                        <page string="รายละเอียดการชำระเงิน">
+                            <group string="รายละเอียดรายการที่เลือก">
+                                <field name="payment_lines" attrs="{'readonly': [('state', '=', 'confirmed')]}">
+                                    <tree editable="bottom">
+                                        <field name="payment_name"/>
+                                        <field name="payment_id" invisible="1"/>
+                                        <field name="partner_id"/>
+                                        <field name="amount" required="1"/>
+                                        <field name="payment_date"/>
+                                    </tree>
+                                </field>
+                            </group>
+                        </page>
+
+                        <page string="การติดตาม">
+                            <div class="oe_chatter">
+                                <field name="message_ids" widget="mail_thread"/>
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_refund_payment_form" model="ir.actions.act_window">
+        <field name="name">โอนคืนเงินลูกค้า</field>
+        <field name="res_model">refund.payment</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_refund_payment_tree"/>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ยังไม่มีข้อมูลเพิ่มข้อมูลใหม่เพื่อเริ่มต้น
+            </p>
+        </field>
+    </record>
+</odoo>

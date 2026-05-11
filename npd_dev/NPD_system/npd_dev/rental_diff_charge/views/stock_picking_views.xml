@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Form View: เพิ่มฟิลด์เก็บค่าเช่าส่วนต่างต่อจาก return_date -->
+        <record id="view_picking_form_rental_diff" model="ir.ui.view">
+            <field name="name">stock.picking.form.rental.diff</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="rental_stock_picking.view_picking_form_rental"/>
+            <field name="priority">20</field>
+            <field name="arch" type="xml">
+                
+                <!-- วางฟิลด์ collect_rental_diff ต่อจาก return_date -->
+                <xpath expr="//field[@name='return_date']" position="after">
+                    <field name="collect_rental_diff" 
+                           string="เก็บค่าเช่าส่วนต่าง"
+                           widget="boolean_toggle"/>
+                </xpath>
+
+            </field>
+        </record>
+
+        <!-- Tree View: เพิ่มฟิลด์เก็บค่าเช่าส่วนต่างต่อจาก return_date -->
+        <record id="view_picking_tree_rental_diff" model="ir.ui.view">
+            <field name="name">stock.picking.tree.rental.diff</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="rental_stock_picking.view_picking_tree_rental"/>
+            <field name="priority">20</field>
+            <field name="arch" type="xml">
+
+                <xpath expr="//field[@name='return_date']" position="after">
+                    <field name="collect_rental_diff" 
+                           string="เก็บค่าเช่าส่วนต่าง" 
+                           optional="show"/>
+                </xpath>
+
+            </field>
+        </record>
+
+    </data>
+</odoo>

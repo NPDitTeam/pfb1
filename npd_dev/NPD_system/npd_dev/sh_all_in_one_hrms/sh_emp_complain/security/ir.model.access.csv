@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sh_complain_categories,access_sh_complain_categories,model_sh_complain_categories,base.group_user,1,1,1,1
+access_sh_complain,access_sh_complain,model_sh_complain,base.group_user,1,1,1,1
+access_sh_complain_resolve_wizard,access_sh_complain_resolve_wizard,model_sh_complain_resolve_wizard,base.group_user,1,1,1,1
+access_sh_complain_refuse_wizard,access_sh_complain_refuse_wizard,model_sh_complain_refuse_wizard,base.group_user,1,1,1,1
+access_sh_effect_model,access_sh_effect_model,model_sh_effect_model,base.group_user,1,1,1,1

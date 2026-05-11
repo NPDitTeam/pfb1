@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_employee_form_view_medical" model="ir.ui.view">
+        <field name="name">sh.employee.form.view</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='personal_information']" position="after">
+                <page string="Medical Information" groups="sh_all_in_one_hrms.group_hide_menu_emp_medical">
+                    <group>
+                        <group string="Doctor Information">
+                            <field name="sh_doctor_id" />
+                            <field name="sh_phone" />
+                        </group>
+                        <group string="Physical Information">
+                            <field name="sh_blood_group" />
+                            <field name="sh_height" />
+                            <field name="sh_weight" />
+                        </group>
+                    </group>
+                    <group string="Does the applicant have any Disabilities?">
+                        <group>
+                            <field name="sh_eyes" />
+                            <field name="sh_respiratory" />
+                            <field name="sh_musculoskeletal" />
+                        </group>
+                        <group>
+                            <field name="sh_ears" />
+                            <field name="sh_cardiovascular" />
+                            <field name="sh_dermatological" />
+                        </group>
+                        <group>
+                            <field name="sh_nose_throat" />
+                            <field name="sh_neurological" />
+                            <field name="sh_blood_pressure" />
+                        </group>
+                    </group>
+                    <group string="Medical Notes">
+                        <field name="sh_notes" />
+                    </group>
+                    <group string="Medical Examination">
+                        <field name="sh_medical_type_ids">
+                            <form string="Medical Examination">
+                                <group>
+                                    <group>
+                                        <field name="sh_medical_type_id" />
+                                        <field name="sh_description" />
+                                        <field name="sh_issue_date" />
+                                    </group>
+                                    <group>
+                                        <field name="sh_expiry_month" />
+                                        <field name="sh_expiry_date" />
+                                    </group>
+                                </group>
+                            </form>
+                            <tree editable="bottom">
+                                <field name="sh_medical_type_id" />
+                                <field name="sh_description" />
+                                <field name="sh_issue_date" />
+                                <field name="sh_expiry_month" />
+                                <field name="sh_expiry_date" />
+                            </tree>
+                        </field>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,27 @@
+<odoo>
+
+    <!-- PDF REPORTS -->
+    <record id="action_report_delivery_print" model="ir.actions.report">
+        <field name="name">Delivery Slip</field>
+        <field name="model">stock.picking</field>
+        <field name="report_name">pfb_npd_delivery_qweb.report_delivery_document</field>
+        <field name="report_file">pfb_npd_delivery_qweb.report_delivery_document</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="paperformat_id" ref="pfb_npd_delivery_qweb.paperformat_delivery_slip"/>
+        <field name="print_report_name">'%s%s' % (object.name, object.state == 'draft' and '-draft' or '')
+        </field>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_picking_print" model="ir.actions.report">
+        <field name="name">Picking Operations</field>
+        <field name="model">stock.picking</field>
+        <field name="report_name">pfb_npd_delivery_qweb.report_picking</field>
+        <field name="report_file">pfb_npd_delivery_qweb.report_picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="paperformat_id" ref="pfb_npd_delivery_qweb.paperformat_picking_operation"/>
+        <field name="print_report_name">'%s%s' % (object.name, object.state == 'draft' and '-draft' or '')
+        </field>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

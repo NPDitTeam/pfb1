@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_project_task_report_user_milestone_inherit_search_view" model="ir.ui.view">
+        <field name="name">project.task.report.user.milestone.search</field>
+        <field name="model">report.project.task.user</field>
+        <field name="inherit_id" ref="project.view_task_project_user_search" />
+        <field name="arch" type="xml">
+            <field name="project_id" position="after">
+                <field name="milestone_id" />
+            </field>
+            <xpath expr="//group" position="inside">
+                <filter string="Milestone" name="milestone_id" context="{'group_by':'milestone_id'}" />
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit Debt Tracking Form View - เพิ่มฟิลด์ยอดชำระ -->
+    <record id="npd_debt_tracking_view_form_payment" model="ir.ui.view">
+        <field name="name">npd.debt.tracking.form.payment</field>
+        <field name="model">npd.debt.tracking</field>
+        <field name="inherit_id" ref="npd_debt_tracking.npd_debt_tracking_view_form"/>
+        <field name="arch" type="xml">
+            <!-- เพิ่มฟิลด์ยอดชำระหลัง partner_mobile -->
+            <xpath expr="//field[@name='partner_mobile']" position="after">
+                <field name="payment_amount"/>
+                <field name="payment_user_id" attrs="{'invisible': [('payment_user_id', '=', False)]}"/>
+                <field name="payment_date" attrs="{'invisible': [('payment_id', '=', False)]}"/>
+                <field name="payment_id" attrs="{'invisible': [('payment_id', '=', False)]}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit Debt Tracking Tree View - เพิ่มคอลัมน์ยอดชำระ -->
+    <record id="npd_debt_tracking_view_tree_payment" model="ir.ui.view">
+        <field name="name">npd.debt.tracking.tree.payment</field>
+        <field name="model">npd.debt.tracking</field>
+        <field name="inherit_id" ref="npd_debt_tracking.npd_debt_tracking_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='amount_residual']" position="after">
+                <field name="payment_amount" sum="รวมชำระแล้ว"/>
+                <field name="payment_user_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

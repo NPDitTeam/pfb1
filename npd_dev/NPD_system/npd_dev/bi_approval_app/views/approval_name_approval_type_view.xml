@@ -1,0 +1,41 @@
+<!-- approval_name_approval_type_view.xml -->
+<odoo>
+    <data>
+        <record id="view_approval_name_approval_type_tree" model="ir.ui.view">
+            <field name="name">approval.name_approval_type.tree</field>
+            <field name="model">approval.name_approval_type</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="Approval Name Type">
+                    <field name="name"/>
+                    <field name="description"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_approval_name_approval_type_form" model="ir.ui.view">
+            <field name="name">approval.name_approval_type.form</field>
+            <field name="model">approval.name_approval_type</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Approval Name Type">
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="description"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_approval_name_approval_type_view" model="ir.actions.act_window">
+            <field name="name">Approval Name Type</field>
+            <field name="res_model">approval.name_approval_type</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_approval_name_approval_type_tree"/>
+        </record>
+
+        <menuitem id="menu_approval_name_approval_type" name="Approval Name Types" action="action_approval_name_approval_type_view" parent="bi_approval_app.main_menu_approval_config" sequence="3"/>
+    </data>
+</odoo>

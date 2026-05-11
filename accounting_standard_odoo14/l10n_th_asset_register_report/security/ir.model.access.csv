@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+asset_register_report_wizard,asset.register.report.wizard,model_asset_register_report_wizard,account.group_account_readonly,1,1,1,0
+report_asset_register,report.asset.register,model_report_asset_register,account.group_account_readonly,1,1,1,0

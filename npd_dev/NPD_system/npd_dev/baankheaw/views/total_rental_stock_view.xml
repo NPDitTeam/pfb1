@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="action_total_rental_stock" model="ir.actions.act_window">
+        <field name="name">Stock เช่ารวม</field>
+        <field name="res_model">baankheaw.total_rental_stock</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p>📌 รายงานนี้แสดงข้อมูลสต็อกเช่าทั้งหมดจากระบบภายนอก</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_total_rental_stock"
+              name="Stock เช่ารวม"
+              parent="baankheaw.baankheaw_menu_root"
+              action="action_total_rental_stock"
+              sequence="29" groups="base.group_user"/>
+
+    <record id="view_total_rental_stock_tree" model="ir.ui.view">
+        <field name="name">baankheaw.total_rental_stock.tree</field>
+        <field name="model">baankheaw.total_rental_stock</field>
+        <field name="arch" type="xml">
+            <tree string="สรุป Stock เช่ารวม">
+                <field name="product_code"/>
+                <field name="product_name"/>
+                <field name="total_initial_stock"/>
+                <field name="total_stock_in"/>
+                <field name="total_stock_out"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_total_rental_stock_form" model="ir.ui.view">
+        <field name="name">baankheaw.total_rental_stock.form</field>
+        <field name="model">baankheaw.total_rental_stock</field>
+        <field name="arch" type="xml">
+            <form string="รายละเอียด Stock เช่ารวม">
+                <header>
+                    <button name="action_update_total_stock_data"
+                            type="object"
+                            string="🔄 อัปเดตข้อมูลสต็อกรวม"
+                            class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group>
+                         <group string="ข้อมูลสินค้า">
+                            <field name="product_code"/>
+                            <field name="product_name"/>
+                        </group>
+                        <group string="จำนวนสต็อกรวม">
+                            <field name="total_initial_stock"/>
+                            <field name="total_stock_in"/>
+                            <field name="total_stock_out"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

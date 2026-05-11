@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_salon_stock,access.salon.stock,model_salon_stock,,1,1,1,1
+

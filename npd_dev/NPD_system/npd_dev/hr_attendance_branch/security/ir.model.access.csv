@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_hr_attendance_branch_user,access_hr_attendance_branch_user,model_hr_attendance_branch,base.group_user,1,1,1,1
+access_hr_attendance_leave_user,access_hr_attendance_leave_user,model_hr_attendance_branch_leave,base.group_user,1,1,1,1
+access_hr_manual_time_log_user,access_hr_manual_time_log_user,model_hr_manual_time_log,base.group_user,1,1,1,1

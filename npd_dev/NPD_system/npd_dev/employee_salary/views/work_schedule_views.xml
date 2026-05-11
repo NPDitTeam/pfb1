@@ -1,0 +1,74 @@
+<odoo>
+  <!-- Form -->
+  <record id="view_hr_work_schedule_form" model="ir.ui.view">
+    <field name="name">hr.work.schedule.form</field>
+    <field name="model">hr.work.schedule</field>
+    <field name="arch" type="xml">
+      <form string="Work Schedule">
+        <sheet>
+          <group>
+            <field name="employee_id"/>
+            <field name="employee_code"/>
+            <field name="position_id"/>
+            <field name="department_id"/>
+            <field name="category"/>
+          </group>
+
+          <!-- เฉพาะถ้าเลือก Check-in -->
+          <group attrs="{'invisible': [('category','=','no_checkin')]}">
+            <separator string="วันที่ต้องทำงาน"/>
+            <group>
+              <field name="work_mon"/>
+              <field name="work_tue"/>
+              <field name="work_wed"/>
+              <field name="work_thu"/>
+              <field name="work_fri"/>
+              <field name="work_sat"/>
+            </group>
+
+            <separator string="กะการทำงาน"/>
+            <notebook>
+              <page string="วันจันทร์"><group><field name="mon_shift_start"/><field name="mon_shift_end"/></group></page>
+              <page string="วันอังคาร"><group><field name="tue_shift_start"/><field name="tue_shift_end"/></group></page>
+              <page string="วันพุธ"><group><field name="wed_shift_start"/><field name="wed_shift_end"/></group></page>
+              <page string="วันพฤหัสบดี"><group><field name="thu_shift_start"/><field name="thu_shift_end"/></group></page>
+              <page string="วันศุกร์"><group><field name="fri_shift_start"/><field name="fri_shift_end"/></group></page>
+              <page string="วันเสาร์"><group><field name="sat_shift_start"/><field name="sat_shift_end"/></group></page>
+            </notebook>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- Tree -->
+  <record id="view_hr_work_schedule_tree" model="ir.ui.view">
+    <field name="name">hr.work.schedule.tree</field>
+    <field name="model">hr.work.schedule</field>
+    <field name="arch" type="xml">
+      <tree string="Work Schedule">
+        <field name="employee_id"/>
+        <field name="department_id"/>
+        <field name="position_id"/>
+        <field name="category"/>
+        <!-- แสดงเฉพาะวันจันทร์เป็นตัวอย่าง -->
+        <field name="mon_shift_start" attrs="{'invisible': [('category','=','no_checkin')]}"/>
+        <field name="mon_shift_end" attrs="{'invisible': [('category','=','no_checkin')]}"/>
+      </tree>
+    </field>
+  </record>
+
+  <!-- Action -->
+  <record id="action_hr_work_schedule" model="ir.actions.act_window">
+    <field name="name">ประเภทการทำงาน/กะการทำงาน</field>
+    <field name="res_model">hr.work.schedule</field>
+    <field name="view_mode">tree,form</field>
+  </record>
+
+  <!-- Menu -->
+  <menuitem id="menu_hr_work_schedule"
+            name="ประเภทการทำงาน/กะการทำงาน"
+            parent="main_employee_salary_menu"
+            action="action_hr_work_schedule"
+            sequence="20"/>
+</odoo>

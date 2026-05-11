@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <template id="assets_common" name="l10n_ch_isr_report" inherit_id="web.report_assets_common">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/css" href="pfb_npd_debt_reduction/static/report.css"/>
+        </xpath>
+    </template>
+
+    <record id="paperformat_debt_reduction_form_test" model="report.paperformat">
+        <field name="name">A5 Custom</field>
+        <field name="default" eval="False" />
+        <field name="format">A5</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">5</field>
+        <field name="margin_bottom">2</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False" />
+        <field name="header_spacing">-05</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <report
+            id="action_pfb_npd_debt_reduction"
+            string="ใบลดหนี้"
+            name="pfb_npd_debt_reduction.form_debt_reduction_npd_pfb"
+            model="account.move"
+            report_type="qweb-pdf"
+            print_report_name="'ใบลดหนี้ - %s' % (object.name)"
+            paperformat="pfb_npd_debt_reduction.paperformat_debt_reduction_form_test"
+    />
+
+    <template id="so_form_header">
+        <style>
+            .font_weight {
+                font-weight: 800;
+            }
+            .address-line {
+                font-size: 14px;
+                margin-top: 5px;
+            }
+            .tax-id {
+                font-size: 14px;
+                margin-top: -10px;
+                display: block;
+            }
+            .header-container {
+                display: flex;
+                align-items: flex-start;
+            }
+            .company-info {
+                margin-left: 40px;
+                margin-top: 10px;
+            }
+            .document-info {
+                margin-top: 15px;
+<!--                margin-left: -20px;-->
+            }
+            .text-date {
+                font-size: 14px;
+                margin-top: -10px
+            }
+            .date-info {
+                margin-top: -10px;
+            }
+        </style>
+        <div class="row">
+            <div class="col-1">
+                <img src="web/binary/company_logo" class="img-responsive" />
+            </div>
+            <div class="col-1"/>
+            <div class="col-7 company-info line-distance">
+                <table width="100%" style="font-size: 14px;">
+                    <tr>
+                        <td>
+                            <b style="font-size: 20px;line-height: 1.8; overflow: visible;"><span t-esc="doc.company_id.name"/></b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span t-field="doc.branch_id.address" style="line-height: 1.5;font-size: 14px;"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+<!--            <div class="col-1"></div>-->
+            <div class="col-3">
+                <table width="100%">
+                    <tr style="">
+                        <td style="display:block;width: 150px;text-align: center;padding-top: 3px;">
+                            <p class="text-center document-info"><h4><strong>ใบลดหนี้</strong></h4></p>
+                            <p class="text-center"><h5><strong>credit note</strong></h5></p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="row" style="margin-bottom: -15px;"></div>
+    </template>
+
+    <template id="so_form_title">
+        <style>
+            .container-table1 {
+                width: 35.5cm;
+                height: 11.5cm;
+<!--                border: 1px solid black;-->
+                padding: 5px;
+                box-sizing: border-box;
+                font-size: 14px;
+            }
+            .invoice-table {
+                width: 140%;
+                border-collapse: collapse;
+<!--                margin-bottom: 10px;-->
+                font-size: 14px;
+            }
+            .invoice-table, .invoice-table th, .invoice-table td {
+                border: 1px solid black;
+                font-size: 14px;
+            }
+            .invoice-table th, .invoice-table td {
+                padding: 5px;
+<!--                text-align: right;-->
+                vertical-align: top;
+                font-size: 14px;
+            }
+            .bold {
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .text-right {
+                text-align: right;
+                font-size: 14px;
+            }
+            .text-center {
+                text-align: center;
+                font-size: 14px;
+            }
+            .preserve-whitespace {
+                white-space: pre;
+            }
+        </style>
+        <br/>
+        <table class="container-table1 invoice-table line-distance">
+            <tr>
+                <div style="display: flex; justify-content: space-between;">
+                    <td colspan="2">
+                        <p style="margin-bottom: 5px;">
+                            <span class="text-left">ชื่อลูกค้า :</span>
+                            <span class="text-left"><span t-esc="doc.partner_id.name"/></span>
+                        </p>
+                        <p>
+                            <span class="preserve-whitespace">ที่อยู่         :</span>
+                            <span t-esc="doc.partner_id.street"/>
+                            <span t-esc="doc.partner_id.street2"/>
+                            <span t-esc="doc.partner_id.city"/>
+                            <span t-esc="doc.partner_id.state_id.name"/>
+                            <span t-esc="doc.partner_id.zip"/>
+                        </p>
+                        <p>
+                            <span class="preserve-whitespace">                     เลขประจำตัวผู้เสียภาษี</span>
+                            <span t-esc="doc.partner_id.vat"/>
+                            <span t-if="doc.partner_id.branch == '00000'">(สำนักงานใหญ่)</span>
+                        </p>
+                    </td>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <td style="border-right: hidden;">
+                        <p>
+                            <span class="text-left">เลขที่ / NO.</span>
+                        </p>
+                        <p>
+                            <span class="text-left">วันที่ / DATE</span>
+                        </p>
+                    </td>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <td style="border-left: hidden;" colspan="2">
+                        <p class="text-center">
+                            <span t-esc="doc.name"/>
+                        </p>
+                        <p class="text-center">
+                            <span t-esc="doc.date.strftime('%d') + ' ' + {1: 'ม.ค.', 2: 'ก.พ.', 3: 'มี.ค.', 4: 'เม.ย.', 5: 'พ.ค.', 6: 'มิ.ย.', 7: 'ก.ค.', 8: 'ส.ค.', 9: 'ก.ย.', 10: 'ต.ค.', 11: 'พ.ย.', 12: 'ธ.ค.'}[int(doc.date.strftime('%m'))] + ' ' + str(int(doc.date.strftime('%Y')) + 543)[-2:]"/>
+                        </p>
+                    </td>
+                </div>
+            </tr>
+            <div class="row" style="margin-bottom: -10px;"></div>
+            <tr>
+                <td colspan="4">
+                    <div class="row" style="margin-bottom: 5px;"></div>
+                    <t t-set="payments" t-value="doc.reversed_entry_id._get_reconciled_payments().filtered(lambda p: p.state == 'posted')"/>
+                    <p class="preserve-whitespace">อ้างอิงใบกำกับภาษีเลขที่                <t t-if="payments"><span t-esc="', '.join(payments.mapped('name'))"/></t><t t-else=""><span>ไม่พบข้อมูลการรับชำระ</span></t>                                                                                                       ลงวันที่        <span t-esc="doc.invoice_date.strftime('%d') + ' ' + {1: 'ม.ค.', 2: 'ก.พ.', 3: 'มี.ค.', 4: 'เม.ย.', 5: 'พ.ค.', 6: 'มิ.ย.', 7: 'ก.ค.', 8: 'ส.ค.', 9: 'ก.ย.', 10: 'ต.ค.', 11: 'พ.ย.', 12: 'ธ.ค.'}[int(doc.invoice_date.strftime('%m'))] + ' ' + str(int(doc.invoice_date.strftime('%Y')) + 543)[-2:]"/></p>
+                    <div class="row" style="margin-bottom: -10px;"></div>
+                </td>
+            </tr>
+            <tr>
+                <th class="text-center" width="10%">ลำดับที่</th>
+                <th class="text-center" width="55%">รายการ<br>DESCRIPTION</br></th>
+                <!-- <th class="text-center" width="12%">ค่าเช่าต่อวัน<br>RENT PER DAY</br></th> -->
+                <!-- <th class="text-center" width="15%">จำนวนวัน<br>NUMBER OF DAYS</br></th> -->
+                <th colspan="2" class="text-center" width="35%">จำนวนเงิน<br>AMOUNT</br></th>
+            </tr>
+            <tr t-foreach="doc.invoice_line_ids" t-as="l">
+                <td class="text-center"><span t-esc="l_index + 1"/></td>
+                <td><span t-esc="l.name"/></td>
+                <!-- <td class="text-right"><span t-esc="'{0:,.2f}'.format(l.price_unit)"/></td> -->
+                <!-- <td class="text-center"><span t-esc="l.pfb_date_of_rent"/></td> -->
+                <td colspan="2" class="text-right"><span t-esc="'{0:,.2f}'.format(l.price_subtotal)"/></td>
+            </tr>
+            <tr>
+                <td colspan="2" class="text-left" style="border-bottom: hidden;">เหตุผลในการลดหนี้</td>
+                <td class="text-left" style="border-bottom: hidden; border-right: hidden;">มูลค่าตามใบกำกับภาษีเดิม</td>
+                <td class="text-right" style="border-bottom: hidden; border-left: hidden;"><span t-esc="'{0:,.2f}'.format(doc.reversed_entry_id.amount_total)"/></td>
+            </tr>
+            <tr>
+                <!--                <td colspan="2" class="text-left preserve-whitespace" style="border-bottom: hidden;">              <span t-esc="doc.narration"/></td>-->
+                <t t-set="nar" t-value="doc.narration or ''"/>
+                <!-- แปลงแพทเทิร์นที่ 'เหมือนว่าง' เป็นค่าว่าง โดยใช้ &lt; &gt; -->
+                <t t-set="nar_norm"
+                   t-value="nar.replace('&lt;p&gt;&lt;br&gt;&lt;/p&gt;', '')
+                            .replace('&lt;br/&gt;', '')
+                            .replace('&lt;p&gt;&amp;nbsp;&lt;/p&gt;', '')
+                            .strip()"/>
+
+                <!-- แสดงเฉพาะเมื่อหลัง normalize แล้วยังเหลือเนื้อหา -->
+                <t t-if="nar_norm">
+                  <td colspan="2" class="text-left" style="border-bottom: hidden;">
+                    <span t-raw="nar"/>
+                  </td>
+                </t>
+                <t t-else="">
+                  <td colspan="2" style="border-bottom: hidden;"></td>
+                </t>
+
+                <td class="text-left" style="border-bottom: hidden; border-right: hidden;">มูลค่าที่ถูกต้อง</td>
+<!--                <td class="text-right" style="border-bottom: hidden; border-left: hidden;"><span t-esc="'{0:,.2f}'.format(doc.reversed_entry_id.amount_total - (doc.amount_untaxed * 1.07))"/></td>-->
+                 <td class="text-right" style="border-bottom: hidden; border-left: hidden;"><span t-esc="'{0:,.2f}'.format(doc.reversed_entry_id.amount_total - doc.amount_total)"/></td>
+
+            </tr>
+            <tr>
+                <td colspan="2" class="text-left preserve-whitespace" style="border-bottom: hidden;"></td>
+                <td class="text-left" style="border-bottom: hidden; border-right: hidden;">ผลต่าง</td>
+                <td class="text-right" style="border-bottom: hidden; border-left: hidden;"><span t-esc="'{0:,.2f}'.format(doc.amount_total)"/></td>
+<!--                <td class="text-right" style="border-bottom: hidden; border-left: hidden;"><span t-esc="'{0:,.2f}'.format(doc.amount_untaxed * 1.07)"/></td>-->
+<!--                <td colspan="2" class="text-right" style="border-left: hidden; border-bottom: hidden;"><span t-esc="'{0:,.2f}'.format(doc.wht_amt_net)"/></td>-->
+            </tr>
+            <tr>
+                <td colspan="2" class="text-left">จำนวนเงิน (ตัวอักษร)</td>
+                <td class="text-left" style="border-right: hidden;">ภาษีมูลค่าเพิ่ม 7%</td>
+<!--                <td class="text-right" style="border-left: hidden;"><span t-esc="'{0:,.2f}'.format(doc.amount_untaxed * 0.07)"/></td>-->
+                <td class="text-right" style="border-left: hidden;"><span t-esc="'{0:,.2f}'.format(doc.amount_tax)"/></td>
+            </tr>
+            <tr>
+                <td colspan="2" class="text-center"><strong>(<span t-esc="doc.get_baht_text_debt_reduction()"/>)</strong></td>
+                <td class="text-left" style="border-top: hidden; border-right: hidden;">ค่าเช่าก่อนภาษีมูลค่าเพิ่ม</td>
+                <td class="text-right" style="border-top: hidden; border-left: hidden;"><span t-esc="'{0:,.2f}'.format(doc.amount_untaxed)"/></td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <p>
+                        <div class="row" style="margin-bottom: 50px;"></div>
+                    </p>
+                    <p class="text-center" style="margin-left: 200px; margin-bottom: 6px;">
+                        <span>........................................................................</span>
+                    </p>
+                    <p class="text-center" style="margin-left: 200px;">
+                        <span>ผู้ตรวจสอบ / Inspector</span>
+                    </p>
+                </td>
+                <td colspan="2" style="border-left: hidden;">
+                    <p class="text-center">
+                        <img src="/pfb_npd_debt_reduction/static/img/Signature.png" alt="Signature" style="max-width: 200px; height: auto;"/>
+                    </p>
+                    <p class="text-center">
+                        <span>ผู้มีอำนาจลงนาม / AUTHORIZED SIGNATURE</span>
+                    </p>
+                </td>
+            </tr>
+        </table>
+    </template>
+
+    <template id="form_debt_reduction_npd_pfb">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.basic_layout">
+                    <table width="100%" border="1">
+                        <tr>
+                            <td>
+<!--                                Header-->
+                                <t t-call="pfb_npd_debt_reduction.so_form_header"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+<!--                                Title-->
+                                <t t-call="pfb_npd_debt_reduction.so_form_title"/>
+                            </td>
+                        </tr>
+                    </table>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

@@ -1,0 +1,40 @@
+<odoo>
+    <!-- Tree View -->
+    <record id="view_commission_rate_branch_sales_tree" model="ir.ui.view">
+        <field name="name">commission.rate.branch.sales.tree</field>
+        <field name="model">commission.rate.branch.sales</field>
+        <field name="arch" type="xml">
+            <tree string="ตั้งค่าอัตราค่าคอมสาขา/Sales" editable="bottom">
+                <field name="name"/>
+                <field name="branch_rate" string="ค่าคอมสาขา (%)"/>
+                <field name="sales_rate" string="ค่าคอม Sales (%)"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_commission_rate_branch_sales_form" model="ir.ui.view">
+        <field name="name">commission.rate.branch.sales.form</field>
+        <field name="model">commission.rate.branch.sales</field>
+        <field name="arch" type="xml">
+            <form string="ตั้งค่าอัตราค่าคอมสาขา/Sales">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="branch_rate" string="ค่าคอมสาขา (%)"/>
+                            <field name="sales_rate" string="ค่าคอม Sales (%)"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_commission_rate_branch_sales" model="ir.actions.act_window">
+        <field name="name">ค่าคอมสาขา/Sales</field>
+        <field name="res_model">commission.rate.branch.sales</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

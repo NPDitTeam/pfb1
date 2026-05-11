@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_withholding_tax_form_inherit" model="ir.ui.view">
+        <field name="name">view.withholding.tax.cert.form.inherit</field>
+        <field name="model">withholding.tax.cert</field>
+        <field name="inherit_id" ref="l10n_th_withholding_tax_cert.view_withholding_tax_cert_form"/>
+        <field name="arch" type="xml">
+             <xpath expr="//field[@name='payment_id']" position="before">
+                    <field name="name" />
+              </xpath>
+                 <xpath expr="//field[@name='company_taxid']" position="after">
+
+                      <label for="report_date" />
+                            <div class="o_row">
+                                <field name="report_late_mo" />
+                                <span>=</span>
+                                <field name="report_date" />
+                            </div>
+
+              </xpath>
+            <xpath expr="//field[@name='payment_id']" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </xpath>
+              <xpath expr="//field[@name='move_id']" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </xpath>
+            <!-- <xpath expr="//field[@name='wt_line']" position="attributes">
+            <attribute name="context">{'default_wt_percent':percent_tax}</attribute>
+            </xpath> -->
+            <xpath expr="//field[@name='wt_line']" position="after">
+                <group col="3" class="oe_subtotal_footer oe_right">
+                    <field name="base_amount" string="Base Amount"/>
+                    <field name="tax_amount" string="Tax Amount"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+       <template
+            id="report_assets_common"
+            name="withholding tax cert change payment number common assets"
+            inherit_id="web.report_assets_common"
+        >
+            <xpath expr="." position="inside">
+                <link
+                    rel="stylesheet"
+                    type="text/scss"
+                    href="/withholding_tax_cert_amount/static/scss/style_report.scss"
+                />
+            </xpath>
+    </template>
+      <record id="view_move_form_inherit_wht" model="ir.ui.view">
+       <field name="name">account.move.form.inherit.wht</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form" />
+        <field name="arch" type="xml">
+         <xpath expr="//field[@name='amount_total']" position="after">
+                    <field name="wht_amt" string="WiholdingTax Amount"/>
+                    <field name="wht_amt_net" ></field>
+            </xpath>
+
+            
+           </field>
+    </record>
+
+    <record id="view_move_form" model="ir.ui.view">
+       <field name="name">account.move.form</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="l10n_th_withholding_tax.view_move_form" />
+        <field name="arch" type="xml">
+              <xpath
+                expr="//page/field[@name='invoice_line_ids']/tree/field[@name='wt_tax_id']"
+                position="attributes"
+                >
+                    <attribute name="string">WitholdingTax</attribute>
+            </xpath>
+              <xpath
+                expr="//page/field[@name='invoice_line_ids']/form//field[@name='wt_tax_id']"
+                position="attributes"
+                >
+                    <attribute name="string">WitholdingTax</attribute>
+            </xpath>
+           <xpath
+                 expr="//page/field[@name='line_ids']/tree/field[@name='wt_tax_id']"
+                position="attributes"
+                >
+                  <attribute name="invisible">True</attribute>
+            </xpath>
+              <xpath
+                  expr="//page/field[@name='line_ids']/form//field[@name='wt_tax_id']"
+                position="attributes"
+                >
+                  <attribute name="invisible">True</attribute>
+            </xpath>
+       
+        </field>
+    </record>
+    <record id="view_withholding_tax_tree_inherit" model="ir.ui.view">
+        <field name="name">view.withholding.tax.cert.tree.inherit</field>
+        <field name="model">withholding.tax.cert</field>
+        <field name="inherit_id" ref="l10n_th_withholding_tax_cert.view_withholding_tax_cert_tree"/>
+        <field name="arch" type="xml">
+           
+            <xpath expr="//tree//field[@name='tax_payer']" position="after">
+                 <field name="report_late_mo" />
+                       <field name="report_date" />
+                    <field name="base_amount" string="Base Amount"/>
+                    <field name="tax_amount" string="Tax Amount"/>
+               
+            </xpath>
+        </field>
+    </record>
+     <menuitem
+        id="menu_withholding_tax_cert_report"
+        name="Withholdding tax"
+        action="l10n_th_withholding_tax_cert.action_withholding_tax_cert_menu"
+        parent="account.menu_finance_entries_accounting_miscellaneous"
+        sequence="30"
+    />
+
+</odoo>

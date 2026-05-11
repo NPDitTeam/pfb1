@@ -1,0 +1,95 @@
+<odoo>
+    <!-- Tree View -->
+    <record id="view_cash_payment_tree" model="ir.ui.view">
+        <field name="name">cash.payment.tree</field>
+        <field name="model">cash.payment</field>
+        <field name="arch" type="xml">
+            <tree string="ชำระเงินสด">
+                <field name="name"/>
+                <field name="state"/>
+                <field name="payment_ids"/>
+                <field name="total_amount"/>
+                <field name="date_created" readonly="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_cash_payment_form" model="ir.ui.view">
+        <field name="name">cash.payment.form</field>
+        <field name="model">cash.payment</field>
+        <field name="arch" type="xml">
+            <form string="ชำระเงินสด">
+                <header>
+                    <button name="action_confirm"
+                            string="ยืนยัน"
+                            type="object"
+                            class="btn-primary"
+                            attrs="{'invisible': [('state', '=', 'confirmed')]}"/>
+                    <button name="action_reset_to_draft"
+                            string="ยกเลิกรับเป็นร่าง"
+                            type="object"
+                            class="btn-secondary"
+                            attrs="{'invisible': [('state', '=', 'draft')]}"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+                </header>
+
+                <sheet>
+                    <group>
+                        <field name="name" readonly="1"/>
+                        <field name="branch_id" readonly="1"/>
+                        <field name="payment_ids"
+                               widget="many2many_tags"
+                               domain="[('payment_method_one_id.name', '=', 'เงินสด'),
+                                       ('payment_type', '=', 'inbound'),
+                                       ('branch_id', '=', branch_id),
+                                       ('cash_status', '=', False)]"
+                               attrs="{'readonly': [('state', '=', 'confirmed')]}"/>
+                        <field name="move_id" readonly="1"/>
+                        <field name="total_amount"/>
+                        <field name="date_created" />
+                    </group>
+
+                    <notebook>
+                        <!-- Tab: Payment Details -->
+                        <page string="รายละเอียดการชำระเงิน">
+                            <group string="รายละเอียดรายการที่เลือก">
+                                <field name="payment_lines" attrs="{'readonly': [('state', '=', 'confirmed')]}">
+                                    <tree editable="bottom">
+                                        <field name="payment_name"/>
+                                        <field name="payment_id" invisible="1"/>
+                                        <field name="partner_id"/>
+                                        <field name="amount"/>
+                                        <field name="payment_date"/>
+                                    </tree>
+                                </field>
+                            </group>
+                        </page>
+
+                        <!-- Tab: Mail Thread and Activities -->
+                        <page string="การติดตาม">
+                            <div class="oe_chatter">
+                                <field name="message_ids" widget="mail_thread"/>
+<!--                                <field name="activity_ids" widget="mail_activity"/>-->
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_cash_payment_form" model="ir.actions.act_window">
+        <field name="name">ชำระเงินสด</field>
+        <field name="res_model">cash.payment</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_cash_payment_tree"/>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ยังไม่มีข้อมูลเพิ่มข้อมูลใหม่เพื่อเริ่มต้น
+            </p>
+        </field>
+    </record>
+</odoo>

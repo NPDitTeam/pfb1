@@ -1,0 +1,12 @@
+<odoo>
+    <report
+        string="ใบเคลียร์เงินทดรองจ่าย"
+        id="ksp_payment_voucher_pdf_report"
+        model="account.advance.clear"
+        name="pfb_npd_advance_clear_print.ksp_advance_clear_pdf"
+        file="pfb_npd_advance_clear_print.ksp_advance_clear_pdf"
+        report_type="qweb-pdf"
+        print_report_name="'[%s]' % object.display_name"
+        paperformat="pfb_npd_advance_clear_print.paperformat_ksp_advance_clear"
+    />
+</odoo>

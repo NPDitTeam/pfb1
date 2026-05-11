@@ -1,0 +1,59 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* base
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-09-07 03:25+0000\n"
+"PO-Revision-Date: 2022-09-07 03:25+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: base
+#: model:ir.module.module,summary:base.module_viin_maintenance_tracking
+msgid ""
+"\n"
+"Tracking Changes Maintenance Request\n"
+"    "
+msgstr ""
+"\n"
+"Theo dõi thay đổi trên Yêu cầu Bảo trì\n"
+"    "
+
+#. module: base
+#: model:ir.module.module,description:base.module_viin_maintenance_tracking
+msgid ""
+"\n"
+"What it does\n"
+"============\n"
+"Track changes of some fields on maintenance request.\n"
+"\n"
+"Supported Editions\n"
+"==================\n"
+"1. Community Edition\n"
+"2. Enterprise Edition\n"
+"\n"
+"    "
+msgstr ""
+"\n"
+"Ứng dụng này làm gì\n"
+"===================\n"
+"Theo dõi thay đổi của một số trường trên yêu cầu bảo trì.\n"
+"\n"
+"Ấn bản được hỗ trợ\n"
+"==================\n"
+"1. Ấn bản Community\n"
+"2. Ấn bản Enterprise\n"
+"\n"
+"    "
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_viin_maintenance_tracking
+msgid "Tracking Maintenance Request"
+msgstr "Theo dõi Yêu cầu Bảo trì"

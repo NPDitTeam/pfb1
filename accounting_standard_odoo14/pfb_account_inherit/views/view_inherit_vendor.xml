@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+
+    <record id="account.action_move_in_invoice_type" model="ir.actions.act_window">
+      <field name="name">Bills</field>
+      <field name="view_mode">tree,kanban,form,pivot,graph</field>
+    </record>
+
+    <record id="account.action_move_in_refund_type" model="ir.actions.act_window">
+      <field name="name">Refunds</field>
+      <field name="view_mode">tree,kanban,form,pivot,graph</field>
+    </record>
+
+    <record id="account_cheque.action_account_cheque_payment" model="ir.actions.act_window">
+      <field name="name">Cheque</field>
+      <field name="view_mode">tree,kanban,form,pivot,graph</field>
+    </record>
+
+    <record id="account_billing.action_supplier_billing" model="ir.actions.act_window">
+      <field name="name">billing</field>
+      <field name="view_mode">tree,kanban,form,pivot,graph</field>
+    </record>
+
+    <record id="account.action_account_payments_payable" model="ir.actions.act_window">
+      <field name="name">Payment</field>
+      <field name="view_mode">tree,kanban,form,pivot,graph</field>
+    </record>
+
+    <!-- <record id="account.action_purchase_receipt" model="ir.actions.act_window">
+      <field name="name">Purchase Receipts</field>
+      <field name="view_mode">tree,kanban,form,pivot,graph</field>
+    </record> -->
+
+
+
+  </data>
+</odoo>

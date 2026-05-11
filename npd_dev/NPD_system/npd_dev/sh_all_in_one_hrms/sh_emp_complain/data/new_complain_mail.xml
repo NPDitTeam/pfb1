@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- 	New complain notification for responsible person -->
+    <record id="send_new_complain_notification_responsible_user" model="mail.template">
+        <field name="name">Post New Complain Notification To Responsible Persons </field>
+        <field name="model_id" ref="model_sh_complain" />
+        <field name="partner_to"></field>
+        <field name="subject">${object.created_by.company_id.name} -Complain ${object.name} - ${object.subject}</field>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                Hello There,
+                <br />
+                <br />
+                Complain
+                <b>${object.subject}</b>
+                -
+                <b>${object.name}</b>
+                submitted by
+                <b>${object.created_by.partner_id.name}</b>
+                .
+                <br />
+                <div style="display: inline-block; margin: 15px 0px; text-align: center;">
+                    <a href="/mail/view?model=sh.complain&amp;res_id=${object.id}" target="_blank" style="padding: 5px 10px; color: #ffffff; text-decoration: none; background-color: #875a7b; border: 1px solid #875a7b; border-radius: 3px;">
+                        Click here to view
+                    </a>
+                </div>
+                <br />
+                Thank you.
+            </div>
+        </field>
+        <field name="lang">${object.created_by.partner_id.lang}</field>
+        <field name="auto_delete" eval="True" />
+    </record>
+
+    <!-- 	Complain resolve notification for complain created user	 -->
+    <record id="send_complain_resolved_notification_created_user" model="mail.template">
+        <field name="name">Complain Resolved Notification to Created User </field>
+        <field name="model_id" ref="model_sh_complain" />
+        <field name="partner_to">${object.created_by.partner_id.id}</field>
+        <field name="subject">${object.created_by.company_id.name} -Complain ${object.name} - ${object.subject} - Resolved</field>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                Hello There,
+                <br />
+                <br />
+                Your Complain <b>${object.subject}</b> - <b>${object.name}</b> Resolved by <b>${object.resolved_by.name}</b> Successfully.<br />
+                <div style="display: inline-block; margin: 15px 0px; text-align: center;">
+                    <a href="/mail/view?model=sh.complain&amp;res_id=${object.id}" target="_blank" style="padding: 5px 10px; color: #ffffff; text-decoration: none; background-color: #875a7b; border: 1px solid #875a7b; border-radius: 3px;">
+                        Click here to view
+                    </a>
+                </div>
+                <br />
+                Thank you.
+            </div>
+        </field>
+        <field name="lang">${object.created_by.partner_id.lang}</field>
+        <field name="auto_delete" eval="True" />
+    </record>
+
+    <!-- Complain Refused notification for complain created user	 -->
+    <record id="send_complain_refused_notification_created_user" model="mail.template">
+        <field name="name">Complain Refused Notification to Created User </field>
+        <field name="model_id" ref="model_sh_complain" />
+        <field name="partner_to">${object.created_by.partner_id.id}</field>
+        <field name="subject">${object.created_by.company_id.name} -Complain ${object.name} - ${object.subject} - Refused</field>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                Hello There,
+                <br />
+                <br />
+                Your Complain <b>${object.subject}</b> - <b>${object.name}</b> Refused by <b>${object.refused_by.name}</b>.<br />
+                <div style="display: inline-block; margin: 15px 0px; text-align: center;">
+                    <a href="/mail/view?model=sh.complain&amp;res_id=${object.id}" target="_blank" style="padding: 5px 10px; color: #ffffff; text-decoration: none; background-color: #875a7b; border: 1px solid #875a7b; border-radius: 3px;">
+                        Click here to view
+                    </a>
+                </div>
+                <br />
+                Thank you.
+            </div>
+        </field>
+        <field name="lang">${object.created_by.partner_id.lang}</field>
+        <field name="auto_delete" eval="True" />
+    </record>
+</odoo>

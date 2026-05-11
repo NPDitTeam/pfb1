@@ -1,0 +1,41 @@
+<odoo>
+    <data>
+
+        <record id="shipment_type_form_view" model="ir.ui.view">
+            <field name="name">shipment.type.form.view</field>
+            <field name="model">shipment.type</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="shipment_type_tree_view" model="ir.ui.view">
+            <field name="name">shipment.type.tree</field>
+            <field name="model">shipment.type</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name='name'/>
+                </tree>
+            </field>
+        </record>
+        <record model="ir.actions.act_window" id="action_transport_shipment_type">
+            <field name="name">Shipment Types</field>
+            <field name="res_model">shipment.type</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        
+        <menuitem id="menu_transport_shipment_type"
+            name="Shipment Types"
+            parent="menu_setting"
+            action="action_transport_shipment_type"/>
+
+
+    </data>
+</odoo>

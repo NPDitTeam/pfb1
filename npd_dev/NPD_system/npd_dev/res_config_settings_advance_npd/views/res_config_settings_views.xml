@@ -1,0 +1,17 @@
+<odoo>
+    <record id="view_users_form_inherit_pos_shop_limit" model="ir.ui.view">
+        <field name="name">res.users.form.inherit.pos.shop.limit</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+             <xpath expr="//page[@name='access_rights']" position="inside">
+                 <group>
+
+                     <field name="advance_re_approve_show" />
+                <field name="avance_cl_approve_show" />
+<!--                     <field name="refund_of_rental" />-->
+                 </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

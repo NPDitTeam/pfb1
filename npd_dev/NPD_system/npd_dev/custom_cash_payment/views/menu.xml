@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menu: Accounting > Entries > ชำระเงินสด -->
+    <menuitem id="menu_cash_payment_root"
+              name="ชำระเงินสด"
+              parent="account.menu_finance_entries_accounting_miscellaneous"
+              action="action_cash_payment_form"
+              sequence="99"/>
+</odoo>

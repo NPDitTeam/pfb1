@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="project_kanban_view_inherit" model="ir.ui.view">
+        <field name="name">project.project.order.kanban.view.inherit</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project_kanban" />
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="doc_count" />
+            </field>
+            <xpath expr="//div[hasclass('o_primary')]" position="after">
+                <div class="o_row">
+                    <span class="oe_kanban_partner_links">
+                        <span t-if="record.doc_count.value&gt;0" class="badge badge-pill" groups="sh_all_in_one_pms.group_sh_project_document">
+                            <i class="fa fa-fw fa-files-o" role="img" aria-label="Files" title="Files" /><t t-esc="record.doc_count.value" />
+                        </span>
+                    </span>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

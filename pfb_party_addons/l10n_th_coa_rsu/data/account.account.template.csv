@@ -1,0 +1,705 @@
+id,name,code,user_type_id/id,chart_template_id/id,reconcile
+100000,ทรัพย์สิน,100000,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+110000,ทรัพย์สินหมุนเวียน,110000,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+111000,เงินสด,111000,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112000,เงินฝากธนาคาร,112000,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112100,เงินฝากกระแสรายวัน,112100,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112101,BBL กระแส-ซอยอารี 127-3-07536-4,112101,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112102,BBL กระแส-รังสิต 165-3-03241-5,112102,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112104,TFB C/A-รังสิต 183-1-05888-5,112104,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112105,SCB C/A-รังสิต 349-3-00346-1,112105,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112106,BAY C/A-สี่มุมเมือง 283-0-01188-8,112106,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112108,TMB C/A-สี่มุมเมือง 099-1-05145-9,112108,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112109,STD กระแส-ฟิวเจอร์พาร์ค รังสิต 055-1-00120-2,112109,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112110,BBL กระแสฯ -ย่อย ม.รังสิต 020-3-00009-6,112110,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112111,127-6-01928-9 KTB  C/A-สี่มุมเมือง,112111,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112112,SCB C/A-ม.รังสิต 468-006479-5,112112,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112113,ไทยเครดิต C/A-ฟิวเจอร์พาร์ครังสิต 002-1-00113-3,112113,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112114,TMB กองทุน 099-0-00525-8,112114,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112115,875-3-50134-8 BBL S/A-ม.รังสิต2,112115,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112200,เงินฝากออมทรัพย์,112200,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112201,BBL S/A - รังสิต 165-0-46855-4,112201,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112202,KTB S/A - รังสิต 120-1-47576-7,112202,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112203,TFB S/A - รังสิต 183-2-07272-7,112203,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112204,SCB S/A - รังสิต 349-2-09357-8,112204,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112205,KTB S/A -  รังสิต 120-0-39629-4,112205,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112206,TMB S/A - สี่มุมเมือง 099-2-16349-3,112206,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112207,BAY  S/A - สี่มุมเมือง 283-1-18837-4,112207,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112209,STD S/A - ฟิวเจอร์พาร์ค รังสิต 055-2-09730-3,112209,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112210,BBL  S/A - ย่อย ม.รังสิต 020-0-00009-9,112210,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112211,KTB  S/A -  สี่มุมเมือง  127-0-07026-6,112211,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112212,BBL  S/A -  ม.รังสิต 020-0-09494-4  CYBER U,112212,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112213,UOB  S/A  วิภาวดี ชั้น(9)  806-122-886-1,112213,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112214,SCB  S/A - รังสิต-349 - 252442-2,112214,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112215,SCB - S/A  ย่อย ม.รังสิต 401-679119-8,112215,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112216,ไทยเครดิต S/A -ฟิวเจอร์พาร์ครังสิต,112216,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112217,KTB S/A - สี่ มม.เมือง 127-0-28264-6,112217,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112218,UOB S/A 604-104-937-2  รังสิต,112218,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112219,CIMB THAI รังสิต 70-0722185-5,112219,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112220,BBL S/A - ม.รังสิต 2 875-3-50134-8,112220,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112221,ICBC -วิภาวดี-ดอนเมือง105-0-05677-1,112221,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+112255,RSU S/A For Transfer,112255,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113000,เงินลงทุนระยะสั้น,113000,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113001,เงินลงทุนระยะสั้น ในตั๋วเงิน BBL,113001,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113100,เงินฝากประจำ,113100,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113101,SCB  Fix -  รังสิต 349-1-01700-8,113101,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113102,BBL Fix - รังสิต 165-2-27244-2,113102,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113103,BBL Fix - รังสิต  165-2-15719-7 -3M,113103,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113104,BBL Fix - รังสิต 020-20-00089,113104,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113105,BAY Fix -  สี่ มม. 283-2-02955-8,113105,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113106,BBL Fix -  ม.รังสิต 020-2-00274-7,113106,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113107,BBL Fix - 4 เดือน -ม.รังสิต 020-2-00285-3,113107,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113108,BBL Fix -  ม.รังสิต 020-2-00308-3 -3 เดือน,113108,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113109,BBL Fix -  ม.รังสิต 020-2-00316-6/ 3 M.,113109,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113110,SCB Fix - รังสิต 349-10-3909-2 / 3 M.,113110,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113111,BBL Fix - Step - ม.รังสิต 020-2-00482-6,113111,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113112,BBL Fix  - Step-บุญถาวร เกษตร-นวมินทร์ 039-600199-2,113112,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113113,SCB Fix - ม.รังสิต 461-0-98450-9,113113,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113114,BBL Fix -  ม.รังสิต 020-2-00546-8/3 M,113114,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113115,SCB Fixed รังสิต 349-104606-5,113115,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113117,BBL Fix-บุญถาวร เกษตร-นวมินทร์ 039-6-00229-7,113117,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113118,BBL Fix ม.รังสิต 020-2-00565-8,113118,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113119,BBL FIx -ม.รังสิต 020-2-00581-5,113119,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113120,SCB Fix - ม.รังสิต  461-1-61527-6 / 11 M,113120,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113121,SCB Fix - ม.รังสิต 461-2-12656-3/ 3M,113121,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113122,BBL Fix - ม.รังสิต 020-2-00741-5,113122,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113123,BBL Fix -บุญถาวร เกษตร-นวมินทร์ 039-6-00690-0,113123,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113124,BBL Fix- ม.รังสิต  2  875-6-00033-0,113124,account.data_account_type_liquidity,l10n_th_coa_rsu.chart,TRUE
+113500,พันธบัตรธนาคาร,113500,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+113600,กองทุนเปิดตราสารหนี้ SCB 349-8-0631120-3- รังสิต,113600,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+113601,กองทุนเปิด บัวหลวงธนทวี 888-2-40698-9,113601,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+113602,กองทุนเปิดตราสารหนี้ SCB-000-0-0775676-2,113602,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+113603,หุ้นกู้ด้อยสิทธิ BBL 777-011876-3  No.012740,113603,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+113604,กองทุนบัวหลวงธนทวี BBL Fix- 888-240698-9,113604,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+114000,วัสดุคงเหลือ,114000,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+114001,วัสดุสำนักงาน,114001,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+114002,วัสดุการศึกษา,114002,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+114003,วัสดุซ่อมแซม,114003,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+114004,วัสดุคอมพิวเตอร์,114004,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+114005,วัสดุกีฬา,114005,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+115000,ลูกหนี้,115000,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115100,ลูกหนี้กิจการที่เกี่ยวข้อง,115100,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115101,ลูกหนี้บริษัทประสิทธิรัตน์,115101,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115102,ลูกหนี้โรงเรียน บริติช อินเตอร์เนชั่นแนล,115102,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115103,ลูกหนี้โครงการดัลลิช,115103,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115104,ลูกหนี้ บริษัทประสิทธิรัตน์ - อาคาร 1,115104,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115105,ลูกหนี้ โรงเรียนสาธิตแห่งมหาวิทยาลัยรังสิต,115105,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115106,ลูกหนี้ บริษัท อาร์เอสยู เฮลท์แคร์ จำกัด,115106,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115107,ลูกหนี้ บจ. อาร์เอสยู ดีเวลลอปเม้นท์,115107,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115108,ลูกหนี้ บจ. อาร์เอสยู เมดิคัล รีสอร์ท แอนด์ สปา,115108,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115109,ลูกหนึ้ บจ. ภิมณ์ธารา เอสเตติก้า,115109,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115110,ลูกหนี้ บจ. อาร์เอสยู ทีวี,115110,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115111,ลูกหนี้ บจ.อาร์เอสยู แอนิเมชั่น,115111,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115112,"ลูกหนี้ บริษัท RSU Internation Hospital Co,.Ltd",115112,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115114,ลูกหนี้ บริษัท ประสิทธิ์พัฒนา โฮลดิ้ง จำกัด,115114,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115115,ลูกหนี้ บริษัท ซันธารา เรียล เอสเตท จำกัด,115115,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115116,ลูกหนี้ บริษัท อาร์เอสยู ฮอสพิทอล จำกัด,115116,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115200,ลูกหนี้นักศึกษา,115200,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+a_recv,ลูกหนี้นักศึกษา,115201,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115202,ลูกหนี้นักศึกษา(ผ่อนชำระ),115202,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115203,ลูกหนี้นักศึกษา น.ส.กัญญารัตน์,115203,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115204,ลูกหนี้ทุนช่วยเหลือนักศึกษา,115204,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115205,ลูกหนี้กองทุนฉุกเฉินนักศึกษา,115205,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115206,ลูกหนี้สวัสดิการ,115206,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115300,ลูกหนี้อื่น,115300,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115301,ลูกหนี้กองทุนกู้ยืมรัฐบาล  (กรอ+กยศ),115301,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115302,ลูกหนี้ศูนย์หนังสือ ม.รังสิต,115302,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115303,ลูกหนี้สวัสดิการ (คอมพิวเตอร์),115303,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115304,ลูกหนี้ค่ารักษาพยาบาล,115304,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115305,ลูกหนี้บุคลากร นส.ณงรค์ศรี,115305,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115306,ลูกหนี้บุคลากรทุนนศิริพร นุชเนื่อง,115306,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115307,ลูกหนี้ค่าโทรศัพท์-โรงเรียนดัลลิฃ,115307,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115308,ลูกหนี้สถาบันร่วมผลิตแพทย์,115308,account.data_account_type_receivable,l10n_th_coa_rsu.chart,TRUE
+115309,บัญชีเช็คคืน,115309,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+115310,ลูกหนี้กองทุน ICL,115310,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+115320,ลูกหนี้จากการขายสินทรัพย์ถาวร,115320,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+115325,ลูกหนี้บริษัทประกันภัย จากภัยพิบัติ,115325,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+115400,เงินทดรองจ่าย,115400,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+115401,เงินทดรองจ่าย-กองทุนสงเคราะห์,115401,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+115402,เงินหมุนเวียนในหน่วยงาน,115402,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+115404,เงินทดรองจ่าย-กองทุนทั่วไป,115404,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+115409,บัญชีพักเงินทดรองจ่าย,115409,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+a_input_vat,ภาษีซื้อ,115499,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+115500,ลูกหนี้-กองทุนทั่วไป,115500,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+115600,ลูกหนี้-กองทุนทรัพย์สินถาวร,115600,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+115700,ลูกหนี้-กองทุนห้องสมุดและเทคโนโลยี,115700,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+115800,ลูกหนี้-กองทุนสงเคราะห์,115800,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+115900,ลูกหนี้-กองทุนคงเงินต้น,115900,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+116000,ค่าใช้จ่ายจ่ายล่วงหน้า,116000,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+117000,รายได้ค้างรับ,117000,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+118000,ทรัพย์สินหมุนเวียนอื่น,118000,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+118100,ลูกหนี้ บัญชีคุมเงินเดือน,118100,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120000,เงินลงทุนระยะยาว,120000,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120001,เงินลงทุนหลักทรัพย์-บงล.กรุงไทย,120001,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120002,เงินลงทุนหลักทรัพย์-วิทยาเขตภูเก็ต,120002,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120003,เงินลงทุนหลักทรัพย์- บจก.เอ-เน็ต,120003,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120004,เงินลงทุนในตราสารการเงิน-ปูนซีเมนต์,120004,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120005,เงินลงทุนในตราสารการเงิน-บจ.เยื่อกระดาษสยาม,120005,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120006,เงินลงทุนในหลักทรัพย์-บจ.ดัลลิช อินเตอร์ฯ สมุย,120006,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120007,เงินลงทุนหลักทรัพย์-ZYNNOX,120007,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120008,เงินลงทุนหลักทรัพย์ บจ. อาร์เอสยู เฮลท์แคร์,120008,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120009,เงินลงทุนหลักทรัพย์ บจ.อาร์เอสยู อินโนเวชั่น โปรดักส์,120009,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120010,เงินลงทุนหลักทรัพย์ บจ.อาร์เอสยู ฮอไรซอน,120010,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120011,เงินลงทุนหลักทรัพย์ บจ. อาร์เอสยู ทราเวิล แอนด์ คอนซัลแทนต์,120011,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120012,เงินลงทุน บจ.อาร์ เอส ยู โพรเฟสชันแนล ดีเวลลอปเมนท์,120012,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120013,เงินลงทุน บจ อาร์เอสยู เมดิคัล รีสอร์ท แอนด์ สปา,120013,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120014,เงินลงทุน บจ อาร์เอสยู ดีเวลลอปเม้นท์,120014,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120015,เงินลงทุน บจ สาธิตรังสิต,120015,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120016,เงินลงทุน บจ อาร์เอสยู ทีวี (คอนซูเมอร์ แคร์),120016,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120017,เงินลงทุน บจ.อาร์เอสยู แอนิเมชั่น,120017,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+120018,เงินลงทุน บจ.อาร์เอสยู อินเตอร์เนชันแนล ฮอสพิทอล,120018,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+130000,ทรัพย์สินถาวร,130000,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131000,ที่ดิน อาคารและค่าตกแต่ง,131000,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131100,ที่ดิน ค่าพัฒนาที่ดินและอาคารระหว่างก่อสร้าง,131100,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131101,ที่ดิน,131101,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131102,ค่าบูรณะที่ดิน,131102,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131103,อาคารระหว่างก่อสร้าง-ตึกอาทิตย์ อุไรรัตน์,131103,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131104,อาคารระหว่างก่อสร้าง-บริหาร,131104,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131105,ลิฟต์และอุปกรณ์,131105,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131106,ง.ระหว่างก่อสร้างประติมากรรมพระสูริยาทิตย์,131106,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131107,อาคารระหว่างก่อสร้าง-อ.อุไรรัตน์(3),131107,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131108,อาคารระหว่างก่อสร้าง-อ.วิทยาศาสตร์ (4),131108,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131109,อาคารระหว่างก่อสร้าง-อ.เฉลิมพระเกียรติ์ (11),131109,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131110,อาคารระหว่างก่อสร้าง-ส.เทนนิสและอ.ทันตแพทย์ศาสตร์ เฟส 1,131110,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131111,อ.ระหว่างก่อสร้าง- Digital Multimedia complex  (15),131111,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131112,"อ.ระหว่างก่อสร้าง-อ.แพทย์,ทัศน,ทันตแพทย์ เฟส 2",131112,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131113,ง.ระหว่างก่อสร้างบริเวณโครงการ 9,131113,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131114,อ.ระหว่างก่อสร้าง-หอพัก,131114,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131115,ง.ระหว่างก่อสร้างพระบรมวงศ์เธอกรมพระยาชัยนาทนเรนทร,131115,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131116,อ.ระหว่างก่อสร้าง The Gallery Building,131116,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131117,อาคารระหว่างก่อสร้าง งานบูรณะและฟื้นฟู มรส.,131117,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131118,อ.ระหว่างก่อสร้าง Guan Yim Sala,131118,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131119,อ.ระหว่างก่อสร้างคุณหญิงพัฒนา (อ.8),131119,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131120,อ.ระหว่างก่อสร้างรังสิตประยูรศักดิ์ 2 (อ.12/1),131120,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131121,อ.ระหว่างก่อสร้างศาลาดนตรี,131121,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131122,อ.ระหว่างก่อสร้างนันทนาการ,131122,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131123,อ.ระหว่างก่อสร้างโรงงานต้นแบบ,131123,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131124,อ.ระหว่าง โครงการก่อสร้าง อ.สถาบัน ไทย-จีน,131124,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131125,อ.ระหว่างก่อสร้าง Student Center,131125,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131126,อ.ระหว่างก่อสร้างอาคารนวัตกรรมเกษตร,131126,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131127,โรงงานระหว่างก่อสร้างโรงงาน-ปาล์ม,131127,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131128,อ.ระหวางก่อสร้างโรงสีข้าวต้นแบบ จ.กาญจนบุรี,131128,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131129,งานระหว่างทำ ประตูทางเข้า-ออก พระศรีศาสนา ลานสุริยะเทพ,131129,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131130,อ.ระหว่างก่อสร้างสถาปัตยกรรมศาสตร์,131130,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131131,อ.ระหว่างก่อสร้างอาคาร สนง.อาจารย์คณะเภสัช,131131,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131132,"อ.ระหว่างก่อสร้างห้องเอกซ์เรย์รังสีเทคนิค ชั้น 9,10 อาคาร 10",131132,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131133,"งานประติมากรรม""พระพิฆเณศวร์ 4 กร ปางทรงตำรา""",131133,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131134,"งาน.ห้อง Lab/ห้องพักอาจารย์ คณะเทคนิคการแพทย์ เฟส 1,2",131134,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131135,งานปรับปรุงห้องปฏิบัติการเภสัชเวช 4-617,131135,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131136,งานปรับปรุงอาคารห้องสมุด,131136,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131137,อาคารระหว่างก่อสร้างสถาบันกัญชา,131137,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131138,อาคารระหว่างก่อสร้าง อ.สัตว์ทดลอง,131138,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131200,อาคารและค่าตกแต่ง,131200,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131201,สนามกีฬา,131201,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131202,ตกแต่งอาคาร,131202,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131203,"มณฑปองค์พระศรีศาสดา,พระศรีศาสดา",131203,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131204,ตึก 2 อาคารประสิทธิรัตน์,131204,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131205,ตึก 3 อาคารอุไรรัตน์,131205,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131206,ตึก 4 อาคารวิทยาศาสตร์,131206,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131207,ตึก 5 อาคารวิษณุรัตน์,131207,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131208,ตึก 9 (หอพัก) อาคารประสิทธิ์พัฒนา,131208,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131209,ตึก 7 อาคารหอสมุด,131209,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131210,ตึก 14 อาคารนันทนาการ,131210,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131211,ตึก 8 อาคารคุณหญิงพัฒนา,131211,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131212,ตึก 13 อาคารสำนักงานอาคารและสิ่งแวดล้อม,131212,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131213,โรงฝึกงาน-กายวิภาคศาสตร์,131213,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131214,"โรงฝึกงาน-วิศวกรรมศาสตร์, ตึก 5 อาคารวิษณุรัตน์",131214,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131215,โรงฝึกงาน-เภสัชศาสตร์,131215,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131216,โรงฝึกงาน-เทคโนโลยีชีวภาพ,131216,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131217,สตูดิโอ,131217,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131218,บ้านพักรับรอง,131218,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131219,อาคาร-โรง-ลานจอดรถ,131219,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131220,เสาธงและป้ายมหาวิทยาลัย,131220,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131221,ตึก 6 อาคารโรงอาหารกลาง,131221,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131222,ที่พักนักศึกษา,131222,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131223,อัฒจันทร์,131223,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131224,ตึก 10 อาคารวิทยาลัยดนตรี,131224,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131225,อาคารโรงเก็บของ,131225,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131226,อาคารศูนย์อาหาร,131226,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131227,รั้ว คลส (หลังตึกหอพัก),131227,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131228,ตึก1 อาคารอาทิตย์ อุไรรัตน์,131228,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131229,"อาคาร,สิ่งก่อสร้าง,สำนักงาน",131229,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131230,ตึก 11 อาคารรัตนคุณากร,131230,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131231,ตึก 12/1 อาคารรังสิตประยูรศักดิ์ 1,131231,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131300,ระบบสาธารณูปโภค,131300,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131301,ถนนและท่อระบายน้ำ,131301,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+131302,ระบบสาธารณูปโภค,131302,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132000,ครุภัณฑ์และอุปกรณ์,132000,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132100,ครุภัณฑ์และอุปกรณ์การศึกษา,132100,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132101,อุปกรณ์การศึกษา,132101,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132102,อุปกรณ์การกีฬาและดนตรี,132102,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132103,อุปกรณ์วิทยาศาสตร์และการแพทย์,132103,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132104,อุปกรณ์คอมพิวเตอร์(การศึกษา),132104,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132105,อุปกรณ์โสตทัศน์,132105,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132106,ซอฟต์แวร์คอมพิวเตอร์(การศึกษา),132106,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132107,อุปกรณ์วิศวกรรมศาสตร์,132107,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132108,ระบบโครงข่ายอินเตอร์เน็ต,132108,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132109,อุปกรณ์ดนตรี,132109,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132110,อุปกรณ์คอมพิวเตอร์ (ห้องสมุด),132110,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132111,ซอฟท์แวร์คอมพิวเตอร์ (ห้องสมุด),132111,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132120,อุปกรณ์ระหว่างทำ,132120,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132200,ครุภัณฑ์และอุปกรณ์สำนักงาน,132200,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132201,อุปกรณ์สำนักงาน,132201,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132202,"อุปกรณ์ก่อสร้าง,งานช่าง,เกษตร",132202,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132203,อุปกรณ์คอมพิวเตอร์(สำนักงาน),132203,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132204,ซอฟต์แวร์คอมพิวเตอร์(สำนักงาน),132204,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132300,ครุภัณฑ์และอุปกรณ์ห้องอาหาร,132300,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132301,อุปกรณ์หอพัก,132301,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132302,อุปกรณ์งานบ้านงานครัว,132302,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132400,อุปกรณ์ห้องสมุด,132400,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132401,อุปกรณ์ห้องสมุด,132401,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+132500,อุปกรณ์ระหว่างทำ (ไม่ใช้),132500,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+133000,หนังสือและวารสารวิชาการ,133000,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+134000,ยานพาหนะ,134000,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+135000,ค่าเสื่อมราคาสะสม,135000,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+135001,ค่าเสื่อมราคาสะสม-อาคาร,135001,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+135002,ค่าเสื่อมราคาสะสม-ค่าตกแต่งอาคาร,135002,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+135003,ค่าเสื่อมราคาสะสม-ระบบสาธารณูปโภค,135003,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+135004,ค่าเสื่อมราคาสะสม-ครุภัณฑ์และอุปกรณ์การศึกษา,135004,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+135005,ค่าเสื่อมราคาสะสม-ครุภัณฑ์และอุปกรณ์สำนักงาน,135005,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+135006,ค่าเสื่อมราคาสะสม-อุปกรณ์หอพัก,135006,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+135007,ค่าเสื่อมราคาสะสม-อุปกรณ์ห้องสมุด,135007,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+135008,ค่าเสื่อมราคาสะสม-หนังสือและวารสารวิชาการ,135008,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+135009,ค่าเสื่อมราคาสะสม-ยานพาหนะ,135009,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+135101,ค่าเผื่อการลดลงของมูลค่า อาคาร (ด้อยค่า),135101,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+135102,ค่าเผื่อการลดลงของมูลค่า อุปกรณ์ (ด้อยค่า),135102,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+140000,ทรัพย์สินอื่น,140000,account.data_account_type_fixed_assets,l10n_th_coa_rsu.chart,TRUE
+141000,เงินมัดจำ,141000,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+141001,เงินมัดจำจ่าย ค่าสินค้าและบริการ,141001,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+141002,เงินประกันความเสียหาย,141002,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+a_wht_income,เงินประกันต่าง ๆ,141003,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+141004,เงินมัดจำเพื่อการซื้อที่ดิน,141004,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+190000,บัญชีพักสินทรัพย์ถาวร,190000,account.data_account_type_current_assets,l10n_th_coa_rsu.chart,TRUE
+200000,หนี้สินและเงินกองทุน,200000,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+210000,หนี้สินหมุนเวียน,210000,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+211000,เงินกู้ยืมระยะยาวที่ถึงกำหนดชำระภายใน 1 ปี,211000,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212000,เจ้าหนี้,212000,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212100,เจ้าหนี้,212100,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212101,เจ้าหนี้การค้า (เก่า),212101,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+a_pay,เจ้าหนี้การค้า,212102,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212200,เจ้าหนี้อื่น,212200,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212201,เจ้าหนี้ศูนย์หนังสือ,212201,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212202,เจ้าหนี้สหกรณ์ออมทรัพย์ ม.รังสิต,212202,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212203,เจ้าหนี้อาคารสงเคราะห์,212203,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212204,เจ้าหนี้ซุ้มอาหาร ม.รังสิต,212204,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212205,เจ้าหนี้ ดร.อาทิตย์ อุไรรัตน์,212205,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212206,เจ้าหนี้สถานปฏิบัติการเภสัชกรรม,212206,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212207,เจ้าหนี้อื่น ๆ,212207,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212208,เจ้าหนี้รร.นานาชาติดัลลิช,212208,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212300,เจ้าหนี้-กองทุนทั่วไป,212300,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212400,เจ้าหนี้-กองทุนทรัพย์สินถาวร,212400,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212500,เจ้าหนี้-กองทุนห้องสมุดและเทคโนโลยี,212500,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212600,เจ้าหนี้-กองทุนสงเคราะห์,212600,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212700,เจ้าหนี้-กองทุนวิจัย,212700,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212800,เจ้าหนี้-กองทุนพัฒนาบุคลากร,212800,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+212900,เจ้าหนี้-กองทุนคงเงินต้น,212900,account.data_account_type_payable,l10n_th_coa_rsu.chart,TRUE
+213000,บัญชีคุมยอดค่าใช้จ่ายค้างจ่าย,213000,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213100,ค่าใช้จ่ายค้างจ่าย,213100,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213101,ค่าใช้จ่ายค้างจ่าย,213101,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213102,ดอกเบี้ยค้างจ่าย,213102,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213103,ค่าตอบแทนค้างจ่าย,213103,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213104,ค่าบริการรักษาความสะอาดค้างจ่าย,213104,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213105,ค่าบริการสื่อสารค้างจ่าย,213105,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213106,ค่ารักษาพยาบาลค้างจ่าย,213106,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213107,ค่าสาธารณูปโภคค้างจ่าย,213107,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+a_cheque,เช็คจ่ายระหว่างทาง,213108,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213109,ค่าโฆษณาและประชาสัมพันธ์ค้างจ่าย,213109,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213110,เช็คจ่ายยังไม่ขึ้นเงิน,213110,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213111,เจ้าหนี้สวัสดิการค้างจ่าย,213111,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213112,กองทุนสำรองเลี้ยงชีพมหาวิทยาลัยรังสิต,213112,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213200,ค่าใช้จ่ายค้างจ่ายอื่น,213200,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213201,ค่าใช้จ่ายอื่นค้างจ่าย,213201,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213202,ภาษีหัก ณ ที่จ่ายค้างจ่าย,213202,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213203,เงินประกันสังคมค้างจ่าย,213203,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213204,เงินชดเชยในการใช้ทรัพย์สิน,213204,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213205,ภาษีหัก ณ ที่จ่าย ภงด.01 เงินเดือนค้างจ่าย,213205,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213206,ภาษีหัก ณ ที่จ่าย ภงด.1 ค่าตอบแทนค้างจ่าย,213206,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213207,ภาษีหัก ณ ที่จ่าย ภงด.3 ค้างจ่าย,213207,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+a_wht,ภาษีหัก ณ ที่จ่าย ภงด.53 ค้างจ่าย,213208,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213209,ภาษีหัก ณ ที่จ่าย ค่าตอบแทนค้างจ่าย (กรณีปรับปรุงสิ้นปี),213209,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213210,เจ้าหนี้กรมสรรพากร,213210,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213211,ภาษีหัก ณ ที่จ่าย ภงด.1 เงินชดเชยค้างจ่าย,213211,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213211,ภาษีหัก ณ ที่จ่าย ภงด.1 เงินชดเชยค้างจ่าย,213299,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+a_output_vat,ภาษีขาย,213220,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213230,ดอกเบี้ยเช่าซื้อทรัพย์สินรอตัดบัญชี,213230,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213402,BBL เช็คจ่ายยังไม่ขึ้นเงิน,213402,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213404,TFB เช็คจ่ายยังไม่ขึ้นเงิน,213404,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213405,SCB เช็คจ่ายยังไม่ขึ้นเงิน,213405,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213406,BAY เช็คจ่ายยังไม่ขึ้นเงิน,213406,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213408,TMB เช็คจ่ายยังไม่ขึ้นเงิน,213408,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213409,STD เช็คจ่ายยังไม่ขึ้นเงิน,213409,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213410,RSU เช็คจ่ายยังไม่ขึ้นเงิน,213410,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213411,เช็คหมดอายุยังไม่ขึ้นเงิน BBL,213411,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213412,เช็คหมดอายุยังไม่ขึ้นเงิน RSU,213412,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+213500,เจ้าหนี้กองทุนร่วมผลิตแพทย์,213500,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+214000,เงินผลประโยชน์ค้างจ่ายแก่ผู้รับใบอนุญาต,214000,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+215000,รายได้รับล่วงหน้า,215000,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+a_accr_exp,รายได้รับล่วงหน้า ภาคเรียนที่ 1,215001,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+215002,รายได้รับล่วงหน้า ภาคเรียนที่ 2,215002,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+215003,รายได้รับล่วงหน้า ภาคเรียนที่ 3,215003,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+215100,รายได้ค่าหอพัก รับล่วงหน้า,215100,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216000,เงินประกันความเสียหาย,216000,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216001,เงินประกันทรัพย์สินเสียหาย หอพัก,216001,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216002,เงินประกันเครื่องปรับอากาศ,216002,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216040,เงินประกันทรัพย์สินเสียหาย ปี40,216040,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216041,เงินประกันทรัพย์สินเสียหาย ปี41,216041,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216042,เงินประกันทรัพย์สินเสียหาย ปี42,216042,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216043,เงินประกันทรัพย์สินเสียหาย ปี43,216043,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216044,เงินประกันทรัพย์สินเสียหาย ปี44,216044,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216045,เงินประกันทรัพย์สินเสียหาย ปี45,216045,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216046,เงินประกันทรัพย์สินเสียหาย ปี 2546,216046,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216047,เงินประกันทรัพย์สินเสียหาย ปี 2547,216047,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216048,เงินประกันทรัพย์สินเสียหาย ปี 2548,216048,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216049,เงินประกันทรัพย์สินเสียหาย ปี 2549,216049,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216050,เงินประกันทรัพย์สินเสียหาย ปี 2550,216050,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216051,เงินประกันทรัพย์สินเสียหาย ปี 2551,216051,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216052,เงินประกันทรัพย์สินเสียหาย ปี 2552,216052,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216053,เงินประกันทรัพย์สินเสียหาย ปี 2553,216053,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216054,เงินประกันทรัพย์สินเสียหาย 2554,216054,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216055,เงินประกันทรัพย์สินเสียหาย ปี  2555,216055,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216056,เงินประกันทรัพย์สินเสียหาย 2556,216056,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216057,เงินประกันทรัพย์สินเสียหาย 2557,216057,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216058,เงินประกันทรัพย์สินเสียหาย 2558,216058,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216059,เงินประกันทรัพย์สินเสียหาย 2559,216059,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216060,เงินประกันทรัพย์สินเสียหาย 2560,216060,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+216099,เงินประกันทรัพย์สินเสียหายจากนักศึกษา,216099,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+217000,หนี้สินหมุนเวียนอื่น,217000,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+217001,เงินโอนนักศึกษา,217001,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+217002,เจ้าหนี้นักศึกษา มรส.14 (นศ.ถอนวิชา),217002,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+217003,เจ้าหนี้นักศึกษา มรส.18  (เงินโอนเก็บ),217003,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+217004,เงินทอนนักศึกษา,217004,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+217005,เงินฝากสมาคมศิษย์เก่า ม.รังสิต,217005,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+217006,เงินประกันสัญญา,217006,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+217007,เงินประกันพนักงาน,217007,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+217008,เงินมัดจำหอพัก,217008,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+217009,เงินประกันผลงาน,217009,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+217010,เงินรับฝาก,217010,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+217011,เจ้าหนี้-อ.อุทัย ทุติยะโพธิ,217011,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+217020,เงินประกันผลงาน และสัญญา,217020,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+217030,เงินประกันของเสียหาย ด้านอาคารสถานที่,217030,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+220000,เงินกู้ยืมระยะยาว,220000,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+220100,เงินกู้ยืม-ทบวงมหาวิทยาลัย,220100,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+220200,เงินกู้ยืม-ธนาคารกรุงเทพ จำกัด(มหาชน)-มหาวิทยาลัยรังสิต,220200,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+220300,เงินกู้ยืม-บจ.ประสิทธิรัตน์ จาก ธนาคารไทยพาณิชย์ จำกัด,220300,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+220301,เงินกู้ยืม-บจ.ประสิทธิรัตน์ จาก ธนาคารกรุงเทพ จำกัด,220301,account.data_account_type_current_liabilities,l10n_th_coa_rsu.chart,TRUE
+300000,เงินกองทุน,300000,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+310000,ทุนประเดิม,310000,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+a_common_stock,ทุนประเดิม-กองทุนทั่วไป,310001,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+310002,ทุนประเดิม-กองทุนทรัพย์สินถาวร,310002,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+310003,ทุนประเดิม-กองทุนห้องสมุดและเทคโนโลยี,310003,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+310004,ทุนประเดิม-กองทุนสงเคราะห์,310004,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+310005,ทุนประเดิม-กองทุนวิจัย,310005,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+310006,ทุนประเดิม-กองทุนพัฒนาบุคลากร,310006,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+310007,ทุนประเดิม-กองทุนคงเงินต้น,310007,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+320000,ทุนสะสม,320000,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+a_dividends,ทุนสะสม-กองทุนทั่วไป,320001,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+320002,ทุนสะสม-กองทุนทรัพย์สินถาวร,320002,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+320003,ทุนสะสม-กองทุนห้องสมุดและเทคโนโลยี,320003,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+320004,ทุนสะสม-กองทุนสงเคราะห์,320004,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+320005,ทุนสะสม-กองทุนวิจัย,320005,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+320006,ทุนสะสม-กองทุนพัฒนาบุคลากร,320006,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+320007,ทุนสะสม-กองทุนคงเงินต้น,320007,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+390000,รายได้สูงกว่า(ต่ำกว่า)ค่าใช้จ่ายประจำปีการศึกษา,390000,account.data_account_type_equity,l10n_th_coa_rsu.chart,TRUE
+400000,รายได้,400000,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+410000,รายได้จากการดำเนินงาน,410000,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411000,รายได้จากการเรียนการสอน,411000,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411100,ค่าเล่าเรียนระดับปริญญาตรี,411100,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+a_sales,รายได้ค่าหน่วยกิต ภาค 1,411101,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411102,รายได้ค่าหน่วยกิต ภาค 2,411102,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411103,รายได้ค่าหน่วยกิต ภาค 3,411103,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411200,ค่าเล่าเรียนระดับบัณฑิตศึกษา,411200,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411201,รายได้ค่าหน่วยกิต ภาค 1,411201,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411202,รายได้ค่าหน่วยกิต ภาค 2,411202,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411203,รายได้ค่าหน่วยกิต ภาค 3,411203,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411210,ค่าเล่าเรียนระดับดุษฏีบัณฑิต,411210,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411211,รายได้ค่าหน่วยกิต ภาค 1,411211,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411212,รายได้ค่าหน่วยกิต ภาค 2,411212,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411213,รายได้ค่าหน่วยกิต ภาค 3,411213,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411300,ค่าบำรุงการศึกษาระดับปริญญาตรี,411300,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411301,ค่าบำรุงการศึกษา  ปริญญาตรี ภาค 1,411301,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411302,ค่าบำรุงการศึกษา  ปริญญาตรี ภาค 2,411302,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411303,ค่าบำรุงการศึกษา  ปริญญาตรี ภาค 3,411303,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411400,ค่าบำรุงการศึกษาระดับบัณฑิตศึกษา,411400,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411401,ค่าบำรุงการศึกษา  บัณฑิตศึกษา ภาค 1,411401,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411402,ค่าบำรุงการศึกษา  บัณฑิตศึกษา ภาค 2,411402,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411403,ค่าบำรุงการศึกษา  บัณฑิตศึกษา ภาค 3,411403,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411410,ค่าบำรุงการศึกษาระดับดุษฏีบัณฑิต,411410,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411411,ค่าบำรุงการศึกษา ภาค 1,411411,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411412,ค่าบำรุงการศึกษา ภาค 2,411412,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411413,ค่าบำรุงการศึกษา ภาค 3,411413,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411500,ค่าบำรุงการศึกษาอื่น,411500,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411501,ค่าบำรุงห้องปฏิบัติการ,411501,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411502,ค่าบำรุง Internet,411502,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+a_recv_pos,ค่าบำรุงการศึกษาอื่น,411503,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411504,ค่าบำรุงการศึกษาการเรียน(แพทย์),411504,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411505,ค่าบำรุงการศึกษาการเรียน_LAB MSCAAD,411505,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411506,ค่าบำรุงการเรียน -วิทยาลัยดนตรี,411506,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411507,ค่าบำรุงการศึกษา-เภสัชศาสตร์,411507,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411508,ค่าบำรุงแพทย์อินเดีย,411508,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411509,ค่าบำรุง-นานาชาติ,411509,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411510,ค่าบำรุง-สถาปัตยกรรมศาสตร์,411510,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411511,ค่าบำรุงการศึกษา--ทันตแพทย์,411511,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411512,ค่าบำรุงการศึกษา-CRU,411512,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411513,ค่าบำรุงการศึกษา-CHN,411513,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411514,ค่าธรรมเนียมการศึกษา-พยาบาล,411514,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411515,ค่าธรรมเนียม-CBS,411515,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411516,ค่าบำรุงสโมสร,411516,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411517,ค่าธรรมเนียม-สถาบันการบิน,411517,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411600,ค่าธรรมเนียมเอกสาร,411600,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411601,ค่าใบสมัคร,411601,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411602,ค่าสมัครสอบ,411602,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411603,ค่าเอกสารลงทะเบียน,411603,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411604,ค่าขึ้นทะเบียนนักศึกษา,411604,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411605,ค่าบัตรประจำตัวนักศึกษา,411605,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411700,ค่าธรรมเนียมการศึกษา,411700,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411701,ค่าธรรมเนียมเพิ่มถอนวิชา,411701,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411702,ค่าลงทะเบียนล่าช้า,411702,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411703,ค่าธรรมเนียมลาพักการศึกษา,411703,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411704,ค่าธรรมเนียมห้องสมุด,411704,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411705,ค่าเบี้ยปรับห้องสมุด,411705,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411800,ค่าธรรมเนียมบัณฑิต,411800,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411801,ค่าขึ้นทะเบียนบัณฑิต,411801,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411802,ค่าปัจฉิมนิเทศ,411802,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411803,ค่าหนังสืออนุสรณ์,411803,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411804,ค่าวุฒิบัตรแบบพิมพ์,411804,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411900,ค่าธรรมเนียมอื่น,411900,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411901,ค่าเบี้ยประกันอุบัติเหตุ,411901,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411902,ค่าบำรุงสุขภาพ,411902,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411903,ค่าธรรมเนียมอื่น,411903,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411904,ค่าบำรุงสโมสร,411904,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+411905,ค่าประกันด้านการบินที่ BAC,411905,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+412000,รายได้จากการบริการทางวิชาการ,412000,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+412100,รายได้บริการวิชาการ,412100,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+412101,รายได้จากการจัดกิจกรรม,412101,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+412102,รายได้ค่าบริการวิชาการ,412102,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+412103,รายได้จากการพิมพ์และจำหน่ายเอกสาร,412103,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+412200,รายได้บริการวิชาการอื่น,412200,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+412201,รายได้ศูนย์การศึกษาต่อเนื่อง,412201,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+412202,รายได้โครงการพิเศษ,412202,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+413000,รายได้จากการวิจัย,413000,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+413001,เงินอุดหนุนวิชาการ,413001,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+413002,เงินอุดหนุนการวิจัยจากรัฐบาล,413002,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+413003,เงินอุดหนุนการวิจัยจากเอกชน,413003,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+420000,รายได้จากการบริจาคที่ใช้เงินต้นได้,420000,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+420001,เงินอุดหนุนการศึกษา,420001,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+420002,เงินอุดหนุนจากรัฐบาล,420002,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+420003,เงินอุดหนุนทบวงมหาวิทยาลัย,420003,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+420004,เงินบริจาคสนุบสนุนกิจกรรม,420004,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+420005,เงินอุดหนุนโครงการศึกษา,420005,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+420006,รายได้จากการบริจาคอื่น (รอเปลี่ยนชื่อ),420006,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+430000,ดอกเบี้ยรับและเงินปันผลรับ,430000,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+430001,ดอกเบี้ยรับเงินฝากออมทรัพย์,430001,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+430002,ดอกเบี้ยรับเงินฝากประจำ,430002,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+430003,ดอกเบี้ยรับตั๋วสัญญาใช้เงิน,430003,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+430004,ดอกเบี้ยรับเงินลงทุนในตราสาร,430004,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+430005,ดอกเบี้ยรับอื่น,430005,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+440000,รายได้จากหอพัก,440000,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+441000,ค่าเช่าหอพัก,441000,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+442000,ค่าบำรุงหอพัก,442000,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+443000,ธรรมเนียมหอพัก,443000,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+443001,ค่าสาธารณูปโภค,443001,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+443002,ค่าเบี้ยปรับหอพัก,443002,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+443003,ค่าบำรุงโทรศัพท์,443003,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+443004,ค่าบำรุงเครื่องปรับอากาศ,443004,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+443005,รายได้อื่น ๆ - หอพัก,443005,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+450000,รายได้อื่น,450000,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+450001,ค่าบำรุงอุปกรณ์,450001,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+450002,ค่าบำรุงสาธารณูปโภค,450002,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+450003,ค่าบำรุงสถานที่,450003,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+450004,รายได้ค่าขายแบบสำหรับประมูล,450004,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+450005,รายได้เบ็ดเตล็ด,450005,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+450006,เงินสมทบรับคืน,450006,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+a_income_gain,รายได้อื่น,450007,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+450008,รายได้ค่าเช่ารถ,450008,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+450009,รายได้ศูนย์กีฬา,450009,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+450010,รายได้จากการขายหนังสือ,450010,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+450011,รายรับจากการคืนทุนการศึกษา,450011,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+450101,รายได้ค่าชดเชย,450101,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+460000,คุมยอดรายรับ,460000,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+490000,รายได้จัดสรรจากกองทุนทั่วไป เข้ากองทุนต่าง ๆ,490000,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+490002,เงินจัดสรรจากกองทุนทั่วไป-กองทุนทรัพย์สินถาวร,490002,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+490003,เงินจัดสรรจากกองทุนทั่วไป-กองทุนห้องสมุดและเทคโนโลยี,490003,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+490004,เงินจัดสรรจากกองทุนทั่วไป-กองทุนสงเคราะห์,490004,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+490005,เงินจัดสรรจากกองทุนทั่วไป-กองทุนวิจัย,490005,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+490006,เงินจัดสรรจากกองทุนทั่วไป-กองทุนพัฒนาบุคลากร,490006,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+490007,เงินจัดสรรจากกองทุนทั่วไป-กองทุนคงเงินต้น,490007,account.data_account_type_revenue,l10n_th_coa_rsu.chart,TRUE
+500000,ค่าใช้จ่าย,500000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+510000,ค่าใช้จ่ายการเรียนการสอน,510000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+a_equipment_dept,เงินเดือนและค่าจ้างอาจารย์ประจำ,511000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+511001,เงินเดือนและค่าจ้าง-ส่วนวิชาการ,511001,account.data_account_type_direct_costs,l10n_th_coa_rsu.chart,TRUE
+511002,ค่าล่วงเวลา-ส่วนวิชาการ,511002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+511003,ค่าตอบแทนการสอนเกินภาระงาน-อาจารย์ประจำ,511003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+512000,ค่าจ้างอาจารย์พิเศษ,512000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+a_exp_cogs,ค่าตอบแทนการสอน-อาจารย์พิเศษ,512001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+512002,ค่าพาหนะอาจารย์พิเศษ,512002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+513000,เงินสมนาคุณและค่าตอบแทนอื่น,513000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+513001,ค่าตอบแทนวิทยากร,513001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+513002,ค่าตอบแทนและค่าใช้จ่ายกรรมการพัฒนาหลักสูตร,513002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+513003,ค่าตอบแทนและค่าใช้จ่ายกรรมการกำกับมาตราฐานวิชาการ,513003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+513004,ค่าตอบแทนกรรมการและที่ปรึกษาสอบประมวลความรู้/โครงร่าง/วิทยาน,513004,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+513005,ค่าตอบแทนกรรมการและที่ปรึกษาปริญญานิพนธ์/ศิลปนิพนธ์/โครงการว,513005,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+513006,ค่าตอบแทนอื่น ๆ,513006,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+513007,ค่าสัมมนาอบรมการศึกษาวิชาการ,513007,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+513008,ค่าตำแหน่งวิชาการ,513008,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+513009,ค่าตอบแทนตำแหน่งงานบริหาร-ส่วนวิชาการ,513009,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+513010,ต่าตอบแทนที่ปรึกษาและการบริหารงาน,513010,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+514000,เงินสมทบร่วมผลิตแพทย์,514000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+515000,ค่าวัสดุการศึกษา,515000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+515001,ค่าวัสดุการศึกษาและวัสดุห้องปฏิบัติการ,515001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+a_exp_income_tax,ค่าใช้จ่ายอื่น ๆ,516000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+517000,ค่าใช้สอยการศึกษา,517000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+517001,ค่าใช้จ่ายในการฝึกภาคปฏิบัตินอกสถานที่,517001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+517002,ค่าใช้จ่ายในการนิเทศนักศึกษาฝึกงาน,517002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+a_exp_interest,ค่าใช้จ่ายปริญญาและโครงงานนิพนธ์,517003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+a_exp_office,ค่าใช้จ่ายอื่นเพื่อการศึกษา,517004,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+a_exp_rent,ค่าอาหารว่างนักศึกษามหาบัณฑิต,517005,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+a_exp_salary,ค่าบริการ Internet,517006,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+a_income_summary,ค่าโทรศัพท์อินเตอร์เน็ต,517007,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+a_invent,ค่าเช่าอาคารสถานที่,517008,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+a_loan,ค่าใช้จ่ายโครงการเพื่อการศึกษา,517009,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+a_retained_earnings,ค่าหนังสือพิมพ์และวารสาร,517010,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+a_uninvoiced_receipts,ค่าพาหนะและเบี้ยเลี้ยงเดินทาง,517011,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+517012,ค่ารับรอง,517012,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+517013,ค่าของขวัญและรางวัล,517013,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+517014,ค่าใช้จ่ายในการอบรมสัมมนาและเดินทางต่างประเทศ,517014,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+517015,ค่าใช้จ่ายเกี่ยวกับการบิน,517015,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+518000,ค่าใช้จ่ายกิจการนักศึกษา,518000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+518001,ค่าใช้จ่ายปฐมนิเทศ,518001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+518002,ค่าใช้จ่ายปัจฉิมนิเทศ,518002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+518003,ค่าใช้จ่ายพิธีประสาทปริญญาบัตร,518003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+518004,ค่าใช้จ่ายพิธีการต่างๆ,518004,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+518005,ค่าใช้จ่ายการจัด Open House,518005,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+518006,ค่าเบี้ยประกันอุบัติเหตุ,518006,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+519000,ค่าใช้จ่ายกิจกรรมนักศึกษา,519000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+519001,ค่าใช้จ่ายโครงการกิจกรรมนักศึกษา,519001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+519002,ค่าใช้จ่ายโครงการกีฬา,519002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+519003,กิจกรรม-อนุรักษ์ ศิลปะและวัฒนธรรม ศาสนา,519003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+519004,กิจกรรม-การบำเพ็ญประโยชน์,519004,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+519005,กิจกรรม-สิ่งแวดล้อม,519005,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+519006,กิจกรรม-วิชาการ,519006,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+519007,กิจกรรม-สันทนาการและกีฬา,519007,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+519008,กิจกรรม-อื่นๆ,519008,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+520000,ค่าใช้จ่ายการบริหาร,520000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+521000,เงินเดือนและค่าจ้างฝ่ายบริหารและเจ้าหน้าที่,521000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+521001,เงินเดือนและค่าจ้าง-ส่วนบริหาร,521001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+521002,ค่าล่วงเวลา-ส่วนบริหาร,521002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+522000,เงินสมนาคุณและค่าตอบแทนอื่น,522000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+522001,ค่าตอบแทนที่ปรึกษาและการบริหารงาน,522001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+522002,ค่าตอบแทนตำแหน่งงานบริหาร-ส่วนบริหาร,522002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+522003,ค่าใช้จ่ายภาษีค่าตอบแทน,522003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+523000,เบี้ยประชุม,523000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+523001,ค่าใช้จ่ายในการประชุมกรรมการบริหาร,523001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+524000,ค่าวัสดุสำนักงานและสิ้นเปลือง,524000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+524001,ค่าวัสดุคอมพิวเตอร์,524001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+524002,ค่าวัสดุสำนักงาน,524002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+524003,ค่าวัสดุสิ้นเปลือง,524003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+524004,ค่าถ่ายเอกสาร,524004,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+525000,ค่าซ่อมแซมและบำรุงรักษาอุปกรณ์,525000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+525001,ค่าซ่อมแซมและบำรุงรักษาครุภัณฑ์และอุปกรณ์,525001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+525002,ค่าซ่อมแซมและบำรุงรักษายานพาหนะ,525002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+525003,ค่าซ่อมแซมและบำรุงรักษาระบบสาธารณูปโภค,525003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+526000,ค่าพาหนะและเบี้ยเลี้ยงเดินทาง,526000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+526001,ค่าน้ำมันเชื้อเพลิง,526001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+526002,ค่าใช้จ่ายในการเดินทางในประเทศ,526002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+526003,ค่าใช้จ่ายในการอบรมสัมมนาและเดินทางต่างประเทศ,526003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+527000,ค่าใช้จ่ายประชาสัมพันธ์,527000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+527001,ค่าของขวัญและรางวัล,527001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+527002,ค่าโฆษณาและประชาสัมพันธ์,527002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+527003,ค่าวัสดุโฆษณาและเผยแพร่,527003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+527100,ค่ารับรอง,527100,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+528000,ค่าใช้จ่ายบริหารอื่น,528000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+528001,ค่าสัมมนาและอบรมบุคคลากร,528001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+528002,ค่าไปรษณียากร,528002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+528003,ค่าใช้จ่ายโครงการเพื่อการบริหาร,528003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+528004,ค่าใช้จ่ายในการพัฒนาบุคลากร,528004,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529000,ค่าใช้จ่ายเบ็ดเตล็ด,529000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529001,ค่าน้ำดื่ม,529001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529002,ค่าบริจาคเพื่อการกุศล,529002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529003,ค่าธรรมเนียมสอบบัญชี,529003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529004,ค่าธรรมเนียมธนาคาร,529004,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529005,ค่าธรรมเนียมกฎหมาย,529005,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529006,ค่าธรรมเนียมอื่น ๆ,529006,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529007,ค่าเบี้ยประกันภัยรถยนต์และค่าภาษีรถยนต์,529007,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529008,ค่าบำรุงสมาชิกสมาคม,529008,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529009,"ค่าหนังสือพิมพ์,วารสาร&เคเบิ้ลทีวี",529009,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529010,ค่าภาษีโรงเรือนและที่ดิน,529010,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529011,ค่าใช้จ่ายเบ็ดเตล็ด,529011,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529012,เงินเกิน(ขาด)บัญชี,529012,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529013,ค่าใช้จ่ายเกี่ยวกับภาษี,529013,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529014,ค่าใช้จ่ายต่าง ๆ เพื่อป้องกันและบรรเทาอุทกภัย,529014,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+529015,ค่าธรรมเนียมตรวจสอบภายใน,529015,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+530000,ค่าใช้จ่ายการวิจัย,530000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+530001,ทุนสนับสนุนการวิจัย,530001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+530002,ค่าหนังสือและวารสารห้องสมุด,530002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+530003,ค่าใช้จ่ายอื่นเกี่ยวกับห้องสมุด,530003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+530101,ค่าตอบแทนผู้วิจัย,530101,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+530102,ค่าตอบแทนผู้ช่วยวิจัย,530102,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+530103,ค่าใช้จ่ายในการเดินทางเพื่อการวิจัย,530103,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+530104,ค่าวัสดุสิ้นเปลืองเพื่อการวิจัย,530104,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+530105,ค่าเช่าสถานที่เพื่อการวิจัย,530105,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+530106,ค่าพิมพ์ผลงานวิจัย,530106,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+530107,ค่าใช้จ่ายเบ็ดเตล็ดเพื่องานวิจัย,530107,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+530108,ค่าตอบแทนที่ปรึกษางานวิจัย,530108,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+540000,ค่าใช้จ่ายอาคารและสถานที่,540000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+541000,ค่าซ่อมแซมและบำรุงรักษาอาคาร,541000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+541001,ค่าซ่อมแซมอาคาร,541001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+542000,ค่าไฟฟ้า น้ำประปา และอื่น ๆ,542000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+542001,ค่าไฟฟ้า,542001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+542002,ค่าน้ำประปา,542002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+542003,ค่าโทรศัพท์,542003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+542004,ค่าเช่าสัญญาณคลื่นวิทยุสื่อสาร,542004,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+543000,ค่าวัสดุทำความสะอาด,543000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+543001,ค่าบริการทำความสะอาด,543001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+543002,ค่าบริการกำจัดสิ่งปฏิกูล,543002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+543003,ค่าบริการกำจัดปลวกและแมลง,543003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+544000,ค่าใช้จ่ายอื่น ๆ,544000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+544001,ค่าบริการรักษาความปลอดภัย,544001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+544002,ค่าใช้จ่ายเกี่ยวกับการจัดสวน,544002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+544100,ค่าประกันอาคารและทรัพย์สินอื่น,544100,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+550000,ดอกเบี้ยจ่าย,550000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+550010,ดอกเบี้ยจ่ายค่าเช่าซื้อสินทรัพย์,550010,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+550100,ขาดทุนจากการจำหน่ายทรัพย์สิน,550100,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+550101,ขาดทุนจากการรื้อถอนอาคาร,550101,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+560000,ค่าเสื่อมราคา,560000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+561000,อาคาร และค่าตกแต่ง,561000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+a_building_depr,ค่าเสื่อมราคา-อาคาร,561001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+561002,ค่าเสื่อมราคา-ระบบสาธารณูปโภค,561002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+561003,ค่าเสื่อมราคา-ค่าตกแต่งอาคาร,561003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+562000,ครุภัณฑ์และอุปกรณ์,562000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+562001,ค่าเสื่อมราคา-อุปกรณ์การศึกษา,562001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+562002,ค่าเสื่อมราคา-อุปกรณ์สำนักงาน,562002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+562003,ค่าเสื่อมราคา-อุปกรณ์หอพัก,562003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+562004,ค่าเสื่อมราคา-อุปกรณ์ห้องสมุด,562004,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+562005,ค่าเสื่อมราคา-โสตทัศนูปกรณ์,562005,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+562006,ค่าเสื่อมราคา-หนังสือและวารสาร,562006,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+562007,ค่าเสื่อมราคา-ยานพาหนะ,562007,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+570000,ค่าใช้จ่ายสวัสดิการ,570000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+571000,ทุนการศึกษาของอาจารย์และเจ้าหน้าที่,571000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+571001,ทุนการศึกษา-บุคลากร,571001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+571002,ทุนการศึกษา-นักศึกษา,571002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+572000,ค่าใช้จ่ายรักษาพยาบาล,572000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+572001,ค่ารักษาพยาบาล,572001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+572002,ค่าตอบแทนแพทย์,572002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+573000,ค่าใช้จ่ายประกันสังคม.,573000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+573001,เงินสมทบกองทุนเงินทดแทน,573001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+573002,เงินสมทบกองทุนประกันสังคม,573002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+573003,เงินสมทบกองทุนสำรองเลี้ยงชีพ,573003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+573004,เงินสมทบกองทุนส่งเสริมและพัฒนาคุณภาพชีวิตคนพิการ,573004,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+574000,เงินช่วยเหลือ,574000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+574001,ค่าเล่าเรียนบุตร,574001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+574002,ค่าเครื่องแบบบุคลากร,574002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+574003,เงินชดเชยออกจากงาน,574003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+574004,ค่าใช้จ่ายสวัสดิการสงเคราะห์อื่น,574004,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+574005,เงินช่วยเหลืองานศพ,574005,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+574006,ค่าใช้จ่ายอื่น-สวัสดิการ,574006,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+575000,เงินรางวัลบุคลากร,575000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+575101,ประมาณการค่าเสียหายจากภัยพิบัติ ด้านอาคาร,575101,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+575102,ประมาณการค่าเสียหายจากภัยพิบัติ ด้านอุปกรณ์,575102,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+580000,ค่าใช้จ่ายเบ็ดเตล็ด,580000,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+580001,บัญชีคุมเงินเดือน,580001,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+580002,บัญชีเงินโอนระหว่างบัญชี,580002,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+580003,บัญชีคุมค่าเล่าเรียน,580003,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+580004,บัญชีคุมค่าธรรมเนียม,580004,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+a_exp_loss,รายสูง (ต่ำ) กว่าค่าใช้จ่าย,599999,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+999998,บัญชีพัก,999998,account.data_account_type_expenses,l10n_th_coa_rsu.chart,TRUE
+999999,Undistributed Profits/Losses,999999,account.data_unaffected_earnings,l10n_th_coa_rsu.chart,TRUE

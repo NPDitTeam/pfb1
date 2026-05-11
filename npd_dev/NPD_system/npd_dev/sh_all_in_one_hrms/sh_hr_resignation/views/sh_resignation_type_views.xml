@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<odoo>
+    <!-- Resignation Type views and action -->
+    <record id="sh_resignation_type_form_view" model="ir.ui.view">
+        <field name="name">sh.resignation.types.form</field>
+        <field name="model">sh.resignation.types</field>
+        <field name="arch" type="xml">
+            <form string="Resignation Type">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_resignation_type_tree_view" model="ir.ui.view">
+        <field name="name">sh.resignation.types.tree</field>
+        <field name="model">sh.resignation.types</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" string="Resignation Type" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="sh_resignation_type_search_views" model="ir.ui.view">
+        <field name="name">sh.resignation.types.search</field>
+        <field name="model">sh.resignation.types</field>
+        <field name="arch" type="xml">
+            <search string="Resignation Type">
+                <field name="name" />
+                <group expand="0" string="Group by...">
+                    <filter string="Resignation Type" name="name" context="{'group_by': 'name'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="sh_resignation_type_view_actions" model="ir.actions.act_window">
+        <field name="name">Resignation Type</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.resignation.types</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="sh_resignation_main_menu" name="Resignation Management"
+        groups="sh_all_in_one_hrms.group_enable_emp_hr_resignation" />
+
+    <menuitem id="sh_resignation_menu" name="Resignation" action="sh_resignation_view_actions"
+        parent="sh_resignation_main_menu" sequence="4" />
+
+    <menuitem id="sh_resignation_type_menu" name="Resignation Type"
+        parent="sh_resignation_main_menu" action="sh_resignation_type_view_actions"
+        sequence="7" groups="hr.group_hr_user" />
+
+</odoo>

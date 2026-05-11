@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_account_voucher_asset_user,account.voucher.asset,model_account_voucher_asset,account.group_account_user,1,1,1,1
+access_account_voucher_asset_item_user,account.voucher.asset.item,model_account_voucher_asset_item,account.group_account_user,1,1,1,1
+access_account_voucher_asset_move_user,account.voucher.asset.move,model_account_voucher_asset_move,account.group_account_user,1,1,1,1

@@ -1,0 +1,14 @@
+<odoo>
+    <!-- ✅ ประกาศ action ก่อน -->
+    <record id="action_stock_api_transfer" model="ir.actions.act_window">
+        <field name="name">Stock Transfer</field>
+        <field name="res_model">stock.api.transfer</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- ✅ จากนั้นจึงประกาศเมนู -->
+    <menuitem id="menu_stock_api_transfer_root" name="Stock API Transfer" parent="stock.menu_stock_root" sequence="20"/>
+    <menuitem id="menu_stock_api_transfer" name="Transfer via API"
+              parent="menu_stock_api_transfer_root"
+              action="stock_api_transfer.action_stock_api_transfer"/>
+</odoo>

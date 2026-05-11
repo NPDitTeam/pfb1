@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sequence_view_inherit" model="ir.ui.view">
+        <field name="name">ir.sequence.form.inherit</field>
+        <field name="model">ir.sequence</field>
+        <field name="inherit_id" ref="base.sequence_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='date_range_ids']" position="after">
+                 <button string="Generate Sub Sequences" 
+                    name="generate_sub_sequences" type="object" class="btn-primary"
+                    attrs="{'invisible': [('use_date_range', '=', False)]}"
+                 />
+                 <button string="Cancel Generate Sequesces"
+                        confirm="You want to delete Sub Sequence?"
+                        name="delete_sub_sequences" type="object"
+                        attrs="{'invisible': [('use_date_range', '=', False)]}"
+                        />
+            </xpath>
+        </field>
+    </record>
+      <record id="generate_sub_sequences_view_form" model="ir.ui.view">
+        <field name="name">generate.sub.sequences.form</field>
+        <field name="model">generate.sub.sequences</field>
+        <field name="arch" type="xml">
+        <form string="Generate Sub Sequence">
+            <sheet>
+            <group>
+             <separator string="Generate Sub Sequence" colspan="4" />
+                <group>
+                    <field name="prefix" string="Format Sub Seq"/>
+                     <field name="generate_date_month" />
+                     <field name="year"></field>
+                </group>
+            </group>
+                    <footer>
+                        <button string="Confirm" name="action_generate" type="object" class="oe_highlight"/>
+                        <button string="Cancel" class="btn btn-secondary" special="cancel"/>
+                    </footer>
+            </sheet>
+        </form>
+        </field>
+    </record>
+    
+
+</odoo>

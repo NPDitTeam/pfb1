@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <template id="assets_common" name="l10n_ch_isr_report" inherit_id="web.report_assets_common">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/css"
+                  href="pfb_npd_payment_receipt_form/static/report.css"/>
+        </xpath>
+    </template>
+
+    <record id="paperformat_stock_form_test" model="report.paperformat">
+        <field name="name">A4 Custom</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">60</field>
+        <field name="margin_bottom">155</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">55</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <report
+            id="action_pfb_npd_payment_receipt_form"
+            string="ใบนำสินค้าเข้า"
+            name="pfb_npd_payment_receipt_form.form_stock_npd_pfb"
+            model="stock.picking"
+            report_type="qweb-pdf"
+            print_report_name="'ใบนำสินค้าเข้า - %s' % (object.name)"
+            paperformat="pfb_npd_payment_receipt_form.paperformat_stock_form_test"
+    />
+
+    <template id="so_form_header">
+         <style>
+            .font_weight {
+                font-weight: 800;
+            }
+            .address-line {
+                font-size: 13px;
+                margin-top: 5px;
+            }
+            .tax-id {
+                font-size: 13px;
+                margin-top: -10px;
+                display: block;
+            }
+            .header-container {
+                display: flex;
+                align-items: flex-start;
+            }
+            .company-info {
+                margin-left: 40px;
+                 margin-top: 30px;
+            }
+            .document-info {
+                margin-top: 15px;
+<!--                margin-left: -20px;-->
+            }
+            .text-rent {
+                font-size: 11px;
+                margin-top: -10px
+            }
+            .date-info {
+                margin-top: -10px;
+            }
+            .doc-post {
+                font-size: 12px;
+            }
+        </style>
+        <div class="row">
+            <div class="col-1" style="margin-top: 30px;">
+                <img src="web/binary/company_logo" class="img-responsive"/>
+            </div>
+            <div class="col-1"/>
+            <div class="col-7 company-info line-distance">
+                <h1 class="font_weight"><strong>ใบนำสินค้าเข้า</strong></h1>
+                <h6><strong><span t-esc="doc.company_id.name"/></strong></h6>
+                <p>
+                  <span t-field="doc.branch_id.address" style="line-height: 1.5;font-size: 14px;"/>
+                </p>
+
+                <p class="doc-post" style="position: fixed; right: 60px; top: 280px;">
+                  <t t-esc="doc.sale_id.pricelist_id.name" />
+                </p>
+            </div>
+            <div class="col-4" style="margin-top: 30px;">
+                <table width="100%">
+                    <tr style="">
+                        <td style="display:block;width: 200px;text-align: center;padding-top: 5px; padding-right: -80px;">
+                            <p class="text-center document-info"><h4><strong>เลขที่</strong></h4></p>
+                            <p class="text-center"><strong><span t-esc="doc.name"/></strong></p>
+
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+    </template>
+
+    <template id="so_form_title_top">
+        <style>
+            .rounded-square {
+                border: 1px solid #000;
+                border-radius: 10px;
+                padding: 20px;
+
+                font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+<!--                margin: auto; /* Center align */-->
+            }
+            .preserve-whitespace {
+                white-space: pre; !important
+            }
+
+            .text-partner {
+                font-size: 13px;
+            }
+        </style>
+
+        <div class="row" style="margin-bottom: 5px;"/>
+    </template>
+
+    <template id="so_form_title">
+        <br/><br/>
+        <table width="100%">
+
+                <tr style="font-size: 16px;">
+                    <td width="5%" style="padding-left: 60px;">
+
+                    </td>
+                   <td width="15%" style="padding-left: 60px;">
+                        <strong>ต้นทาง : <span t-esc="doc.get_request_source_location_name()"/></strong>
+                    </td>
+                    <td width="15%" style="padding-left: 60px;">
+                       <strong>วันที่ :
+                          <span t-esc="doc.force_date.strftime('%d/%m/') + str(doc.force_date.year + 543)"/>
+                        </strong>
+
+                    </td>
+                </tr>
+                <tr style="font-size: 16px;">
+                    <td width="5%" style="padding-left: 60px;">
+
+                    </td>
+                    <td width="15%" style="padding-left: 60px;">
+                        <strong>ปลายทาง : <span t-esc="doc.location_dest_id.name"/></strong>
+                    </td>
+                   <td width="15%" style="padding-left: 60px;">
+                        <strong>วันที่ :
+                          <span t-esc="doc.force_date.strftime('%d/%m/') + str(doc.force_date.year + 543)"/>
+                        </strong>
+
+                    </td>
+
+                </tr>
+            </table>
+    </template>
+
+    <template id="so_form_detail_top">
+         <style>
+            .preserve-whitespace {
+                white-space: pre;
+            }
+            .line-distance {
+                line-height: 1.5;
+                font-size: 13px !important;
+            }
+            .small-font {
+                font-size: 13px !important;
+            }
+            .border_report {
+                border-bottom: 1px solid black !important;
+                border-top: 1px solid black !important
+            }
+        </style>
+        <table width="100%">
+    <thead>
+        <tr style="border-bottom: 1px solid black !important;">
+            <th width="10%" class="text-center">ลำดับ</th>
+            <th width="60%" class="text-left">สินค้า</th>
+            <th width="15%" class="text-left">จำนวน</th>
+            <th width="20%" class="text-center">หน่วย</th>
+        </tr>
+    </thead>
+    <tbody>
+        <t t-foreach="enumerate(doc.move_lines)" t-as="line_data">
+            <tr>
+                <!-- ลำดับที่ -->
+                <td class="text-center">
+                    <span t-esc="line_data[0] + 1"/>
+                </td>
+
+                <!-- ชื่อสินค้า -->
+                <td class="text-left">
+                    <span t-esc="line_data[1].product_id.display_name"/>
+                </td>
+
+                <!-- จำนวนที่ทำเสร็จ -->
+                <td class="text-left">
+                    <span t-esc="'{0:,.2f}'.format(line_data[1].quantity_done)"/>
+                </td>
+
+                <!-- หน่วย -->
+                <td class="text-center">
+                    <span t-esc="line_data[1].product_uom.name"/>
+                </td>
+            </tr>
+        </t>
+    </tbody>
+</table>
+
+<!-- ✅ ส่วนแสดงหมายเหตุ (ใต้ตาราง) -->
+<t t-if="doc.note">
+    <div style="margin-top: 15px;">
+        <strong>หมายเหตุ:</strong>
+        <p t-field="doc.note"/>
+    </div>
+</t>
+
+    </template>
+
+
+
+    <template id="form_stock_npd_pfb">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.basic_layout">
+                    <t t-set="multi" t-value="0"/>
+                    <t t-set="ply" t-value="0"/>
+                    <t t-set="wei" t-value="0"/>
+
+                    <div class="header">
+                      <table width="100%" border="1">
+                        <tr>
+                            <td>
+                              <t t-call="pfb_npd_payment_receipt_form.so_form_header"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                              <t t-call="pfb_npd_payment_receipt_form.so_form_title_top"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                              <t t-call="pfb_npd_payment_receipt_form.so_form_title"/>
+                            </td>
+                        </tr>
+                      </table>
+<!--                      <t t-call="pfb_npd_payment_receipt_form.so_form_footer"/>-->
+                    </div>
+
+                    <table width="100%" border="1">
+                        <tr>
+                            <td>
+<!--                                Detail-->
+                                <t t-call="pfb_npd_payment_receipt_form.so_form_detail_top"/>
+                            </td>
+                        </tr>
+                    </table>
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+</odoo>

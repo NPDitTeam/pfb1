@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="inherit_view_asset_borrow_field_view_form" model="ir.ui.view">
+        <field name="name">account.asset.form</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset_management.account_asset_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                <button
+                        name="open_asset_borrow"
+                        string="Borrow"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-bars"
+                />
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Borrow">
+                    <group>
+                        <group>
+                            <field name="owner_user_id" readonly="1"/>
+                            <field name="assign_date" readonly="1"/>
+                            <field name="end_date" readonly="1"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+
+    <!--     <record id="inherit_view_asset_borrow_field_field_form" model="ir.ui.view">-->
+    <!--        <field name="name">account.asset.form</field>-->
+    <!--        <field name="model">account.asset</field>-->
+    <!--        <field name="inherit_id" ref="pfb_std_asset_menu.inherit_view_account_asset_free_field_view_form"/>-->
+    <!--        <field name="arch" type="xml">-->
+    <!--            -->
+    <!--        </field>-->
+    <!--    </record>-->
+
+    <menuitem
+            id="menu_asset_borrow_request_form"
+            name="Asset Borrow Requests"
+            parent="pfb_std_asset_menu.account_asset_request_menu"
+            action="asset_equipment_borrow_request_action"
+            groups="pfb_std_asset_menu.group_asset_manager,base.group_user"
+            sequence="1"/>
+
+    <menuitem
+            id="menu_asset_borrow_stage_configuration"
+            name="Asset Borrow Stages"
+            parent="pfb_std_asset_menu.account_asset_setting_menu"
+            action="asset_equipment_borrow_stage_action"
+            groups="pfb_std_asset_menu.group_asset_manager"
+            sequence="50"/>
+
+    <menuitem
+            id="menu_asset_provide_request_form"
+            name="Asset Provide Requests"
+            parent="pfb_std_asset_menu.account_asset_request_menu"
+            action="asset_equipment_provide_request_action"
+            groups="pfb_std_asset_menu.group_asset_manager,base.group_user"
+            sequence="1"/>
+
+    <menuitem
+            id="menu_asset_request_calendar"
+            name="Asset Calendar"
+            parent="pfb_std_asset_menu.account_asset_request_menu"
+            action="asset_equipment_request_action_cal"
+            groups="base.group_erp_manager"
+            sequence="2"/>
+
+    <menuitem
+            id="menu_asset_provide_stage_configuration"
+            name="Asset Provide Stages"
+            parent="pfb_std_asset_menu.account_asset_setting_menu"
+            action="asset_equipment_provide_stage_action"
+            groups="pfb_std_asset_menu.group_asset_manager"
+            sequence="51"/>
+
+    <menuitem
+            id="account_asset_report_menu"
+            name="Inventory"
+            parent="pfb_std_asset_menu.menu_asset_operator"
+            action="asset_inventory_action"
+            sequence="25"/>
+
+    <menuitem
+            action="action_view_asset_equipment_export"
+            id="menu_view_asset_equipment_export"
+            parent="pfb_std_asset_menu.account_asset_report_menu"
+            sequence="33"
+    />
+</odoo>

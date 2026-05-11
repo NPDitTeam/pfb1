@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="account_credit_card_view_form" model="ir.ui.view">
+        <field name="name">account.credit.card.view.form</field>
+        <field name="model">account.credit.card</field>
+        <field name="arch" type="xml">
+            <form string="Credit Card">
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object"
+                            attrs="{'invisible': [('state', 'not in', ['assigned'])]}"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            attrs="{'invisible': [('state', 'not in', ['done','draft','reject'])]}"/>
+                    <button name="action_assigned" string="Assigned" type="object"
+                            attrs="{'invisible': [('state', 'not in', ['draft'])]}"/>
+                    <button name="action_reject" string="Reject" type="object"
+                            attrs="{'invisible': [('state', 'not in', ['draft','assigned'])]}"/>
+                    <button name="action_redraft" string="Reset Draft" type="object"
+                            attrs="{'invisible': [('state', 'not in', ['cancel'])]}"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,cancel,assigned,reject,done,cancel"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Credit Card Info">
+                            <field name="name" attrs="{'readonly': [('state','not in',['draft'])]}"/>
+                            <field name="partner_id" options="{'no_create': True}"
+                                   attrs="{'readonly': [('state','not in',['draft'])]}"/>
+                            <!--              <field name="date_credit_card" attrs="{'readonly': [('state','not in',['draft'])]}" />-->
+                            <field name="date_done" attrs="{'readonly': [('state','not in',['draft','assigned'])]}"/>
+                            <field name="format_type" attrs="{'readonly': [('state','not in',['draft'])]}"/>
+                            <field name="payment_method_id" options="{'no_create': True}"
+                                   attrs="{'readonly': [('state','not in',['draft','assign'])]}"/>
+                            <field name="credit_card_total" attrs="{'readonly': [('state','not in',['draft'])]}"/>
+
+
+                        </group>
+                        <group string="Account info">
+                            <field name="journal_id" options="{'no_create': True}"
+                                   domain="[('type', 'in', ('bank', 'cash'))]" required="True"
+                                   attrs="{'readonly': [('state','not in',['draft'])]}"/>
+                            <!--              <field name="bank_id" options="{'no_create': True}" required="True" attrs="{'readonly': [('state','not in',['draft'])]}"/>-->
+                            <field name="bank_partner_id" options="{'no_create': True}"
+                                   attrs="{'readonly': [('state','not in',['draft'])]}"/>
+                            <field name="account_bank_id" options="{'no_create': True}"
+                                   attrs="{'readonly': [('state','not in',['draft'])]}"/>
+                            <field name="move_id" readonly="True" force_save="1"/>
+
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Payment Info">
+                            <field name="is_online"/>
+                            <field name="payment_id"/>
+                            <field name="voucher_id"/>
+                            <field name="remark"/>
+                            <field name="credit_card_type" invisible="False"/>
+                        </group>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+
+        </field>
+    </record>
+    <record id="account_credit_card_view_tree" model="ir.ui.view">
+        <field name="name">account.credit.card.view.tree</field>
+        <field name="model">account.credit.card</field>
+        <field name="arch" type="xml">
+            <tree string="Credit Card">
+                <header>
+                    <button string="Change Date Receipt" name="action_credit_card_done" type="object"
+                            class="btn-primary" attrs="{'always_visible': True}"/>
+                </header>
+                <field name="name"/>
+                <!--        <field name="date_credit_card" />-->
+                <field name="partner_id"/>
+                <field name="credit_card_type"/>
+                <field name="account_bank_id"/>
+                <!--        <field name="bank_id"/>-->
+                <field name="credit_card_total"/>
+                <field name="date_done"/>
+                <field name="remark"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+    <record model="ir.ui.view" id="view_account_credit_card_pivot">
+        <field name="name">account.credit.card.pivot</field>
+        <field name="model">account.credit.card</field>
+        <field name="arch" type="xml">
+            <pivot string="Account Credit Card" sample="1">
+                <field name="date_done" type="row"/>
+                <field name="credit_card_total" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="action_account_credit_card_receipt" model="ir.actions.act_window">
+        <field name="name">Credit Card Receipt</field>
+        <field name="res_model">account.credit.card</field>
+        <field name="view_mode">tree,kanban,form,pivot,graph</field>
+        <field name="domain">[('credit_card_type','=','inbound')]</field>
+        <field name="context">{'default_credit_card_type': 'inbound'}</field>
+        <field name="view_id" ref="account_credit_card_view_tree"/>
+        <!-- <field name="search_view_id" ref="view_account_bill_filter"/> -->
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create Account Credit Card
+            </p>
+            <p>
+                Create Account Credit Card to recheck payment from customer
+            </p>
+        </field>
+    </record>
+
+    <record id="action_account_credit_card_payment" model="ir.actions.act_window">
+        <field name="name">Credit Card Payment</field>
+        <field name="res_model">account.credit.card</field>
+        <field name="view_mode">tree,kanban,form,pivot,graph</field>
+        <field name="domain">[('credit_card_type','=','outbound')]</field>
+        <field name="context">{'default_credit_card_type': 'outbound'}</field>
+        <field name="view_id" ref="account_credit_card_view_tree"/>
+        <!-- <field name="search_view_id" ref="view_account_bill_filter"/> -->
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create Account Credit Card
+            </p>
+            <p>
+                Create Account Credit Card to recheck payment from customer
+            </p>
+        </field>
+    </record>
+
+    <!--  <record id="view_partner_bank_form" model="ir.ui.view">-->
+    <!--    <field name="name">res.partner.bank.view.form</field>-->
+    <!--    <field name="model">res.partner.bank</field>-->
+    <!--    <field name="inherit_id" ref="base.view_partner_bank_form"/>-->
+    <!--    <field name="arch" type="xml">-->
+    <!--      <xpath expr="//field[@name='partner_id']" position="after">-->
+    <!--        <field name="account_bank_id" />-->
+    <!--      </xpath>-->
+    <!--    </field>-->
+    <!--  </record>-->
+
+    <menuitem id="account_credit_card_menu" name="Credit Card" action="action_account_credit_card_receipt"
+              parent="account.menu_finance_receivables" sequence="10"/>
+
+    <menuitem id="account_credit_card_menu_bill" name="Credit Card" action="action_account_credit_card_payment"
+              parent="account.menu_finance_payables" sequence="10"/>
+
+</odoo>

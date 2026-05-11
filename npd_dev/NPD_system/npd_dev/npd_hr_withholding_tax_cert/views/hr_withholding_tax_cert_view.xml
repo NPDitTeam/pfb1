@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form View -->
+    <record id="view_hr_withholding_tax_cert_form" model="ir.ui.view">
+        <field name="name">hr.withholding.tax.cert.form</field>
+        <field name="model">hr.withholding.tax.cert</field>
+        <field name="arch" type="xml">
+            <form string="HR Withholding Tax Certificate">
+                <header>
+                    <button name="action_draft"
+                            string="Set to Draft"
+                            type="object"
+                            attrs="{'invisible': [('state', '=', 'draft')]}"/>
+                    <button name="action_done"
+                            string="Done"
+                            type="object"
+                            class="oe_highlight"
+                            attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                    <button name="action_cancel"
+                            string="Cancel"
+                            type="object"
+                            attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,done"/>
+                </header>
+                <sheet>
+                    <h1>
+                        <field name="name" readonly="1"/>
+                    </h1>
+                    <group>
+                        <group string="Company">
+                            <field name="company_name"/>
+                            <field name="company_taxid"/>
+                            <field name="company_address"/>
+                            <field name="branch_id"/>
+                        </group>
+                        <group string="พนักงาน">
+                            <field name="employee_id"
+                                   options="{'no_create': True}"/>
+                            <field name="employee_firstname"/>
+                            <field name="employee_lastname"/>
+                            <field name="employee_taxid"/>
+                            <field name="employee_address"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Options">
+                            <field name="income_tax_form"/>
+                            <field name="tax_payer"/>
+                        </group>
+                        <group string="References">
+                            <field name="report_year"/>
+                            <field name="total_net_salary"/>
+                            <field name="date"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="company_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Withholding Tax Lines">
+                            <field name="wt_line" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="wt_cert_income_type"/>
+                                    <field name="wt_cert_income_desc"/>
+                                    <field name="amount" string="Tax Amount" sum="Total Tax"/>
+                                    <field name="wt_percent" string="% Tax"/>
+                                    <field name="base" string="Base Amount" sum="Total Base"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Tree View -->
+    <record id="view_hr_withholding_tax_cert_tree" model="ir.ui.view">
+        <field name="name">hr.withholding.tax.cert.tree</field>
+        <field name="model">hr.withholding.tax.cert</field>
+        <field name="arch" type="xml">
+            <tree string="HR Withholding Tax Certificates">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="employee_id"/>
+                <field name="employee_firstname"/>
+                <field name="employee_lastname"/>
+                <field name="company_name"/>
+                <field name="branch_id"/>
+                <field name="total_net_salary"/>
+                <field name="income_tax_form"/>
+                <field name="tax_payer"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_hr_withholding_tax_cert_search" model="ir.ui.view">
+        <field name="name">hr.withholding.tax.cert.search</field>
+        <field name="model">hr.withholding.tax.cert</field>
+        <field name="arch" type="xml">
+            <search string="HR WT Certificates">
+                <field name="name" string="Number"/>
+                <field name="employee_id" string="พนักงาน"/>
+                <field name="employee_firstname" string="ชื่อ"/>
+                <field name="employee_lastname" string="นามสกุล"/>
+                <field name="company_name" string="บริษัท"/>
+                <separator/>
+                <filter name="draft" string="Draft"
+                        domain="[('state', '=', 'draft')]"/>
+                <filter name="done" string="Done"
+                        domain="[('state', '=', 'done')]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter name="group_income_tax_form"
+                            string="Tax Form"
+                            context="{'group_by': 'income_tax_form'}"/>
+                    <filter name="group_tax_payer"
+                            string="Tax Payer"
+                            context="{'group_by': 'tax_payer'}"/>
+                    <filter name="group_employee"
+                            string="พนักงาน"
+                            context="{'group_by': 'employee_id'}"/>
+                    <filter name="group_company"
+                            string="บริษัท"
+                            context="{'group_by': 'company_name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_hr_withholding_tax_cert" model="ir.actions.act_window">
+        <field name="name">HR WT Certificates</field>
+        <field name="res_model">hr.withholding.tax.cert</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_hr_withholding_tax_cert_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                สร้างหนังสือรับรองหัก ณ ที่จ่าย
+            </p>
+        </field>
+    </record>
+
+    <!-- Cleanup: unbind old server action from Action dropdown -->
+    <record id="action_server_generate_all_wt_cert" model="ir.actions.server">
+        <field name="name">สร้าง WT Certificates ทั้งหมด</field>
+        <field name="model_id" ref="model_hr_withholding_tax_cert"/>
+        <field name="binding_model_id" eval="False"/>
+        <field name="state">code</field>
+        <field name="code">action = False</field>
+    </record>
+
+    <!-- Menu under Employee Salary root menu -->
+    <menuitem id="menu_hr_withholding_tax_cert_root"
+              name="หนังสือรับรองหัก ณ ที่จ่าย"
+              parent="employee_salary.main_employee_salary_menu"
+              action="action_hr_withholding_tax_cert"
+              sequence="60"/>
+
+    <!-- Action for wizard menu -->
+    <record id="action_generate_hr_wt_cert_menu" model="ir.actions.act_window">
+        <field name="name">สร้าง WT Certificates ทั้งหมด</field>
+        <field name="res_model">generate.hr.wt.cert</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Menu: open wizard directly -->
+    <menuitem id="menu_generate_all_wt_cert"
+              name="สร้าง WT Certificates ทั้งหมด"
+              parent="employee_salary.main_employee_salary_menu"
+              action="action_generate_hr_wt_cert_menu"
+              sequence="61"/>
+
+    <!-- Action for send email menu -->
+    <record id="action_send_hr_wt_cert_email_menu" model="ir.actions.act_window">
+        <field name="name">ส่งเมล WT Certificate</field>
+        <field name="res_model">send.hr.wt.cert.email</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Menu: send email wizard -->
+    <menuitem id="menu_send_wt_cert_email"
+              name="ส่งเมล WT Certificate"
+              parent="employee_salary.main_employee_salary_menu"
+              action="action_send_hr_wt_cert_email_menu"
+              sequence="62"/>
+
+</odoo>

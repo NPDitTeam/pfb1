@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="withhodling_tax_type_view_tree" model="ir.ui.view">
+        <field name="name">withholding.tax.type.view.tree</field>
+        <field name="model">withholding.tax.type</field>
+        <field name="arch" type="xml">
+            <tree string="Type of InCome" editable="bottom">
+                <field name="wt_cert_income_type"></field>
+                <field name="percent_tax"></field>
+                <field name="title_number_form"></field>
+            </tree>
+        </field>
+    </record>
+      <record id="action_withholding_tax_type" model="ir.actions.act_window">
+            <field name="name">Type of Income</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">withholding.tax.type</field>
+            <field name="view_id" ref="withhodling_tax_type_view_tree"/>
+        </record>
+    
+    <menuitem
+        id="menu_withholding_tax_type"
+        name="Type of Income"
+        action="action_withholding_tax_type"
+        parent="account.account_account_menu" 
+        sequence="70"/>
+</odoo>

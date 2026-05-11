@@ -1,0 +1,23 @@
+<odoo>
+    <data>
+        <record id="view_order_form_inherit" model="ir.ui.view">
+            <field name="name">sale.order.form.inherit</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook" position="inside">
+                    <page string="ข้อมูลขนส่ง">
+                        <group>
+                            <group>
+                                <field name="delivery_employee_id"/>
+                                <field name="destination"/>
+                                <field name="shipping_cost"/>
+                                <field name="distance_km"/>
+                            </group>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

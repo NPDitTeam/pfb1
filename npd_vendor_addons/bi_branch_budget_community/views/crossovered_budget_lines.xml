@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<odoo>
+	<data>
+		
+		<!-- Crossovered Budget Lines Views -->
+		
+		<record id="view_crossovered_budget_line_form_inherit_bi_branch_budget_com" model="ir.ui.view">
+            <field name="name">view.crossovered.budget.line.form.inherit.bi.branch.budget.com</field>
+            <field name="model">crossovered.budget.lines</field>
+            <field name="inherit_id" ref="bi_account_budget.view_crossovered_budget_line_form" />
+            <field name="arch" type="xml">
+                <field name="company_id" position="after">
+                    <field name="branch_id" readonly="1"/>
+                </field>
+                
+                <xpath expr="//field[@name='general_budget_id']" position="attributes">
+                      <attribute name="domain">[('branch_id', '=', branch_id)]</attribute>
+                </xpath>
+                
+                <xpath expr="//field[@name='analytic_account_id']" position="attributes">
+                      <attribute name="domain">[('branch_id', '=', branch_id)]</attribute>
+                </xpath>
+                
+            </field>
+        </record>
+        
+        
+        <record id="view_crossovered_budget_line_tree_inherit_bi_branch_budget_com" model="ir.ui.view">
+            <field name="name">view.crossovered.budget.line.tree.inherit.bi.branch.budget.com</field>
+            <field name="model">crossovered.budget.lines</field>
+            <field name="inherit_id" ref="bi_account_budget.view_crossovered_budget_line_tree"/>
+            <field name="arch" type="xml">
+                <field name="general_budget_id" position="after">
+                    <field name="branch_id" readonly="1"/>
+                </field>
+            </field>
+        </record>
+
+        
+	</data>
+</odoo>

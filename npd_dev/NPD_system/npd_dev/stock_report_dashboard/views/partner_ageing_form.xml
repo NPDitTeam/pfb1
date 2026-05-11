@@ -1,0 +1,22 @@
+<odoo>
+<!--<record id="view_ins_partner_ageing_form_inherit" model="ir.ui.view">-->
+<!--    <field name="name">ins.partner.ageing.view.inherit</field>-->
+<!--    <field name="model">ins.partner.ageing</field>-->
+<!--    <field name="inherit_id" ref="account_dynamic_reports.ins_partner_ageing_view"/> &lt;!&ndash; ตรวจสอบ External ID ที่ถูกต้อง &ndash;&gt;-->
+<!--    <field name="arch" type="xml">-->
+
+<!--        &lt;!&ndash; ปรับแต่งฟิลด์ type &ndash;&gt;-->
+<!--        <field name="type" position="attributes">-->
+<!--            <attribute name="onchange">1</attribute>-->
+<!--        </field>-->
+
+<!--        &lt;!&ndash; ปรับแต่งฟิลด์ partner_type &ndash;&gt;-->
+<!--        <field name="partner_type" position="attributes">-->
+<!--            <attribute name="onchange">1</attribute>-->
+<!--        </field>-->
+
+<!--    </field>-->
+<!--</record>-->
+
+
+</odoo>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_expired_visa_email_template" model="mail.template">
+        <field name="name">Notification of Employee Visa will be expired: Send by email</field>
+        <field name="model_id" ref="base.model_res_company" />
+        <field name="email_from">${object.partner_id.email_formatted |safe}</field>
+        <field name="subject">Notification to expire Employee Visa</field>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                    <strong>Notification to expire Employee Visa</strong>
+                    <br />
+                    <br />
+                </p>
+                <table style="font-family: 'Trebuchet MS', Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%;">
+                    <tr>
+                        <th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #875a7b; color: white;">Application No</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #875a7b; color: white;">Employee</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #875a7b; color: white;">Application Date</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #875a7b; color: white;">Duration in Month</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #875a7b; color: white;">
+                            Visa Expiry Date
+                        </th>
+                        <th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #875a7b; color: white;">
+                            Status
+                        </th>
+                    </tr>
+                    % for line in object.sh_expired_visa_ids:
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left;"><span>${line.sh_application_no}</span></td>
+                        <td style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left;">
+                            <span>${line.employee_id.name}</span>
+                        </td>
+                        <td style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left;">
+                            <span>${line.sh_application_date}</span>
+                        </td>
+                        <td style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left;">
+                            <span>${line.sh_duration}</span>
+                        </td>
+                        <td style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left;">
+                            <span>${line.sh_expiry_date}</span>
+                        </td>
+                        <td style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left;">
+                            <span>${line.state}</span>
+                        </td>
+                    </tr>
+                    % endfor
+                </table>
+            </div>
+        </field>
+        <field name="lang">${object.partner_id.lang}</field>
+        <field name="auto_delete" eval="False" />
+    </record>
+</odoo>

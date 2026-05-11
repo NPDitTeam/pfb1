@@ -1,0 +1,8 @@
+<odoo>
+    <template id="assets_backend" name="pfb_npd_tap_shipment_information assets backend" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCHKkMOyDdI29v52SULcRx_OcB3i-MD7lw&amp;libraries=places"></script>
+            <script type="text/javascript" src="/pfb_npd_tap_shipment_information/static/src/js/autocomplete.js"></script>
+        </xpath>
+    </template>
+</odoo>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="petty_cash_expense_summary_view_tree" model="ir.ui.view">
+        <field name="name">petty.cash.summary.rows.view.tree</field>
+        <field name="model">petty.cash.summary.rows</field>
+        <field name="arch" type="xml">
+            <tree string="Petty Cash" create="0" edit="0">
+                <field name="petty_cash_id"/>
+                <field name="expense_name"/>
+                <field name="user_id"/>
+                <field name="date"/>
+                <field name="total"/>
+                <field name="company_id"/>
+<!--                <field name="employee_id"/>-->
+                <field name="wht_amount"/>
+                <field name="note"/>
+                <field name="state"/>
+                <field name="amount"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="petty_cash_summary_rows_action" model="ir.actions.act_window">
+        <field name="name">Petty Cash Summary</field>
+        <field name="res_model">petty.cash.summary.rows</field>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="petty_cash_expense_summary_view_tree"/>
+        <field name="target">new</field>
+    </record>
+
+
+</odoo>

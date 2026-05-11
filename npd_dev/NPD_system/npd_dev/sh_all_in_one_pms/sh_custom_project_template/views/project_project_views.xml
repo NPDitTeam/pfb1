@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_project_project_cus_template_task_form_view_inherit" model="ir.ui.view">
+        <field name="name">project.project.form.view.inherit</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project" />
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="btn_project_generate_task" string="Generate Task" type="object"
+                    class="oe_highlight"
+                    groups="sh_all_in_one_pms.group_custom_project_template" />
+            </xpath>
+            <field name="partner_id" position="after">
+                <field name="project_template_id" domain="[('templ_active','=',True)]"
+                    options="{'no_create_edit': True}"
+                    groups="sh_all_in_one_pms.group_custom_project_template" />
+            </field>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,21 @@
+<odoo>
+
+    <!-- PDF REPORTS -->
+    <record id="action_report_asset_barcode_print" model="ir.actions.report">
+        <field name="name">Asset Barcode</field>
+        <field name="model">account.asset</field>
+        <field name="report_name">pfb_std_asset_barcode_print.report_asset_barcode</field>
+        <field name="report_file">pfb_std_asset_barcode_print.report_asset_barcode</field>
+        <field name="report_type">qweb-pdf</field>
+        <field
+                name="paperformat_id"
+                ref="pfb_std_asset_barcode_print.paperformat_asset_barcode_print"
+        />
+        <field name="print_report_name">'Asset Barcode - %s%s' % (object.name, object.state == 'draft' and '-draft' or '')</field>
+        <field name="binding_model_id" ref="account_asset_management.model_account_asset"/>
+        <field name="binding_type">report</field>
+
+    </record>
+
+
+</odoo>

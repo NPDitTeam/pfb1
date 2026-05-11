@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="sh_payslip_cheque_format_template_id">
+        <t t-call="web.html_container">
+            <t t-call="web.internal_layout">
+                <div class="page">
+                    <t t-foreach="docs" t-as="o">
+                        <table width="100%" t-att-style="str(o.get_cheque_border())">
+                            <tr>
+                                <t t-if="o.sh_bank_id.logo">
+                                    <td align="left">
+                                        <img t-if="o.sh_bank_id.logo" t-att-src="image_data_uri(o.sh_bank_id.logo)" style="max-height: 45px;" alt="Logo" />
+                                    </td>
+                                </t>
+                                <t t-if="not o.sh_bank_id.logo">
+                                    <td align="left"></td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_free_text_two==True">
+                                    <td
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_free_text_two_font_color)+";font-size:"+str(o.sh_cheque_format_id.sh_free_text_two_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_print_free_text_two_from_top)'
+                                    >
+                                        <span t-esc="o.sh_free_text_two" />
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_free_text_two==False">
+                                    <td align="left"></td>
+                                </t>
+
+                                <t t-if="o.sh_cheque_format_id.sh_print_acc_pay==True">
+                                    <td
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_acc_pay_font_color)+";font-size:"+str(o.sh_cheque_format_id.sh_acc_pay_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_print_acc_pay_from_top)'
+                                    >
+                                        <strong>A/C PAY</strong>
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_acc_pay==False">
+                                    <td align="left"></td>
+                                </t>
+                            </tr>
+                            <tr>
+                                <t t-if="o.sh_cheque_format_id.sh_print_address==True">
+                                    <td align="left" colspan="2" t-att-style='"padding-left:10px;color:"+str(o.sh_cheque_format_id.sh_address_font_color)+";font-size:"+str(o.sh_cheque_format_id.sh_address_font_size)'>
+                                        <span t-field="o.sh_bank_id.street" />
+                                        ,
+                                        <span t-field="o.sh_bank_id.street2" />
+                                        <br />
+                                        <span t-field="o.sh_bank_id.state.name" />
+                                        ,
+                                        <span t-field="o.sh_bank_id.country.name" />
+                                        -
+                                        <span t-field="o.sh_bank_id.zip" />
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_address==False">
+                                    <td align="left" colspan="2"></td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_date==True">
+                                    <td
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_date_font_color)+";font-size:"+str(o.sh_cheque_format_id.sh_date_font_size)+";letter-spacing:%s"%str(o.get_date_letter_spacing())+"px;"+"padding:"+str(o.sh_cheque_format_id.sh_date_from_top)'
+                                    >
+                                        <span t-esc="o.get_date()" />
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_date==False">
+                                    <td align="left"></td>
+                                </t>
+                            </tr>
+                            <tr>
+                                <t t-if="o.sh_cheque_format_id.sh_print_free_text_three==True">
+                                    <td
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_free_text_three_font_color)+";font-size:"+str(o.sh_cheque_format_id.sh_free_text_three_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_print_free_text_three_from_top)'
+                                    >
+                                        <span t-esc="o.sh_free_text_three" />
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_free_text_three==False">
+                                    <td align="left"></td>
+                                </t>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <t t-if="o.sh_cheque_format_id.sh_print_partner==True and o.sh_cheque_format_id.sh_partner_font_bold==True and o.sh_cheque_format_id.sh_partner_title=='prefix'">
+                                    <td colspan="2" align="left" t-att-style='"color:"+str(o.sh_cheque_format_id.sh_color)+";font-size:"+str(o.sh_cheque_format_id.sh_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_partner_from_top)'>
+                                        <span t-esc="o.sh_partner_title" />
+                                        &amp;nbsp;
+                                        <b>
+                                            <span t-esc="o.employee_id.name" />
+                                        </b>
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_partner==True and o.sh_cheque_format_id.sh_partner_font_bold==True and o.sh_cheque_format_id.sh_partner_title=='suffix'">
+                                    <td colspan="2" align="left" t-att-style='"color:"+str(o.sh_cheque_format_id.sh_color)+";font-size:"+str(o.sh_cheque_format_id.sh_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_partner_from_top)'>
+                                        <b>
+                                            <span t-esc="o.employee_id.name" />
+                                        </b>
+                                        &amp;nbsp;
+                                        <span t-esc="o.sh_partner_title" />
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_partner==True and o.sh_cheque_format_id.sh_partner_font_bold==False and o.sh_cheque_format_id.sh_partner_title=='prefix'">
+                                    <td colspan="2" align="left" t-att-style='"color:"+str(o.sh_cheque_format_id.sh_color)+";font-size:"+str(o.sh_cheque_format_id.sh_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_partner_from_top)'>
+                                        <span t-esc="o.sh_partner_title" />
+                                        &amp;nbsp;
+                                        <span t-esc="o.employee_id.name" />
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_partner==True and o.sh_cheque_format_id.sh_partner_font_bold==False and o.sh_cheque_format_id.sh_partner_title=='suffix'">
+                                    <td colspan="2" align="left" t-att-style='"color:"+str(o.sh_cheque_format_id.sh_color)+";font-size:"+str(o.sh_cheque_format_id.sh_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_partner_from_top)'>
+                                        <span t-esc="o.employee_id.name" />
+                                        &amp;nbsp;
+                                        <span t-esc="o.sh_partner_title" />
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_partner==True and o.sh_cheque_format_id.sh_partner_font_bold==True and not o.sh_cheque_format_id.sh_partner_title">
+                                    <td colspan="2" align="left" t-att-style='"color:"+str(o.sh_cheque_format_id.sh_color)+";font-size:"+str(o.sh_cheque_format_id.sh_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_partner_from_top)'>
+                                        <b>
+                                            <span t-esc="o.employee_id.name" />
+                                        </b>
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_partner==True and o.sh_cheque_format_id.sh_partner_font_bold==False and not o.sh_cheque_format_id.sh_partner_title">
+                                    <td colspan="2" align="left" t-att-style='"color:"+str(o.sh_cheque_format_id.sh_color)+";font-size:"+str(o.sh_cheque_format_id.sh_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_partner_from_top)'>
+                                        <span t-esc="o.employee_id.name" />
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_amount==True and o.sh_cheque_format_id.sh_print_currency==True and o.company_id.currency_id.position=='before' and o.sh_cheque_format_id.sh_print_star==True">
+                                    <td
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_amount_digit_color)+";font-size:"+str(o.sh_cheque_format_id.sh_amount_digit_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_amount_from_top)'
+                                    >
+                                        <strong>***</strong>
+                                        <span t-esc="str(o.company_id.currency_id.symbol)+str(o.get_net_amount())" />
+                                        <strong>***</strong>
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_amount==True and o.sh_cheque_format_id.sh_print_currency==True and o.company_id.currency_id.position=='after' and o.sh_cheque_format_id.sh_print_star==True">
+                                    <td
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_amount_digit_color)+";font-size:"+str(o.sh_cheque_format_id.sh_amount_digit_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_amount_from_top)'
+                                    >
+                                        <strong>***</strong>
+                                        <span t-esc="str(o.get_net_amount())+str(o.company_id.currency_id.symbol)" />
+                                        <strong>***</strong>
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_amount==True and o.sh_cheque_format_id.sh_print_currency==True and o.company_id.currency_id.position=='before' and o.sh_cheque_format_id.sh_print_star==False">
+                                    <td
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_amount_digit_color)+";font-size:"+str(o.sh_cheque_format_id.sh_amount_digit_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_amount_from_top)'
+                                    >
+                                        <span t-esc="str(o.company_id.currency_id.symbol)+str(o.get_net_amount())" />
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_amount==True and o.sh_cheque_format_id.sh_print_currency==True and o.company_id.currency_id.position=='after' and o.sh_cheque_format_id.sh_print_star==False">
+                                    <td
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_amount_digit_color)+";font-size:"+str(o.sh_cheque_format_id.sh_amount_digit_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_amount_from_top)'
+                                    >
+                                        <span t-esc="str(o.get_net_amount())+str(o.company_id.currency_id.symbol)" />
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_amount==True and o.sh_cheque_format_id.sh_print_currency==False and o.sh_cheque_format_id.sh_print_star==False">
+                                    <td
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_amount_digit_color)+";font-size:"+str(o.sh_cheque_format_id.sh_amount_digit_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_amount_from_top)'
+                                    >
+                                        <span t-esc="str(o.get_net_amount())" />
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_amount==True and o.sh_cheque_format_id.sh_print_currency==False and o.sh_cheque_format_id.sh_print_star==True">
+                                    <td
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_amount_digit_color)+";font-size:"+str(o.sh_cheque_format_id.sh_amount_digit_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_amount_from_top)'
+                                    >
+                                        <strong>***</strong>
+                                        <span t-esc="str(o.get_net_amount())" />
+                                        <strong>***</strong>
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_amount==False">
+                                    <td align="left"></td>
+                                </t>
+                            </tr>
+                            <tr>
+                                <t t-if="o.sh_cheque_format_id.sh_print_amount_words==True and o.sh_cheque_format_id.sh_amount_words_print_star==True and o.sh_cheque_format_id.sh_amount_words_font_bold==True">
+                                    <td
+                                        colspan="2"
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_amount_word_color)+";font-size:"+str(o.sh_cheque_format_id.sh_amount_word_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_amount_words_from_first_top)'
+                                    >
+                                        <strong>***</strong>
+                                        <b>
+                                            <span t-esc="str(o.get_amount_in_words())" />
+                                        </b>
+                                        <strong>***</strong>
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_amount_words==True and o.sh_cheque_format_id.sh_amount_words_print_star==True and o.sh_cheque_format_id.sh_amount_words_font_bold==False">
+                                    <td
+                                        colspan="2"
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_amount_word_color)+";font-size:"+str(o.sh_cheque_format_id.sh_amount_word_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_amount_words_from_first_top)'
+                                    >
+                                        <strong>***</strong>
+                                        <span t-esc="str(o.get_amount_in_words())" />
+                                        <strong>***</strong>
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_amount_words==True and o.sh_cheque_format_id.sh_amount_words_print_star==False and o.sh_cheque_format_id.sh_amount_words_font_bold==False">
+                                    <td
+                                        colspan="2"
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_amount_word_color)+";font-size:"+str(o.sh_cheque_format_id.sh_amount_word_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_amount_words_from_first_top)'
+                                    >
+                                        <span t-esc="str(o.get_amount_in_words())" />
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_amount_words==True and o.sh_cheque_format_id.sh_amount_words_print_star==False and o.sh_cheque_format_id.sh_amount_words_font_bold==True">
+                                    <td
+                                        colspan="2"
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_amount_word_color)+";font-size:"+str(o.sh_cheque_format_id.sh_amount_word_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_amount_words_from_first_top)'
+                                    >
+                                        <b>
+                                            <span t-esc="str(o.get_amount_in_words())" />
+                                        </b>
+                                    </td>
+                                </t>
+                                <td align="left"></td>
+                            </tr>
+                            <tr>
+                                <t t-if="o.sh_cheque_format_id.sh_print_free_text_one==True">
+                                    <td
+                                        colspan="2"
+                                        align="left"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_free_text_one_font_color)+";font-size:%s;"%str(o.sh_cheque_format_id.sh_free_text_one_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_print_free_text_one_from_top)'
+                                    >
+                                        <span t-esc="o.sh_free_text" />
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_free_text_one==False">
+                                    <td colspan="2" align="left"></td>
+                                </t>
+                                <td align="left">
+                                    <strong style="color: white;"></strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="left"></td>
+                                <td align="right"></td>
+                                <t t-if="o.sh_cheque_format_id.sh_print_first_signature==True">
+                                    <td align="center" style="margin-right: 30px; border-bottom: 2px solid black;">
+                                        <strong style="color: white;">signature</strong>
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_first_signature==False">
+                                    <td align="center">
+                                        <strong style="color: white;">signature</strong>
+                                    </td>
+                                </t>
+                            </tr>
+                            <tr>
+                                <td colspan="2" align="left">
+                                    <t t-if="o.sh_cheque_format_id.sh_print_cheque_no==True">
+                                        <b>
+                                            <span t-att-style='"padding-left:15px;color:"+str(o.sh_cheque_format_id.sh_cheque_no_color)+";font-size:"+str(o.sh_cheque_format_id.sh_cheque_no_font_size)' t-field="o.sh_cheque_no" />
+                                        </b>
+                                    </t>
+                                    <t t-if="o.sh_cheque_format_id.sh_print_cheque_no==False">
+                                        <b>
+                                            <span style="padding-left: 30px;" />
+                                        </b>
+                                    </t>
+                                    <t t-if="o.sh_cheque_format_id.sh_print_acc_no==True">
+                                        <b>
+                                            <span t-att-style='"padding-left:150px;color:"+str(o.sh_cheque_format_id.sh_acc_no_font_color)+";font-size:"+str(o.sh_cheque_format_id.sh_acc_no_font_size)' t-field="o.sh_account_no" />
+                                        </b>
+                                    </t>
+                                    <t t-if="o.sh_cheque_format_id.sh_print_acc_no==False">
+                                        <b>
+                                            <span style="padding-left: 150px;" />
+                                        </b>
+                                    </t>
+                                    <t t-if="o.sh_cheque_format_id.sh_print_short_code==True">
+                                        <b>
+                                            <span t-att-style='"padding-left:150px;color:"+str(o.sh_cheque_format_id.sh_short_code_color)+";font-size:"+str(o.sh_cheque_format_id.sh_short_code_font_size)' t-field="o.sh_bank_id.bic" />
+                                        </b>
+                                    </t>
+                                    <t t-if="o.sh_cheque_format_id.sh_print_short_code==False">
+                                        <b>
+                                            <span style="padding-left: 150px;" />
+                                        </b>
+                                    </t>
+                                </td>
+                                <t t-if="o.sh_cheque_format_id.sh_print_company==True">
+                                    <td
+                                        align="center"
+                                        t-att-style='"color:"+str(o.sh_cheque_format_id.sh_company_color)+";font-size:"+str(o.sh_cheque_format_id.sh_company_font_size)+";padding:"+str(o.sh_cheque_format_id.sh_print_company_from_top)'
+                                    >
+                                        <span t-esc="o.company_id.name" />
+                                    </td>
+                                </t>
+                                <t t-if="o.sh_cheque_format_id.sh_print_company==False">
+                                    <td align="center"></td>
+                                </t>
+                            </tr>
+                        </table>
+
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <t t-if="o.sh_cheque_format_id.sh_print_stub==True">
+                            <h3 align="center">Salary Information</h3>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <t t-if="o.sh_cheque_no">
+                                        <td colspan="2" align="center">
+                                            Cheque No.
+                                            <span t-esc="o.sh_cheque_no"></span>
+                                        </td>
+                                    </t>
+                                    <t t-if="o.employee_id">
+                                        <td colspan="2" align="center">
+                                            <span t-esc="o.employee_id.name"></span>
+                                        </td>
+                                    </t>
+                                    <td colspan="2" align="center">
+                                        Date:
+                                        <span t-esc="o.date_from"></span>
+                                        -
+                                        <span t-esc="o.date_to" />
+                                    </td>
+                                    <td colspan="2" align="center">
+                                        Reference:
+                                        <span t-esc="o.number"></span>
+                                    </td>
+                                </tr>
+                                <br />
+                                <br />
+                                <tr>
+                                    <td>
+                                        <strong>Name</strong>
+                                    </td>
+                                    <td>
+                                        <strong>Code</strong>
+                                    </td>
+                                    <td>
+                                        <strong>Category</strong>
+                                    </td>
+                                    <td>
+                                        <strong>Quantity</strong>
+                                    </td>
+                                    <td>
+                                        <strong>Rate(%)</strong>
+                                    </td>
+                                    <td>
+                                        <strong>Rule</strong>
+                                    </td>
+                                    <td>
+                                        <strong>Amount</strong>
+                                    </td>
+                                    <td>
+                                        <strong>Total</strong>
+                                    </td>
+                                </tr>
+                                <tr t-foreach="o.line_ids" t-as="line">
+                                    <td>
+                                        <span t-field="line.name" />
+                                    </td>
+                                    <td>
+                                        <span t-field="line.code" />
+                                    </td>
+                                    <td>
+                                        <span t-field="line.category_id.name" />
+                                    </td>
+                                    <td>
+                                        <span t-field="line.quantity" />
+                                    </td>
+                                    <td>
+                                        <span t-field="line.rate" />
+                                    </td>
+                                    <td>
+                                        <span t-field="line.salary_rule_id.name" />
+                                    </td>
+                                    <td>
+                                        <span t-field="line.amount" />
+                                    </td>
+                                    <td>
+                                        <span t-field="line.total" />
+                                    </td>
+                                </tr>
+                            </table>
+                            <br />
+                            <br />
+                            <br />
+                            <br />
+                            <br />
+                            <br />
+                            <br />
+                            <br />
+                            <br />
+                        </t>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+    <record id="action_cheque_format_report_payslip" model="ir.actions.report">
+        <field name="name">Print Cheque</field>
+        <field name="model">hr.payslip</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">sh_all_in_one_hrms.sh_payslip_cheque_format_template_id</field>
+        <field name="report_file">sh_all_in_one_hrms.sh_payslip_cheque_format_template_id</field>
+        <field name="print_report_name">'Print Cheque'</field>
+        <field name="binding_model_id" ref="sh_hr_payroll.model_hr_payslip" />
+        <field name="binding_type">report</field>
+        <field name="groups_id" eval="[(4, ref('sh_all_in_one_hrms.group_enable_sh_payslip_dynamic_cheque'))]" />
+    </record>
+    <record id="paperformat_cheque_payslip" model="report.paperformat">
+        <field name="name">Print Cheque</field>
+        <field name="default" eval="True" />
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">5</field>
+        <field name="margin_bottom">28</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="header_line" eval="False" />
+        <field name="header_spacing">35</field>
+        <field name="dpi">90</field>
+    </record>
+    <record id="sh_all_in_one_hrms.action_cheque_format_report_payslip" model="ir.actions.report">
+        <field name="paperformat_id" ref="sh_all_in_one_hrms.paperformat_cheque_payslip" />
+    </record>
+</odoo>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Tree View -->
+        <record id="view_tree_dev_rental_product_report" model="ir.ui.view">
+            <field name="name">dev_rental.product.report.tree</field>
+            <field name="model">dev_rental.product.report</field>
+            <field name="arch" type="xml">
+                <tree string="รายงานสินค้าเช่า">
+                    <field name="product_code"/>
+                    <field name="product_name"/>
+                    <field name="branch"/>
+                    <field name="stock_initial" sum="Total ตั้งต้น"/>
+                    <field name="stock_available" sum="Total คงเหลือ"/>
+                    <field name="available_quantity" sum="Total ถูกจอง"/>
+                    <field name="stock_in" sum="Total ถูกเช่า"/>
+                    <field name="stock_out" sum="Total ปรับหาย"/>
+                    <field name="damaged_product" sum="Total ชำรุด"/>
+                    <field name="rental_price_day"/>
+                    <field name="rental_price_month"/>
+                    <field name="insurance"/>
+                    <field name="sale_penalty"/>
+                    <field name="weight" sum="Total น้ำหนัก"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Search View -->
+        <record id="view_search_dev_rental_product_report" model="ir.ui.view">
+            <field name="name">dev_rental.product.report.search</field>
+            <field name="model">dev_rental.product.report</field>
+            <field name="arch" type="xml">
+                <search string="ค้นหารายงานสินค้า">
+                    <field name="product_code"/>
+                    <field name="product_name"/>
+                    <field name="branch"/>
+
+                    <filter string="มีคงเหลือ"
+                            name="has_stock"
+                            domain="[('stock_available', '>', 0)]"/>
+                    <filter string="ถูกเช่า"
+                            name="rented"
+                            domain="[('stock_in', '>', 0)]"/>
+                    <filter string="มีความเสียหาย"
+                            name="has_damage"
+                            domain="['|', ('stock_out', '>', 0), ('damaged_product', '>', 0)]"/>
+
+                    <separator/>
+
+                    <group expand="0" string="จัดกลุ่มตาม">
+                        <filter string="สาขา" name="group_by_branch" context="{'group_by': 'branch'}"/>
+                        <filter string="สินค้า" name="group_by_product" context="{'group_by': 'product_name'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Pivot View -->
+        <record id="view_pivot_dev_rental_product_report" model="ir.ui.view">
+            <field name="name">dev_rental.product.report.pivot</field>
+            <field name="model">dev_rental.product.report</field>
+            <field name="arch" type="xml">
+                <pivot string="วิเคราะห์สินค้าเช่า">
+                    <field name="branch" type="row"/>
+                    <field name="product_name" type="row"/>
+                    <field name="stock_available" type="measure"/>
+                    <field name="stock_in" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+        <!-- Action Window สำหรับดูรายงาน -->
+        <record id="action_view_dev_rental_product_report" model="ir.actions.act_window">
+            <field name="name">รายงานสินค้าเช่า</field>
+            <field name="res_model">dev_rental.product.report</field>
+            <field name="view_mode">tree,pivot,graph</field>
+            <field name="search_view_id" ref="view_search_dev_rental_product_report"/>
+        </record>
+
+        <!-- เมนูสำหรับดูรายงาน (ชื่อเดิม) -->
+<!--        <menuitem id="menu_dev_rental_product_report"-->
+<!--                  name="รายงานสินค้าเช่า"-->
+<!--                  parent="menu_stock_reports"-->
+<!--                  action="action_view_dev_rental_product_report"-->
+<!--                  sequence="11"/>-->
+    </data>
+</odoo>

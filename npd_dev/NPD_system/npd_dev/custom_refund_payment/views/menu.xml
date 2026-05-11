@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menu: Accounting > Entries > ชำระเงินสด -->
+    <menuitem id="menu_refund_payment_root"
+              name="โอนคืนเงินลูกค้า"
+              parent="account.menu_finance_entries_accounting_miscellaneous"
+              action="action_refund_payment_form"
+              sequence="99"/>
+</odoo>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_account_create_cheque_form" model="ir.ui.view">
+        <field name="name">create.account.cheque.form</field>
+        <field name="model">create.account.cheque</field>
+        <field name="arch" type="xml">
+            <form string="Create Cheque Book">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="number"/>
+                        </group>
+                        <group>
+                            <field name="multi_cheque"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button string="Confirm" name="action_create_cheque" type="object" class="oe_highlight"/>
+                        <button string="Cancel" class="btn btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="action_create_cheque_wizard" model="ir.actions.act_window">
+        <field name="name">Create cheque Number</field>
+        <field name="res_model">create.account.cheque</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="domain">[('cheque_type','=','outbound')]</field>
+    </record>
+</odoo>

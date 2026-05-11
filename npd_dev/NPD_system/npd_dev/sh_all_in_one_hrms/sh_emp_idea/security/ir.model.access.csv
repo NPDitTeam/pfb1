@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sh_idea_categories,access_sh_idea_categories,model_sh_idea_categories,base.group_user,1,1,1,1
+access_sh_idea,access_sh_idea,model_sh_idea,base.group_user,1,1,1,1
+access_sh_idea_approve_wizard,access_sh_idea_approve_wizard,model_sh_idea_approve_wizard,base.group_user,1,1,1,1
+access_sh_idea_refuse_wizard,access_sh_idea_refuse_wizard,model_sh_idea_refuse_wizard,base.group_user,1,1,1,1

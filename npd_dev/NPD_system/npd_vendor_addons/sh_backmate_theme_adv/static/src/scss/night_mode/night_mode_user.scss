@@ -1,0 +1,1228 @@
+body.sh_night_mode{background : #171c32 !important;color:#94A2C7;}
+.sh_night_mode a,
+.sh_night_mode .o_form_view .o_form_uri,
+.sh_night_mode .o_form_view .o_form_uri:first-line {color: #556ee6;}
+
+
+/*------------ sidebar -----------*/ 
+@if $theme_style == 'style_2' and $sidebar_collapse_style == 'expanded' and $sidebar_background_style == 'color' or $theme_style == 'style_2' and $sidebar_collapse_style == 'collapsed' and $sidebar_background_style == 'color'{
+    .sh_night_mode .o_main_navbar .o_menu_apps .hover_menuitem .sh_backmate_theme_appmenu_div .logo,
+    .sh_night_mode .o_main_navbar .dropdown-menu.sh_backmate_theme_appmenu_div{background: #252c48 !important;}
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:hover, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:focus, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app.active,
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:hover, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:focus, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2.active,
+    .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:hover,
+    .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-item.o_menu_header_lvl_1 a:hover,
+    .sh_night_mode .sh_backmate_theme_appmenu_div .dropdown.cssmenu .dropdown-menu .dropdown-header.o_menu_header_lvl_2 .dropdown-item.dropdown-toggle.sh_sub_dropdown,
+    .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu a.active{background: #171c32;}
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2,
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app,
+    .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu a,
+    .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu .o_menu_header_lvl_1 span{color: #94A2C7;}
+    .sh_night_mode .o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:hover, .sh_night_mode .o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:hover, .sh_night_mode .o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:focus, .sh_night_mode .o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:focus, .sh_night_mode .o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div a.dropdown-item.o_app.active, .sh_night_mode .o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2.active{box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.14), 0 6px 10px -5px #171c32;}
+    .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-item.o_menu_header_lvl_1 a:hover,
+    .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:hover,
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:hover > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:hover > span,
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:active > .sh_fa_icon, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2.active > span.sh_fa_icon, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:active > span.sh_fa_icon,
+    .sh_night_mode .o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:hover:before,
+    .sh_night_mode .o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2.sh_dropdown.active:before,
+    .sh_night_mode .o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2.active:before,
+    .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-item.o_menu_header_lvl_1 a:hover span,
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:hover, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:focus, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2.active,
+    .sh_night_mode .sh_backmate_theme_appmenu_div .dropdown.cssmenu .dropdown-menu .dropdown-header.o_menu_header_lvl_2 .dropdown-item.dropdown-toggle.sh_sub_dropdown span,
+    .sh_night_mode .sh_backmate_theme_appmenu_div .dropdown.cssmenu .dropdown-menu .dropdown-header.o_menu_header_lvl_2 .dropdown-item.dropdown-toggle.sh_sub_dropdown:after,
+    .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .action_menu.active span{color: #556ee6;}
+    .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu .o_menu_header_lvl_1:not(.dropdown-item){border-bottom: 1px solid #171c32;}
+    .sh_night_mode .dropdown-menu.sh_backmate_theme_appmenu_div .logo #hide_top_bar,
+    .sh_night_mode .dropdown-menu.sh_backmate_theme_appmenu_div .logo #show_top_bar,
+    .sh_night_mode .dropdown-menu.sh_backmate_theme_appmenu_div .logo .icon-top_hide:hover:before,
+    .sh_night_mode .dropdown-menu.sh_backmate_theme_appmenu_div .logo .icon-top_show:hover::before,
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app.active > .sh_fa_icon,
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app.active span{color: #556ee6 !important;}
+    .sh_night_mode .o_main_navbar .dropdown-menu.sh_backmate_theme_appmenu_div .dropdown.cssmenu .dropdown-menu{box-shadow: none !important;}
+}
+@if $theme_style == 'style_2' and $sidebar_collapse_style == 'collapsed'{
+    .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu a.active span,.sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-item a:hover span,.sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:hover span,.sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:focus span,.sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a.active span,
+    .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover a.dropdown-item.o_app2:hover > span.sh_fa_icon, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover a.dropdown-item.o_app:hover > span.sh_fa_icon,
+    .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover a.dropdown-item.o_app.active span{color: #556ee6 !important;}
+}
+@if $theme_style == 'style_2' and $sidebar_background_style == 'image' or $theme_style == 'style_1' and $sidebar_background_style == 'image'{
+    .sh_night_mode .dropdown-menu.sh_backmate_theme_appmenu_div:before{background: linear-gradient(0deg, #171c32 0%, #171c32 100%);opacity: 0.95;}
+    .sh_night_mode .o_main_navbar .hover_menuitem .sh_backmate_theme_appmenu_div a.dropdown-item.o_app, .sh_night_mode .hover_menuitem .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2, .sh_night_mode .dropdown-menu.sh_backmate_theme_appmenu_div .logo #hide_top_bar, .sh_night_mode .dropdown-menu.sh_backmate_theme_appmenu_div .logo #show_top_bar,
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:hover > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:focus > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:active > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app.active > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:hover > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:focus > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:active > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2.active > span, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-header .action_menu:focus > span, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-header .action_menu:hover > span, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-header .action_menu:active > span, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu a.active span, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:hover, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:focus, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a.active, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu .dropdown-header span, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-toggle:after{color: #556ee6 !important;}
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:hover, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:focus, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:active, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2.active, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:hover, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:focus, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:active, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app.active,
+    .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-header .action_menu:focus, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-header .action_menu:hover, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-header .action_menu:active, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu a.active, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:hover, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:focus, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a.active{background: #171c32 !important;box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.14), 0 6px 10px -5px #171c32 !important;}
+}
+
+@if $theme_style == 'style_1' and $sidebar_collapse_style == 'expanded' and $sidebar_background_style == 'color' or $theme_style == 'style_1' and $sidebar_collapse_style == 'collapsed' and $sidebar_background_style == 'color'{  
+    .sh_night_mode nav.o_main_navbar .o_menu_apps .dropdown-menu.sh_backmate_theme_appmenu_div, .sh_night_mode nav.o_main_navbar .o_menu_apps .dropdown-menu.sh_backmate_theme_appmenu_div .logo{background: #252c48;}
+    .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2 > span.sh_fa_icon, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div a.dropdown-item.o_app > span.sh_fa_icon,
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app,.sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2,
+    .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover a.dropdown-item.o_app2 > span.sh_fa_icon, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover a.dropdown-item.o_app > span.sh_fa_icon,
+    .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu a,.sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu .dropdown-header,.sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu .o_menu_header_lvl_1 span{color: #94A2C7 !important;}
+    .sh_night_mode .sh_backmate_theme_appmenu_div.dropdown-menu .cssmenu a.dropdown-item.active,
+    .sh_night_mode .o_main_navbar .dropdown-menu .dropdown-item:hover, .sh_night_mode .o_main_navbar .dropdown-menu .dropdown-item:focus{background: #252c48 !important;}
+    .sh_night_mode div.sh_backmate_theme_appmenu_div.dropdown-menu .dropdown.cssmenu a.dropdown-item.active .sh_fa_icon, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover .dropdown.cssmenu a.dropdown-item.active > .sh_fa_icon,
+    .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:hover span.sh_fa_icon, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:focus span.sh_fa_icon, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2.active span.sh_fa_icon, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:hover span.sh_fa_icon, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:focus span.sh_fa_icon, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app.active span.sh_fa_icon, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:hover span.sh_fa_icon, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:focus span.sh_fa_icon, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app.active span.sh_fa_icon, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item:hover span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item:focus span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item:active span, .sh_night_mode .dropdown-menu.sh_backmate_theme_appmenu_div .logo #hide_top_bar, .sh_night_mode .dropdown-menu.sh_backmate_theme_appmenu_div .logo #show_top_bar, .sh_night_mode .icon-top_hide:hover:before, .sh_night_mode .icon-top_show:hover::before,
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:hover, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:focus, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:active, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2.active, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:hover, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:focus, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:active, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app.active, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu .dropdown-header > a:hover, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu .dropdown-header > a:focus, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu .dropdown-header > a.active,
+    .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu a.active span, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-item a:hover span, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:hover span, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:focus span, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a.active span, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover a.dropdown-item.o_app2:hover > span.sh_fa_icon, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover a.dropdown-item.o_app:hover > span.sh_fa_icon, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover a.dropdown-item.o_app.active span{color: #556ee6 !important;}
+}
+@if $theme_style == 'style_3'{
+    .sh_night_mode .dropdown-menu.sh_backmate_theme_appmenu_div:before{background: linear-gradient(200deg, #252c48 40%, #171c32 100%);opacity: .9;}
+    .sh_night_mode .hover_menuitem .sh_backmate_theme_appmenu_div a.dropdown-item.o_app, .sh_night_mode .hover_menuitem .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2, .sh_night_mode .dropdown-menu.sh_backmate_theme_appmenu_div .logo #hide_top_bar, .sh_night_mode .dropdown-menu.sh_backmate_theme_appmenu_div .logo #show_top_bar,.sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu .dropdown-header,.sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu a,
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:hover > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:focus > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:active > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app.active > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:hover > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:focus > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:active > span, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2.active > span, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-header .action_menu:focus > span, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-header .action_menu:hover > span, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-header .action_menu:active > span, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu a.active span, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:hover, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:focus, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a.active, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu .dropdown-header span, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-toggle:after{color: #c6cee2 !important;}
+    .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:hover, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:focus, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2:active, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2.active, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:hover, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:focus, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app:active, .sh_night_mode .sh_backmate_theme_appmenu_div a.dropdown-item.o_app.active,
+    .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-header .action_menu:focus, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-header .action_menu:hover, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-header .action_menu:active, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu a.active, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:hover, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:focus, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a.active{background-color: rgba(85, 110, 230, 0.47) !important;}
+    .sh_night_mode .o_main_navbar .dropdown-menu .dropdown-item:hover, .sh_night_mode .o_main_navbar .dropdown-menu .dropdown-item:focus{background: transparent !important;}
+}
+
+/*----------- search style --------------*/ 
+@if $search_style == 'expanded'{
+    .sh_night_mode nav.o_main_navbar .o_menu_systray li.sh_search:first-child .sh_search_container .sh_search_input{border-color: #171c32;}
+    .sh_night_mode .o_main_navbar .sh_search .sh_search_container .sh_search_input:hover, .sh_night_mode .o_main_navbar .sh_search .sh_search_container .sh_search_input:focus,
+    .sh_night_mode .o_main_navbar .sh_search .sh_search_container.has-results .sh_search_input{border: 1px solid #556ee6 !important;}
+}
+@if $search_style == 'collapsed'{
+    .sh_night_mode nav.o_main_navbar .o_menu_systray li .sh_search_container .sh_search_input .input-group-text{background: #171c32;}
+    .sh_night_mode .sh_search_input .usermenu_search_input::placeholder,
+    .sh_night_mode .sh_search_input .usermenu_search_input{color: #94a2c7;}
+    .sh_night_mode .sh_search_input .usermenu_search_input{color: #94a2c7;}
+    .sh_night_mode .sh_search_input .usermenu_search_input{border-bottom: 1px solid #171c32 !important;}
+}
+
+/*-------------- search box ---------------*/ 
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_search_container .sh_search_results{background: #252c48;}
+.sh_night_mode nav.o_main_navbar .o_menu_systray li .sh_search_container .sh_search_input .input-group-text,
+.sh_night_mode nav.o_main_navbar .o_menu_systray .sh_search .sh_search_container .sh_search_results .dropdown-item{color: #94a2c7;}
+.sh_night_mode nav.o_main_navbar .o_menu_systray .sh_search .sh_search_container .sh_search_results .dropdown-item:hover,
+.sh_night_mode nav.o_main_navbar .o_menu_systray .sh_search .sh_search_container .sh_search_results .dropdown-item:focus{color: #556ee6;background-color: #171c32;}
+
+
+/*------------------ Navbar --------------*/
+.sh_night_mode .o_main_navbar{border-bottom: 1px solid #252c48;background-color: #252c48;}
+.sh_night_mode .o_menu_systray,
+.sh_night_mode nav.o_main_navbar .o_menu_systray li .sh_search_container .sh_search_input .usermenu_search_input2::placeholder,
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark .o_user_bookmark_menu > a{color: #94A2C7 !important;}
+.sh_night_mode .o_menu_systray .sh_search .sh_search_container .sh_search_results .dropdown-item:hover
+.sh_night_mode nav.o_main_navbar .o_menu_systray li .sh_search_container .sh_search_input .input-group-text,
+.sh_night_mode nav.o_main_navbar .o_menu_systray li .sh_search_container .sh_search_input .usermenu_search_input2{color: #94A2C7;}
+.sh_night_mode nav.o_main_navbar .o_menu_systray li .sh_search_container .sh_search_input .input-group-text span:hover, .sh_night_mode nav.o_main_navbar .o_menu_systray li.o_night_mode span:hover, .sh_night_mode nav.o_main_navbar .o_menu_systray li.o_debug_manager a span:hover, .sh_night_mode .o_main_navbar > ul > li > a span.icon-activity:hover, .sh_night_mode .o_main_navbar > ul > li > a span.icon-discuss:hover, .sh_night_mode .o_main_navbar > ul > li > a.gift_icon i:hover, .sh_night_mode nav.o_main_navbar .o_menu_systray li.o_switch_company_menu a i:hover, .sh_night_mode .o_main_navbar > ul > li > a .icon-expand:hover, .sh_night_mode nav.o_main_navbar .o_menu_systray li.o_full_screen .compress_img:hover, .sh_night_mode nav.o_main_navbar > ul > li.o_user_bookmark_menu > a i:hover,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu i.fa:hover,
+.sh_night_mode .o_menu_systray .sh_calc_util .open_calc .fa:hover, .sh_night_mode .o_menu_systray .sh_calc_util.active > .open_calc .fa{color: #556ee6;}
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu.o-is-open > a.o_MessagingMenu_toggler,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item.show > a.dropdown-toggle,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_user_bookmark_menu a.active,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_switch_company_menu.show > a.dropdown-toggle,
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark .o_user_bookmark_menu > a:hover,
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark.active .o_user_bookmark_menu > a .fa,
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark.show .dropdown-menu.dropdown-menu-right.sh_wqm_quick_menu_submenu_list_cls.show .dropdown-item:hover .fa,
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark.active .o_user_bookmark_menu > a,
+.sh_night_mode nav.o_main_navbar .sh_bookmark .o_user_bookmark_menu i:active{color: #556ee6 !important;}
+.sh_night_mode nav.o_main_navbar .o_menu_systray li:not(.theme_settings) > a,
+.sh_night_mode nav.o_main_navbar .o_menu_systray li.o_night_mode,
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark .o_user_bookmark_menu{background: #171c32!important;}
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item .o_notification_counter, .sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu_counter{background: #556ee6;}
+.sh_night_mode .o_main_navbar .o_menu_systray .o_switch_company_menu.show .dropdown-menu.dropdown-menu-right.show,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_user_menu.show .dropdown-menu.dropdown-menu-right.show,
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark.show .dropdown-menu.dropdown-menu-right.sh_wqm_quick_menu_submenu_list_cls.show{background-color: #252c48;border: 1px solid #171c32;}
+.sh_night_mode .o_main_navbar .o_menu_systray .o_switch_company_menu.show .dropdown-menu.dropdown-menu-right.show .dropdown-item.d-flex.py-0.px-0 .o_py,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_user_menu.show .dropdown-menu.dropdown-menu-right.show .dropdown-item,
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark.show .dropdown-menu.dropdown-menu-right.sh_wqm_quick_menu_submenu_list_cls.show .dropdown-item{color: #94A2C7;}
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark .sh_wqm_quick_menu_submenu_list_cls a.dropdown-item svg{fill: #94A2C7 !important;}
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark .sh_wqm_quick_menu_submenu_list_cls a.dropdown-item:hover svg{fill: #556ee6 !important;}
+.sh_night_mode .o_main_navbar .o_menu_systray .o_switch_company_menu.show .dropdown-menu.dropdown-menu-right.show .dropdown-item.d-flex.py-0.px-0 .o_py.log_into{background: #252c48 !important;}
+.sh_night_mode .o_main_navbar .o_menu_systray .o_switch_company_menu.show .dropdown-menu.dropdown-menu-right.show .dropdown-item.d-flex.py-0.px-0:hover,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_switch_company_menu .dropdown-item .o_py:hover{background-color: #171c32 !important;}
+.sh_night_mode .o_main_navbar .o_menu_systray .o_user_menu.show .dropdown-menu.dropdown-menu-right.show .dropdown-divider{border-top: 1px solid #171c32;}
+.sh_night_mode .o_main_navbar .o_menu_systray .o_user_menu.show .dropdown-menu.dropdown-menu-right.show .dropdown-item:hover,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_user_menu.show .dropdown-menu.dropdown-menu-right.show .dropdown-item:focus,
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark.show .dropdown-menu.dropdown-menu-right.sh_wqm_quick_menu_submenu_list_cls .dropdown-item:hover{background: #171c32 !important;color: #556ee6;}
+.sh_night_mode nav.o_main_navbar .o_menu_systray li.theme_settings{background: #556ee6 !important;}
+@if $body_background_type == 'bg_img'{
+    .sh_night_mode.o_web_client .o_main_navbar,.sh_night_mode .o_main_navbar .o_user_menu{background: #252c48 !important;}
+    .sh_night_mode .o_list_view{background-color: #252c48;}
+}
+
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_language_icon svg{fill: #94a2c7;}
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_language_icon:hover svg,.sh_night_mode .o_main_navbar .o_menu_systray .sh_language_icon.show svg{fill: #556ee6;}
+.sh_night_mode .o_menu_systray .sh_language_icon .sh_user_language_list_cls .dropdown-item.active:focus, .sh_night_mode .o_menu_systray .sh_language_icon .sh_user_language_list_cls .dropdown-item.active:hover, .sh_night_mode .o_menu_systray .sh_language_icon .sh_user_language_list_cls .dropdown-item.selected:focus, .sh_night_mode .o_menu_systray .sh_language_icon .sh_user_language_list_cls .dropdown-item.selected:hover,.sh_night_mode .o_menu_systray .sh_language_icon .sh_user_language_list_cls .dropdown-item.active{background: #171c32;color: #556ee6;}
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark .o_user_bookmark_menu.active > a .fa{color: #556ee6 !important;}
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark .sh_wqm_quick_menu_submenu_list_cls .sh_bookmark_search_div .sh_bookmark_search.form-control,.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark .sh_wqm_quick_menu_submenu_list_cls .sh_bookmark_search_div .sh_bookmark_search.form-control::placeholder,
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark .dropdown-menu.dropdown-menu-right.sh_wqm_quick_menu_submenu_list_cls .sh_search_result span{color: #94a2c7;}
+.sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark .sh_wqm_quick_menu_submenu_list_cls .sh_bookmark_search_div .sh_bookmark_search.form-control:focus, .sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark .sh_wqm_quick_menu_submenu_list_cls .sh_bookmark_search_div .sh_bookmark_search.form-control:hover{border: 1px solid #556ee6 !important;}
+
+
+/*------- dropdown menu ---------*/ 
+.sh_night_mode .dropdown-menu:not(.sh_backmate_theme_appmenu_div):not(.dropdown-menu-right.show_ul){background:#252c48!important;box-shadow: 0px 4px 16px 0px rgba(0, 0, 0,0.31%);border: 0px!important;}
+.sh_night_mode .dropdown-menu{box-shadow: 0 0 20px 4px #15192b !important;}
+.sh_night_mode .dropdown-menu .dropdown-item,
+.sh_night_mode .dropdown-menu .custom-control label.custom-control-label{color: #94A2C7;}
+.sh_night_mode .dropdown-menu .dropdown-item:hover, .sh_night_mode .dropdown-menu .dropdown-item:focus{background: #171c32 !important;color: #556ee6 !important;}
+.sh_night_mode .dropdown-menu .dropdown-divider{border-top: 1px solid #171c32;}
+.sh_night_mode .dropdown-menu .o_menu_item .dropdown-item.selected{color: #556ee6;}
+.sh_night_mode .dropdown-menu.sh_backmate_theme_appmenu_div .dropdown-menu.dropdown-menu-right{box-shadow: none !important;background: transparent !important;}
+/*-------------- calculator ----------*/ 
+.sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator{background: #171c32;}
+.sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad .clear,.sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad .clear:focus, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad #sqrt, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad #square, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad #divide, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad #multiply, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad #subtract, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad #add, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad #equals{background: #252c48 !important;color: #94A2C7 !important;}
+.sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad button.btn-calc{background: linear-gradient(to bottom, #252c48, transparent 50%, #556ee6);color: #94A2C7;}
+.sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .displayBox{background: #252c48;}
+.sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad .btn-calc:hover{color: #556ee6;}
+.sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad button.btn-calc:hover, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad .btn-operation:hover{box-shadow: none;background: linear-gradient(to bottom, #556ee6, rgba(133,125,125,0) 50%, #556ee6);}
+.sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .displayText{color: #94A2C7;}
+
+/*------------ Messaging menu and activity dropdown menu---------*/ 
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_dropdownMenuHeader{background: #252c48;}
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_dropdownMenuHeader .o_MessagingMenu_tabButton.btn.btn-link,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_notificationList .o_NotificationRequest_header,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_notificationList .o_NotificationGroup_header,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_notificationList .o_ThreadPreview_header,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item .o_mail_systray_dropdown .o_mail_systray_dropdown_items .o_mail_preview.o_systray_activity .o_preview_info .o_preview_title span.o_preview_name,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item .o_mail_systray_dropdown .o_mail_systray_dropdown_items .o_mail_preview.o_systray_activity .o_preview_info span.o_no_activity,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item .o_mail_systray_dropdown .o_mail_systray_dropdown_items .o_note_show,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item .o_mail_systray_dropdown .o_mail_systray_dropdown_items .o_note.o_mail_preview .o_note_input,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item .o_mail_systray_dropdown .o_mail_systray_dropdown_items .o_note.o_mail_preview .o_preview_info{color: #94A2C7;}
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_dropdownMenuHeader .o_MessagingMenu_newMessageButton.btn.btn-link,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_dropdownMenuHeader .o_MessagingMenu_tabButton.btn.btn-link:hover,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_dropdownMenuHeader .o_MessagingMenu_tabButton.btn.btn-link.o-active,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_notificationList .o_NotificationGroup.o_NotificationList_group .o_NotificationGroup_content .o_NotificationGroup_date,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item .o_mail_systray_dropdown .o_mail_systray_dropdown_items .o_mail_preview.o_systray_activity .o_preview_info .o_activity_filter_button.btn,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item .o_mail_systray_dropdown .o_mail_systray_dropdown_items .o_mail_preview.o_systray_activity .o_preview_info .o_preview_title .o_mail_activity_action_buttons .o_mail_activity_action.btn,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item .o_mail_systray_dropdown .o_mail_systray_dropdown_items .o_note.o_mail_preview .fa{color: #556ee6;}
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_notificationList .o_NotificationRequest.o_NotificationList_notificationRequest,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_notificationList .o_NotificationGroup.o_NotificationList_group,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_notificationList .o_ThreadPreview,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item.show .o_mail_systray_dropdown .o_mail_systray_dropdown_items .o_mail_preview.o_systray_activity,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item .o_mail_systray_dropdown .o_mail_systray_dropdown_items .o_note.o_mail_preview{background: #171c32;}
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_notificationList .o_NotificationRequest.o_NotificationList_notificationRequest:hover,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_notificationList .o_NotificationGroup.o_NotificationList_group:hover,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_notificationList .o_ThreadPreview:hover,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item.show .o_mail_systray_dropdown .o_mail_systray_dropdown_items .o_mail_preview.o_systray_activity:hover,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item .o_mail_systray_dropdown .o_mail_systray_dropdown_items .o_note_show{background: #252c48;}
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item .o_mail_systray_dropdown .o_mail_systray_dropdown_items .o_note.o_mail_preview .o_note_input_box .o_note_input{background: #171c32;}
+.sh_night_mode .o_main_navbar .o_menu_systray .dropdown-menu.dropdown-menu-right{border: 1px solid #171c32;}
+
+
+.sh_night_mode .o_main_navbar .o_menu_systray .o_MessagingMenu .o_MessagingMenu_dropdownMenu .o_MessagingMenu_notificationList .o_NotificationList_separator,
+.sh_night_mode .o_main_navbar .o_menu_systray .o_mail_systray_item.show .o_mail_systray_dropdown .o_mail_systray_dropdown_items .o_mail_preview.o_systray_activity:not(:last-child){border-bottom: 1px solid #252c48;}
+
+
+/*--------- chat window -------*/ 
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_ChatWindowHeader.o_ChatWindow_header,
+.sh_night_mode .o_MessageList_separator .o_MessageList_separatorLabel{background: #171c32;}
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_MessageList.o_ThreadView_messageList,
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_MessageList.o_ThreadView_messageList .o_Message.o-not-discussion.o-notification.o_MessageList_item.o_MessageList_message,
+.sh_night_mode .o_Attachment.o-has-card-details,
+.sh_night_mode .o_Composer_attachmentList.o-composer-is-compact{background: #252c48;}
+.sh_night_mode .o_ChatWindow{background: #252c48;}
+.sh_night_mode input.o_ChatWindow_newMessageFormInput{border: 1px solid #94a2c7;background: #171c32;}
+.sh_night_mode input.o_ChatWindow_newMessageFormInput,.sh_night_mode input.o_ChatWindow_newMessageFormInput::placeholder{color: #94a2c7;}
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_MessageList.o_ThreadView_messageList .o_Message.o-not-discussion.o-notification.o_MessageList_item.o_MessageList_message .o_Message_originThread,
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_MessageList.o_ThreadView_messageList .o_Message.o-not-discussion.o-notification.o_MessageList_item.o_MessageList_message .o_Message_core .o_Message_content p,
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_ChatWindowHeader.o_ChatWindow_header .o_ChatWindowHeader_item.o_ChatWindowHeader_rightArea,
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_ChatWindowHeader.o_ChatWindow_header,
+.sh_night_mode .o_Composer_coreMain .o_ComposerTextInput.o_Composer_textInput .o_ComposerTextInput_textarea,
+.sh_night_mode .o_Composer_coreMain .o_ComposerTextInput.o_Composer_textInput .o_ComposerTextInput_textarea::placeholder{color: #94A2C7;}
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_MessageList.o_ThreadView_messageList .o_Message.o-not-discussion.o-notification.o_MessageList_item.o_MessageList_message .o_Message_originThread .o_Message_originThreadLink{color: #556ee6}
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_ThreadView.o_ChatWindow_thread .o_ThreadView_composer .o_Composer_coreMain,
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_ThreadView.o_ChatWindow_thread .o_ThreadView_composer .o_Composer_coreMain .o_ComposerTextInput.o_Composer_textInput,
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_ThreadView.o_ChatWindow_thread .o_ThreadView_composer .o_Composer_coreMain .o_ComposerTextInput.o_Composer_textInput .o_ComposerTextInput_textarea,
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_ThreadView.o_ChatWindow_thread .o_ThreadView_composer .o_Composer_coreMain .o_Composer_buttons .o_Composer_toolButtons {background: #171c32;border-top: 1px solid #171c32;border-bottom: 1px solid #171c32;}
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_ThreadView.o_ChatWindow_thread .o_ThreadView_composer .o_Composer_coreMain .o_Composer_buttons .o_Composer_toolButtonSeparator,
+.sh_night_mode .o_Composer_coreMain .o_Composer_buttons .o_Composer_toolButtons .o_Composer_toolButtonSeparator{border-left: 1px solid #556ee6;}
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_ThreadView.o_ChatWindow_thread .o_ThreadView_composer .o_Composer_coreMain .o_ComposerTextInput.o_Composer_textInput,
+.sh_night_mode .o_Discuss .o_Discuss_content .o_Composer.o_ThreadView_composer .o_Composer_coreMain .o_ComposerTextInput.o_Composer_textInput{border-left: 1px solid #171c32;}
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_ThreadView.o_ChatWindow_thread .o_ThreadView_composer .o_Composer_coreMain .o_Composer_buttons .o_Composer_toolButtons .o_Composer_toolButton.btn,
+.sh_night_mode .o_Composer_coreMain .o_Composer_buttons .o_Composer_toolButtons .o_Composer_toolButton.btn{background: #252c48;color: #d0d5e2;}
+.sh_night_mode .o_ChatWindowManager .o_ChatWindow .o_ThreadView.o_ChatWindow_thread .o_ThreadView_composer .o_Composer_coreMain .o_Composer_buttons .o_Composer_toolButtons .o_Composer_toolButton.btn:hover,
+.sh_night_mode .o_Composer_coreMain .o_Composer_buttons .o_Composer_toolButtons .o_Composer_toolButton.btn:hover,
+.sh_night_mode .o_Attachment_asideItemUploaded{color: #556ee6;}
+.sh_night_mode .o_Attachment_asideItemUnlink.o-pretty{background-color: #556ee6;}
+
+
+/*-------- control panel --------*/ 
+.sh_night_mode .o_control_panel{background-color:#171c32!important;border-bottom: 1px solid #363c59;}
+.sh_night_mode .o_control_panel .o_cp_top .o_cp_top_left .breadcrumb{background: #171c32 !important;}
+.sh_night_mode .o_control_panel .o_cp_top .o_cp_top_left .breadcrumb .breadcrumb-item.active,
+.sh_night_mode .breadcrumb .breadcrumb-item + .breadcrumb-item::before{color: #94A2C7;}
+.sh_night_mode .o_control_panel .o_cp_top .o_cp_top_right .o_searchview{background: #252c48;border: 1px solid #252c48;}
+.sh_night_mode .o_control_panel .o_cp_top .o_cp_top_right .o_searchview .o_searchview_input_container,
+.sh_night_mode .o_control_panel .o_cp_top .o_cp_top_right .o_searchview .o_searchview_input_container .o_searchview_input{background: #252c48;}
+.sh_night_mode .o_control_panel .o_cp_top .o_cp_top_right .o_searchview .o_searchview_input_container .o_searchview_facet .o_searchview_facet_label{background: #556ee6;}
+.sh_night_mode .o_control_panel .o_cp_top .o_cp_top_right .o_searchview .o_searchview_input_container .o_searchview_facet .o_facet_values{background-color: #171c32;}
+.sh_night_mode .o_control_panel .o_cp_top .o_cp_top_right .o_searchview .o_searchview_input_container .o_searchview_facet .o_facet_remove,
+.sh_night_mode .o_control_panel .o_cp_top .o_cp_top_left .breadcrumb .breadcrumb-item:not(.active){color: #556ee6;}
+.sh_night_mode .o_control_panel .o_cp_top .o_cp_top_right .o_searchview .o_searchview_input_container .o_searchview_input,
+.sh_night_mode .o_control_panel .o_cp_top .o_cp_top_right .o_searchview .o_searchview_input_container .o_searchview_input::placeholder{color: #94A2C7;}
+.sh_night_mode .o_control_panel .o_cp_top .o_cp_top_right .o_cp_searchview .o_searchview .o_searchview_input_container .o_dropdown_menu.o_searchview_autocomplete.dropdown-menu{background: #252c48;border: 1px solid #171c32;}
+.sh_night_mode .o_control_panel .o_cp_top .o_cp_top_right .o_cp_searchview .o_searchview .o_searchview_input_container .o_dropdown_menu.o_searchview_autocomplete.dropdown-menu .o_menu_item > a{color: #556ee6;}
+.sh_night_mode .o_control_panel .o_cp_top .o_cp_top_right .o_cp_searchview .o_searchview .o_searchview_input_container .o_dropdown_menu.o_searchview_autocomplete.dropdown-menu .o_menu_item.o_selection_focus{background: #171c32;}
+.sh_night_mode .o_control_panel .o_cp_bottom_right .o_cp_switch_buttons button:hover,
+.sh_night_mode .o_control_panel .o_cp_bottom_right .o_cp_switch_buttons button:active, .sh_night_mode .o_control_panel .o_cp_bottom_right .o_cp_switch_buttons button.active, .sh_night_mode .o_control_panel .o_cp_bottom_right .o_cp_switch_buttons button:focus{background: #556ee6 !important;}
+
+/*----------btn -------------*/ 
+.sh_night_mode .btn-primary ,
+.sh_night_mode .o_form_statusbar > .o_statusbar_buttons .btn.btn-primary,
+.sh_night_mode .o_control_panel .o_cp_bottom .o_cp_buttons .o_calendar_buttons .o_calendar_scale_buttons .dropdown .dropdown-menu .dropdown-item.active, .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_buttons .o_calendar_buttons .o_calendar_scale_buttons .dropdown.show > .btn-secondary.dropdown-toggle{background: #556ee6 !important;color: #fff !important;}
+.sh_night_mode .o_cp_buttons .btn.btn-primary,
+.sh_night_mode .o_favorites_menu .btn.btn-primary,
+.sh_night_mode .o_form_statusbar > .o_statusbar_buttons .btn.btn-primary{border: 1.5px solid #556ee6!important;}
+.sh_night_mode .o_cp_left .o_cp_buttons button.btn-secondary,
+.sh_night_mode .o_form_view .o_form_statusbar > .o_statusbar_buttons .btn.btn-secondary,
+.sh_night_mode .o_popover .o_ActivityMarkDonePopover_buttons .o_ActivityMarkDonePopover_discardButton.btn.btn-sm.btn-link{border: 1.5px solid #556ee6!important;}
+.sh_night_mode .o_popover .o_ActivityMarkDonePopover_buttons .o_ActivityMarkDonePopover_discardButton.btn.btn-sm.btn-link,
+.sh_night_mode .o_form_view .o_Chatter .o_Activity_toolButton{color: #94A2C7;}
+.sh_night_mode .o_form_view .o_form_statusbar > .o_statusbar_buttons .btn.btn-secondary{background: transparent !important;color: #94A2C7 !important;}
+.sh_night_mode .btn-secondary,
+.sh_night_mode .backmate_theme_layout .btn.btn-secondary,
+.sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-secondary{background: #252c48  !important;color: #94A2C7!important;border-color: #556ee6 !important;}
+.sh_night_mode .btn-secondary:hover,.sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-secondary:hover,.sh_night_mode .backmate_theme_layout .btn.btn-secondary:hover,
+.sh_night_mode .o_form_view .o_form_statusbar > .o_statusbar_buttons .btn.btn-secondary:hover{background: #556ee6!important;color:#fff!important}
+.sh_night_mode .o_dropdown .dropdown-toggle:first-child{border: 1px solid #556ee6!important;}
+.sh_night_mode .o_dropdown .dropdown-toggle{background: #171c32;color: #94A2C7;}
+.sh_night_mode .btn-secondary:not(:disabled):not(.disabled):active,.sh_night_mode .btn-secondary:not(:disabled):not(.disabled).active, .sh_night_mode .show > .btn-secondary.o_dropdown_toggler_btn{background: #556ee6!important;color:  #fff!important;border: 1px solid #556ee6;}
+.sh_night_mode .btn-secondary:not(:disabled):not(.disabled).active, .sh_night_mode .show > .btn-secondary.dropdown-toggle, .sh_night_mode .btn-secondary.active:not(:disabled):not(.disabled), .sh_night_mode .show > .btn-secondary.dropdown-toggle{background: #556ee6 !important;border: 1.5px solid #556ee6 !important;color: #fff !important;}
+.sh_night_mode .btn-secondary:not(:disabled):not(.disabled):active:focus, .sh_night_mode .btn-secondary:not(:disabled):not(.disabled).active:focus, .sh_night_mode .show > .btn-secondary.o_dropdown_toggler_btn:focus {box-shadow: 0 0 0 0.2rem rgba(76, 132, 255,0.37%);}
+.sh_night_mode .btn-secondary:disabled{background: #171c32!important;color: #94A2C7!important;border: 1px solid #556ee6!important;}
+.sh_night_mode .o_filters_menu .btn.btn-primary{border: 1.5px solid #556ee6 !important;}
+.sh_night_mode .o_filters_menu .btn-secondary,
+.sh_night_mode .o_control_panel .o_cp_right .btn-group.o_search_options .o_favorites_menu .btn.btn-primary{border: 1.5px solid #556ee6!important;}
+
+@if $button_style == 'style_1'{
+    .sh_night_mode .btn-primary{border-color: #556ee6 !important;}
+    .sh_night_mode .o_cp_bottom .o_cp_bottom_left .o_cp_buttons .btn.btn-primary, .sh_night_mode .o_form_statusbar .o_statusbar_buttons .btn.btn-primary, .sh_night_mode .modal-footer .btn.btn-primary, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-primary, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonSendMessage, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonLogNote, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonScheduleActivity, .sh_night_mode .o_list_view .o_field_x2many_list_row_add a, .sh_night_mode .o_calendar_container .o_cw_popover.popover.card .card-footer .btn.btn-primary, .sh_night_mode .o_control_panel .o_cp_bottom .o_search_options .btn-group.o_dropdown .dropdown-menu .btn.btn-primary{background: linear-gradient(1deg, #556ee6, #2b3ba5) !important;}
+    .sh_night_mode.o_web_client .btn.btn-secondary,.sh_night_mode .backmate_theme_layout .btn.btn-secondary,
+    .sh_night_mode .o_cp_bottom .o_cp_bottom_left .o_cp_buttons .btn.btn-secondary, .sh_night_mode .o_form_statusbar .o_statusbar_buttons .btn.btn-secondary, .sh_night_mode .modal-footer .btn.btn-secondary, .sh_night_mode .backmate_theme_layout.sh_theme_model #color_list_id .btn.btn-secondary, .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right .o_search_options .btn-group.o_dropdown .o_dropdown_toggler_btn.btn.btn-secondary, .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_left .o_cp_action_menus .btn-group.o_dropdown .o_dropdown_toggler_btn.btn.btn-secondary, .sh_night_mode .o_calendar_container .o_cw_popover.popover.card .card-footer .btn.btn-secondary, .sh_night_mode .o_control_panel .o_cp_bottom .o_search_options .btn-group.o_dropdown .dropdown-menu .btn.btn-secondary{border: 1.5px solid #94a2c7 !important;background: linear-gradient(1deg, #171c32, #252c48) !important;}
+    .sh_night_mode .backmate_theme_layout.sh_theme_model #color_list_id .btn.btn-primary{border: 1.5px solid #556ee6 !important;}
+    // style 1 button  to do //
+    .sh_night_mode .todo_layout .add_todo_section .input-group-append .btn.sh_add_todo{background: linear-gradient(1deg, #556ee6, #2b3ba5) !important; border: 1.5px solid #556ee6; border-radius: 2px !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24) !important;}
+
+     // style 4 button notification //
+     .sh_night_mode .o_notification_manager .toast.o_notification.bg-warning .toast-body .btn-primary{border-color: #ffffff !important;}
+
+}
+
+@if $button_style == 'style_3'{
+    .sh_night_mode .btn-primary{border-color: #556ee6 !important;}
+    .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-primary{border: 1.5px solid #556ee6 !important;}
+    .sh_night_mode .sh_zoom_view_layout .btn.sh_zoom{box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.01), 0 6px 10px -5px #556ee6 !important;}
+    //to do //
+    .sh_night_mode .todo_layout .add_todo_section .input-group-append .btn.sh_add_todo{border-color: #556ee6 !important;}
+}
+@if $button_style == 'style_4'{
+    .sh_night_mode.o_web_client .btn.btn-primary,
+    .sh_night_mode .o_cp_bottom .o_cp_bottom_left .o_cp_buttons .btn.btn-primary, .sh_night_mode .o_form_statusbar .o_statusbar_buttons .btn.btn-primary, .sh_night_mode .modal .modal-footer .btn.btn-primary, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-primary, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonSendMessage, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonLogNote, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonScheduleActivity, .sh_night_mode .o_notebook .o_x2m_control_panel .o_cp_buttons .o-kanban-button-new, .sh_night_mode .o_content.o_controller_with_searchpanel .o_kanban_view .o_kanban_record .oe_module_action .btn-primary, .sh_night_mode .o_content .o_kanban_view .o_kanban_card_content .oe_kanban_action_button.btn.btn-primary, .sh_night_mode .o_content .o_setting_container .settings .o_settings_container .o_setting_right_pane .btn.btn-primary.o_web_settings_invite, .sh_night_mode .o_kanban_view .o_kanban_record .o_kanban_record_bottom .oe_kanban_bottom_left .btn-primary, .sh_night_mode .o_Chatter .o_Composer_actionButtons .btn-primary, .sh_night_mode .o_content .o_kanban_view .btn-primary, .sh_night_mode .modal.o_web_editor_dialog .modal-content .modal-body .btn-primary, .sh_night_mode .o_calendar_container .o_calendar_view .o_cw_popover.popover.card .o_cw_body .card-footer .btn-primary{border-bottom: 3px solid #4a63dc !important;}
+    .sh_night_mode .o_cp_bottom .o_cp_bottom_left .o_cp_buttons .btn.btn-secondary, .sh_night_mode .backmate_theme_layout .btn.btn-secondary, .sh_night_mode .o_form_statusbar .o_statusbar_buttons .btn.btn-secondary, .sh_night_mode .modal-footer .btn.btn-secondary, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-secondary, .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right .o_search_options .btn-group.o_dropdown .o_dropdown_toggler_btn.btn.btn-secondary, .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_left .o_cp_action_menus .btn-group.o_dropdown .o_dropdown_toggler_btn.btn.btn-secondary, .sh_night_mode .o_content.o_controller_with_searchpanel .o_kanban_view .o_kanban_record .oe_module_action .btn-secondary, .sh_night_mode .o_content .o_kanban_view .o_kanban_card_content .oe_kanban_action_button.btn.btn-secondary, .sh_night_mode .o_kanban_view .o_kanban_record .o_kanban_record_bottom .oe_kanban_bottom_left .btn-primary:hover, .sh_night_mode .o_kanban_view .o_kanban_record .o_kanban_record_bottom .oe_kanban_bottom_left .btn-secondary, .sh_night_mode .modal.o_web_editor_dialog .modal-content .modal-body .btn-secondary, .sh_night_mode .o_calendar_container .o_calendar_view .o_cw_popover.popover.card .o_cw_body .card-footer .btn-secondary,.sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right .btn-group.o_search_options .o_dropdown .o_dropdown_menu.dropdown-menu .btn-secondary{border: 1.5px solid #252c48 !important;border-bottom: 3px solid #22273b !important;}
+    .sh_night_mode nav.o_main_navbar .o_menu_systray li:not(:last-child) > a, .sh_night_mode nav.o_main_navbar .o_menu_systray li.o_night_mode,
+    .sh_night_mode .o_kanban_view .o_kanban_record .oe_kanban_details .oe_kanban_partner_links .badge-pill,
+    .sh_night_mode .o_main_navbar .o_menu_systray .sh_bookmark .o_user_bookmark_menu{border: 1.5px solid #171c32 !important;border-bottom: 3px solid #191e31 !important;}
+    .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right .o_cp_pager .o_pager .btn{border-bottom: 3px solid #556ee6 !important;}
+    .sh_night_mode .btn.btn-secondary:hover,.sh_night_mode .backmate_theme_layout .btn.btn-secondary:hover, .sh_night_mode .modal-footer .btn-secondary:hover,
+    .sh_night_mode .o_cp_bottom .o_cp_bottom_left .o_cp_buttons .btn.btn-secondary:hover, .sh_night_mode .o_form_statusbar .o_statusbar_buttons .btn.btn-secondary:hover, .sh_night_mode .modal-footer .btn.btn-secondary:hover, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-secondary:hover, .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right .o_search_options .btn-group.o_dropdown .o_dropdown_toggler_btn.btn.btn-secondary:hover, .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_left .o_cp_action_menus .btn-group.o_dropdown .o_dropdown_toggler_btn.btn.btn-secondary:hover, .sh_night_mode .o_content.o_controller_with_searchpanel .o_kanban_view .o_kanban_record .oe_module_action .btn-secondary:hover, .sh_night_mode .o_content .o_kanban_view .o_kanban_card_content .oe_kanban_action_button.btn.btn-secondary:hover, .sh_night_mode .o_kanban_view .o_kanban_record .o_kanban_record_bottom .oe_kanban_bottom_left .btn-primary:hover, .sh_night_mode .o_kanban_view .o_kanban_record .o_kanban_record_bottom .oe_kanban_bottom_left .btn-secondary:hover, .sh_night_mode .modal.o_web_editor_dialog .modal-content .modal-body .btn-secondary:hover, .sh_night_mode .o_calendar_container .o_calendar_view .o_cw_popover.popover.card .o_cw_body .card-footer .btn-secondary:hover,
+    .sh_night_mode .btn-group.o_dropdown.show > .o_dropdown_toggler_btn.btn.btn-secondary,
+    .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right .o_search_options .btn-group.o_dropdown.show .o_dropdown_toggler_btn.btn.btn-secondary,.sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right .btn-group.o_search_options .o_dropdown .o_dropdown_menu.dropdown-menu .btn-secondary:hover,
+    .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_left .o_cp_action_menus .btn-group.o_dropdown.show .o_dropdown_toggler_btn.btn.btn-secondary,
+    .sh_night_mode .o_content .note-editor .note-toolbar.panel-heading .btn-group.show button.btn.dropdown-toggle, .sh_night_mode .o_content .note-editor .note-toolbar.panel-heading .btn-group .btn:focus, .sh_night_mode .o_content .note-editor .note-toolbar.panel-heading .btn-group .btn.active{border: 1.5px solid #556ee6 !important;border-bottom: 3px solid #4a63dc !important;}
+    .sh_night_mode .modal-footer .btn.btn-primary,.sh_night_mode .o_content .note-editor .note-toolbar.panel-heading .btn-group.show button.btn.dropdown-toggle, .sh_night_mode .o_content .note-editor .note-toolbar.panel-heading .btn-group .btn:focus, .sh_night_mode .o_content .note-editor .note-toolbar.panel-heading .btn-group .btn.active,
+    .sh_night_mode .modal.o_web_editor_dialog .modal-content .modal-body .form-control:hover, .sh_night_mode .modal.o_web_editor_dialog .modal-content .modal-body .form-control:focus, .sh_night_mode .modal.o_web_editor_dialog .modal-content .modal-body select:hover, .sh_night_mode .modal.o_web_editor_dialog .modal-content .modal-body select:focus{border: 1.5px solid #556ee6 !important;}
+    @if $search_style == 'collapsed'{
+        .sh_night_mode nav.o_main_navbar .sh_search .sh_search_input .usermenu_search_input{left: 0px;border: 0px !important;}
+        .sh_night_mode nav.o_main_navbar .o_menu_systray li.sh_search:first-child .sh_search_container .sh_search_input{border: 1px solid #171c32 !important;}
+        .sh_night_mode nav.o_main_navbar .o_menu_systray li .sh_search_container .sh_search_input .input-group-text,
+        .sh_night_mode .o_kanban_view .o_kanban_record .oe_kanban_details .oe_kanban_partner_links .badge-pill{border: 1.5px solid #171c32 !important;border-bottom: 3px solid #191e31 !important;}
+    }
+    .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad .clear, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad .clear:focus, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad #sqrt, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad #square, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad #divide, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad #multiply, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad #subtract, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad #add, .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad #equals,
+    .sh_night_mode .o_menu_systray .sh_calc_util .sh_calc_results .calculator .numberPad button.btn-calc,
+    .sh_night_mode .btn-secondary:not(:disabled):not(.disabled):active, .sh_night_mode .btn-secondary:not(:disabled):not(.disabled).active, .sh_night_mode .show > .btn-secondary.o_dropdown_toggler_btn{border-bottom: 3px solid #556ee6 !important;}
+    .sh_night_mode .o_cp_buttons .btn.btn-primary:hover,.sh_night_mode .btn-primary{border-color: #556ee6 !important;}
+    .sh_night_mode .o_cp_bottom .o_cp_bottom_left .o_cp_buttons .btn.btn-primary:hover, .sh_night_mode .o_cp_bottom .o_cp_bottom_left .o_cp_buttons .btn.btn-primary:focus, .sh_night_mode .o_form_statusbar .o_statusbar_buttons .btn.btn-primary:hover, .sh_night_mode .o_form_statusbar .o_statusbar_buttons .btn.btn-primary:focus, .sh_night_mode .modal .modal-footer .btn.btn-primary:hover, .sh_night_mode .modal .modal-footer .btn.btn-primary:focus, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-primary:hover, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-primary:focus, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button:hover, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button:focus, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonLogNote:hover, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonLogNote:focus, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonScheduleActivity:hover, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonScheduleActivity:focus, .sh_night_mode .o_notebook .o_x2m_control_panel .o_cp_buttons .o-kanban-button-new:hover, .sh_night_mode .o_notebook .o_x2m_control_panel .o_cp_buttons .o-kanban-button-new:focus, .sh_night_mode .o_content.o_controller_with_searchpanel .o_kanban_view .o_kanban_record .oe_module_action .btn-primary:hover, .sh_night_mode .o_content.o_controller_with_searchpanel .o_kanban_view .o_kanban_record .oe_module_action .btn-primary:focus, .sh_night_mode .o_content .o_kanban_view .o_kanban_card_content .oe_kanban_action_button.btn.btn-primary:hover, .sh_night_mode .o_content .o_kanban_view .o_kanban_card_content .oe_kanban_action_button.btn.btn-primary:focus, .sh_night_mode .o_kanban_view .o_kanban_record .o_kanban_record_bottom .oe_kanban_bottom_left .btn-primary:hover, .sh_night_mode .o_kanban_view .o_kanban_record .o_kanban_record_bottom .oe_kanban_bottom_left .btn-primary:focus, .sh_night_mode .modal.o_web_editor_dialog .modal-content .modal-body .btn-primary:hover, .sh_night_mode .modal.o_web_editor_dialog .modal-content .modal-body .btn-primary:focus{box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.01), 0 6px 10px -5px #556ee6 !important;}
+    .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right .o_cp_switch_buttons{background: #252c48;border: 1.5px solid #252c48;border-bottom: 3px solid #252c48 !important;}
+    .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right .o_cp_switch_buttons .btn.o_switch_view{border: 0px !important;}
+    .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right .o_cp_switch_buttons .btn.o_switch_view.active,
+    .sh_night_mode .tooltip .tooltip-inner .oe_tooltip_string{color: #556ee6 !important;}
+    .sh_night_mode .modal-footer .btn-secondary:hover,.sh_night_mode .modal-footer .btn-secondary:focus,
+    .sh_night_mode .o_content .note-editor .note-toolbar.panel-heading .btn-group.show button.btn.dropdown-toggle, .sh_night_mode .o_content .note-editor .note-toolbar.panel-heading .btn-group .btn:focus, .sh_night_mode .o_content .note-editor .note-toolbar.panel-heading .btn-group .btn.active{background: #556ee6 !important;}
+    .sh_night_mode .o_content .note-editor .note-popover .popover .popover-body .btn, .sh_night_mode .o_content .note-editor .panel-heading.note-toolbar .btn{border: 1px solid #252c48 !important;background: #252c48 !important;border-bottom: 3px solid #252c48 !important;}
+    .sh_night_mode .tooltip-inner{box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.14), 0 6px 10px -5px #556ee6 !important;}
+    .sh_night_mode .tooltip .tooltip-inner .oe_tooltip_string{background-color: #252c48;}
+    .sh_night_mode .o_select_media_dialog .modal-content .input-group .input-group-text.o_we_search_icon{border-radius: 50rem !important;}
+    .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-primary{border: 1.5px solid #556ee6 !important;}
+
+    // style 4 button to do //
+    .sh_night_mode .todo_layout .add_todo_section .input-group-append .btn.sh_add_todo{border-radius: 0 20px 20px 0 !important; background:  $primaryColor;border: 1.5px solid  $primaryColor; box-shadow: 0 1px 3px rgba(0, 0, 0,0.12), 0 1px 2px rgba(0, 0, 0, 0.24) !important;border-bottom: 3px solid #4a63dc !important;transition: all .5s;}
+    .sh_night_mode .todo_layout .add_todo_section .input-group-append .btn.sh_add_todo:hover{background:  $primaryColor; box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.1), 0 6px 10px -5px  $primaryColor !important; transition: all .5s;}
+    .sh_night_mode.o_web_client .o_main_navbar .o_menu_systray .todo{background-color: transparent !important;box-shadow: none !important;padding: 0px !important;}
+    .sh_night_mode .o_main_navbar .o_menu_systray .todo > a {border-bottom: 3px solid #171c32 !important; transition: all .5s;}
+    .sh_night_mode .o_main_navbar .o_menu_systray .todo:hover span{ color: #556ee6 !important;}
+    .sh_night_mode .o_main_navbar .o_menu_systray .todo span#todo_icon{color: #94a2c7; font-size: 14px;}
+
+    // style 4 button notification //
+    .sh_night_mode .o_notification_manager .toast.o_notification.bg-warning .toast-body .btn-primary{border: none !important}
+
+}
+@if $button_style == 'style_5'{
+    .sh_night_mode .o_chatter .o_chatter_header_container .o_chatter_topbar > .btn{background: #252c48 !important;}
+    .sh_night_mode .o_chatter .o_chatter_header_container .o_chatter_topbar > .btn:hover,.sh_night_mode .o_chatter .o_chatter_header_container .o_chatter_topbar > .btn:focus,
+    .sh_night_mode .o_chatter .o_chatter_header_container .o_chatter_topbar > .btn.o_active{background: #171c32 !important;}
+    .sh_night_mode .o_cp_bottom .o_cp_bottom_left .o_cp_buttons .btn.btn-primary, .sh_night_mode .o_form_statusbar .o_statusbar_buttons .btn.btn-primary, .sh_night_mode .modal-footer .btn.btn-primary, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-primary, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-primary, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonSendMessage, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonLogNote, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonScheduleActivity,
+    .sh_night_mode .o_cp_bottom .o_cp_bottom_left .o_cp_buttons .btn.btn-primary:hover, .sh_night_mode .o_cp_bottom .o_cp_bottom_left .o_cp_buttons .btn.btn-primary:focus, .sh_night_mode .o_form_statusbar .o_statusbar_buttons .btn.btn-primary:hover, .sh_night_mode .o_form_statusbar .o_statusbar_buttons .btn.btn-primary:focus, .sh_night_mode .modal-footer .btn.btn-primary:hover, .sh_night_mode .modal-footer .btn.btn-primary:focus, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-primary:hover, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-primary:focus .backmate_theme_layout.sh_theme_model #color_list_id .btn.btn-primary:hover, .sh_night_mode .backmate_theme_layout.sh_theme_model #color_list_id .btn.btn-primary:focus, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button:hover, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button:focus, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonLogNote:hover, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonLogNote:focus, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonScheduleActivity:hover, .sh_night_mode .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_button.o_ChatterTopbar_buttonScheduleActivity:focus{background: #556ee6 !important;}
+    .sh_night_mode .o_cp_bottom .o_cp_bottom_left .o_cp_buttons .btn.btn-secondary,.sh_night_mode .backmate_theme_layout .btn.btn-secondary, .sh_night_mode .o_form_statusbar .o_statusbar_buttons .btn.btn-secondary, .sh_night_mode .modal-footer .btn.btn-secondary, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-secondary, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-secondary, .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right .o_search_options .btn-group.o_dropdown .o_dropdown_toggler_btn.btn.btn-secondary, .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_left .o_cp_action_menus .btn-group.o_dropdown .o_dropdown_toggler_btn.btn.btn-secondary{border: 1.5px solid #94a2c7 !important;color: #94a2c7 !important;}
+    .sh_night_mode .o_cp_bottom .o_cp_bottom_left .o_cp_buttons .btn.btn-secondary:hover,.sh_night_mode .backmate_theme_layout .btn.btn-secondary:hover, .sh_night_mode .o_form_statusbar .o_statusbar_buttons .btn.btn-secondary:hover, .sh_night_mode .modal-footer .btn.btn-secondary:hover, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-secondary:hover, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-secondary:hover, .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right .o_search_options .btn-group.o_dropdown .o_dropdown_toggler_btn.btn.btn-secondary:hover, .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_left .o_cp_action_menus .btn-group.o_dropdown .o_dropdown_toggler_btn.btn.btn-secondary:hover,
+    .sh_night_mode .o_cp_bottom .o_cp_bottom_left .o_cp_buttons .btn.btn-secondary:focus,.sh_night_mode .backmate_theme_layout .btn.btn-secondary:focus, .sh_night_mode .o_form_statusbar .o_statusbar_buttons .btn.btn-secondary:focus, .sh_night_mode .modal-footer .btn.btn-secondary:focus, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-secondary:focus, .sh_night_mode .backmate_theme_layout #color_list_id .btn.btn-secondary:focus, .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right .o_search_options .btn-group.o_dropdown .o_dropdown_toggler_btn.btn.btn-secondary:focus, .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_left .o_cp_action_menus .btn-group.o_dropdown .o_dropdown_toggler_btn.btn.btn-secondary:focus,
+    .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right .o_search_options .btn-group.o_dropdown.show .o_dropdown_toggler_btn.btn.btn-secondary{background: transparent !important;color: #556ee6 !important;border: 1.5px solid #556ee6 !important;}
+    .sh_night_mode .btn-primary,
+    .sh_night_mode .o_content .o_base_settings .o_control_panel .o_panel .o_setting_search .searchInput:hover, .sh_night_mode .o_content .o_base_settings .o_control_panel .o_panel .o_setting_search .searchInput:focus{border-color: #556ee6 !important;}
+    .sh_night_mode .o_action .o_content .o_kanban_view .o_kanban_record:hover,.sh_night_mode .o_action .o_content .o_kanban_view .o_kanban_record:focus{box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.14), 0 6px 10px -5px #171c32 !important;}
+    .sh_night_mode .o_content .note-editor .note-popover .popover .popover-body .btn, .sh_night_mode .o_content .note-editor .panel-heading.note-toolbar .btn{border: 1px solid #252c48 !important;background: #252c48 !important;}
+    .sh_night_mode .o_content .note-editor .note-toolbar.panel-heading .btn-group.show button.btn.dropdown-toggle, .sh_night_mode .o_content .note-editor .note-toolbar.panel-heading .btn-group .btn:focus, .o_content .note-editor .note-toolbar.panel-heading .btn-group .btn.active{background: #556ee6 !important;border: 1px solid #556ee6 !important;}
+    .sh_night_mode .modal.o_web_editor_dialog .modal-content .modal-body .form-control:hover, .sh_night_mode .modal.o_web_editor_dialog .modal-content .modal-body .form-control:focus, .sh_night_mode .modal.o_web_editor_dialog .modal-content .modal-body select:hover, .sh_night_mode .modal.o_web_editor_dialog .modal-content .modal-body select:focus{border: 1px solid #556ee6 !important;}
+    // // style 5 button to do //
+    .sh_night_mode.o_web_client nav.o_main_navbar .o_menu_systray li.o_night_mode{padding: 0px 8px !important;}
+    .sh_night_mode.o_web_client nav.o_main_navbar .o_menu_systray .todo{background-color: transparent !important;}
+}
+
+/*---------- radio button ---------*/ 
+.sh_night_mode [type='radio'].with-gap:checked + label:after{background-color: #556ee6;}
+.sh_night_mode [type='radio']:checked + label:after, .sh_night_mode [type='radio'].with-gap:checked + label:before, .sh_night_mode [type='radio'].with-gap:checked + label:after{border: 2px solid #556ee6;}
+.sh_night_mode [type='radio']:not(:checked) + label:before, .sh_night_mode [type='radio']:not(:checked) + label:after{border: 2px solid #556ee6;}
+
+
+/*----------------apps--------------*/
+.sh_night_mode .oe_module_name > span{color: #71768e;}
+/*----------------apps--------------*/
+
+/*----------------input/select--------------*/
+.sh_night_mode .o_input{border-color:#556ee6!important ;color: #94A2C7!important;}
+.sh_night_mode .o_input::placeholder{color: #94A2C7!important;}
+.sh_night_mode input:-webkit-autofill{box-shadow: 0 0 0 50px #556ee6 inset;}
+.sh_night_mode select option{background-color: #252c48 !important;}
+.sh_night_mode select option:checked, .sh_night_mode select option:hover {background: #171c32 !important;
+}
+/*----------------input--------------*/
+
+/*----------form_element_style ----------*/ 
+@if $form_element_style == 'style_1'{
+    .sh_night_mode .o_input:focus, .sh_night_mode .o_input:focus-within{background-image: linear-gradient(#556ee6, #556ee6), linear-gradient(#556ee6, #556ee6);}
+}
+@if $form_element_style == 'style_2'{
+    .sh_night_mode .o_required_modifier.o_input, .sh_night_mode .o_required_modifier .o_input, .sh_night_mode .o_field_number.o_input, .sh_night_mode .o_field_number .o_input{background: #171c32 !important;}
+}
+@if $form_element_style == 'style_3'{
+    .sh_night_mode .o_input{background: #171c32;}
+    .sh_night_mode .o_required_modifier.o_input, .sh_night_mode .o_required_modifier .o_input, .sh_night_mode .o_field_number.o_input, .sh_night_mode .o_field_number .o_input{background: #171c32 !important;}
+} 
+@if $form_element_style == 'style_4'{
+    .sh_night_mode .o_input{background: #212844;}
+    .sh_night_mode .o_input:focus, .sh_night_mode .o_input:focus-within{box-shadow: 0 -50px 0 #1b2138 inset;}
+    .sh_night_mode .o_required_modifier.o_input, .sh_night_mode .o_required_modifier .o_input, .sh_night_mode .o_field_number.o_input, .sh_night_mode .o_field_number .o_input{background: #171c32 !important;}
+}
+@if $form_element_style == 'style_5'{
+    .sh_night_mode .o_required_modifier.o_input, .sh_night_mode .o_required_modifier .o_input, .sh_night_mode .o_field_number.o_input, .sh_night_mode .o_field_number .o_input{background: #171c32 !important;}
+}
+@if $form_element_style == 'style_6'{
+    .sh_night_mode .o_input {background-color: #171c32;border-color: #344483 !important;}
+    .sh_night_mode .o_input:focus, .sh_night_mode .o_input:focus-within{background-image: linear-gradient(#556ee6, #556ee6), linear-gradient(#556ee6, #556ee6);}
+    .sh_night_mode .o_required_modifier.o_input, .sh_night_mode .o_required_modifier .o_input, .sh_night_mode .o_field_number.o_input, .sh_night_mode .o_field_number .o_input{background: #171c32 !important;}
+}
+@if $form_element_style == 'style_8'{
+    .sh_night_mode .o_input {background-color: #171c32;}
+    .sh_night_mode .o_input:hover,.sh_night_mode .o_input:focus{box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.01), 0 6px 10px -5px #556ee6 !important;border-bottom: 3px solid #556ee6 !important;border: 1px solid #556ee6;}
+    .sh_night_mode .o_required_modifier.o_input,.sh_night_mode .o_required_modifier .o_input,
+    .sh_night_mode .o_field_number.o_input, .sh_night_mode .o_field_number .o_input{box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.01), 0 6px 10px -5px #556ee6 !important;background: #171c32 !important;}
+}
+@if $form_element_style == 'style_7'{
+    .sh_night_mode .o_input,
+    .sh_night_mode .o_required_modifier.o_input, .sh_night_mode .o_required_modifier .o_input, .sh_night_mode .o_field_number.o_input, .sh_night_mode .o_field_number .o_input {background-color: #171c32 !important;}
+    .sh_night_mode .o_required_modifier.o_input, .sh_night_mode .o_required_modifier .o_input, .sh_night_mode .o_field_number.o_input, .sh_night_mode .o_field_number .o_input{box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 #46549b !important;}
+}
+
+/*------ discuss ------*/ 
+.sh_night_mode .o_Discuss .o_DiscussSidebar.o_Discuss_sidebar{background: #171c32;color: #94a2c7;border-right: 1px solid #252c48;border-top: 1px solid #171c32;}
+.sh_night_mode .o_Discuss .o_DiscussSidebar.o_Discuss_sidebar .o_DiscussSidebar_separator{background-color: #252c48;}
+.sh_night_mode .o_Discuss .o_DiscussSidebar.o_Discuss_sidebar .o_DiscussSidebarItem:hover{background: #556ee6;color: #b7c7f2;}
+.sh_night_mode .o_Discuss .o_DiscussSidebarItem_activeIndicator.o-item-active{background-color: #556ee6;}
+.sh_night_mode .o_Discuss .o_DiscussSidebar.o_Discuss_sidebar .o_DiscussSidebar_group.o_DiscussSidebar_groupChannel .o_DiscussSidebar_groupHeader .o_DiscussSidebar_groupTitle.o-clickable:not(:hover),
+.sh_night_mode .o_Discuss .o_DiscussSidebar.o_Discuss_sidebar .o_DiscussSidebar_group .o_DiscussSidebar_groupHeader .o_DiscussSidebar_groupTitle:not(.o-clickable),
+.sh_night_mode .o_Discuss .o_DiscussSidebar.o_Discuss_sidebar .o_DiscussSidebar_item.o_DiscussSidebar_itemNew input.o_DiscussSidebar_itemNewInput::placeholder{color: #b7c7f2;}
+.sh_night_mode .o_Discuss .o_DiscussSidebar.o_Discuss_sidebar .o_DiscussSidebarItem .o_DiscussSidebarItem_command:not(:hover){color: #252c48;}
+.sh_night_mode .o_Discuss .o_DiscussSidebar.o_Discuss_sidebar .o_DiscussSidebar_item.o_DiscussSidebar_itemNew input.o_DiscussSidebar_itemNewInput{background: #252c48;box-shadow: none;border: 1px solid #171c32;outline: 0px;}
+.sh_night_mode .ui-menu.ui-widget-content.ui-widget{background: #252c48 !important;border: 1px solid #171c32;}
+.sh_night_mode ul.ui-menu.ui-widget-content.ui-widget li a,
+.sh_night_mode .o_Composer.o_ThreadView_composer .o_Composer_coreMain .o_ComposerTextInput.o_Composer_textInput .o_ComposerTextInput_textarea,
+.sh_night_mode .o_Composer.o_ThreadView_composer .o_Composer_coreMain .o_ComposerTextInput.o_Composer_textInput .o_ComposerTextInput_textarea::placeholder,
+.sh_night_mode .o_MessageList.o_ThreadView_messageList .o_Message .o_Message_core .o_Message_content .o_Message_prettyBody p,
+.sh_night_mode .o_MessageList.o_ThreadView_messageList .o_Message .o_Message_core p.o_Message_subject{color: #94A2C7;}
+.sh_night_mode ul.ui-menu.ui-widget-content.ui-widget li:hover,
+.sh_night_mode .ui-autocomplete .ui-menu-item > a.ui-state-active{background: #556ee6;}
+.sh_night_mode .o_MessageList.o_ThreadView_messageList,
+.sh_night_mode .o_ThreadView .o_Message.o-not-discussion,
+.sh_night_mode .o_Composer.o_ThreadView_composer .o_Composer_coreMain .o_ComposerTextInput.o_Composer_textInput .o_ComposerTextInput_textarea,
+.sh_night_mode .o_MessageList.o_ThreadView_messageList .o_Message{background-color: #252c48;}
+.sh_night_mode .o_MessageList.o_ThreadView_messageList .o_MessageList_separator .o_MessageList_separatorLine{border-color: #171c32;}
+.sh_night_mode .o_MessageList.o_ThreadView_messageList .o_MessageList_separator .o_MessageList_separatorLabel,
+.sh_night_mode .o_Discuss .o_Discuss_content .o_ThreadView_composer{background: #171c32;}
+.sh_night_mode .o_Discuss .o_Discuss_content{border-top: 1px solid #252c48;}
+.sh_night_mode .o_Discuss .o_Discuss_content .o_ThreadView.o_Discuss_thread .o_MessageList.o_ThreadView_messageList .o_Message .o_Message_core .o_Message_originThread .o_Message_originThreadLink{color: #556ee6;}
+.sh_night_mode .o_Discuss .o_Discuss_content .o_Composer.o_ThreadView_composer .o_Composer_coreMain .o_ComposerTextInput.o_Composer_textInput {background-color: #252c48;border-top: 1px solid #252c48;border-bottom: 1px solid #252c48;border-left: 1px solid #252c48;}
+.sh_night_mode .o_Composer_coreMain .o_Composer_buttons .o_Composer_toolButtons .o_Composer_toolButtonSeparator{border-left: 1px solid #171c32;}
+.sh_night_mode .o_Composer_coreMain .o_Composer_buttons .o_Composer_toolButtons{background-color: #252c48;border-top: 1px solid #252c48;border-bottom: 1px solid #252c48;}
+.sh_night_mode .o_Discuss .o_DiscussSidebar.o_Discuss_sidebar .o_DiscussSidebarItem.o-starred-box .o_DiscussSidebarItem_counter{border-color: #556ee6;background-color: #556ee6;}
+
+
+/*------ calendar view --------*/ 
+.sh_night_mode .o_content .o_calendar_container .o_calendar_view{background: linear-gradient(-45deg, #252c48, #252c48);}
+.sh_night_mode .o_content .o_calendar_container .o_calendar_sidebar_container{background-color: #252c48;border-left: 1px solid #171c32;}
+.sh_night_mode .o_content .o_calendar_container .o_calendar_sidebar_container .o_calendar_sidebar .ui-datepicker-inline.ui-datepicker.ui-widget{background: #252c48;}
+.sh_night_mode .o_content .o_calendar_container .o_calendar_sidebar_container .ui-datepicker table .ui-state-default,
+.sh_night_mode .o_content .o_calendar_container .o_calendar_sidebar_container .ui-datepicker .ui-widget-header .ui-datepicker-title,
+.sh_night_mode .o_content .o_calendar_container .o_calendar_sidebar_container .o_calendar_sidebar .o_calendar_filter > h5,.sh_night_mode .popover.show h3.popover-header,
+.sh_night_mode .o_content .o_calendar_container .o_calendar_sidebar_container .o_calendar_filter .o_field_widget.o_field_many2one .o_input_dropdown .o_input.ui-autocomplete-input::placeholder,
+.sh_night_mode .o_content .o_calendar_container .o_calendar_view .o_calendar_widget .o_cw_popover.popover.card .card-header, .sh_night_mode .o_content .o_calendar_container .o_calendar_view .o_calendar_widget .o_cw_popover.popover.card .popover-header,
+.sh_night_mode .o_content .o_calendar_container .o_calendar_view .o_cw_popover.popover.card .o_cw_body .list-group .list-group-item,
+.sh_night_mode .o_calendar_view .o_calendar_widget .fc-dayGridMonth-view .fc-day-number,
+.sh_night_mode .o_calendar_view .o_calendar_widget .fc-dayGridYear-view > .fc-month-container > .fc-month > .fc-toolbar.fc-header-toolbar h2{color: #b7c7f2;}
+.sh_night_mode .o_content .o_calendar_container .o_calendar_sidebar_container .ui-datepicker th > span,
+.sh_night_mode .o_timeoff_calendar .o_content .o_timeoff_purple{color: #556ee6;}
+.sh_night_mode .o_content .o_calendar_container .o_calendar_sidebar_container .ui-datepicker table .ui-state-active{color: #252c48 !important;background-color: #556ee6 !important;}
+.sh_night_mode .o_content .o_calendar_container .o_calendar_sidebar_container .ui-datepicker table .ui-state-default:hover{background-color: #556ee6;border-color: #556ee6;color: #252c48 !important;}
+.sh_night_mode .o_content .o_calendar_container .o_calendar_sidebar_container .o_calendar_sidebar .o_calendar_filter,
+.sh_night_mode .o_calendar_view .o_calendar_widget .fc-timeGridWeek-view div.fc-day-grid,
+.sh_night_mode .o_calendar_view .o_calendar_widget .fc-timeGridDay-view div.fc-day-grid,
+.sh_night_mode .o_content .o_calendar_container .o_calendar_view .o_cw_popover.popover.card .o_cw_body .list-group .list-group-item {background: #252c48;}
+.sh_night_mode .popover.show,.sh_night_mode .popover.show h3.popover-header,
+.sh_night_mode .o_content .o_calendar_container .o_calendar_view .o_calendar_widget .o_cw_popover.popover.card .card-header, .sh_night_mode .o_content .o_calendar_container .o_calendar_view .o_calendar_widget .o_cw_popover.popover.card .popover-header,
+.sh_night_mode .o_calendar_view .o_calendar_widget .o_calendar_disabled {background: #171c32;}
+.sh_night_mode .o_content .o_calendar_container .o_calendar_sidebar_container .o_calendar_filter .o_calendar_filter_item button.o_remove{background: #556ee6 !important;color: #94a2c7 !important;}
+.sh_night_mode .o_calendar_container .o_calendar_view .o_calendar_widget .fc-widget-header{ background-color: #556ee6 !important;}
+.sh_night_mode .o_content .o_calendar_container .o_calendar_view .o_cw_popover.popover.card .o_cw_body .list-group .list-group-item .o_field_widget.o_field_many2manytags.avatar .badge{background-color: #171c32;border: 1px solid #171c32;color: #94a2c7;}
+.sh_night_mode .o_calendar_container .o_calendar_sidebar_container .ui-datepicker .ui-widget-header{background-color: #556ee6;}
+
+
+/*------------ modal ----------*/ 
+.sh_night_mode .modal .modal-dialog .modal-content,
+.sh_night_mode .modal-dialog .modal-content{background: #252c48;box-shadow: 0 0 20px 4px #15192b !important;}
+.sh_night_mode .modal .modal-dialog .modal-content .modal-header .modal-title .o_subtitle.text-muted.small,.sh_night_mode .modal-dialog .modal-content .modal-header .modal-title,
+.sh_night_mode .modal-dialog .modal-content .modal-header .modal-title,
+.sh_night_mode .modal .modal-dialog .modal-content .modal-header .modal-title button.close,
+.sh_night_mode .modal-dialog .modal-content .modal-header .o_FollowerSubtypeList_closeButton.close.fa.fa-times{color: #94A2C7 !important;}
+.sh_night_mode .modal-dialog .modal-content .modal-body .o_FollowerSubtypeList_subtypes .o_FollowerSubtype.o_FollowerSubtypeList_subtype .o_FollowerSubtype_label:hover{background: #171c32;color: #556ee6;}
+.sh_night_mode .modal-dialog .o_control_panel .o_cp_top .o_cp_top_right .o_searchview{background: #171c32;border: 1px solid #171c32;}
+.sh_night_mode .modal-dialog .o_control_panel .o_cp_top .o_cp_top_right .o_searchview .o_searchview_input_container, .sh_night_mode .modal-dialog .o_control_panel .o_cp_top .o_cp_top_right .o_searchview .o_searchview_input_container .o_searchview_input{background: #171c32;}
+.sh_night_mode .modal-dialog .o_control_panel {background-color: #252c48 !important;border-bottom: 1px solid #171c32;}
+.sh_night_mode .o_form_view .o_form_sheet_bg .o_form_sheet .oe_title .o_row.no-gutters.align-items-end .oe_edit_only button.btn.btn-link{color: #556ee6;}
+.sh_night_mode .modal .o_select_media_dialog .modal-body #editor-media-video #video-preview{border-top: 1px solid #171c32;background-image: linear-gradient(-150deg, #171c32, #171c32);}
+.sh_night_mode .note-editor .dropdown-menu .dropdown-item:hover, .sh_night_mode .note-editor .dropdown-menu .dropdown-item:focus{color: #252c48 !important;}
+
+/*---------- o_content --------*/ 
+html .o_web_client.sh_night_mode > .o_action_manager > .o_action > .o_content{background: #171c32 !important;}
+.sh_night_mode .o_kanban_view .o_column_quick_create .o_quick_create_unfolded .o_kanban_muted_record{background: #171c32 !important;}
+.sh_night_mode .o_content .o_kanban_view .o_kanban_record{background-color: #252c48;}
+.sh_night_mode .o_content .o_kanban_view .o_kanban_record .o_dropdown_kanban.dropdown a.dropdown-toggle .fa.fa-ellipsis-v,
+.sh_night_mode .o_kanban_view .o_column_quick_create .o_quick_create_folded .o_kanban_title,
+.sh_night_mode .o_kanban_view .o_kanban_group .o_kanban_header > .o_kanban_header_title .o_kanban_quick_add i,
+.sh_night_mode .o_kanban_view .o_column_quick_create .o_quick_create_unfolded .o_kanban_header input.o_input::placeholder{color: #94A2C7;}
+.sh_night_mode .o_kanban_view .o_column_quick_create .o_quick_create_folded .o_kanban_add_column{background: #94a2c7;}
+.sh_night_mode .o_kanban_view .o_column_quick_create .o_quick_create_folded .o_kanban_add_column .fa.fa-plus{color: #252c48;}
+.sh_night_mode .o_kanban_view .o_column_quick_create .o_quick_create_unfolded{box-shadow: 0 3px 6px 0px rgba(0, 0, 0, 0.16), 0 3px 6px 0px rgba(0, 0, 0, 0.12) !important;background-color: #252c48;}
+.sh_night_mode .o_kanban_view .oe_kanban_card .o_dropdown_kanban.show .dropdown-toggle, .sh_night_mode .o_kanban_view .o_kanban_record .o_dropdown_kanban.show .dropdown-toggle {background: #252c48;border-color: #252c48;}
+
+
+/*-------- form view ---------*/ 
+.sh_night_mode .o_form_view .o_form_sheet_bg > .o_form_sheet,.sh_night_mode .o_form_view .o_form_sheet_bg,.sh_night_mode .o_form_view{background: #252c48;}
+.sh_night_mode .o_form_view .o_form_sheet_bg .o_form_sheet .note-editor.panel,
+.sh_night_mode .o_popover {background: #252c48;border: 1px solid #252c48 !important;}
+.sh_night_mode .dropdown-item-text,
+.sh_night_mode .o_lunch_content .o_lunch_widget .o_lunch_widget_info.card, .sh_night_mode .o_lunch_content .o_lunch_widget .o_lunch_widget_info.card .card-title, .sh_night_mode .o_lunch_content .o_lunch_widget .o_lunch_widget_info.card .card-body,
+.sh_night_mode .o_lunch_content .o_lunch_widget .o_lunch_widget_info.card .btn-link.o_lunch_open_wizard{color: #94a2c7;}
+.sh_night_mode .o_form_view .note-editor .panel-heading.note-toolbar,
+.sh_night_mode .o_form_view .note-editor .note-editing-area .note-editable{background: #171c32 !important;border: 1px solid #171c32 !important;}
+.sh_night_mode .o_form_view .o_form_sheet_bg .o_form_statusbar,
+.sh_night_mode .o_form_view .note-editor .note-statusbar,
+.sh_night_mode .o_popover .o_popover_header,
+.sh_night_mode .o_notebook .oe_form_field.oe_form_field_html.o_field_widget .o_readonly > table,
+.sh_night_mode .o_notebook .note-editor.panel .note-editing-area .note-editable.panel-body > table{background: #171c32 !important;}
+.sh_night_mode .o_form_view .o_group .o_td_label .o_form_label,
+.sh_night_mode .popover .table.table-borderless{color: #c4cde4;}
+.sh_night_mode .o_form_view .o_form_sheet_bg .o_field_char.o_field_widget.o_input::placeholder,
+.sh_night_mode .o_select_media_dialog .modal-content .input-group .form-control::placeholder,
+.sh_night_mode .o_form_view .o_form_sheet_bg .o_form_sheet .oe_title h1,
+.sh_night_mode .o_form_view .o_form_sheet_bg .o_form_sheet .oe_title h2,
+.sh_night_mode .o_popover .popover-body,
+.sh_night_mode .o_form_view .o_form_uri > span,
+.sh_night_mode #o_employee_right .o_org_chart_title,
+.sh_night_mode #o_employee_right .o_org_chart_entry.o_org_chart_entry_manager .media-body > a .o_media_heading, .sh_night_mode #o_employee_right .o_org_chart_entry.o_org_chart_entry_sub .media-body > a .o_media_heading {color: #94A2C7;}
+.sh_night_mode .o_field_widget .o_input_dropdown .o_dropdown_button:after,
+.sh_night_mode .o_datepicker .o_datepicker_button:after,
+.sh_night_mode .o_field_widget.o_field_many2one .fa.fa-external-link.o_external_button,
+.sh_night_mode .modal-dialog .o_link_dialog.modal-body .form-group .o_btn_preview.btn.btn-sm.btn-link,
+.sh_night_mode .o_form_view .oe_button_box .oe_stat_button .o_button_icon ,
+.sh_night_mode .o_form_view .oe_button_box .btn.oe_stat_button > .o_stat_info .o_stat_value, .sh_night_mode .o_form_view .oe_button_box .btn.oe_stat_button > span .o_stat_value,
+.sh_night_mode .o_form_view .o_form_uri > span:first-child,
+.sh_night_mode .o_form_view .btn.oe_edit_only.btn-link,
+.sh_night_mode #o_employee_right .o_org_chart_entry.o_org_chart_entry_manager:hover .media-body > a .o_media_heading, .sh_night_mode #o_employee_right .o_org_chart_entry.o_org_chart_entry_sub:hover .media-body > a .o_media_heading,
+.sh_night_mode .o_form_view .o_group.o_inner_group > tbody > tr > td > button.btn.btn-link,
+.sh_night_mode .o_form_view button.btn-link,
+.sh_night_mode .popover .btn.btn-link.action_open_forecast,
+.sh_night_mode .o_lunch_content .o_lunch_widget .o_lunch_widget_info.card button.btn-link.fa{color:#556ee6 !important;}
+.sh_night_mode .popover .table.table-borderless tr.table-info{color: #252c48;}
+.sh_night_mode .o_content .note-editor .panel-heading.note-toolbar .dropdown-menu,
+.sh_night_mode .note-editor.panel .note-toolbar.panel-heading .note-color.btn-group .colorpicker,
+.sh_night_mode .o_select_media_dialog .modal-content .input-group .input-group-text.o_we_search_icon,
+.sh_night_mode .o_select_media_dialog .modal-content .modal-body form .custom-select {background: #252c48 !important;border: 1px solid #252c48 !important;}
+.sh_night_mode .o_content .note-editor .panel-heading.note-toolbar .dropdown-item,
+.sh_night_mode .note-editor.panel .note-toolbar.panel-heading .note-color.btn-group .colorpicker .o_colorpicker_reset{background-color: #556ee6 !important;}
+.sh_night_mode .o_form_view .oe_button_box .btn.oe_stat_button{background-color: #171c32;border-color: #556ee6;color: #94A2C7;}
+.sh_night_mode .o_form_view .oe_button_box .btn.oe_stat_button:hover, .sh_night_mode .o_form_view .oe_button_box .btn.oe_stat_button:focus{background-color: rgba(0, 0, 0, 0.03) !important;}
+.sh_night_mode .alert-info{background-color: #121624;color: #556ee6;}
+.sh_night_mode .o_list_view .o_field_x2many_list_row_add a{background: #556ee6;color: #fff;}
+.sh_night_mode .tooltip-inner{box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.14), 0 6px 10px -5px #556ee6 !important;}
+.sh_night_mode .tooltip .tooltip-inner{background: #556ee6;}
+.sh_night_mode .tooltip .tooltip-inner .oe_tooltip_string{background-color: #252c48;}
+.sh_night_mode .tooltip .tooltip-inner .oe_tooltip_string{color: #556ee6 !important;}
+.sh_night_mode .tooltip.bs-tooltip-bottom .arrow::after, .sh_night_mode .tooltip.bs-tooltip-auto[x-placement^="bottom"] .arrow::after, .sh_night_mode .tooltip.bs-tooltip-auto[x-placement^="bottom"] .arrow::after{border-bottom-color: #556ee6 !important;}
+.sh_night_mode .tooltip.bs-tooltip-top .arrow::after, .sh_night_mode .tooltip.bs-tooltip-auto[x-placement^="top"] .arrow::after, .sh_night_mode .tooltip.bs-tooltip-auto[x-placement^="top"] .arrow::after{border-top-color: #556ee6 !important;}
+.sh_night_mode .tooltip.bs-tooltip-right .arrow::after, .sh_night_mode .tooltip.bs-tooltip-auto[x-placement^="right"] .arrow::after, .sh_night_mode .tooltip.bs-tooltip-auto[x-placement^="right"] .arrow::after{border-right-color: #556ee6 !important;}
+.sh_night_mode .tooltip.bs-tooltip-left .arrow::after, .sh_night_mode .tooltip.bs-tooltip-auto[x-placement^="left"] .arrow::after, .sh_night_mode .tooltip.bs-tooltip-auto[x-placement^="left"] .arrow::after{border-left-color: #556ee6 !important;}
+.sh_night_mode .card-body .text-muted, .sh_night_mode .o_colored_level .card-body .text-muted{color: #94A2C7 !important;}
+.sh_night_mode .o_view_sample_data .o_nocontent_help{background-color: #252c48;box-shadow: 0 0 120px 100px #252c48;}
+.sh_night_mode .o_form_view .o_form_sheet_bg{border-bottom: 1px solid #252c48;}
+.sh_night_mode .o_notebook .oe_form_field.oe_form_field_html.o_field_widget .o_readonly > table > tbody > tr > td > table,
+.sh_night_mode .o_notebook .oe_form_field.oe_form_field_html.o_field_widget .o_readonly > table > tbody > tr > td > table > tbody > tr > td > table,
+.sh_night_mode .o_notebook .note-editor.panel .note-editing-area .note-editable.panel-body > table > tbody > tr > td > table,
+.sh_night_mode .o_notebook .note-editor.panel .note-editing-area .note-editable.panel-body > table > tbody > tr > td > table > tbody > tr > td > table{background-color: #252c48 !important;color: #94a2c7 !important;}
+.sh_night_mode #o_employee_right .o_org_chart_entry.o_org_chart_entry_self .o_media_object{border: 2px solid #556ee6;}
+.sh_night_mode #o_employee_right .o_org_chart_entry.o_org_chart_entry_manager:hover .o_media_object, .sh_night_mode #o_employee_right .o_org_chart_entry.o_org_chart_entry_sub:hover .o_media_object{box-shadow: 0 0 0 2px #556ee6;}
+.sh_night_mode .o_field_widget.o_field_image .o_form_image_controls{background-color: #556ee6;}
+.sh_night_mode .note-editor .note-editing-area .note-codable{background-color: #171c32;}
+
+.sh_night_mode .o_field_selector.o_edit_mode > .o_field_selector_controls::after{border-top: 4px solid #556ee6;}
+
+.sh_night_mode .o_domain_node.o_domain_leaf > .o_domain_leaf_edition > *{background-color: #252c48;}
+.sh_night_mode .o_domain_node.o_domain_leaf > .o_domain_leaf_info,
+.sh_night_mode .o_field_selector > .o_field_selector_value > .o_field_selector_chain_part{background: #171c32;}
+.sh_night_mode .o_domain_node.o_domain_leaf > .o_domain_leaf_info .o_domain_leaf_value.text-primary{color: #556ee6 !important;}
+.sh_night_mode .o_field_selector > .o_field_selector_value > .o_field_selector_chain_part{border: 1px solid #171c32;}
+.sh_night_mode .o_field_translate.btn.btn-link {color: #556ee6;}
+
+
+.sh_night_mode .o_field_selector.o_edit_mode > .o_field_selector_popover .o_field_selector_popover_header{background-color: #171c32;color: #556ee6;}
+.sh_night_mode .o_field_selector.o_edit_mode > .o_field_selector_popover .o_field_selector_popover_body .o_field_selector_page{background: #252c48;}
+.sh_night_mode .o_field_selector.o_edit_mode > .o_field_selector_popover .o_field_selector_popover_body .o_field_selector_page > .o_field_selector_item{color: #94a2c7;border-bottom: 1px solid #94a2c7;}
+.sh_night_mode .o_field_selector.o_edit_mode > .o_field_selector_popover .o_field_selector_popover_body .o_field_selector_page > .o_field_selector_item.active{background: #171c32;}
+.sh_night_mode .o_field_selector.o_edit_mode > .o_field_selector_popover .o_field_selector_popover_header:before{border-bottom: 7px solid #171c32;}
+.sh_night_mode .o_field_selector.o_edit_mode > .o_field_selector_popover .o_field_selector_popover_header .o_field_selector_popover_option:hover{background: #556ee6;color: #fff;}
+.sh_night_mode .o_field_selector.o_edit_mode > .o_field_selector_popover .o_field_selector_popover_footer{background: #171c32;}
+.sh_night_mode .o_field_domain .o_domain_node::after{background-image: linear-gradient(45deg, rgba(85, 110, 230, 0.87), rgba(85, 110, 230, 0.10));}
+.sh_night_mode .datepicker .table-sm > thead > tr:first-child th:hover{background-color: #171c32;}
+
+/*-------- kanban view ---------*/ 
+.sh_night_mode .o_kanban_view.o_kanban_ungrouped .oe_kanban_global_click .o_kanban_record_title span,
+.sh_night_mode .o_kanban_view .o_kanban_record .o_kanban_record_title,
+.sh_night_mode .o_kanban_record .o_mail_activity div.o_activity ul.o_activity_log li .o_edit_button, .sh_night_mode .o_view_controller .o_mail_activity div.o_activity ul.o_activity_log li .o_edit_button{color: #556ee6;}
+.sh_night_mode .o_kanban_view .o_kanban_record .oe_kanban_details .oe_kanban_partner_links .badge-pill{background-color: #171c32;border-color: #171c32;}
+.sh_night_mode .o_kanban_view .o_kanban_record .o_mail_activity div.o_activity .o_no_activity, .sh_night_mode .o_view_controller .o_mail_activity div.o_activity .o_no_activity,
+.sh_night_mode .o_mail_activity div.o_activity ul.o_activity_log, .sh_night_mode .o_view_controller .o_mail_activity div.o_activity ul.o_activity_log,
+.sh_night_mode .o_activity .o_activity_log_container .o_activity_log .list-group-item.o_log_activity,
+.sh_night_mode .o_kanban_view .o_kanban_record .o_payment_acquirer_desc h3.mt4,
+.sh_night_mode .o_kanban_view .o_kanban_record .o_payment_acquirer_desc p{color: #94A2C7;}
+.sh_night_mode .o_activity .o_activity_log_container .o_activity_log .list-group-item.o_log_activity .text-dark{color: #94A2C7 !important;}
+.sh_night_mode .o_activity .o_activity_log_container .o_activity_log .list-group-item-light.o_activity_label,
+.sh_night_mode .o_kanban_view.o_kanban_dashboard .o_kanban_record .o_kanban_card_header + .container.o_kanban_card_content .o_kanban_primary_bottom.bottom_block {background-color: #252c48;}
+.sh_night_mode .o_kanban_view,
+.sh_night_mode .o_activity .o_activity_log_container .o_activity_log .list-group-item.o_log_activity{background: #171c32;}
+.sh_night_mode .o_activity .o_activity_log_container.bg-100,
+.sh_night_mode .o_kanban_view .o_kanban_group.o_column_folded{background-color: #252c48 !important;}
+.sh_night_mode .o_activity .o_activity_log_container.bg-100 .text-muted,
+.sh_night_mode .o_kanban_view.o_kanban_dashboard .o_recruitment_kanban_boxes .o_recruitment_kanban_box .o_link_trackers .fa{color: #556ee6 !important;}
+.sh_night_mode .badge-primary,
+.sh_night_mode .o_progressbar .o_progress .o_progressbar_complete{background-color: #556ee6;}
+.sh_night_mode .o_kanban_view .o_kanban_record .oe_module_desc .oe_module_action a.btn.btn-info.btn-sm{color: #fff;}
+
+.sh_night_mode .o_kanban_card_survey_successed{background-image: linear-gradient(#252c48, #171c32), url(/survey/static/src/img/trophy-solid.svg);}
+.sh_night_mode .o_progressbar .o_progress{background-color: #171c32;border: 1px solid #171c32;}
+
+/*-------- activity view --------*/ 
+.sh_night_mode .o_activity_view > table{background-color: #252c48;}
+.sh_night_mode .o_activity_view .table-bordered th, .sh_night_mode .o_activity_view .table-bordered td{border: 1px solid #171c32;}
+.sh_night_mode .o_activity_view .o_record_selector,
+.sh_night_mode .o_activity_view .o_activity_summary_cell.o_activity_empty_cell:hover > i{color: #556ee6 !important;}
+.sh_night_mode .o_activity_view .o_activity_summary_cell{background-color: #252c48;}
+.sh_night_mode .o_activity_view .o_activity_summary_cell.o_activity_empty_cell:hover,
+.sh_night_mode .o_activity_view .o_activity_filter_planned,
+.sh_night_mode .o_activity_view .o_activity_filter_today{background-color: #171c32;}
+
+/*--------pivot view ---------*/ 
+.sh_night_mode .o_pivot table th,.sh_night_mode .o_pivot table,
+.sh_night_mode .o_pivot table .o_pivot_measure_row:hover,
+.sh_night_mode .o_pivot table .o_pivot_header_cell_closed:hover{background-color: #252c48;}
+.sh_night_mode .o_pivot table .o_pivot_header_cell_opened,
+.sh_night_mode .o_pivot table .o_pivot_header_cell_opened:hover{background-color: #171c32;}
+.sh_night_mode .o_pivot table .o_pivot_header_cell_opened:hover,
+.sh_night_mode .o_pivot table.o_enable_linking .o_pivot_cell_value:not(.o_empty):hover,
+.sh_night_mode .o_pivot table .o_pivot_measure_row:hover,
+.sh_night_mode .o_pivot table .o_pivot_header_cell_closed:hover,
+.sh_night_mode .o_pivot table.table-hover tbody tr:hover{color: #556ee6;}
+
+
+/* -------- graph view ------*/ 
+.sh_night_mode .o_graph_controller .o_graph_renderer .o_graph_canvas_container canvas{background-color: #252c48;}
+
+
+/*------------ statusbar ------------*/ 
+.sh_night_mode .o_form_view .o_form_statusbar > .o_statusbar_status > .o_arrow_button:after{border-left: 11px solid #252c48 !important;}
+.sh_night_mode .o_list_view .o_list_table .o_data_row.o_selected_row > .o_data_cell:not(.o_readonly_modifier):not(.o_invisible_modifier):not(.o_handle_cell){background: #171c32;}
+.sh_night_mode .o_form_view .o_form_sheet_bg .o_form_statusbar .o_statusbar_status.o_field_widget .btn.btn-secondary{background: #252c48 !important;}
+.sh_night_mode .o_form_view .o_form_sheet_bg .o_form_statusbar .o_statusbar_status.o_field_widget .btn.btn-secondary.disabled{color: #94a2c7 !important;}
+.sh_night_mode .o_form_view .o_form_statusbar > .o_statusbar_status > .o_arrow_button:before{border-left: 11px solid #94a2c7 !important;}
+.sh_night_mode .o_form_view .o_form_sheet_bg .o_form_statusbar .o_statusbar_status.o_field_widget .btn.btn-secondary.o_arrow_button:hover{color: #fff !important;background-color: #556ee6 !important;}
+.sh_night_mode .o_form_view .o_form_statusbar > .o_statusbar_status > .o_arrow_button:hover:after{border-left: 11px solid #556ee6 !important;}
+.sh_night_mode .o_form_view .o_form_statusbar > .o_statusbar_status > .o_arrow_button.btn-primary.disabled:after{border-left-color: #556ee6 !important;}
+
+
+/*------- chatter --------*/ 
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterTopbar_rightSection .o_ChatterTopbar_button .o_FollowerListMenu_followers .o_FollowerListMenu_dropdown.dropdown-menu .o_Follower.o_FollowerMenu_follower.dropdown-item .btn.btn-icon{color: #94a2c7;}
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_buttonSendMessage,
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_buttonLogNote,
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar_actions .btn.btn-link.o_ChatterTopbar_buttonScheduleActivity{background-color:#556ee6;border: 1.5px solid #556ee6!important;color:#fff!important;}
+.sh_night_mode .o_followers .o_followers_title_box .o_followers_list .o_partner .o_remove_follower,
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar.o_Chatter_topbar .o_ChatterTopbar_rightSection .btn.btn-link,
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_AttachmentBox.o_Chatter_attachmentBox .o_AttachmentBox_content .o_AttachmentBox_buttonAdd.btn.btn-link,
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterTopbar_rightSection .o_ChatterTopbar_button .o_FollowerListMenu_followers .o_FollowerListMenu_dropdown.dropdown-menu .o_Follower.o_FollowerMenu_follower.dropdown-item:hover,
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterTopbar_rightSection .o_ChatterTopbar_button .o_FollowerListMenu_followers .o_FollowerListMenu_dropdown.dropdown-menu .o_Follower.o_FollowerMenu_follower.dropdown-item:hover span,
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterTopbar_rightSection .o_ChatterTopbar_button .o_FollowerListMenu_followers .o_FollowerListMenu_dropdown.dropdown-menu .o_Follower.o_FollowerMenu_follower.dropdown-item:hover .btn.btn-icon{color:#556ee6}
+.sh_night_mode .o_followers .o_followers_title_box .o_followers_list .o_partner .o_edit_subtype{color:#556ee6}
+.sh_night_mode .o_followers .o_followers_title_box .o_followers_list .o_partner{border-bottom: 1px solid #94A2C7;}
+.sh_night_mode .o_chatter.o_chatter_composer_active .o_chatter_topbar > .btn.o_active, .sh_night_mode .o_chatter.o_chatter_composer_active .o_chatter_topbar > .o_followers.o_active, .sh_night_mode .o_chatter.o_chatter_composer_active .o_chatter_topbar > .o_topbar_right_area.o_active{background-color: #171c32;}
+.sh_night_mode .o_chatter.o_chatter_composer_active .o_chatter_topbar > .btn, .sh_night_mode .o_chatter.o_chatter_composer_active .o_chatter_topbar > .o_followers, .sh_night_mode .o_chatter.o_chatter_composer_active .o_chatter_topbar > .o_topbar_right_area{border-bottom-color: #94a2c7;}
+.sh_night_mode .o_thread_composer:not(.o_chat_mini_composer) .o_chatter_composer_tools {border-top: 1px solid #8e9cbf;}
+.sh_night_mode .oe_chatter .o_mail_chatter_attachments .o_chatter_attachment .o_border_dashed{border-bottom: 1px dashed #94a2c7;}
+.sh_night_mode .oe_chatter .o_mail_chatter_attachments .o_chatter_attachment .o_border_dashed .o_attach_title{background: #171c32;color: #94a2c7;}
+.sh_night_mode .note-editor{border: 1px solid #171c32;}
+.sh_night_mode .form-inline{background: #171c32;}
+.sh_night_mode .nav-tabs .nav-link.active, .sh_night_mode .nav-tabs .nav-item.show .nav-link{border-color: #556ee6 #556ee6 #556ee6;}
+.sh_night_mode .nav-tabs .nav-link:hover, .sh_night_mode .nav-tabs .nav-link:focus {border-color: #556ee6 #556ee6 #556ee6;}
+body.sh_night_mode .modal .o_select_media_dialog .modal-body .card{border-color: #94a2c7;}
+.sh_night_mode .input-group > .form-control:not(:last-child), .sh_night_mode .input-group > .custom-select:not(:last-child){background: #252c48;border-color: #252c48;}
+body.sh_night_mode .modal .o_select_media_dialog .modal-body li.search .form-group > input{background: #171c32;border-color: #171c32;}
+.sh_night_mode .form-control{background-color: #171c32;border: 1px solid #171c32;}
+.sh_night_mode .modal .modal-content .o_link_dialog.modal-body .form-control:focus, .sh_night_mode .modal .modal-content .o_link_dialog.modal-body select:focus{border: 1px solid #556ee6;}
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter,
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_Chatter_scrollPanel .o_ThreadView.o_Chatter_thread,
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_Chatter_scrollPanel .o_ThreadView.o_Chatter_thread .o_MessageList.o_ThreadView_messageList,
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_Chatter_scrollPanel .o_ThreadView.o_Chatter_thread .o_MessageList.o_ThreadView_messageList .o_Message{background: #252c48;}
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_Composer.o-has-current-partner-avatar{background-color: #171c32;border: 1px solid #171c32;}
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_Composer_buttons .o_Composer_toolButtons{background: #252c48;border-top: 1px solid #252c48;}
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_ComposerTextInput >  textarea.o_ComposerTextInput_textareaStyle,
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_ComposerTextInput{background: #252c48;}
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_Composer_coreMain:not(.o-composer-is-compact){border: 1px solid #252c48;background: #252c48;}
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_Composer_buttons .o_Composer_toolButtons .o_Composer_secondaryToolButtons .o_Composer_button{background: #171c32;color: #fff;}
+.sh_night_mode .o_FormRenderer_chatterContainer .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar.o_Chatter_topbar .o_ChatterTopbar_actions .o_ChatterTopbar_rightSection .o_ChatterTopbar_button:hover{background: transparent;}
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterTopbar_rightSection .o_ChatterTopbar_button .o_FollowerListMenu_followers .o_FollowerListMenu_dropdown.dropdown-menu .o_Follower.o_FollowerMenu_follower.dropdown-item .o_Follower_details:hover,
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterTopbar_rightSection .o_ChatterTopbar_button .o_FollowerListMenu_followers .o_FollowerListMenu_dropdown.dropdown-menu .o_Follower.o_FollowerMenu_follower.dropdown-item .o_Follower_details:focus,
+.sh_night_mode .o_FormRenderer_chatterContainer .o_Message_core .o_Message_prettyBody div:first-child{background: #171c32 !important;}
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterTopbar_rightSection .o_ChatterTopbar_button .o_FollowerListMenu_followers .o_FollowerListMenu_dropdown.dropdown-menu .o_Follower.o_FollowerMenu_follower.dropdown-item .btn.o_Follower_button:hover{background: #171c32 !important;color: #556ee6;}
+.sh_night_mode .o_FormRenderer_chatterContainer .o_ChatterContainer .o_Chatter .o_Chatter_fixedPanel .o_ChatterTopbar.o_Chatter_topbar .o_ChatterTopbar_actions.o-has-active-button{border-color: #171c32;}
+.sh_night_mode .o_FormRenderer_chatterContainer .o_Activity .o_Activity_core .o_Activity_info .o_Activity_summary{color: #556ee6;}
+
+.sh_night_mode .o_popover--right::after{border-right-color: #171c32;}
+.sh_night_mode .o_popover .popover-body .o_ActivityMarkDonePopover .form-control.o_ActivityMarkDonePopover_feedback:focus{box-shadow: none;border: 1px solid #556ee6;}
+
+/*------- separator ---------*/ 
+.sh_night_mode .o_form_view .o_horizontal_separator{color: #556ee6;}
+
+@if $separator_style == 'style_1'{
+    .sh_night_mode .o_form_view .o_horizontal_separator{border-bottom: 2px dashed #556ee6;}
+}
+@if $separator_style == 'style_2'{
+    .sh_night_mode .o_form_view .o_horizontal_separator:after{border-left: 3px solid #556ee6;}
+}
+@if $separator_style == 'style_3'{
+    .sh_night_mode .o_form_view .o_horizontal_separator:after{border-color: #556ee6;}
+}
+@if $separator_style == 'style_4'{
+    .sh_night_mode .o_form_view .o_horizontal_separator:after {border-bottom: 2px solid #556ee6;}
+}
+@if $separator_style == 'style_5'{
+    .sh_night_mode .o_form_view .o_horizontal_separator:after{background-image: linear-gradient(45deg, rgba(0, 0, 0, 0) 6px, #556ee6 7px, rgba(0, 0, 0, 0) 6px), linear-gradient(-45deg, rgba(0, 0, 0, 0) 6px, #556ee6 7px, rgba(0, 0, 0, 0) 6px);}
+}
+@if $separator_style == 'style_6'{
+    .sh_night_mode .o_form_view .o_horizontal_separator:after{border-bottom: 2px solid #556ee6;}
+}
+@if $separator_style == 'style_7'{
+    .sh_night_mode .o_horizontal_separator:before{background: #556ee6;}
+    .sh_night_mode .o_horizontal_separator:after{background: #171c32;}
+}
+
+
+/*----------- tab style ----------*/ 
+.sh_night_mode .nav.nav-tabs .nav-link:focus,
+.sh_night_mode .nav.nav-tabs .nav-link:active, .sh_night_mode .nav.nav-tabs .nav-link.active,
+.sh_night_mode .o_notebook div > p > .btn.btn-link{
+    color: #556ee6;
+}
+.sh_night_mode .o_notebook div > p{color: #94a2c7;}
+.sh_night_mode .nav-tabs{border-bottom: 1px solid #556ee6;}
+.sh_night_mode .nav-tabs .nav-link.active, .sh_night_mode .nav-tabs .nav-item.show .nav-link{background-color: #171c32;}
+@if $tab_style == 'vertical' or  $tab_style_mobile == 'vertical'{
+    .sh_night_mode .card-body{color: #94a2c7;}
+	@if $vertical_tab_style == 'style_1'{
+		.sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"], .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"] .fa{color: #556ee6 !important;}
+        .sh_night_mode .o_notebook .accordion .card-body{background: #252c48 !important;}
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"],
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"] .fa{color: #94a2c7;}
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:after{background: #556ee6;}
+	}
+    @if $vertical_tab_style == 'style_2'{
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"], .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"]:focus, .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"] .fa{color: #252c48 !important;}
+        .sh_night_mode .o_notebook .accordion .card-body{background: #252c48 !important;}
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"],
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"] .fa{color: #94a2c7;}
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:after{background: #556ee6;}
+    }
+    @if $vertical_tab_style == 'style_3'{
+        .sh_night_mode .o_notebook .accordion .card-header{background: #171c32;}
+        .sh_night_mode .o_notebook .accordion .card-body{background: #252c48 !important;}
+        .sh_night_mode .o_notebook .accordion .card-header h5.o_default_notebook_title,
+        .sh_night_mode .o_notebook .accordion .card-header:before, .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:before{background: #556ee6;}
+        .sh_night_mode .o_notebook .accordion .card-header a{color: #94a2c7;}
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"]{color: #556ee6;}
+    }
+    @if $vertical_tab_style == 'style_4'{
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:after, .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"],
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:before, .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:after{background: #171c32;}
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"], .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"]:before, .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"]:after{background: #556ee6 !important;color: #171c32 !important;}
+        .sh_night_mode .o_notebook .accordion .card-body{background: #252c48 !important;}
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"],.sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"] .fa{color: #94a2c7;}
+        .sh_night_mode .o_notebook .accordion .card-body{border: 1px solid #556ee6;}
+    }
+    @if $vertical_tab_style == 'style_5'{
+       .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]{background: #171c32;}
+       .sh_night_mode .o_notebook .accordion .card-body{background: #252c48 !important;}
+       .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"],.sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"] > h5 > .fa.fa-plus{color: #94a2c7;}
+       .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"],
+       .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"] h5 span.fa:before{color: #556ee6;}
+    }
+    @if $vertical_tab_style == 'style_6'{
+        .sh_night_mode .o_notebook .accordion .card-header{background: #252c48;}
+        .sh_night_mode .o_notebook .accordion .card-body{background: #252c48 !important;}
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]{background: #171c32;border: 1px solid #171c32;}
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"],
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"] .fa{color: #94a2c7;}
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:focus, .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:active, .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"]{border: 1px solid #556ee6 !important;border-bottom: 1px solid #556ee6 !important;}
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:hover, 
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:focus, .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:active, .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"],.sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:hover .fa{color: #556ee6;}
+    }
+    @if $vertical_tab_style == 'style_7'{
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]{border: 1px solid #556ee6;background: #171c32;}
+        .sh_night_mode .o_notebook .accordion .card-header{background: #171c32;}
+        .sh_night_mode .o_notebook .accordion .card-body{background: #252c48 !important;}
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"],
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"] .fa{color: #94a2c7;}
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:focus, .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:active, .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"]{border-top: 2px solid #556ee6 !important;}
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"] h5 span.fa,
+        .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:focus, .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"]:active, .sh_night_mode .o_notebook .accordion .card-header [data-toggle="collapse"][aria-expanded="true"]{color: #556ee6;}
+    }
+}
+@if $tab_style_mobile == 'vertical'{
+    @if $vertical_tab_style == 'style_3'{
+        .sh_night_mode .o_notebook .accordion .card-header h5{color: #fff !important;}
+        .sh_night_mode .o_notebook .accordion .card-header h5{padding: 5px !important;}
+    }
+}
+@if $tab_style == 'horizontal' or $tab_style_mobile == 'horizontal'{
+    @if $horizontal_tab_style == 'style_1'{
+        .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link:after{background: #556ee6;}
+        .sh_night_mode .nav.nav-tabs .nav-link{border-color: #556ee6 #556ee6;}
+        .sh_night_mode .nav.nav-tabs .nav-item .nav-link{color: #94a2c7;}
+    }
+	@if $horizontal_tab_style == 'style_2'{
+        .sh_night_mode .nav.nav-tabs .nav-item .nav-link{color: #94a2c7;}
+        .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link:after,
+        .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link:before{background: #556ee6;}
+        .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link.active, .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link:focus{color: #252c48 !important;}
+    }
+    @if $horizontal_tab_style == 'style_3'{
+        .sh_night_mode .o_notebook .nav.nav-tabs .nav-item{background: #171c32;}
+        .sh_night_mode .o_notebook .nav.nav-tabs .nav-item:before, .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link:before{background: #556ee6;}
+        .sh_night_mode .nav.nav-tabs .nav-item .nav-link{border-color: #556ee6 #556ee6;}
+    }
+    @if $horizontal_tab_style == 'style_4'{
+        .sh_night_mode .o_notebook .nav.nav-tabs .nav-link,
+        .sh_night_mode .o_notebook .nav.nav-tabs .nav-link:before, .sh_night_mode .o_notebook .nav.nav-tabs .nav-link:after{background: #171c32;}
+        .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link.active, .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link.active:before, .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link.active:after,
+        .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link:active, .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link:active:before, .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link:active:after, .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link.active, .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link.active:before, .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link.active:after{background: #556ee6 !important;color: #fff !important;}
+        .sh_night_mode .nav-tabs{border-bottom: 1px solid #171c32;}
+        .sh_night_mode .nav.nav-tabs .nav-link{color: #94a2c7;}
+    }
+    @if $horizontal_tab_style == 'style_5'{
+        .sh_night_mode .o_notebook .nav.nav-tabs .nav-link:before{background: #556ee6;}
+        .sh_night_mode .nav.nav-tabs .nav-link{border-color: #556ee6 #556ee6;}
+    }
+    @if $horizontal_tab_style == 'style_6'{
+        .sh_night_mode .o_notebook .nav.nav-tabs .nav-link:focus, .sh_night_mode .o_notebook .nav.nav-tabs .nav-link:active,.sh_night_mode .o_notebook .nav.nav-tabs .nav-link.active{border-bottom: #556ee6 !important;}
+        .sh_night_mode .nav.nav-tabs .nav-link{border-color: #556ee6 #556ee6;}
+    }
+    @if $horizontal_tab_style == 'style_7'{
+        .sh_night_mode .o_notebook .nav.nav-tabs .nav-item .nav-link{color: #556ee6 !important;border: 1px solid #556ee6;}
+        .sh_night_mode .o_notebook .nav.nav-tabs .nav-link:focus, .sh_night_mode .o_notebook .nav.nav-tabs .nav-link:active, .sh_night_mode .o_notebook .nav.nav-tabs .nav-link.active{border-top: 2px solid #556ee6 !important;}
+    }
+}
+
+/*------- list-view ---------*/ 
+.sh_night_mode .o_list_view thead,
+.sh_night_mode .o_list_view .o_data_cell.o_field_cell.o_badge_cell .badge.badge-pill.o_field_badge.o_field_widget.o_readonly_modifier{background-color: #171c32;}
+.sh_night_mode .o_list_view .o_list_table thead,
+.sh_night_mode .o_list_view .o_list_table tfoot{color: #94a2c7;}
+@if $is_sticky_list == True{
+    .sh_night_mode .o_list_view .table-responsive .o_list_table thead tr:nth-child(1) th{background: #556ee6 !important;}
+    .sh_night_mode .o_list_view .o_list_table thead{color: #fff;}
+    .sh_night_mode .o_list_view thead [type='checkbox']:not(:checked) + label:not(.lever):before{border: 2px solid #ffffff !important;}
+    .sh_night_mode .o_list_view thead [type='checkbox']:checked + label:not(.lever):before {border-top: 0px !important;border-left: 0px !important;border-right: 2px solid #ffffff !important;border-bottom: 2px solid #ffffff !important;}
+}
+@if $button_style == 'style_5'{
+    .sh_night_mode .o_list_view .table-responsive .o_list_table thead tr:nth-child(1) th{background: #556ee6 !important;}
+}
+.sh_night_mode .o_list_table_ungrouped tbody tr,
+.sh_night_mode .o_list_view .o_list_table.table tbody tr:nth-of-type(even){ background: #2b3353 !important;color: #94a2c7;}
+.sh_night_mode .o_list_table_ungrouped tbody tr:nth-of-type(odd),
+.sh_night_mode .table-striped tbody tr:nth-of-type(odd) {background-color: #252c48 !important;color: #94a2c7;}
+@if $list_view_is_hover_row == True{
+    .sh_night_mode .o_list_table_ungrouped tbody tr:hover{background: #171c32 !important;}
+}
+.sh_night_mode .o_list_view tbody > tr.o_group_header{background: #171c32 !important;}
+.sh_night_mode .o_list_view tbody > tr.o_group_header .o_group_name{color: #94a2c7;}
+.sh_night_mode .o_list_view .table-responsive .o_list_table tfoot tr:nth-child(1) td,
+.sh_night_mode .o_list_view .o_list_table{background-color: #252c48;}
+.sh_night_mode .o_list_view .table-responsive .o_list_table .o_data_cell.o_list_button .btn.btn-link.o_icon_button,
+.sh_night_mode .o_list_view .o_data_cell.o_field_cell.o_badge_cell .badge.badge-pill.o_field_badge.o_field_widget.o_readonly_modifier:not(.bg-success-light):not(.bg-info-light):not(.bg-danger-light):not(.bg-warning-light){color: #556ee6;}
+.sh_night_mode .o_list_view .o_list_table .text-info,
+.sh_night_mode .o_list_view .o_list_table .text-primary,
+.sh_night_mode .o_list_view .o_list_table a.text-primary:hover, .sh_night_mode .o_list_view .o_list_table a.text-primary:focus{color: #556ee6 !important;}
+.sh_night_mode .o_required_modifier.o_input, .sh_night_mode .o_required_modifier .o_input, .sh_night_mode .o_field_number.o_input, .sh_night_mode .o_field_number .o_input{box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 #556ee6 !important;}
+
+
+/*--------- toggle button design ------*/ 
+.sh_night_mode div.o_boolean_toggle.custom-control.custom-checkbox > input.custom-control-input:checked + label.custom-control-label::before{background-color: #556ee6 !important;}
+
+/*-------- datepicker ----------*/ 
+.sh_night_mode .bootstrap-datetimepicker-widget.dropdown-menu .datepicker .table-sm > thead,
+.sh_night_mode .bootstrap-datetimepicker-widget.dropdown-menu .picker-switch span.fa.primary{background-color: #556ee6;}
+.sh_night_mode .bootstrap-datetimepicker-widget table td span:hover{background: #171c32 !important;}
+.sh_night_mode .bootstrap-datetimepicker-widget table td span{color: #94a2c7;}
+.sh_night_mode .bootstrap-datetimepicker-widget.dropdown-menu .datepicker .datepicker-days .day.active{background-color: #556ee6 !important;}
+
+/*--------- setting page ---------*/ 
+.sh_night_mode .o_base_settings .o_control_panel .o_panel .o_setting_search .searchInput{background: #252c48; border: 1px solid #252c48 !important;}
+.sh_night_mode .o_base_settings .o_control_panel .o_panel .o_setting_search .searchInput::placeholder,
+.sh_night_mode .o_base_settings .o_control_panel .o_panel .o_setting_search .searchInput,
+.sh_night_mode .o_base_settings .o_setting_container .settings > .app_settings_block h2,
+.sh_night_mode .o_base_settings .o_setting_container .settings_tab .tab, .sh_night_mode .o_search_panel .o_search_panel_section_header b,
+.sh_night_mode .o_base_settings .o_setting_container .o_form_label{color: #94a2c7 !important;}
+.sh_night_mode .o_form_view .o_control_panel .o_form_statusbar,
+.sh_night_mode .o_base_settings .o_setting_container .settings > .app_settings_block h2,
+.sh_night_mode .o_base_settings .o_setting_container .settings .settingSearchHeader {background-color: #171c32 !important;}
+.sh_night_mode .o_base_settings .o_setting_container .settings,
+.sh_night_mode .o_base_settings .o_setting_container .settings_tab{ background-color: #252c48;}
+.sh_night_mode .o_base_settings .o_setting_container .settings_tab .selected{background-color: #556de4;box-shadow: inset 3px 0 0 #556ee6;}
+
+
+/*--------- purchase dashboard --------*/ 
+.sh_night_mode .o_purchase_dashboard{background-color: #171c32;}
+.sh_night_mode .o_purchase_dashboard .table > thead > tr > td, .sh_night_mode .o_purchase_dashboard .table tbody > tr > td{background-color: #252c48;color: #94a2c7;}
+.sh_night_mode .o_purchase_dashboard .table > thead > tr > td.o_text, .sh_night_mode .o_purchase_dashboard .table tbody > tr > td.o_text{background: #1f2643;color: #94a2c7;}
+.sh_night_mode .o_purchase_dashboard .table > thead > tr > td.o_main, .sh_night_mode .o_purchase_dashboard .table tbody > tr > td.o_main{background-color: #556ee6;}
+.sh_night_mode .o_purchase_dashboard .table > thead > tr > td.o_main:hover, .sh_night_mode .o_purchase_dashboard .table tbody > tr > td.o_main:hover{background-color: #252c48;}
+
+.sh_night_mode .o_onboarding_container .o_onboarding .o_onboarding_wrap{background-color: rgba(23, 28, 50, 0.75);background-image: linear-gradient(to bottom, rgba(37, 44, 72, 0.7), #171c32);}
+.sh_night_mode .o_onboarding, .sh_night_mode .o_onboarding .o_onboarding_step_title, .sh_night_mode .o_onboarding .o_onboarding_step_action, .sh_night_mode .o_onboarding a.o_onboarding_all_done, .sh_night_mode .o_onboarding .o_onboarding_all_done > .fa, .sh_night_mode .o_onboarding .o_onboarding_btn_close{color: #556ee6 !important;}
+.sh_night_mode .o_onboarding .o_onboarding_step .o_onboarding_step_content .o_onboarding_step_action{border: 1px solid #556ee6;}
+
+/*-------- search panel--------*/ 
+.sh_night_mode .o_action .o_controller_with_searchpanel .o_search_panel{background: #252c48;border-right: 1px solid #252c48;}
+.sh_night_mode .o_action .o_controller_with_searchpanel .o_search_panel .list-group-item header.active,
+.sh_night_mode .list-group-item-action:hover, .sh_night_mode .list-group-item-action:focus{background-color: #556ee6;}
+.sh_night_mode .o_search_panel .o_search_panel_category .o_search_panel_section_icon{color: #556ee6;}
+.sh_night_mode .o_search_panel .o_search_panel_section .o_search_panel_field .list-group-item{background-color: #171c32;} 
+.sh_night_mode .o_search_panel .o_search_panel_section .o_search_panel_field .list-group-item .list-group-item-action,
+.sh_night_mode .list-group-item-action:hover, .sh_night_mode .list-group-item-action:focus{color: #94a2c7;}
+.sh_night_mode .o_Chatter .o_Message_core .o_Message_content .o_Message_prettyBody > table{background-color: #171c32 !important;}
+
+
+/*------kiosk mode ------*/ 
+.sh_night_mode .o_hr_attendance_kiosk_mode_container .o_hr_attendance_kiosk_backdrop {background-color: #171c32 !important;}
+.sh_night_mode .o_hr_attendance_kiosk_mode_container .o_hr_attendance_kiosk_mode{background: #252c48;}
+.sh_night_mode .o_hr_attendance_kiosk_mode_container .o_hr_attendance_kiosk_mode h1.mb8,
+.sh_night_mode .o_hr_attendance_kiosk_mode_container .o_hr_attendance_kiosk_mode h3.mt8.mb24,.sh_night_mode h2,.sh_night_mode p,.sh_night_mode h1{color: #94a2c7;}
+.sh_night_mode .o_hr_attendance_kiosk_mode .o_hr_attendance_user_badge {background: linear-gradient(to right bottom, #556ee6, #171c32) !important;}
+.sh_night_mode .o_hr_attendance_kiosk_mode_container .o_hr_attendance_kiosk_mode .btn-warning:hover{color: #556ee6 !important;}
+
+/*--------- lunch ---------*/ 
+.sh_night_mode .o_lunch_content .o_lunch_banner,
+.sh_night_mode .o_action .o_controller_with_searchpanel .o_search_panel .o_search_panel_section.o_search_panel_filter .list-group{background-color: #171c32;}
+.sh_night_mode .o_lunch_content .o_lunch_widget .o_lunch_widget_info.card .card-body,
+.sh_night_mode .o_action .o_controller_with_searchpanel .o_search_panel .o_search_panel_section.o_search_panel_filter .o_search_panel_filter_value .o_search_panel_label_title{color: #94a2c7;}
+
+/*------ notification --------*/ 
+// .sh_night_mode .o_notification_manager .toast.o_notification {background-color: #171c32 !important;}
+// .sh_night_mode .o_notification_manager .toast.o_notification .toast-body{background-color: transparent !important;}
+
+
+/*------ view ----*/ 
+.sh_night_mode .o_ace_view_editor .ace-tm .ace_gutter{background: #171c32 !important;color: #94a2c7;}
+.sh_night_mode .o_ace_view_editor .ace-tm {background-color: #171c32 !important;color: #94a2c7;}
+
+/*------ form element design -------*/ 
+.sh_night_mode .o_field_domain .o_domain_node_children_container .o_domain_leaf_edition select.o_input,
+.sh_night_mode .o_field_domain .o_domain_node_children_container .o_domain_leaf_edition input.o_input,
+.sh_night_mode .o_field_domain .o_domain_node .o_domain_node.o_hover_btns{background: #252c48 !important;}
+.sh_night_mode .o_field_domain .o_domain_node_children_container .o_domain_node_control_panel button.btn i{color: #94a2c7;}
+
+@if $form_element_style == 'style_4'{
+    .sh_night_mode .o_input{background: #212844;}
+    .sh_night_mode .o_input:focus, .sh_night_mode .o_input:focus-within{box-shadow: 0 -50px 0 #1b2138 inset;}
+}
+@if $form_element_style == 'style_3'{
+    .sh_night_mode .o_input{background: #171c32;}
+} 
+@if $form_element_style == 'style_6'{
+    .sh_night_mode .o_input {background-color: #171c32;border-color: #344483 !important;}
+    .sh_night_mode .o_input:focus, .sh_night_mode .o_input:focus-within{background-image: linear-gradient(#556ee6, #556ee6), linear-gradient(#556ee6, #556ee6);}
+}
+@if $form_element_style == 'style_1'{
+    .sh_night_mode .o_input:focus, .sh_night_mode .o_input:focus-within{background-image: linear-gradient(#556ee6, #556ee6), linear-gradient(#556ee6, #556ee6);}
+}
+
+
+/*--------- configuration palatte ----------*/ 
+.sh_night_mode .backmate_theme_layout{background: #252c48;}
+.sh_night_mode .backmate_theme_layout .theme_header h3,
+.sh_night_mode .backmate_theme_layout .theme_header i,
+.sh_night_mode .backmate_theme_layout #primaryColors table tr td label,
+.sh_night_mode .backmate_theme_layout #color_list_id #headerColors tr td label,
+.sh_night_mode select option,.sh_night_mode .backmate_theme_layout #color_list_id #stickyPopup tr td label,
+.sh_night_mode .backmate_theme_layout #color_list_id #buttonSeprator tr td label,
+.sh_night_mode .backmate_theme_layout #color_list_id #sidebarStyle tr td label,
+.sh_night_mode .backmate_theme_layout #color_list_id #listViewTable tr td label,
+.sh_night_mode .backmate_theme_layout #color_list_id #loginPopup tr td label,
+.sh_night_mode .backmate_theme_layout #color_list_id #fontColors tr td label,
+.sh_night_mode .backmate_theme_layout #color_list_id #fontColors tr td input,
+.sh_night_mode.o_web_client .backmate_theme_layout #color_list_id #loginPopup #progress_height{color: #94a2c7;}
+.sh_night_mode .backmate_theme_layout .sh_theme_design > span,
+.sh_night_mode .backmate_theme_layout .sh_theme_design i.fa,
+.sh_night_mode #pre_theme_color_id .pre_theme_color_box .fa,
+.sh_night_mode .theme_style_box input[type="radio"]:checked + span:before{color: #556ee6;}
+.sh_night_mode .backmate_theme_layout .sh_theme_design{border-bottom: 1px solid #94a2c7;}
+.sh_night_mode .backmate_theme_layout #color_list_id #headerColors tr input, .sh_night_mode .backmate_theme_layout #color_list_id #fontColors tr td input, .sh_night_mode .backmate_theme_layout #color_list_id #buttonSeprator tr td #separator_color,
+.sh_night_mode .backmate_theme_layout #primaryColors #primary_color_id, .sh_night_mode .backmate_theme_layout #primaryColors #secondary_color_id, .sh_night_mode .backmate_theme_layout #primaryColors #primary_hover_id, .sh_night_mode .backmate_theme_layout #primaryColors #secondary_hover_id, .sh_night_mode .backmate_theme_layout #primaryColors #primary_active_id, .sh_night_mode .backmate_theme_layout #primaryColors #secondary_active_id,
+.sh_night_mode .backmate_theme_layout #color_list_id #sidebarStyle tr td #sidebar_background_color, .sh_night_mode .backmate_theme_layout #color_list_id #sidebarStyle tr td #sidebar_font_color, .sh_night_mode .backmate_theme_layout #color_list_id #sidebarStyle tr td #sidebar_font_hover_color, .sh_night_mode .backmate_theme_layout #color_list_id #sidebarStyle tr td #sidebar_font_hover_background_color,
+.sh_night_mode .backmate_theme_layout #color_list_id #listViewTable tr td > input,
+.sh_night_mode .backmate_theme_layout #loginPopup table tr td > input{background: #252c48;border: 0px;}
+.sh_night_mode.o_web_client .backmate_theme_layout #color_list_id #loginPopup #progress_height{border: 1px solid #94a2c7;}
+.sh_night_mode .backmate_theme_layout select{background: #171c32;border: 1px solid #94a2c7;color: #94a2c7 !important;}
+
+/* -------- progressbar ------*/ 
+@if $progress_style == 'style_1'{
+    .sh_night_mode #nprogress .bar {background: #556ee6;}
+    .sh_night_mode #nprogress .peg {box-shadow: 0 0 10px #556ee6, 0 0 5px #556ee6;}
+}
+
+/*------- dashboard-------*/ 
+.sh_night_mode .o_dashboard .oe_dashboard .oe_action{background: #171c32;border-color: #171c32 #171c32 #171c32;}
+
+
+@media only screen and (max-width: 992px){
+    .sh_night_mode #js_bar_toggle_btn_mobile{background: #556ee6;}
+    @if $theme_style == 'style_1' or $theme_style == 'style_2'{
+        @if $sidebar_background_style == 'color'{
+            .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div .dropdown-menu .dropdown-header span{color: #94a2c7 !important;}
+        }
+        @if $sidebar_background_style == 'image'{
+            .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div .dropdown-menu .dropdown-header span{color: #556ee6 !important;}
+            .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div a.dropdown-item.o_app2 > span.sh_fa_icon, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div a.dropdown-item.o_app > span.sh_fa_icon, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div .dropdown-menu .dropdown-header span,
+            .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu a.active span, .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-item a:hover span, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:hover span, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a:focus span, .sh_night_mode .sh_backmate_theme_appmenu_div .cssmenu .dropdown-menu-right .dropdown-header > a.active span, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover a.dropdown-item.o_app2:hover > span.sh_fa_icon, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover a.dropdown-item.o_app:hover > span.sh_fa_icon, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover a.dropdown-item.o_app.active span, .sh_night_mode div.sh_backmate_theme_appmenu_div.dropdown-menu .dropdown.cssmenu a.dropdown-item.active .sh_fa_icon, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover .dropdown.cssmenu a.dropdown-item.active > .sh_fa_icon, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover a.dropdown-item.o_app2 > span.sh_fa_icon, .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div:hover a.dropdown-item.o_app > span.sh_fa_icon{color: #556ee6 !important;}
+        }
+        .sh_night_mode .o_main_navbar .o_menu_apps .dropdown-menu.sh_backmate_theme_appmenu_div ul.dropdown-menu a:hover span{color: #556ee6 !important;}
+    }
+    @if $theme_style == 'style_2'{
+        .sh_night_mode .sh_backmate_theme_appmenu_div ul.dropdown-menu.show_ul .dropdown-header > a:active{background: #171c32;}
+    }
+    .sh_night_mode nav.o_main_navbar .o_menu_systray li .sh_search_container .sh_search_input .usermenu_search_input{background: #252c48;} 
+}
+@media only screen and (max-width: 767.98px){
+    .sh_night_mode .o_control_panel .breadcrumb-item:nth-last-of-type(2)::before{color: #556ee6 !important;}
+    .sh_night_mode .o_control_panel .o_cp_bottom_left .o_cp_buttons .o_list_buttons .btn.btn-primary.o_list_button_save .fa.fa-check{display: none;}
+    .sh_night_mode .o_MobileMessagingNavbar_tab.o-active,.sh_night_mode .o_searchview_quick .o_searchview .btn.o_enable_searchview,
+    .sh_night_mode .o_control_panel .o_cp_top_right .o_cp_searchview .o_searchview .sh_mobile_search_icon .o_enable_searchview.btn.btn-link.fa.fa-search{color: #556ee6;}
+    .sh_night_mode .o_MobileMessagingNavbar,.sh_night_mode .o_ThreadPreview.o-muted,
+    .sh_night_mode .o_mobile_search_header,.sh_night_mode .modal-header,.sh_night_mode .modal.o_technical_modal.o_modal_full .modal-dialog .modal-content .modal-header{background: #171c32;}
+    .sh_night_mode .o_Discuss.o-mobile,
+    .sh_night_mode .o_cp_searchview.o_searchview_quick.sh_o_cp_searchview .o_mobile_search{background: #252c48;}
+    .sh_night_mode .o_control_panel .o_cp_top .o_cp_top_right .o_searchview{background: transparent !important;border: 1px solid transparent !important;}
+    .sh_night_mode nav.o_main_navbar .o_menu_systray li .sh_search_container .sh_search_input .input-group-text{background: #171c32;}
+    .sh_night_mode .o_control_panel .o_cp_top .o_cp_top_right .o_searchview .o_searchview_input_container, .sh_night_mode .o_control_panel .o_cp_top .o_cp_top_right .o_searchview .o_searchview_input_container .o_searchview_input{background: transparent !important;}
+    .sh_night_mode .o_control_panel .o_cp_top.sh_top1.sh_o_cp_top .sh_mobile_search_icon .o_mobile_search .btn.btn-primary.o_mobile_search_show_result {background: #171c32 !important;border: 1.5px solid #171c32 !important;}
+    .sh_night_mode .o_cp_switch_buttons .btn-sm, .sh_night_mode .o_cp_switch_buttons .btn-group-sm > .btn,
+    .sh_night_mode .o_base_settings .o_setting_container .settings_tab .tab:after{background: #556ee6;}
+    .sh_night_mode .o_MessagingMenu.o-mobile .o_MessagingMenu_dropdownMenu.dropdown-menu .o_MobileMessagingNavbar.o_MessagingMenu_mobileNavbar,
+    .sh_night_mode .o_cp_bottom_left .o_cp_buttons .o_form_button_cancel:before,.sh_night_mode .o_cp_bottom_left .o_cp_buttons .o_list_button_discard:before,.sh_night_mode .o_control_panel .o_form_buttons_view .o_form_button_create:before{color: #94a2c7;}
+    .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_left .o_calendar_buttons .o_calendar_scale_buttons .dropdown.btn-group .dropdown-menu .btn.dropdown-item.active,
+    .sh_night_mode .btn-secondary:not(:disabled):not(.disabled):active, .sh_night_mode .btn-secondary:not(:disabled):not(.disabled).active, .sh_night_mode .show > .btn-secondary.dropdown-toggle, .sh_night_mode .btn-secondary:not(:disabled):not(.disabled):focus{background: #556ee6 !important;}
+    @if $theme_style == 'style_1' or $theme_style == 'style_2'{
+        @if $sidebar_background_style == 'image'{
+            .sh_night_mode nav.o_main_navbar .o_menu_apps .sh_backmate_theme_appmenu_div .dropdown-menu .dropdown-header span{color: #556ee6 !important;}
+        }
+    }
+    @if $button_style == 'style_4'{
+        .sh_night_mode .o_action .o_control_panel .o_cp_bottom .o_cp_bottom_right .o_cp_pager .o_pager button.btn{background: #252c48 !important;border-bottom: 3px solid #556ee6 !important;}
+        .sh_night_mode .o_cp_bottom .o_cp_bottom_left .o_cp_action_menus .o_dropdown_toggler_btn.btn.btn-secondary:focus,
+        .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right nav.o_cp_switch_buttons button.btn.active, .sh_night_mode .o_control_panel .o_cp_bottom .o_cp_bottom_right nav.o_cp_switch_buttons button.btn:focus{background: #252c48 !important;}
+        .sh_night_mode .btn-group.o_cp_switch_buttons .btn.btn-link.btn-sm .fa.fa-th-large, .sh_night_mode .btn-group.o_cp_switch_buttons .btn-group-sm > .btn.btn-link .fa.fa-th-large{color: #556ee6 !important;}
+    }
+}
+
+/*------ zoom-in/zoom-out ------*/ 
+.sh_night_mode .sh_zoom_view_layout .btn.sh_zoom{background-color: #556ee6;}
+.sh_night_mode .sh_zoom_view_layout .sh-zoom-panel .sh_dec, .sh_night_mode .sh_zoom_view_layout .sh-zoom-panel .sh_inc{color: #94a2c7;}
+.sh_night_mode .sh_zoom_view_layout .sh-zoom-panel{background-color: #171c32;border: 1px solid #171c32;color: #94a2c7;}
+.sh_night_mode .sh_zoom_view_layout .sh-zoom-panel .sh_dec:hover,.sh_night_mode .sh_zoom_view_layout .sh-zoom-panel .sh_dec:focus,
+.sh_night_mode .sh_zoom_view_layout .sh-zoom-panel .sh_inc:hover,.sh_night_mode .sh_zoom_view_layout .sh-zoom-panel .sh_inc:focus{color: #556ee6;}
+.sh_night_mode .sh_zoom_view_layout .sh-zoom-panel .sh_dec:focus,.sh_night_mode .sh_zoom_view_layout .sh-zoom-panel .sh_inc:focus,
+.sh_night_mode .sh_zoom_view_layout .sh-zoom-panel .sh_reset{box-shadow: none !important;}
+@if $button_style == 'style_1'{
+    .sh_night_mode .sh_zoom_view_layout .btn.sh_zoom{background: linear-gradient(1deg, #556ee6, #2b3ba5) !important;border: 1.5px solid #556ee6;}
+    .sh_night_mode .sh_zoom_view_layout .btn.sh_zoom:hover,
+    .sh_night_mode .sh_zoom_view_layout .btn.sh_zoom[aria-expanded="true"]{background: linear-gradient(1deg, #556ee6, #556ee6) !important;border: 1.5px solid #556ee6;}
+}
+@if $button_style == 'style_4'{
+    .sh_night_mode .sh_zoom_view_layout .btn.sh_zoom{border: 1.5px solid #4a63dc !important;border-bottom: 3px solid #4a63dc !important;background: #556ee6 !important;box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.01), 0 6px 10px -5px #556ee6 !important;}
+    .sh_night_mode .sh_zoom_view_layout .sh-zoom-panel{border-bottom: 3px solid #1f253c !important;}
+    .sh_night_mode .sh_zoom_view_layout .sh-zoom-panel .sh_reset{border: 1.5px solid #171c32 !important;border-bottom: 3px solid #191e31 !important;}
+    .sh_night_mode .sh_zoom_view_layout .sh-zoom-panel .sh_reset:hover, .sh_night_mode .sh_zoom_view_layout .sh-zoom-panel .sh_reset:focus{background-color: #556ee6 !important;border: 1.5px solid #171c32 !important;border-bottom: 3px solid #191e31 !important;}
+}
+@if $button_style == 'style_5'{
+    .sh_night_mode .sh_zoom_view_layout .btn.sh_zoom{box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.01), 0 6px 10px -5px #556ee6 !important;}
+    .sh_night_mode .sh_zoom_view_layout .sh-zoom-panel .sh_reset:hover, .sh_night_mode .sh_zoom_view_layout .sh-zoom-panel .sh_reset:focus{background-color: #556ee6 !important;}
+}
+
+/* ---- purchase ---- */ 
+.sh_night_mode .o_stock_reports_page{background-color: #252c48;}
+.sh_night_mode .o_stock_reports_table .table{color: #94a2c7;}
+
+/* ---- manufacturing -----*/ 
+.sh_night_mode .o_mrp_bom_report_page{background-color: #252c48;}
+
+/*----- emplyoee -> challenges -> badges -----*/ 
+.sh_night_mode .o_kanban_examples .o_kanban_examples_group .o_kanban_examples_ghost{background-color: #252c48;}
+
+// todo style  //
+.sh_night_mode .todo_layout .theme_header h3 { margin-bottom: 0; color: #94a2c7; }
+.sh_night_mode .todo_layout .theme_header { display: -webkit-box; display: -webkit-flex; display: flex; align-items: center; justify-content: space-between; padding: 13px 20px; background-color: #171c32; color: #94a2c7; }
+.sh_night_mode .todo_layout .add_todo_section,
+.sh_night_mode .todo_layout {background-color: #252c48; }
+.sh_night_mode .todo_layout .add_todo_section .input-group .sh_add_todo_input {background-color: #171c32; }
+.sh_night_mode .todo_layout .ui-sortable .card{background-color: #171c32;}
+.sh_night_mode .todo_layout .ui-sortable .card .card-body{background-color: #171c32 !important;}
+.sh_night_mode .todo_layout .ui-sortable .card .card-body .sh_todo_description {resize: none !important;border: 1px solid #94a2c7 !important;padding: 10px;color: #94a2c7;width: 100%;background-color: #252c48 !important;} 
+.sh_night_mode .todo_layout .ui-sortable .card .card-header .sh-card-header .sh_todo_label{background: #171c32;color: #94a2c7;}
+.sh_night_mode .todo_layout .ui-sortable .card .card-header .sh-card-header .sh_todo_label.sh_edit_todo_lable{border: 1px solid #556ee6 !important;}
+.sh_night_mode .todo_layout .ui-sortable .card .card-body,.sh_night_mode .o_main_navbar .o_menu_systray .todo span#todo_icon,
+.sh_night_mode .todo_layout .add_todo_section .input-group .sh_add_todo_input{color: #94a2c7;}
+.sh_night_mode .todo_layout .ui-sortable .card .card-header{background: #556ee6 !important;}
+.sh_night_mode.o_web_client .o_main_navbar .o_menu_systray .todo:hover span{color: #556ee6 !important;}
+
+/* checkbox style */
+@if $checkbox_style == 'style_1'{ 
+    .sh_night_mode [type='checkbox']:not(:checked) + label:not(.lever):before,
+    .sh_night_mode :not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox):not(.custom-control.custom-switch) > [type='checkbox'] + label:not(.lever):before, .sh_night_mode :not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox):not(.custom-control.custom-switch) > [type='checkbox']:not(.filled-in) + label:not(.lever):after{border: 2px solid #556ee6 !important;}
+    .sh_night_mode [type='checkbox']:checked + label:not(.lever):before {border-top: 0px !important;border-left: 0px !important;border-right: 2px solid #556ee6 !important;border-bottom: 2px solid #556ee6 !important;}
+    .sh_night_mode [type='checkbox']:not(:checked) + label:not(.lever):before, .sh_night_mode :not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox):not(.custom-control.custom-switch) > [type='checkbox'] + label:not(.lever):before{background: #252c48;}
+    .sh_night_mode :not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox):not(.custom-control.custom-switch) > [type='checkbox']:checked + label:not(.lever):before{    border: 0px !important;border-right: 2px solid #556ee6 !important;border-bottom: 2px solid #556ee6 !important;}
+    .sh_night_mode .o_list_view .table-responsive .o_list_table thead tr:nth-child(1) th.o_list_record_selector .custom-control.custom-checkbox [type='checkbox'] + label:not(.lever):before{border: 2px solid #ffffff !important;}
+    .sh_night_mode.o_web_client .o_list_view .table-responsive .o_list_table thead tr:nth-child(1) th.o_list_record_selector .custom-control.custom-checkbox [type='checkbox']:checked + label:not(.lever):before{border: 0px !important;border-right: 2px solid #ffffff !important;border-bottom: 2px solid #ffffff !important;}
+
+}
+@if $checkbox_style == 'style_2'{
+    .sh_night_mode [type='checkbox']:not(:checked) + label:not(.lever):before, .sh_night_mode :not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox):not(.custom-control.custom-switch) > [type='checkbox'] + label:not(.lever):before{border: 2px solid #556ee6 !important;}
+    .sh_night_mode .o_content .custom-checkbox:not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox) input[type="checkbox"]:checked + label::before{background: #556ee6 !important;}
+    .sh_night_mode .o_action_manager .o_action.o_view_controller .o_content .o_list_view .table-responsive .o_list_table thead tr:nth-child(1) th.o_list_record_selector input[type="checkbox"]:checked + label::before{border: 1px solid  #ffffff !important;}
+    .sh_night_mode .o_action_manager .o_action.o_view_controller .o_content .o_list_view .table-responsive .o_list_table thead tr:nth-child(1) th.o_list_record_selector input[type="checkbox"] + label::before{border: 1px solid  #ffffff !important;}
+    .sh_night_mode div.o_boolean_toggle.custom-control.custom-checkbox > input.custom-control-input:checked + label.custom-control-label::before,
+    .sh_night_mode div.o_boolean_toggle.custom-control.custom-checkbox [type='checkbox'] + label:not(.lever):before{border: 1px solid #556ee6 !important;}
+
+    /* TODO */ 
+    .sh_night_mode .todo_layout #accordion .card-header .custom-checkbox:not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox) input[type="checkbox"]:checked + label::before{background-color: transparent !important;}
+    .sh_night_mode .todo_layout #accordion .card .card-header .sh-card-header [type='checkbox'] + label:not(.lever):before{background-color: transparent !important;}
+    .sh_night_mode .todo_layout #accordion .card .card-header .sh-card-header .custom-checkbox .custom-control-input:not(checked) ~ .custom-control-label::after{color: #ffffff !important; left: 16px !important; top: 6px !important; height: 16px !important;  width: 16px !important;}
+}
+@if $checkbox_style == 'style_3'{
+    .sh_night_mode :not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox):not(.custom-control.custom-switch) > [type='checkbox'] + label:not(.lever):before{border: 1px solid #556ee6 !important;}
+    .sh_night_mode .o_list_view .table-responsive .o_list_table thead tr:nth-child(1) th.o_list_record_selector .custom-control.custom-checkbox [type='checkbox'] + label:not(.lever):before{border: 1px solid #ffffff !important;}
+    .sh_night_mode .o_content .custom-checkbox:not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox) input[type="checkbox"]:checked + label::before{background: #556ee6 !important;}
+    .sh_night_mode .o_action_manager .o_action.o_view_controller .o_content .o_list_view .table-responsive .o_list_table thead tr:nth-child(1) th.o_list_record_selector [type='checkbox']:checked + label:after{color: #252c48 !important;}
+    .sh_night_mode .o_action_manager .o_action.o_view_controller .o_content .o_list_view .table-responsive .o_list_table thead tr:nth-child(1) th.o_list_record_selector input[type="checkbox"]:checked + label::before{border: 1px solid  #ffffff !important;}
+    .sh_night_mode .o_action_manager .o_action.o_view_controller .o_content .o_list_view .table-responsive .o_list_table thead tr:nth-child(1) th.o_list_record_selector input[type="checkbox"] + label::before{border: 1px solid  #ffffff !important;}
+    .sh_night_mode div.o_boolean_toggle.custom-control.custom-checkbox > input.custom-control-input:checked + label.custom-control-label::before,
+    .sh_night_mode div.o_boolean_toggle.custom-control.custom-checkbox [type='checkbox'] + label:not(.lever):before{border: 1px solid #556ee6 !important;}
+
+    /* TODO */
+    .sh_night_mode :not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox):not(.custom-control.custom-switch) > [type='checkbox'] + label:not(.lever):before{border: 1px solid #94a2c7 !important;}
+    .sh_night_mode .todo_layout #accordion .card-header .custom-checkbox:not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox) input[type="checkbox"]:checked + label:after{color: #556ee6 !important;}
+}
+@if $checkbox_style == 'style_4'{
+    .sh_night_mode .o_content .custom-checkbox:not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox) input[type="checkbox"]:checked + label::before{background-color: #556ee6 !important;border-color: #556ee6 !important;}
+    .sh_night_mode :not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox):not(.custom-control.custom-switch) > [type='checkbox'] + label:not(.lever):before{border: 1px solid #556ee6 !important;}
+    .sh_night_mode .o_content :not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox):not(.custom-control.custom-switch) > [type='checkbox'] + label:not(.lever):before{background: #252c48;}
+    .sh_night_mode.o_web_client .o_action_manager .o_action.o_view_controller .o_content .o_list_view .table-responsive .o_list_table thead tr:nth-child(1) th.o_list_record_selector input[type="checkbox"]:checked + label::before{border: 1px solid  #ffffff !important;}
+    .sh_night_mode div.o_boolean_toggle.custom-control.custom-checkbox > input.custom-control-input:checked + label.custom-control-label::before,
+    .sh_night_mode div.o_boolean_toggle.custom-control.custom-checkbox [type='checkbox'] + label:not(.lever):before{border: 1px solid #556ee6 !important;}
+
+    /*TODO*/
+
+    .sh_night_mode .custom-checkbox:not(.o_field_boolean.o_boolean_toggle.o_field_widget.custom-control.custom-checkbox) input[type="checkbox"]:checked + label::before{background-color: transparent !important;}
+    .sh_night_mode .todo_layout #accordion .card .card-header .sh-card-header .custom-checkbox .custom-control-input:checked ~ .custom-control-label::after{color: #556ee6 !important;}
+}
+
+/* radio style */
+@if $radio_btn_style == 'style_1'{
+    .sh_night_mode .o_content .custom-radio input[type='radio']:checked + label:before {border: 2px solid #556ee6 !important;}
+    .sh_night_mode .o_content .custom-radio input[type='radio']:not(:checked) + label:before, .sh_night_mode .o_content .custom-radio input[type='radio']:not(:checked) + label:after{border: 2px solid #556ee6 !important;}
+    .sh_night_mode .o_content .custom-radio input[type='radio']:checked + label:after{border: 1px solid #556ee6;}
+    .sh_night_mode .o_content .custom-radio .custom-control-input:checked ~ .custom-control-label::after{background-color: #556ee6;}
+} 
+@if $radio_btn_style == 'style_2'{
+    .sh_night_mode .o_content [type='radio']:not(:checked) + label:before, .sh_night_mode .o_content [type='radio']:not(:checked) + label:after{border: 2px solid #556ee6;}
+    .sh_night_mode .o_content [type='radio']:checked + label:after{background-color: #556ee6;border: 4px solid #556ee6;}
+}
+@if $radio_btn_style == 'style_3'{
+    .sh_night_mode .o_content .custom-radio input[type='radio']:not(:checked) + label:before, .sh_night_mode .o_content .custom-radio input[type='radio']:not(:checked) + label:after{border: 1px solid #556ee6 !important;}
+    .sh_night_mode .o_content .custom-radio .custom-control-input:checked ~ .custom-control-label::after{background-color: #556ee6 !important;}
+    .sh_night_mode .o_content .custom-radio input[type='radio']:checked + label:before{border: 1px solid #556ee6 !important;}
+}
+@if $radio_btn_style == 'style_4'{
+    .sh_night_mode .o_content .custom-radio input[type='radio']:not(:checked) + label:before, .sh_night_mode .o_content .custom-radio input[type='radio']:not(:checked) + label:after{border: 2px solid #556ee6;}
+    .sh_night_mode .o_content .custom-radio input[type='radio'].with-gap:checked + label:after{background-color: #556ee6;}
+    .sh_night_mode .o_content .custom-radio input[type='radio']:checked + label:after, .sh_night_mode .o_content .custom-radio input[type='radio'].with-gap:checked + label:before{border: 4px solid #556ee6;}
+}
+
+
+// secroll bar design // 
+
+@if $scrollbar_style == "style_1" {
+    .sh_night_mode ::-webkit-scrollbar-thumb {
+        background-color: #556ee6 !important
+    }
+}
+@if $scrollbar_style == "style_3" {
+    .sh_night_mode ::-webkit-scrollbar-thumb {
+        background: linear-gradient(200deg, #556ee6 40%, #556ee6 100%);
+    }
+}
+@if $scrollbar_style == "style_4" {
+    .sh_night_mode ::-webkit-scrollbar-thumb {
+        background-color: #556ee6 !important;
+    }
+}
+@if $scrollbar_style == "style_5" {
+    .sh_night_mode ::-webkit-scrollbar-button {
+        background-color: #556ee6;
+        box-shadow: #556ee6 0px 0px 5px 0px inset;
+    }
+}

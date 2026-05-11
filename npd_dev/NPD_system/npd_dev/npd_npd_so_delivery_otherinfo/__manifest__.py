@@ -1,0 +1,23 @@
+{
+    'name': 'SO Delivery Other Info',
+    'version': '14.0.1.0.1',
+    'summary': 'SO Delivery Other Info',
+    'sequence': 10,
+    'description': """SO Delivery Other Info""",
+    'category': 'Productivity',
+    'website': 'https://www.odoo.com/page/billing',
+    'license': 'LGPL-3',
+    'depends': ['sale',
+                'sale_stock',
+                'web',
+                'mail',
+                ],
+    'data': [
+        'views/sale_order.xml',
+    ],
+    'demo': [],
+    'qweb': [],
+    'installable': True,
+    'application': True,
+    'auto_install': False,
+}

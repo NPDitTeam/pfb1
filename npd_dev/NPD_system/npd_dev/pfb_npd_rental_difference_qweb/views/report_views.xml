@@ -1,0 +1,16 @@
+<odoo>
+
+    <!-- PDF REPORTS -->
+    <!-- Tax Invoice-->
+    <record id="action_report_tax_invoice_print" model="ir.actions.report">
+        <field name="name">ใบแจ้งหนี้ค่าเช่าส่วนต่าง</field>
+        <field name="model">account.move</field>
+        <field name="report_name">pfb_npd_rental_difference_qweb.report_tax_invoice</field>
+        <field name="report_file">pfb_npd_rental_difference_qweb.report_tax_invoice</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="paperformat_id" ref="pfb_npd_rental_difference_qweb.paperformat_cr_dr_pdf"/>
+        <field name="print_report_name">'%s%s' % (object.name, object.state == 'draft' and '-draft' or '')</field>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

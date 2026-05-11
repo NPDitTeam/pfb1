@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_hr_employee_checklist_tree_view_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.checklist.tree</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_tree" />
+        <field name="arch" type="xml">
+            <field name="job_id" position="after">
+                <field name="entry_checklist" widget="progressbar" string="Entry Checklist" groups="sh_all_in_one_hrms.group_enable_check_list"/>
+                <field name="exit_checklist" widget="progressbar" string="Exit Checklist" groups="sh_all_in_one_hrms.group_enable_check_list"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="sh_hr_employee_checklist_kanban_view_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.checklist.kanban</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.hr_kanban_view_employees" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_kanban_details')]" position="inside">
+                <div groups="sh_all_in_one_hrms.group_enable_check_list">
+                    <field name="entry_checklist" string="Entry" widget="percentpie" style="background: Blue;" />
+                    <field name="exit_checklist" string="Exit" widget="percentpie" style="background: Blue;" />
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="sh_employee_entry_checklist_form_view" model="ir.ui.view">
+        <field name="name">employee.entry.checklist.form</field>
+        <field name="model">employee.entry.checklist</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                            <field name="company_id" invisible="1" />
+                        </group>
+                        <group>
+                            <field name="description" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="sh_employee_entry_checklist_tree_view" model="ir.ui.view">
+        <field name="name">employee.entry.checklist.tree</field>
+        <field name="model">employee.entry.checklist</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+                <field name="description" />
+            </tree>
+        </field>
+    </record>
+    <record model="ir.actions.act_window" id="action_menu_employee_entry_checklist">
+        <field name="name">Employee Entry Checklist</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">employee.entry.checklist</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="sh_employee_exit_checklist_form_view" model="ir.ui.view">
+        <field name="name">employee.exit.checklist.form</field>
+        <field name="model">employee.exit.checklist</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                        </group>
+                        <group>
+                            <field name="description" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_employee_exit_checklist_tree_view" model="ir.ui.view">
+        <field name="name">employee.exit.checklist.tree</field>
+        <field name="model">employee.exit.checklist</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+                <field name="description" />
+            </tree>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="action_menu_employee_exit_checklist">
+        <field name="name">Employee Exit Checklist</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">employee.exit.checklist</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_employee_entry_checklist" groups="sh_all_in_one_hrms.group_enable_check_list" sequence="18" name="Employee Entry Checklist" action="action_menu_employee_entry_checklist" parent="hr.menu_human_resources_configuration" />
+    <menuitem id="menu_employee_exit_checklist" groups="sh_all_in_one_hrms.group_enable_check_list" sequence="19" name="Employee Exit Checklist" action="action_menu_employee_exit_checklist" parent="hr.menu_human_resources_configuration" />
+    
+    <menuitem id="menu_import_employee_entry_checklist" groups="sh_all_in_one_hrms.group_enable_check_list" name="Import Employee Entry Checklist" sequence="20" action="sh_all_in_one_hrms.sh_import_entry_cl_action" parent="hr.menu_human_resources_configuration" />
+    <menuitem id="menu_import_employee_exit_checklist" groups="sh_all_in_one_hrms.group_enable_check_list" name="Import Employee Exit Checklist" sequence="21" action="sh_all_in_one_hrms.sh_import_exit_cl_action" parent="hr.menu_human_resources_configuration" />
+
+    <record id="sh_hr_employee_checklist_form_view_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.checklist.form</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="entry_checklist" string="Entry Checklist" groups="sh_all_in_one_hrms.group_enable_check_list">
+                    <group>
+                        <group>
+                            <field name="entry_checklist_ids" widget="many2many_checkboxes" />
+                        </group>
+                        <group>
+                            <button name="%(action_menu_employee_entry_checklist)d" type="action" class="oe_stat_button" style="height: 40px; background: White;">
+                                <field name="entry_checklist" string="Checklist Completed" widget="percentpie" style="height: 30px; background: White;" />
+                            </button>
+                        </group>
+                    </group>
+                </page>
+                <page name="exit_checklist" string="Exit Checklist" groups="sh_all_in_one_hrms.group_enable_check_list"> 
+                    <group>
+                        <group>
+                            <field name="exit_checklist_ids" widget="many2many_checkboxes" />
+                        </group>
+                        <group>
+                            <button name="%(action_menu_employee_exit_checklist)d" type="action" class="oe_stat_button" style="height: 40px; background: White;">
+                                <field name="exit_checklist" string="Checklist Completed" widget="percentpie" style="height: 30px; background: White;" />
+                            </button>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

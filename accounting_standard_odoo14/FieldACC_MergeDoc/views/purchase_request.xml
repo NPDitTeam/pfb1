@@ -1,0 +1,23 @@
+<odoo>
+    <record model="ir.ui.view" id="form_date_purchase_request_add_field_inherit">
+        <field name="name">form.date.purchase.request.add.field.inherit</field>
+        <field name="model">purchase.request</field>
+        <field name="inherit_id" ref="purchase_request.view_purchase_request_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='request_document']" position="after">
+                <field name="date_string_shot"/>
+                <field name="date_string_full"/>
+            </xpath>
+        </field>
+    </record>
+    <!--    <record model="ir.ui.view" id="form_amount_text_add_field_inherit">-->
+    <!--        <field name="name">form.amount.text.add.field.inherit</field>-->
+    <!--        <field name="model">purchase.request</field>-->
+    <!--        <field name="inherit_id" ref="pfb_std_purchase_request_custom.view_purchase_request_form_std_custom"/>-->
+    <!--        <field name="arch" type="xml">-->
+    <!--            <xpath expr="//field[@name='amount_total']" position="after">-->
+    <!--                <field name="amount_text" invisible="1"/>-->
+    <!--            </xpath>-->
+    <!--        </field>-->
+    <!--    </record>-->
+</odoo>

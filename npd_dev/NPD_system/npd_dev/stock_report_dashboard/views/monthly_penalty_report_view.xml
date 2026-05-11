@@ -1,0 +1,45 @@
+<odoo>
+    <data>
+        <!-- Tree View (คงเดิม) -->
+        <record id="view_tree_monthly_penalty_report" model="ir.ui.view">
+            <field name="name">monthly.penalty.report.tree</field>
+            <field name="model">monthly.penalty.report</field>
+            <field name="arch" type="xml">
+                <tree string="สรุปรายงานประจำเดือน">
+                    <field name="report_date"/>
+                    <field name="rental_amount" sum="Total ค่าเช่าสินค้า"/>
+                    <field name="vat" sum="Total VAT"/>
+                    <field name="insurance" sum="Total ค่าประกัน"/>
+                    <field name="lost_penalty" sum="Total ค่าปรับหาย"/>
+                    <field name="damage_penalty" sum="Total ค่าปรับชำรุด"/>
+                    <field name="rental_payment_amount" sum="Total รับชำระหนี้ค่าเช่า"/>
+                    <field name="vat_rental_payment_amount" sum="Total VAT"/>
+                    <field name="lost_payment_amount" sum="Total รับชำระหนี้ค่าปรับหาย"/>
+                    <field name="damaged_payment_amount" sum="Total รับชำระหนี้ค่าปรับชำรุด"/>
+                    <field name="difference" sum="Total ส่วนต่าง"/>
+                    <field name="rental_discount" sum="Total ส่วนลดค่าเช่า"/>
+                    <field name="line_discount" sum="Total ส่วนลดปรับหาย"/>
+                    <field name="rental_unpaid_amount" sum="Total ค้างชำระค่าเช่า"/>
+                    <field name="vat_rental_unpaid_amount" sum="Total ค้าง VAT"/>
+                    <field name="lost_unpaid_amount" sum="Total ค้างชำระค่าปรับหาย"/>
+                    <field name="damaged_unpaid_amount" sum="Total ค้างชำระค่าปรับชำรุด"/>
+                    <field name="net_rental_fee" sum="Total ค่าเช่าสุทธิ"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Action Window สำหรับดูรายงาน -->
+        <record id="action_view_monthly_penalty_report" model="ir.actions.act_window">
+            <field name="name">ดูสรุปรายงานประจำเดือน</field>
+            <field name="res_model">monthly.penalty.report</field>
+            <field name="view_mode">tree,pivot,graph</field>
+        </record>
+
+        <!-- เมนูสำหรับดูรายงานประจำเดือน -->
+        <menuitem id="menu_monthly_penalty_report"
+                  name="ดูสรุปรายงานประจำเดือน"
+                  parent="menu_stock_dashboard_root"
+                  action="action_monthly_penalty_report_wizard"
+                  sequence="12"/>
+    </data>
+</odoo>

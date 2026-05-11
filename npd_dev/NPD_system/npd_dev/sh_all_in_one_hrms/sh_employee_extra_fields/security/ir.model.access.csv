@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sh_employee_religion,access_sh_employee_religion,model_sh_employee_religion,base.group_user,1,1,1,1 
+access_sh_company_facilities,access_sh_company_facilities,model_sh_company_facilities,base.group_user,1,1,1,1 
+access_sh_certification,access_sh_certification,model_sh_certification,base.group_user,1,1,1,1 
+access_sh_employee_relation,access_sh_employee_relation,model_sh_employee_relation,base.group_user,1,1,1,1 
+access_hr_emp_emmergancy_manager,access_hr_emp_emmergancy_manager,model_hr_emp_emmergancy,hr.group_hr_manager,1,1,1,1
+access_hr_emp_emmergancy_officer,access_hr_emp_emmergancy_officer,model_hr_emp_emmergancy,hr.group_hr_user,1,0,0,0

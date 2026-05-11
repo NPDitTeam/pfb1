@@ -1,0 +1,57 @@
+<odoo>
+    <data>
+        <record id="view_membership_member_tree" model="ir.ui.view">
+            <field name="name">membership.member.tree</field>
+            <field name="model">membership.member</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="member_id"/>
+                    <field name="name"/>
+                    <field name="phone"/>
+                    <field name="member_type"/>
+                    <field name="birth_date"/>
+                    <field name="gender"/>
+                    <field name="points"/>
+                    <field name="used_points"/>
+                    <field name="signup_date"/>
+<!--                    <field name="end_date" invisible="1"/>-->
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_membership_member_form" model="ir.ui.view">
+            <field name="name">membership.member.form</field>
+            <field name="model">membership.member</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button name="action_fetch_member_data" type="object" string="Update from API" class="oe_highlight"/>
+                    </header>
+                    <sheet>
+                        <group string="Member">
+                            <field name="member_id"/>
+                            <field name="name"/>
+                            <field name="phone"/>
+                            <field name="member_type"/>
+                            <field name="birth_date"/>
+                            <field name="gender"/>
+                            <field name="points"/>
+                            <field name="used_points"/>
+                            <field name="signup_date"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_membership_member" model="ir.actions.act_window">
+            <field name="name">Members</field>
+            <field name="res_model">membership.member</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_membership_member_tree"/>
+        </record>
+
+        <menuitem id="menu_membership_root" name="Membership" sequence="1" web_icon="membership_system,static/description/icon.png"/>
+        <menuitem id="menu_membership_member" name="Members" parent="menu_membership_root" action="action_membership_member"/>
+    </data>
+</odoo>

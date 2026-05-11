@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<odoo>
+	<data>
+		<!--  Sale order -->
+        <record id="view_order_form_inherit_bi_branch_budget_com" model="ir.ui.view">
+            <field name="name">view.order.form.inherit.bi.branch.budget.com</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='analytic_account_id']" position="replace">
+                </xpath>
+                
+                <xpath expr="//field[@name='fiscal_position_id']" position="after">
+                    <field name="analytic_account_id" domain="[('branch_id', '=', branch_id)]" context="{'default_partner_id':partner_invoice_id, 'default_name':name}" attrs="{'readonly': [('invoice_count','!=',0),('state','=','sale')]}" groups="analytic.group_analytic_accounting" force_save="1"/>
+                </xpath>
+            </field>
+        </record>
+	</data>
+</odoo>

@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sh_ot_types,access_sh_ot_types,model_sh_ot_types,base.group_user,1,1,1,1 
+access_sh_hr_overtime,access_sh_hr_overtime,model_sh_hr_overtime,base.group_user,1,1,1,1
+access_sh_ot_reject_wizard,access_sh_ot_reject_wizard,model_sh_ot_reject_wizard,base.group_user,1,1,1,1

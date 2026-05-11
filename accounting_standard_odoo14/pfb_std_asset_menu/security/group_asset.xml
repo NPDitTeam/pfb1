@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- This group is only allowed to deal with equipment registration and asset -->
+    <record id="group_asset_manager" model="res.groups">
+        <field name="name">Asset Manager</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">The user will be able to Manager Asset.</field>
+    </record>
+
+</odoo>

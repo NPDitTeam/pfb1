@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Contract View -->
+    <record id="hr_contract_form_inherit_overtime_rate_per_hr" model="ir.ui.view">
+        <field name="name">hr.contract.view.form.inherit</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr = "//group[@name = 'duration_group']" position = "after" >
+                <group string = "Overtime">
+                    <field name = "overtime_rate_per_hr"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

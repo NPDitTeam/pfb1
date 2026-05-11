@@ -1,0 +1,13 @@
+<odoo>
+	<record id="sh_stages_view_inherit" model="ir.ui.view">
+		<field name="name">sh.stages.view.inherit</field>
+		<field name="model">project.task.type</field>
+		<field name="inherit_id" ref="project.task_type_edit"/>
+		<field name="arch" type="xml">
+			<field name="mail_template_id" position="after">
+				<field name="sh_done"/>
+				<field name="sh_cancel"/>
+			</field>
+		</field>
+	</record>
+</odoo>

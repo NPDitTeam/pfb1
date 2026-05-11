@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_task_checklist_form_view" model="ir.ui.view">
+        <field name="name">task.checklist.form</field>
+        <field name="model">task.checklist</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                        </group>
+                        <group>
+                            <field name="description" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_project_checklist_tree_view" model="ir.ui.view">
+        <field name="name">task.checklist.tree</field>
+        <field name="model">task.checklist</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+                <field name="description" />
+            </tree>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="action_menu_task_checklist">
+        <field name="name">Task Checklist</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">task.checklist</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="sh_project_task_checklist_form_view_inherit" model="ir.ui.view">
+        <field name="name">project.task.checklist.form</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="check_bool_enable_task_check_list" invisible="True" />
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page name="checklist" string="Checklist" groups="sh_all_in_one_pms.group_enable_task_check_list">
+                    <group>
+                        <group>
+                            <field name="checklist_ids" widget="many2many_checkboxes" />
+                        </group>
+                        <group>
+                            <button name="%(action_menu_task_checklist)d" type="action" class="oe_stat_button" style="height: 40px; background: White;">
+                                <field name="checklist" string="Checklist Completed" widget="percentpie" style="height: 30px; background: White;" />
+                            </button>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="sh_project_task_checklist_tree_view_inherit" model="ir.ui.view">
+        <field name="name">project.task.checklist.tree</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_tree2" />
+        <field name="arch" type="xml">
+            <field name="user_id" position="after">
+                <field name="check_bool_enable_task_check_list" invisible="True" />
+                <field name="checklist" widget="progressbar" groups="sh_all_in_one_pms.group_enable_task_check_list" />
+            </field>
+        </field>
+    </record>
+    
+    <menuitem id="menu_task_checklist" name="Task Checklist" sequence="23" groups="sh_all_in_one_pms.group_enable_task_check_list" action="action_menu_task_checklist" parent="project.menu_project_config" />
+    <menuitem id="menu_import_task_checklist" name="Import Task Checklist" groups="sh_all_in_one_pms.group_enable_task_check_list" sequence="24" action="sh_all_in_one_pms.sh_import_task_cl_action" parent="project.menu_project_config" />
+</odoo>

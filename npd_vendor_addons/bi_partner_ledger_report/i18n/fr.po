@@ -1,0 +1,379 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* bi_partner_ledger_report
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 13.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-11-17 08:56+0000\n"
+"PO-Revision-Date: 2021-11-17 08:56+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_agedpartnerbalance
+msgid "<span>Not due</span>"
+msgstr "<span>Pas due</span>"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "<strong>Company:</strong>"
+msgstr "<strong>Société:</strong>"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "<strong>Date from :</strong>"
+msgstr "<strong>Date de :</strong>"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "<strong>Date to :</strong>"
+msgstr "<strong>Date au :</strong>"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_agedpartnerbalance
+msgid "<strong>Partner's:</strong>"
+msgstr "<strong>Les partenaires:</strong>"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_agedpartnerbalance
+msgid "<strong>Period Length (days)</strong>"
+msgstr "<strong>Durée de la période (jours)</strong>"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_agedpartnerbalance
+msgid "<strong>Start Date:</strong>"
+msgstr "<strong>Date de début:</strong>"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_agedpartnerbalance
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "<strong>Target Moves:</strong>"
+msgstr "<strong>Mouvements cibles :</strong>"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "Account"
+msgstr "Compte"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_agedpartnerbalance
+msgid "Account Total"
+msgstr "Total du compte"
+
+#. module: bi_partner_ledger_report
+#: model:ir.actions.act_window,name:bi_partner_ledger_report.action_bi_partner_ledger_report_account_aged_balance_view
+#: model:ir.actions.report,name:bi_partner_ledger_report.action_aged_partner_balance_report
+#: model:ir.ui.menu,name:bi_partner_ledger_report.menu_bi_partner_ledger_report_aged_partner_balance
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_partner_ledger_report_form_partner_aged_ledger
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_agedpartnerbalance
+msgid "Aged Partner Balance"
+msgstr "Solde du partenaire âgé"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields.selection,name:bi_partner_ledger_report.selection__accounting_report_partner_ledger__target_move__all
+#: model:ir.model.fields.selection,name:bi_partner_ledger_report.selection__bi_account_aged_partner_balance__target_move__all
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_agedpartnerbalance
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "All Entries"
+msgstr "Toutes les entrées"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields.selection,name:bi_partner_ledger_report.selection__accounting_report_partner_ledger__target_move__posted
+#: model:ir.model.fields.selection,name:bi_partner_ledger_report.selection__bi_account_aged_partner_balance__target_move__posted
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_agedpartnerbalance
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "All Posted Entries"
+msgstr "Toutes les entrées publiées"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "Balance"
+msgstr "Équilibre"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_financial_excel_reports_view_excel_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_partner_ledger_report_form_partner_aged_ledger
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_partner_ledger_report_form_partner_ledger
+msgid "Cancel"
+msgstr "Annuler"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger__company_id
+msgid "Company"
+msgstr "Société"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger__create_uid
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_bi_account_aged_partner_balance__create_uid
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_excel_report__create_uid
+msgid "Created by"
+msgstr "Créé par"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger__create_date
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_bi_account_aged_partner_balance__create_date
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_excel_report__create_date
+msgid "Created on"
+msgstr "Créé sur"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "Credit"
+msgstr "Crédit"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "Currency"
+msgstr "Monnaie"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "Date"
+msgstr "Date"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_bi_account_aged_partner_balance__date_from
+msgid "Date From"
+msgstr "Dater de"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "Debit"
+msgstr "Débit"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger__display_name
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_bi_account_aged_partner_balance__display_name
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_excel_report__display_name
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_report_bi_partner_ledger_report_bi_report_agedpartnerbalance__display_name
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_report_bi_partner_ledger_report_bi_report_partnerledger__display_name
+msgid "Display Name"
+msgstr "Afficher un nom"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger__date_to
+msgid "End Date"
+msgstr "Date de fin"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_excel_report__file_name
+msgid "Excel File"
+msgstr "Fichier Excel"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_excel_report__excel_file
+msgid "Excel Report"
+msgstr "Rapport Excel"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_financial_excel_reports_view_excel_report
+msgid "Genrated xls File"
+msgstr "Fichier xls généré"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger__id
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_bi_account_aged_partner_balance__id
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_excel_report__id
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_report_bi_partner_ledger_report_bi_report_agedpartnerbalance__id
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_report_bi_partner_ledger_report_bi_report_partnerledger__id
+msgid "ID"
+msgstr "identifiant"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,help:bi_partner_ledger_report.field_accounting_report_partner_ledger__amount_currency
+msgid ""
+"It adds the currency column on report if the currency differs from the "
+"company currency."
+msgstr ""
+"Il ajoute la colonne de devise sur le rapport si la devise diffère de la "
+"devise de l'entreprise."
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "JRNL"
+msgstr "JRNL"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger__journal_ids
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_bi_account_aged_partner_balance__journal_ids
+msgid "Journals"
+msgstr "Journaux"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger____last_update
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_bi_account_aged_partner_balance____last_update
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_excel_report____last_update
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_report_bi_partner_ledger_report_bi_report_agedpartnerbalance____last_update
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_report_bi_partner_ledger_report_bi_report_partnerledger____last_update
+msgid "Last Modified on"
+msgstr "Dernière modification le"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger__write_uid
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_bi_account_aged_partner_balance__write_uid
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_excel_report__write_uid
+msgid "Last Updated by"
+msgstr "Dernière mise à jour par"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger__write_date
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_bi_account_aged_partner_balance__write_date
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_excel_report__write_date
+msgid "Last Updated on"
+msgstr "Dernière mise à jour le"
+
+#. module: bi_partner_ledger_report
+#: model:ir.ui.menu,name:bi_partner_ledger_report.bi_menu_finance_report_partner_ledger_report
+msgid "PDF Reports"
+msgstr "Rapports PDF"
+
+#. module: bi_partner_ledger_report
+#: model:ir.actions.act_window,name:bi_partner_ledger_report.bi_financial_pdf_reports_action_partner_ledger
+#: model:ir.actions.report,name:bi_partner_ledger_report.bi_report_partnerledger_action
+#: model:ir.ui.menu,name:bi_partner_ledger_report.bi_partner_ledger_report_menu_partner_ledger
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "Partner Ledger"
+msgstr "Grand livre des partenaires"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger__result_selection
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_bi_account_aged_partner_balance__result_selection
+msgid "Partner's"
+msgstr "Les partenaires"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_agedpartnerbalance
+msgid "Partners"
+msgstr "Les partenaires"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields.selection,name:bi_partner_ledger_report.selection__accounting_report_partner_ledger__result_selection__supplier
+#: model:ir.model.fields.selection,name:bi_partner_ledger_report.selection__bi_account_aged_partner_balance__result_selection__supplier
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_agedpartnerbalance
+msgid "Payable Accounts"
+msgstr "Comptes payables"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_bi_account_aged_partner_balance__period_length
+msgid "Period Length (days)"
+msgstr "Durée de la période (jours)"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_partner_ledger_report_form_partner_aged_ledger
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_partner_ledger_report_form_partner_ledger
+msgid "Print"
+msgstr "Imprimer"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_partner_ledger_report_form_partner_aged_ledger
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_partner_ledger_report_form_partner_ledger
+msgid "Print Excel"
+msgstr "Imprimer Excel"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields.selection,name:bi_partner_ledger_report.selection__accounting_report_partner_ledger__result_selection__customer
+#: model:ir.model.fields.selection,name:bi_partner_ledger_report.selection__bi_account_aged_partner_balance__result_selection__customer
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_agedpartnerbalance
+msgid "Receivable Accounts"
+msgstr "Comptes clients"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_agedpartnerbalance
+msgid ""
+"Receivable and Payable\n"
+"                                    Accounts"
+msgstr ""
+"À recevoir et à payer\n"
+"Comptes "
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields.selection,name:bi_partner_ledger_report.selection__accounting_report_partner_ledger__result_selection__customer_supplier
+#: model:ir.model.fields.selection,name:bi_partner_ledger_report.selection__bi_account_aged_partner_balance__result_selection__customer_supplier
+msgid "Receivable and Payable Accounts"
+msgstr "Comptes débiteurs et créditeurs"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger__reconciled
+msgid "Reconciled Entries"
+msgstr "Entrées rapprochées"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_partnerledger
+msgid "Ref"
+msgstr "Réf"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_partner_ledger_report_form_partner_aged_ledger
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_partner_ledger_report_form_partner_ledger
+msgid "Report Options"
+msgstr "Options de rapport"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger__date_from
+msgid "Start Date"
+msgstr "Date de début"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger__target_move
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_bi_account_aged_partner_balance__target_move
+msgid "Target Moves"
+msgstr "Mouvements cibles"
+
+#. module: bi_partner_ledger_report
+#: model_terms:ir.ui.view,arch_db:bi_partner_ledger_report.bi_report_agedpartnerbalance
+msgid "Total"
+msgstr "Le total"
+
+#. module: bi_partner_ledger_report
+#: code:addons/bi_partner_ledger_report/reports/report_aged_partner.py:0
+#, python-format
+msgid "Unknown Partner"
+msgstr "Partenaire inconnu"
+
+#. module: bi_partner_ledger_report
+#: model:ir.model.fields,field_description:bi_partner_ledger_report.field_accounting_report_partner_ledger__amount_currency
+msgid "With Currency"
+msgstr "Avec devise"
+
+#. module: bi_partner_ledger_report
+#: code:addons/bi_partner_ledger_report/wizard/account_aged_partner_balance.py:0
+#, python-format
+msgid "You must set a period length greater than 0."
+msgstr "Vous devez définir une durée de période supérieure à 0."
+
+#. module: bi_partner_ledger_report
+#: code:addons/bi_partner_ledger_report/wizard/account_aged_partner_balance.py:0
+#, python-format
+msgid "You must set a start date."
+msgstr "Vous devez définir une date de début."
+
+#. module: bi_partner_ledger_report
+#: model:ir.model,name:bi_partner_ledger_report.model_accounting_report_partner_ledger
+msgid "accounting_report.partner_ledger"
+msgstr ""
+
+#. module: bi_partner_ledger_report
+#: model:ir.model,name:bi_partner_ledger_report.model_bi_account_aged_partner_balance
+msgid "bi.account.aged.partner.balance"
+msgstr ""
+
+#. module: bi_partner_ledger_report
+#: model:ir.model,name:bi_partner_ledger_report.model_excel_report
+msgid "excel.report"
+msgstr ""
+
+#. module: bi_partner_ledger_report
+#: model:ir.model,name:bi_partner_ledger_report.model_report_bi_partner_ledger_report_bi_report_agedpartnerbalance
+msgid "report.bi_partner_ledger_report.bi_report_agedpartnerbalance"
+msgstr ""
+
+#. module: bi_partner_ledger_report
+#: model:ir.model,name:bi_partner_ledger_report.model_report_bi_partner_ledger_report_bi_report_partnerledger
+msgid "report.bi_partner_ledger_report.bi_report_partnerledger"
+msgstr ""

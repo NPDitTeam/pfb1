@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- View cash.type View Tree -->
+    <record id="view_cash_type_tree" model="ir.ui.view">
+        <field name="name">view.cash.type.tree</field>
+        <field name="model">cash.type</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                  <field name="value"/>
+                    <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- View cash.type form -->
+    <record id="view_cash_type_form" model="ir.ui.view">
+        <field name="name">view.cash.type.form</field>
+        <field name="model">cash.type</field>
+        <field name="arch" type="xml">
+            <form string="Cash Type">
+                <sheet>
+                    
+                        <group>
+                            <field name="name" placeholder="Name..."/>
+                             <field name="value" placeholder="1000"/>
+                             <field name="active"/>
+                        </group>
+                  
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- View cash.type search -->
+    <record id="view_cash_type_search" model="ir.ui.view">
+        <field name="name">view.cash.type.search</field>
+        <field name="model">cash.type</field>
+        <field name="arch" type="xml">
+            <search>
+                <group expand="1" string="Group By">
+                    <filter string="Name" name="name" domain="[]" context="{'group_by':'name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action cash.type -->
+    <record id="action_cash_type" model="ir.actions.act_window">
+        <field name="name">Cash Type</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">cash.type</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                There is no examples click here to add new Cash Type.
+            </p>
+        </field>
+    </record>
+    <menuitem
+                id="menu_view_action_cash_type"
+                action="action_cash_type"
+               parent="account.account_account_menu"
+                sequence="1"/>
+</odoo>

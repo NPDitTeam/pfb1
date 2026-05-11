@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<odoo>
+    <!-- Idea Approve views and action -->
+    <record id="sh_idea_approve_wizard_form_view" model="ir.ui.view">
+        <field name="name">sh.idea.approve.wizard.form</field>
+        <field name="model">sh.idea.approve.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Idea">
+                <group>
+                    <group>
+                        <field name="priority" widget="priority" />
+                        <field name="app_comment" placeholder="Enter Approve Comment" />
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_ok" string="Ok" type="object" class="btn-primary" />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="sh_idea_approve_wizard_view_actions" model="ir.actions.act_window">
+        <field name="name">Approve Comment</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.idea.approve.wizard</field>
+        <field name="view_mode">form</field>
+    </record>
+</odoo>

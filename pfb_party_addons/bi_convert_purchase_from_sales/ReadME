@@ -1,0 +1,4 @@
+
+> 10-11-2020 = 14.0.0.1 = Source Document Issue.
+14.0.0.2==>fixed issue of vendor pricelist in purchase order while creating from sale.
+14.0.0.3 ==> Fixed issue if the user does not have access to the system configuration/settings,than can't open view of purchase order.

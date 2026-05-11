@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Menus, form , tree view for model custom fields -->
+<odoo>
+
+    <record id="custom_base_fields_view_tree" model="ir.ui.view">
+        <field name="name">custom.base.fields.view.tree</field>
+        <field name="model">custom.base.fields</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="field_description"/>
+                <field name="model_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id='custom_base_fields_view_form' model='ir.ui.view'>
+        <field name="name">custom.base.fields.view.form</field>
+        <field name="model">custom.base.fields</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="field_description" />
+                </group>
+                <group>
+                    <field name="model_id" />
+                    <field name="custom_field_id" />
+                </group>
+            </form>
+        </field>
+    </record>
+
+    <record id='custom_base_fields_action' model='ir.actions.act_window'>
+        <field name="name">Custom Base Fields</field>
+        <field name="res_model">custom.base.fields</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create New Custom Base Field!
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="custom_base_fields_menu_create"
+              name="Custom Base Fields"
+              parent="pfb_custom_fields.custom_fields_menu"
+              action="custom_base_fields_action"
+              sequence="4"/>
+
+</odoo>

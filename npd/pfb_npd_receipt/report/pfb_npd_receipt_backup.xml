@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!--        กำหนดค่ากระดาษ-->
+    <record id="paperformat_pfb_npd_receipt" model="report.paperformat">
+        <field name="name">A5 Sample</field>
+        <field name="default" eval="False"/>
+        <field name="format">A5</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">5</field> <!-- ระยะขอบด้านบนตั้งค่าเป็น 1 หน่วย -->
+        <field name="margin_bottom">5</field> <!-- ระยะขอบด้านล่างตั้งค่าเป็น 5 หน่วย -->
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="dpi">90</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <!-- กำหนดขนาดตัวอักษรเป็น 12 -->
+        <!--        <field name="font_size">12</field>-->
+    </record>
+
+    <report
+            id="action_pfb_npd_receipt"
+            string="ใบเสร็จรับเงิน(ค่าประกัน)"
+            name="pfb_npd_receipt.report_pfb_npd_receipt"
+            model="account.payment"
+            report_type="qweb-pdf"
+            print_report_name="'Sale - %s' %(object.name)"
+            paperformat="pfb_npd_receipt.paperformat_pfb_npd_receipt"
+    />
+
+
+    <!--    หัวข้อรายงาน-->
+    <template id="report_header">
+        <div class="row">
+            <div class="col-3">
+                <!-- โลโก้บริษัท -->
+                <img src="web/binary/company_logo" class="img-responsive"/>
+            </div>
+            <div class="col-7">
+                <table class="width :100%">
+                    <tr>
+                        <td style="font-size: 14x;"><strong><span t-esc="doc.company_id.name"/></strong></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span t-field="doc.branch_id.address" style="line-height: 1.5;font-size: 13px;"/>
+                        </td>
+                    </tr>
+                    <!--                    <tr>-->
+                    <!--                        <td style="font-size: 14px;">-->
+                    <!--                            <span t-esc="doc.company_id.street"/>-->
+                    <!--                            <span t-esc="doc.company_id.street2"/>-->
+                    <!--                            <span t-esc="doc.company_id.city"/>-->
+                    <!--                            <span t-esc="doc.company_id.state_id.name"/>-->
+                    <!--                            <span t-esc="doc.company_id.zip"/>-->
+                    <!--                        </td>-->
+                    <!--                    </tr>-->
+                    <!--                    <tr>-->
+                    <!--                        <td style="font-size: 14px;">-->
+                    <!--                            <span>โทรศัพท์ / แฟกช์</span>-->
+                    <!--                            <span class="ml-1" t-esc="doc.company_id.fax"/>-->
+                    <!--                            <span class="ml-1">โทร.</span>-->
+                    <!--                            <span class="ml-1" t-esc="doc.company_id.phone"/>-->
+                    <!--                        </td>-->
+                    <!--                    </tr>-->
+                    <!--                    <tr>-->
+                    <!--                        <td style="font-size: 14px;">-->
+                    <!--                            <span>เลขประจำตัวผู้เสียภาษี</span>-->
+                    <!--                            <span class="ml-1" t-esc="doc.company_id.vat"/>-->
+                    <!--                        </td>-->
+                    <!--                    </tr>-->
+                </table>
+            </div>
+            <div class="col-2">
+                <table class="width :100%">
+                    <tr>
+                        <td class="text-center" style="font-size: 16px;"><strong>ใบเสร็จรับเงิน</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-center" style="font-size: 16px;">
+                            <strong>RECEIPT</strong>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </template>
+
+    <!--     รายละเอียด-->
+    <template id="report_detail">
+        <style>
+            .container {
+            display: flex; /* ใช้ Flexbox สำหรับจัดการคอลัมน์ */
+            width: 100%; /* ขยายความกว้างของ container */
+            }
+            .table-report{
+            height: 11.5 cm;
+            width: 19.5 cm;
+            box-sizing: border-box;
+            padding: 5px;
+            font-size: 10px;
+            }
+            .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            }
+            .invoice-table, .invoice-table th, .invoice-table td {
+            border: 1px solid black;
+            font-size: 10px;
+
+            }
+            .invoice-table th, .invoice-table td {
+            padding: 5px;
+            <!--               text-align: right;-->
+            vertical-align: top;
+            font-size: 10px;
+            }.rounded-square {
+            border: 1px solid #000;
+            border-radius: 0;
+            padding: 5px 5px;
+            width: 97%;
+            font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+            }.ml-2 {
+            margin-left: 60px;
+            }.flex-item {
+            margin-right: 20px; /* ระยะห่างที่ต้องการ */
+            }.flex-item2 {
+            margin-right: 5px; /* ระยะห่างที่ต้องการ */
+            }.flex-item3 {
+            margin-left: 50px; /* ระยะห่างที่ต้องการ */
+            }
+            /* Hide the default checkbox */
+            .custom-checkbox input[type="checkbox"] {
+            display: none;
+            }
+
+            /* Style the custom checkbox */
+            .custom-checkbox {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 16px;
+            }
+
+            /* Create the checkbox appearance */
+            .checkbox-checkmark {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            background-color: #f0f0f0;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+            }
+
+            /* Style the checkmark/indicator (hidden by default) */
+            .checkbox-checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            }
+
+            /* Display checkmark when checked */
+            .custom-checkbox input[type="checkbox"]:checked + .checkbox-checkmark:after {
+            display: block;
+            width: 10px;
+            height: 10px;
+            background-color: #4caf50;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            clip-path: polygon(0 0, 100% 100%, 100% 0, 0 100%);
+            }.text-left {
+            text-align: left;
+            }
+            .text-right {
+            text-align: right;
+            }.example-box {
+            border: 2px solid black; /* กำหนดขอบทั้งหมดให้มองเห็นได้ */
+            border-left: hidden; /* ซ่อนขอบด้านซ้าย */
+            border-bottom: hidden; /* ซ่อนขอบด้านล่าง */
+            padding: 10px;
+            margin: 20px;
+            }.ml-99 {
+            margin-left: 0.2rem; /* หรือค่าที่ต้องการ */
+            }.space1{
+            top: 2cm;
+            right: 1.1cm;
+            }
+
+        </style>
+        <table class="table-report invoice-table">
+            <tr>
+                <div style="display: flex; justify-content: space-between;">
+                    <td colspan="7">
+                        <p>
+                            <span class="flex-item2">ชื่อลูกค้า</span>
+                            <span>:</span>
+                            <span class="ml-1" t-esc="doc.partner_id.name"/>
+                        </p>
+                        <p>
+                            <span class="flex-item">ที่อยู่</span>
+                            <span>:</span>
+                            <span class="ml-1" t-esc="doc.partner_id.street"/>
+                            <span class="ml-1" t-esc="doc.partner_id.street2"/>
+                            <span class="ml-1" t-esc="doc.partner_id.city"/>
+                            <span class="ml-1" t-esc="doc.partner_id.state_id.name"/>
+                            <span class="ml-1" t-esc="doc.partner_id.zip"/>
+                        </p>
+                        <p>
+                            <span class="flex-item3">เลขประจำตัวผู้เสียภาษี</span>
+                            <span class="ml-1" t-esc="doc.partner_id.vat"/>
+                        </p>
+                    </td>
+                </div>
+                <!--                <div style="display: flex; justify-content: space-between;">-->
+                <!--                    <td colspan="4">-->
+                <!--                        <p>-->
+                <!--                            <span class="mr-1">วันที่ / DATE</span>-->
+                <!--                            <span class="ml-2" t-esc="doc.date.strftime('%d') + ' ' + {1: 'ม.ค.', 2: 'ก.พ.', 3: 'มี.ค.', 4: 'เม.ย.', 5: 'พ.ค.', 6: 'มิ.ย.', 7: 'ก.ค.', 8: 'ส.ค.', 9: 'ก.ย.', 10: 'ต.ค.', 11: 'พ.ย.', 12: 'ธ.ค.'}[int(doc.date.strftime('%m'))] + ' ' + str(int(doc.date.strftime('%Y')) + 543)[-2:]"/>-->
+                <!--                        </p>-->
+                <!--                    </td>-->
+                <!--                </div>-->
+                <div style="display: flex; justify-content: space-between;">
+                    <td colspan="4">
+                        <p>
+                            <span class="text-left mr-1">เลขที่ / NO.</span>
+                            <span t-esc="doc.name"/>
+                        </p>
+                        <p>
+                            <span class="text-left mr-1">วันที่ / DATE</span>
+                            <span t-esc="doc.date.strftime('%d') + ' ' + {1: 'ม.ก.', 2: 'ก.พ.', 3: 'มี.ค.', 4: 'เม.ย.', 5: 'พ.ค.', 6: 'มิ.ย.', 7: 'ก.ค.', 8: 'ส.ค.', 9: 'ก.ย.', 10: 'ต.ค.', 11: 'พ.ย.', 12: 'ธ.ค.'}[int(doc.date.strftime('%m'))] + ' ' + str(int(doc.date.strftime('%Y')) + 543)[-2:]"/>
+                        </p>
+                    </td>
+                </div>
+            </tr>
+            <tr>
+                <th width="12%" class="text-center">ลำดับ<br>No.</br></th>
+                <th colspan="6" width="65%" class="text-center">รายการ<br>DESCRIPTION</br></th>
+                <th colspan="4" class="text-center">จำนวนเงิน<br>AMOUNT</br></th>
+            </tr>
+            <t t-set="c" t-value="0"/>
+            <t t-foreach="doc.invoice_ids[:1]" t-as="l" style="margin-bottom: 50px !important;">
+                <tr>
+                    <td class="text-center">1</td>
+                    <td colspan="6" class="text-left"><span class="mr-1">ค่าประกัน</span><span class="mr-1">
+                        ใบกำกับการเช่า </span><span class="mr-1">เลขที่</span><span
+                            t-esc="l.invoice_id.invoice_origin"/></td>
+                    <td colspan="4" class="text-right"><span t-esc="'{0:,.2f}'.format(doc.total_amount)"/></td>
+                    <t t-set="c" t-value="c+1"/>
+                </tr>
+            </t>
+            <!--        ทำให้ช่องตารางว่าง-->
+            <t t-set="number" t-value="range(1,abs((4-c)))"/>
+            <t t-foreach="number" t-as="n">
+                <tr>
+                    <td style="border-top:hidden; color : white">.</td>
+                    <td colspan="6" style="border-top:hidden;"/>
+                    <td colspan="4" style="border-top:hidden;"/>
+                </tr>
+            </t>
+            <tr>
+                <td>
+                    <p>
+                        <strong>จำนวนเงิน(ตัวอักษร)</strong>
+                    </p>
+                </td>
+                <td colspan="6" style="border-left :hidden; border-bottom: hidden;" class="text-center">
+                    <strong>(<span t-esc="doc.get_baht_text_form_receipt()"/>)</strong>
+                </td>
+                <td colspan="3">
+                    <p>
+                        <strong class="text-left">รวมเป็นเงิน</strong>
+                    </p>
+                </td>
+                <td colspan="2" style="border-left :hidden;">
+                    <p class="text-right">
+                        <span t-esc="'{0:,.2f}'.format(doc.total_amount)"/>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="8">
+                    <p>
+                        ชำระเงินโดย
+                    </p>
+
+                    <!-- ตรวจสอบ "เงินสด" -->
+                    <p class="flex-item2">
+                        <input type="checkbox"
+                               t-att-checked="doc.payment_method_one_id and doc.payment_method_one_id.type == 'cash' or (doc.is_payment_multi and 'cash' in [payment.payment_method_id.type for payment in doc.paid_ids])"
+                               class="mr-1"/>
+                        <span>เงินสด</span>
+                    </p>
+
+                    <!-- ตรวจสอบ "โอนเงิน" -->
+                    <p class="flex-item2">
+                        <input type="checkbox"
+                               t-att-checked="doc.payment_method_one_id and doc.payment_method_one_id.type == 'bank' and not doc.is_payment_multi or (doc.is_payment_multi and 'bank' in [payment.payment_method_id.type for payment in doc.paid_ids])"
+                               class="mr-1"/>
+                        <span class="mr-1">โอนเงิน</span>
+
+
+                        <!-- กรณีใช้ paid_ids -->
+                        <t t-if="doc.is_payment_multi and 'bank' in [payment.payment_method_id.type for payment in doc.paid_ids]">
+                            <span t-esc="doc.company_id.name"/>
+                            <t t-foreach="[payment for payment in doc.paid_ids if payment.payment_method_id.type == 'bank']"
+                               t-as="payment">
+                                <br/>
+                                <span style="padding-left: 60px;">ธนาคาร:</span>
+                                <t t-set="bank_info" t-value="payment.payment_method_id.name"/>
+                                <t t-set="bank_name">
+                                    <t t-if="bank_info and bank_info.find('SCB') != -1">ธนาคารไทยพาณิชย์</t>
+                                    <t t-if="bank_info and bank_info.find('K') != -1">ธนาคารกสิกรไทย</t>
+                                    <t t-if="bank_info and bank_info.find('BBL') != -1">ธนาคารกรุงเทพ</t>
+                                    <t t-if="bank_info and bank_info.find('KTB') != -1">ธนาคารกรุงไทย</t>
+                                    <t t-if="bank_info and bank_info.find('BAY') != -1">ธนาคารกรุงศรีอยุธยา</t>
+                                    <t t-if="not (bank_info and (bank_info.find('SCB') != -1 or bank_info.find('K') != -1 or bank_info.find('BBL') != -1 or bank_info.find('KTB') != -1 or bank_info.find('BAY') != -1))">
+                                        ธนาคารอื่น
+                                    </t>
+                                </t>
+                                <span t-esc="bank_name" style="padding; 2px;"/>
+                                <span class="ml-1">เลขที่บัญชี:</span>
+                                <span class="ml-1" t-esc="payment.account_id.name[-13:]"/>
+                            </t>
+                        </t>
+                        <!-- กรณีมีข้อมูลใน payment_method_one_id -->
+                        <t t-elif="doc.payment_method_one_id and doc.payment_method_one_id.type == 'bank' and not doc.is_payment_multi">
+                            <t t-set="bank_info" t-value="doc.payment_method_one_id.name"/>
+                            <t t-set="bank_name">
+                                <t t-if="bank_info and bank_info.find('SCB') != -1">ธนาคารไทยพาณิชย์</t>
+                                <t t-if="bank_info and bank_info.find('K') != -1">ธนาคารกสิกรไทย</t>
+                                <t t-if="bank_info and bank_info.find('BBL') != -1">ธนาคารกรุงเทพ</t>
+                                <t t-if="bank_info and bank_info.find('KTB') != -1">ธนาคารกรุงไทย</t>
+                                <t t-if="bank_info and bank_info.find('BAY') != -1">ธนาคารกรุงศรีอยุธยา</t>
+                                <t t-if="not (bank_info and (bank_info.find('SCB') != -1 or bank_info.find('K') != -1 or bank_info.find('BBL') != -1 or bank_info.find('KTB') != -1 or bank_info.find('BAY') != -1))">
+                                    ธนาคารอื่น
+                                </t>
+                            </t>
+                            <span class="ml-1" t-esc="bank_name"/>
+                            <span class="ml-1">เลขที่บัญชี</span>
+                            <span class="ml-1" t-esc="doc.payment_method_one_id.account_id.name[-13:]"/>
+                        </t>
+
+
+                    </p>
+
+                    <!-- ตรวจสอบ "เช็ค" -->
+                    <p class="flex-item2">
+                        <input type="checkbox"
+                               t-att-checked="doc.payment_method_one_id and doc.payment_method_one_id.type == 'cheque' or (doc.is_payment_multi and 'cheque' in [payment.payment_method_id.type for payment in doc.paid_ids])"
+                               class="mr-1"/>
+                        <span class="mr-1">เช็ค</span>
+
+                        <!-- กรณีดึงข้อมูลจาก paid_ids -->
+                        <t t-if="doc.is_payment_multi and 'cheque' in [payment.payment_method_id.type for payment in doc.paid_ids]">
+                            <t t-set="count" t-value="0"/>
+                            <t t-foreach="[payment for payment in doc.paid_ids if payment.payment_method_id.type == 'cheque']"
+                               t-as="payment">
+                                <t t-if="count == 0">
+                                    <span class="ml-1" style="padding-left: 5px;">
+                                        ธนาคาร: <span t-esc="payment.cheque_id.bank_id.name"/>
+                                    </span>
+                                    <span class="ml-1">
+                                        สาขา: <span t-esc="payment.cheque_id.bank_id.branch_name"/>
+                                    </span>
+                                    <span class="ml-1">
+                                        เลขที่เช็ค: <span class="ml-1" t-esc="payment.cheque_id.name"/>
+                                    </span>
+                                    <t t-set="count" t-value="1"/>
+                                </t>
+                                <t t-else="">
+                                    <br/>
+                                    <span class="ml-1" style="padding-left: 46px;">
+                                        ธนาคาร: <span t-esc="payment.cheque_id.bank_id.name"/>
+                                    </span>
+                                    <span class="ml-1">
+                                        สาขา: <span t-esc="payment.cheque_id.bank_id.branch_name"/>
+                                    </span>
+                                    <span class="ml-1">
+                                        เลขที่เช็ค: <span class="ml-1" t-esc="payment.cheque_id.name"/>
+                                    </span>
+                                </t>
+
+                            </t>
+                        </t>
+                        <!-- กรณีดึงข้อมูลจาก payment_method_one_id -->
+                        <t t-elif="doc.payment_method_one_id and doc.payment_method_one_id.type == 'cheque' and not doc.is_payment_multi">
+                            <span class="ml-1">
+                                ธนาคาร: <span t-esc="doc.cheque_one_id.bank_id.name"/>
+                            </span>
+                            <span class="ml-1">
+                                สาขา: <span t-esc="doc.cheque_one_id.bank_id.branch_name"/>
+                            </span>
+                            <span class="ml-1">
+                                เลขที่เช็ค: <span class="ml-1" t-esc="doc.cheque_one_id.name"/>
+                            </span>
+                        </t>
+
+
+                    </p>
+
+                    <!-- ตรวจสอบ "อื่น" -->
+                    <p class="flex-item2">
+                        <input type="checkbox"
+                               t-att-checked="doc.payment_method_one_id and doc.payment_method_one_id.type == 'other' and not doc.is_payment_multi or (doc.is_payment_multi and 'other' in [payment.payment_method_id.type for payment in doc.paid_ids])"
+                               class="mr-1"/>
+                        <span class="ml-1">อื่นๆ</span>
+
+                        <!-- กรณีใช้ paid_ids -->
+                        <t t-if="doc.is_payment_multi and 'other' in [payment.payment_method_id.type for payment in doc.paid_ids]">
+                            <t t-set="count" t-value="0"/>
+                            <t t-foreach="[payment for payment in doc.paid_ids if payment.payment_method_id.type == 'other']"
+                               t-as="payment">
+                                <t t-if="count == 0">
+                                    <span style="padding-left: 5px;" t-esc="payment.payment_method_id.name"/>
+                                    <t t-set="count" t-value="1"/>
+                                </t>
+                                <t t-else="">
+                                    <br/>
+                                    <span style="padding-left: 30px;" t-esc="payment.payment_method_id.name"/>
+                                </t>
+                            </t>
+                        </t>
+                        <!-- กรณีมีข้อมูลใน payment_method_one_id -->
+                        <t t-elif="doc.payment_method_one_id and doc.payment_method_one_id.type == 'other' and not doc.is_payment_multi">
+                            <span style="padding-left: 30px;" t-esc="doc.payment_method_one_id.name"/>
+                        </t>
+                    </p>
+
+                </td>
+                <td colspan="4" style="border-left: hidden;">
+                    <p><div class="row" style="margin-bottom: 90px;"/></p>
+                    <p class="text-center" style="margin: 0; padding: 0;"><span t-esc="doc.create_uid.name"/></p>
+                    <p class="text-center" style="margin: 0; padding: 0;">
+                        ......................................................................</p>
+                    <p class="text-center" style="margin: 0; padding: 0;">ผู้รับเงิน / COLLECROR</p>
+                </td>
+            </tr>
+        </table>
+    </template>
+
+
+    <template id="report_pfb_npd_receipt">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.basic_layout">
+                    <table width="100%">
+                        <tr>
+                            <td>
+                                <t t-call="pfb_npd_receipt.report_header"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <t t-call="pfb_npd_receipt.report_detail"/>
+                            </td>
+                        </tr>
+                    </table>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

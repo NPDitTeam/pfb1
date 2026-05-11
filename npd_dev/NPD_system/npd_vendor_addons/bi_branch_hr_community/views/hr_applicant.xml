@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    
+        <record id="bi_branch_hr_community_inherit_hr_applicant_view_form" model="ir.ui.view">
+            <field name="name">bi.branch.hr.community.inherit.hr_applicant_view_form</field>
+            <field name="model">hr.applicant</field>
+            <field name="inherit_id" ref="hr_recruitment.hr_applicant_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='department_id']" position="after">
+                    <field name="branch_id"/>
+                </xpath>
+            </field>
+        </record>
+        
+        
+        
+        <record id="bi_branch_hr_community_inherit_crm_case_tree_view_job" model="ir.ui.view">
+            <field name="name">bi.branch.hr.community.inherit.crm_case_tree_view_job</field>
+            <field name="model">hr.applicant</field>
+            <field name="inherit_id" ref="hr_recruitment.crm_case_tree_view_job"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='partner_name']" position="after">
+                    <field name="branch_id"/>
+                </xpath>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

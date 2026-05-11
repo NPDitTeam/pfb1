@@ -1,0 +1,30 @@
+<odoo>
+    <record model="ir.ui.view" id="form_sales_receipt_add_field_inherit">
+        <field name="name">form.sales.receipt.add.field.inherit</field>
+        <field name="model">account.voucher</field>
+        <field name="inherit_id" ref="account_voucher.view_sale_receipt_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='date']" position="after">
+                <field name="date_string_shot" invisible="1"/>
+                <field name="date_string_full" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='amount']" position="after">
+                <field name="amount_text" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+    <record model="ir.ui.view" id="form_purchase_receipt_add_field_inherit">
+        <field name="name">form.purchase.receipt.add.field.inherit</field>
+        <field name="model">account.voucher</field>
+        <field name="inherit_id" ref="account_voucher.view_purchase_receipt_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='date']" position="after">
+                <field name="date_string_shot" invisible="1"/>
+                <field name="date_string_full" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='amount']" position="after">
+                <field name="amount_text" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

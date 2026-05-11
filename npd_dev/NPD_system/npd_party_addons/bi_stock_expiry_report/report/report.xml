@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+        <record id="paperformat_report_expiry_print" model="report.paperformat">
+            <field name="name">Report_expiry_print (A4)</field>
+            <field name="default" eval="True" />
+            <field name="format">A4</field>
+            <field name="page_height">0</field>
+            <field name="page_width">0</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">0</field>
+            <field name="margin_bottom">0</field>
+            <field name="margin_left">7</field>
+            <field name="margin_right">7</field>
+            <field name="header_line" eval="False" />
+            <field name="header_spacing">30</field>
+            <field name="dpi">92</field>
+        </record>    
+        <report
+            id="report_expiry_print"
+            string="Stock Expiry Report"
+            model="stock.expiry.report.wizard"
+            report_type="qweb-pdf"
+            file="bi_stock_expiry_report.report_expiry_pdf"
+            name="bi_stock_expiry_report.report_expiry_pdf"
+            paperformat="bi_stock_expiry_report.paperformat_report_expiry_print"
+        />
+
+        <report
+            id="report_expiry_print_all"
+            string="Stock Expiry Report"
+            model="stock.expiry.report"
+            report_type="qweb-pdf"
+            file="bi_stock_expiry_report.report_expiry_pdf_all"
+            name="bi_stock_expiry_report.report_expiry_pdf_all"
+        />
+
+
+        <report
+            id="report_expiry_print_location"
+            string="Stock Expiry Report"
+            model="stock.expiry.report"
+            report_type="qweb-pdf"
+            file="bi_stock_expiry_report.report_expiry_pdf_location"
+            name="bi_stock_expiry_report.report_expiry_pdf_location"
+        />
+
+        <report
+            id="report_expiry_print_warehouse"
+            string="Stock Expiry Report"
+            model="stock.expiry.report"
+            report_type="qweb-pdf"
+            file="bi_stock_expiry_report.report_expiry_pdf_warehouse"
+            name="bi_stock_expiry_report.report_expiry_pdf_warehouse"
+        />
+         
+    </data>
+   
+</odoo>

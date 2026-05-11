@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- กลุ่มสิทธิ์: ผู้มีสิทธิ์กดปุ่ม "โอนแล้ว" -->
+        <record id="group_voucher_transfer" model="res.groups">
+            <field name="name">Voucher Transfer - แสดงปุ่มโอนแล้ว</field>
+            <field name="category_id" ref="base.module_category_accounting_and_finance"/>
+            <field name="comment">ผู้ใช้ที่อยู่ในกลุ่มนี้จะเห็นปุ่ม "โอนแล้ว" บนใบแจ้งหนี้ (account.voucher)</field>
+        </record>
+    </data>
+</odoo>

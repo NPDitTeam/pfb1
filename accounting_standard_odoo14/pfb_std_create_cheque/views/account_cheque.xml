@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+        <record id="inherit_account_cheque_view_form" model="ir.ui.view">
+            <field name="name">account.cheque.form</field>
+            <field name="model">account.cheque</field>
+            <field name="inherit_id" ref="account_cheque.account_cheque_view_form"/>
+            <field name="arch" type="xml">
+                <field name="name" position="replace">
+                     <field name="cheque_number_id"  options="{'no_create': True}" attrs="{'required': [('cheque_type','=', 'outbound')],'invisible': [('cheque_type','=','inbound')],'readonly': [('state','not in',['draft'])]}" />
+                     <field name="name" attrs="{'invisible': [('cheque_type','=','outbound')]}" />
+                </field>
+            </field>
+        </record>
+
+    <record id="cheque_number_view_form" model="ir.ui.view">
+        <field name="name">cheque.number.form</field>
+        <field name="model">cheque.number</field>
+        <field name="arch" type="xml">
+            <form string="Cheque Number">
+                <group>
+                    <group>
+                        <field name="number"/>
+                        <field name="name"/>
+                        <field name="cheque_id"/>
+                    </group>
+                </group>
+            </form>
+        </field>
+    </record>
+
+    <record id="cheque_number_view_tree" model="ir.ui.view">
+        <field name="name">cheque.number.tree</field>
+        <field name="model">cheque.number</field>
+        <field name="arch" type="xml">
+            <tree string="Cheque Number" create="0" edit="0">
+                <field name="number"/>
+                <field name="name"/>
+                <field name="cheque_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="cheque_number_action" model="ir.actions.act_window">
+        <field name="name">Cheque number</field>
+        <field name="res_model">cheque.number</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="account_cheque_menu_bill" name="Cheque"
+              action="account_cheque.action_account_cheque_payment"
+              parent="account_cheque.account_cheque_menu_bill"
+              sequence="10"/>
+
+    <menuitem id="account_create_cheque" name="Running Cheque"
+              action="action_create_cheque_wizard"
+              parent="account_cheque.account_cheque_menu_bill"
+              sequence="10"/>
+
+    <menuitem id="account_cheque_number" name="Cheque Number"
+              action="cheque_number_action"
+              parent="account_cheque.account_cheque_menu_bill"
+              sequence="10"/>
+
+</odoo>

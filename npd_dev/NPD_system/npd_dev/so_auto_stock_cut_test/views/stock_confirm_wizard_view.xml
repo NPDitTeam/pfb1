@@ -1,0 +1,24 @@
+<odoo>
+    <record id="view_stock_cut_confirm_wizard" model="ir.ui.view">
+        <field name="name">stock.cut.confirm.wizard.form</field>
+        <field name="model">stock.cut.confirm.wizard</field>
+        <field name="arch" type="xml">
+            <form string="ยืนยันการตัดสต๊อก">
+                <group>
+                    <field name="order_id" readonly="1"/>
+                    <field name="confirm_line_ids">
+                        <tree editable="bottom">
+                            <field name="product_id"/>
+                            <field name="quantity"/>
+                            <field name="location_name"/>
+                        </tree>
+                    </field>
+                </group>
+                <footer>
+                    <button string="ยืนยันตัดสต๊อก" type="object" name="confirm_stock_cut" class="btn-primary"/>
+                    <button string="ยกเลิก" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

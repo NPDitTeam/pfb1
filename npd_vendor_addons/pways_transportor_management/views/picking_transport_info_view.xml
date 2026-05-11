@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <record id="picking_transport_info_form_view" model="ir.ui.view">
+            <field name="name">picking.transport.info.form.view</field>
+            <field name="model">stock.picking.transport.info</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+<!--                         <button name="picking_prepration" type="object" string="Prepration" states="draft" class="btn-primary"/> -->
+                        <button name="picking_ready" type="object" string="Ready" states="draft" class="btn-primary"/>
+                        <button name="picking_hold" type="object" string="Halt" states="ready" class="btn-primary"/>
+                        <button name="picking_done" type="object" string="Delivery" states="halt" class="btn-primary"/>
+                        <button name="picking_cancel" type="object" string="Cancel" states="draft,halt"/>
+                        <button name="picking_reschedule" type="object" string="Resume" states='cancel' class="btn-primary"/>
+                        <field name="state" widget="statusbar" string="confirm"  
+                                        statusbar_visible="draft,ready,halt,done"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button class="oe_stat_button" type="object"  name="action_open_picking_route"  icon="fa-truck">
+                                <field name='count_route' widget="statinfo" string="Routes"/>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                        <div class="oe_title">
+                        <h1>
+                            <field name="name"/><br/>
+                        </h1>
+                    </div>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="transporter_id" domain="[('transporter','=',True)]" attrs="{'readonly': [['state', 'not in', ['draft']]]}"/>
+                            <field name="saleorder_id" attrs="{'readonly': [['state', 'not in', ['draft']]]}"/>
+                            <field name="delivery_id" attrs="{'readonly': [['state', 'not in', ['draft']]]}"/>
+                            <field name="vehicle_id" attrs="{'readonly': [['state', 'not in', ['draft']]]}"/>
+                            <field name="vehicle_driver" attrs="{'readonly': [['state', 'not in', ['draft']]]}"/>
+                            <field name="user_id" attrs="{'readonly': [['state', 'not in', ['draft']]]}"/>
+                        </group>
+                        <group>
+                            <field name="transport_date" attrs="{'readonly': [['state', 'not in', ['draft']]]}"/>
+                            <field name="destination_id" attrs="{'readonly': [['state', 'not in', ['draft']]]}"/>
+                            <field name='no_of_parcel' attrs="{'readonly': [['state', 'not in', ['draft']]]}"/>
+                            <field name="lr_number" attrs="{'readonly': [['state', 'not in', ['draft']]]}"/>
+                            <field name="company_id" attrs="{'readonly': [['state', 'not in', ['draft']]]}"/>
+                        </group>
+
+                    </group>
+                    <notebook>
+                        <page string='Shipment Details' name='delivery info'>
+                            <group>
+                                <group>
+                                    <label for="weight" string="Weight" attrs="{'readonly': [['state', 'not in', ['draft']]]}"/>
+                                    <div>
+                                    <field name="weight"/><field name="weight_uom_id" nolabel="1" attrs="{'readonly': [['state', 'not in', ['draft']]]}"/></div>
+                                    <field name="picking_date"/>
+                                    <field name="rate"/>
+                                    <field name="distance"/>
+                                    <field name="ref_no"/>
+                                </group>
+                                <group>
+                                    <field name="o_start"/>
+                                    <field name="o_end"/>
+                                    <field name="exp_date"/>
+                                    <field name="bill"/>
+                                    <field name="total_charge"/>
+                                </group>
+                            </group>
+                            <field name="note" placeholder="Notes ..."/>
+                        </page>
+                        <page string="Shipment Route Details">
+                        <field name="picking_route_ids" nolabel="1">
+                            <tree editable="True">
+                                <field name="source_location"/>
+                                <field name="destination_location"/>
+                                <field name="distance"/>
+                                <field name="hour" widget="float_time"/>
+                                <field name='start_time'/>
+                                <field name='end_time'/>
+                                <field name='status'/>
+                            </tree>
+                        </field>
+                    </page>
+                    </notebook>
+                    </sheet>
+                     <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="picking_transport_info_tree_view" model="ir.ui.view">
+            <field name="name">picking.transport.info.tree</field>
+            <field name="model">stock.picking.transport.info</field>
+            <field name="arch" type="xml">
+                 <tree>
+                    <field name="name"/>
+                    <field name="saleorder_id"/>
+                    <field name="delivery_id"/>
+                    <field name="transporter_id"/>
+                    <field name="vehicle_id"/>
+                    <field name="vehicle_driver"/>
+                    <field name="transport_date"/>
+                    <field name="destination_id"/>
+                    <field name="user_id"/>
+                    <field name="company_id"/>
+                    <field name="lr_number"/>
+                    <field name="state"/>
+                 </tree>
+            </field>
+        </record>
+
+        <record id="picking_transport_info_search_view" model="ir.ui.view">
+            <field name="name">picking.transport.info.search</field>
+            <field name="model">stock.picking.transport.info</field>
+                <field name="arch" type="xml">
+                <search>
+                    <field name="customer_id"/>
+                    <field name="state"/>
+                    <field name="saleorder_id"/>
+                    <field name="delivery_id"/>
+                    <field name="transporter_id"/>
+                    <field name="vehicle_id"/>
+                    <field name="vehicle_driver"/>
+                    <field name="transport_date"/>
+                    <field name="destination_id"/>
+                    <field name="user_id"/>
+                    <field name="company_id"/>
+                    <field name="lr_number"/>
+                    <group expand="0" string="Group By">
+                        <filter name="Customer" context="{'group_by':'customer_id'}"/>
+                        <filter name="State" context="{'group_by':'state'}"/>
+                        <filter name="Sale" context="{'group_by':'saleorder_id'}"/>
+                        <filter name="Delivery" context="{'group_by':'delivery_id'}"/>
+                        <filter name="Transporter" context="{'group_by':'transporter_id'}"/>
+                        <filter name="Date" context="{'group_by':'transport_date'}"/>
+                        <filter name="Responsible user" context="{'group_by':'user_id'}"/>
+                        <filter name="Company" context="{'group_by':'company_id'}"/>
+                        <filter name="Destination" context="{'group_by':'destination_id'}"/>
+                        <filter name="LR Number" context="{'group_by':'lr_number'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="action_picking_transport_info">
+            <field name="name">Transport Entry</field>
+            <field name="res_model">stock.picking.transport.info</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
+        <menuitem id="menu_picking_transport_info"
+            name="Picking Shipment Entry"
+            parent="menu_transport_childe"
+            action="action_picking_transport_info"
+            sequence="1"/>
+
+    </data>
+</odoo>

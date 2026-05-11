@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Wizard Form View -->
+    <record id="view_send_hr_wt_cert_email_form" model="ir.ui.view">
+        <field name="name">send.hr.wt.cert.email.form</field>
+        <field name="model">send.hr.wt.cert.email</field>
+        <field name="arch" type="xml">
+            <form string="ส่งเมล WT Certificate">
+                <group>
+                    <field name="year"/>
+                    <field name="send_to" widget="radio"/>
+                    <field name="employee_ids" widget="many2many_tags"
+                           options="{'no_create': True}"
+                           attrs="{'invisible': [('send_to', '=', 'all')],
+                                   'required': [('send_to', '=', 'selected')]}"/>
+                    <field name="cert_count" readonly="1"/>
+                </group>
+                <group attrs="{'invisible': [('no_email_warning', '=', False)]}">
+                    <div colspan="2" class="alert alert-warning" role="alert">
+                        <field name="no_email_warning" readonly="1" nolabel="1"/>
+                    </div>
+                </group>
+                <group>
+                    <p class="text-muted" colspan="2">
+                        ระบบจะส่งไฟล์ PDF หนังสือรับรองหัก ณ ที่จ่าย
+                        ไปยังอีเมลของพนักงานแต่ละคน
+                    </p>
+                </group>
+                <footer>
+                    <button name="action_send_email"
+                            string="ส่งเมล"
+                            type="object"
+                            class="btn-primary"/>
+                    <button string="ยกเลิก" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open wizard -->
+    <record id="action_send_hr_wt_cert_email" model="ir.actions.act_window">
+        <field name="name">ส่งเมล WT Certificate</field>
+        <field name="res_model">send.hr.wt.cert.email</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_send_hr_wt_cert_email_form"/>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

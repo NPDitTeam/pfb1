@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<odoo>
+    <!-- sh ot reject wizard and action -->
+    <record id="sh_ot_reject_wizard_form_view" model="ir.ui.view">
+        <field name="name">sh.ot.reject.wizard.form</field>
+        <field name="model">sh.ot.reject.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Overtime Reject">
+                <group>
+                    <group>
+                        <field name="rej_comment" placeholder="Comment" />
+                    </group>
+                </group>
+                <footer>
+                    <button name="rej_action_ok" string="Ok" type="object" class="btn-primary" />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="sh_ot_reject_wizard_view_actions" model="ir.actions.act_window">
+        <field name="name">Overtime Reject</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.ot.reject.wizard</field>
+        <field name="view_mode">form</field>
+    </record>
+</odoo>

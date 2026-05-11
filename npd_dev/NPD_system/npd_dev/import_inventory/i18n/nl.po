@@ -1,0 +1,232 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* import_inventory
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 13.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-06-15 05:29+0000\n"
+"PO-Revision-Date: 2021-06-15 05:29+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: import_inventory
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/models/stock.py:0
+#, python-format
+msgid "\"%s\" Location is not available."
+msgstr "\"%s\" Locatie is niet beschikbaar."
+
+#. module: import_inventory
+#: code:addons/import_inventory/stock.py:0
+#: code:addons/import_inventory/stock.py:0
+#, python-format
+msgid "\"%s\" Product UOM category is not available."
+msgstr "\"%s\" Product-eenheidscategorie is niet beschikbaar."
+
+#. module: import_inventory
+#: model_terms:ir.ui.view,arch_db:import_inventory.gen_inv_wizard_view
+msgid ""
+"<span style=\"font-size:20px; color:red;\" attrs=\"{'invisible': "
+"[('import_prod_option' ,'!=', 'name')]}\">Make sure that you have unique "
+"product name for all products Otherwise import doesn't work well</span>"
+msgstr ""
+
+#. module: import_inventory
+#: model_terms:ir.ui.view,arch_db:import_inventory.success_import_wizard
+msgid "<span>  records are imported successfully.</span>"
+msgstr "<span>  records zijn succesvol geïmporteerd.</span>"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__location_id_option
+msgid "Allow to Import Location on inventory line from file"
+msgstr "Sta toe om locatie op inventarisregel uit bestand te importeren"
+
+#. module: import_inventory
+#: model:ir.model.fields.selection,name:import_inventory.selection__gen_inv__import_prod_option__barcode
+msgid "Barcode"
+msgstr "Streepjescode"
+
+#. module: import_inventory
+#: model:ir.model.fields.selection,name:import_inventory.selection__gen_inv__import_option__csv
+msgid "CSV File"
+msgstr "CSV-bestand"
+
+#. module: import_inventory
+#: model:ir.model.fields.selection,name:import_inventory.selection__gen_inv__import_prod_option__code
+msgid "Code"
+msgstr "Code"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv__product_counter_main
+msgid "Counter"
+msgstr "Teller"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__create_uid
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv__create_uid
+msgid "Created by"
+msgstr "Gemaakt door"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__create_date
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv__create_date
+msgid "Created on"
+msgstr "Gemaakt op"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__display_name
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv__display_name
+msgid "Display Name"
+msgstr "Weergavenaam"
+
+#. module: import_inventory
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/stock.py:0
+#, python-format
+msgid "Dont Use Charecter only use numbers"
+msgstr "Gebruik geen karakter, gebruik alleen cijfers"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__file
+msgid "File"
+msgstr "het dossier"
+
+#. module: import_inventory
+#: model_terms:ir.ui.view,arch_db:import_inventory.gen_inv_wizard_view
+msgid "Generate Inv"
+msgstr "Inv genereren"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__id
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv__id
+msgid "ID"
+msgstr "ID kaart"
+
+#. module: import_inventory
+#: model_terms:ir.ui.view,arch_db:import_inventory.gen_inv_wizard_view
+msgid "Import"
+msgstr "Importeren"
+
+#. module: import_inventory
+#: model:ir.actions.act_window,name:import_inventory.gen_inv_wizard
+#: model:ir.ui.menu,name:import_inventory.gen_inv_wizard_import
+#: model:res.groups,name:import_inventory.group_import_inventory_access
+msgid "Import Inventory"
+msgstr "Inventaris importeren"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__import_prod_option
+msgid "Import Product By "
+msgstr "Product importeren door"
+
+#. module: import_inventory
+#: code:addons/import_inventory/models/stock.py:0
+#, python-format
+msgid "Invalid file!"
+msgstr "Ongeldig bestand!"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__inv_name
+msgid "Inventory Name"
+msgstr "Voorraadnaam:"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv____last_update
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv____last_update
+msgid "Last Modified on"
+msgstr "Laatst gewijzigd op"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__write_uid
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv__write_uid
+msgid "Last Updated by"
+msgstr "Laatst bijgewerkt door"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__write_date
+#: model:ir.model.fields,field_description:import_inventory.field_generate_inv__write_date
+msgid "Last Updated on"
+msgstr "Laatst geupdate op"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__location_ids
+msgid "Location"
+msgstr "Plaats"
+
+#. module: import_inventory
+#: model:ir.model.fields.selection,name:import_inventory.selection__gen_inv__import_prod_option__name
+msgid "Name"
+msgstr "Naam"
+
+#. module: import_inventory
+#: code:addons/import_inventory/stock.py:0
+#, python-format
+msgid "Not a valid file!"
+msgstr "Geen geldig bestand!"
+
+#. module: import_inventory
+#: model_terms:ir.ui.view,arch_db:import_inventory.success_import_wizard
+msgid "OK"
+msgstr "OK"
+
+#. module: import_inventory
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/models/stock.py:0
+#, python-format
+msgid "Please Select Location"
+msgstr "Selecteer locatie a.u.b."
+
+#. module: import_inventory
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/models/stock.py:0
+#, python-format
+msgid "Product Not Found  \"%s\""
+msgstr "Product niet gevonden  \"%s\""
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__import_option
+msgid "Select"
+msgstr "Selecteer"
+
+#. module: import_inventory
+#: code:addons/import_inventory/models/stock.py:0
+#: code:addons/import_inventory/models/stock.py:0
+#: model_terms:ir.ui.view,arch_db:import_inventory.success_import_wizard
+#, python-format
+msgid "Success"
+msgstr "Succes"
+
+#. module: import_inventory
+#: code:addons/import_inventory/stock.py:0
+#, python-format
+msgid "User Error!"
+msgstr "Gebruikersfout!"
+
+#. module: import_inventory
+#: model:ir.model.fields,field_description:import_inventory.field_gen_inv__is_validate_inventory
+msgid "Validate Inventory"
+msgstr "Voorraad valideren"
+
+#. module: import_inventory
+#: model:ir.model.fields.selection,name:import_inventory.selection__gen_inv__import_option__xls
+msgid "XLS File"
+msgstr "XLS-bestand"
+
+#. module: import_inventory
+#: model:ir.model,name:import_inventory.model_gen_inv
+msgid "gen.inv"
+msgstr ""
+
+#. module: import_inventory
+#: model:ir.model,name:import_inventory.model_generate_inv
+msgid "generate.inv"
+msgstr ""

@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_permission_reverse_cancel_admin,Permission.stock.picking.cancel_admin,stock.stock_quant,base.group_erp_manager,1,1,1,1
+access_permission_reverse_cancel_user,Permission.stock.picking.cancel_user,stock.stock_quant,base.group_user,1,1,1,1

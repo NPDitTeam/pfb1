@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="action_rental_stock_summary" model="ir.actions.act_window">
+        <field name="name">Stock เช่า แยกสาขา</field>
+        <field name="res_model">baankheaw.rental_stock_summary</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p>📌 รายงานนี้แสดงข้อมูลสต็อกเช่าจากระบบภายนอก แยกตามสาขา</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_rental_stock_summary"
+              name="Stock เช่า แยกสาขา"
+              parent="baankheaw.baankheaw_menu_root" action="action_rental_stock_summary"
+              sequence="28" groups="base.group_user"/>
+
+    <record id="view_rental_stock_summary_tree" model="ir.ui.view">
+        <field name="name">baankheaw.rental_stock_summary.tree</field>
+        <field name="model">baankheaw.rental_stock_summary</field>
+        <field name="arch" type="xml">
+            <tree string="สรุป Stock เช่า แยกสาขา">
+                <field name="product_id"/>
+                <field name="product_name"/>
+                <field name="branch_name"/>
+                <field name="initial_stock"/>
+                <field name="stock_in"/>
+                <field name="stock_out"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_rental_stock_summary_form" model="ir.ui.view">
+        <field name="name">baankheaw.rental_stock_summary.form</field>
+        <field name="model">baankheaw.rental_stock_summary</field>
+        <field name="arch" type="xml">
+            <form string="รายละเอียด Stock เช่า">
+                <header>
+                    <button name="action_update_rental_stock_data"
+                            type="object"
+                            string="🔄 อัปเดตข้อมูลสต็อก"
+                            class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="ข้อมูลสินค้า">
+                            <field name="product_id"/>
+                            <field name="product_name"/>
+                            <field name="branch_name"/>
+                        </group>
+                        <group string="จำนวนสต็อก">
+                            <field name="initial_stock"/>
+                            <field name="stock_in"/>
+                            <field name="stock_out"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

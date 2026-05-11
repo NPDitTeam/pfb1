@@ -1,0 +1,36 @@
+<odoo>
+    <template id="assets_backend" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <script type="text/javascript" src="/odoo14_barcode_stock/static/src/js/barcode_auto_enter.js"></script>
+        </xpath>
+    </template>
+
+    <record id="view_product_stock_check_form" model="ir.ui.view">
+        <field name="name">product.stock.check.form</field>
+        <field name="model">product.stock.check</field>
+        <field name="arch" type="xml">
+            <form string="ตรวจสอบสต็อกสินค้า">
+                <sheet>
+                    <group>
+                        <field name="barcode" string="บาร์โค้ด" placeholder="สแกนบาร์โค้ดที่นี่"/>
+                        <field name="product_id" string="สินค้า"/>
+                        <field name="quantity_on_hand" string="จำนวนคงเหลือ" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Add missing action -->
+    <record id="action_product_stock_check" model="ir.actions.act_window">
+        <field name="name">ตรวจสอบสต็อกสินค้า</field>
+        <field name="res_model">product.stock.check</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_product_stock_check"
+              name="ตรวจสอบสต็อกสินค้า"
+              parent="sale.menu_sale_config"
+              action="action_product_stock_check"/>
+</odoo>

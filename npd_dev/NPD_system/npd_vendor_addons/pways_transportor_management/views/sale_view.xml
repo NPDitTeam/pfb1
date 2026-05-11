@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <record id="transport_management_form" model="ir.ui.view">
+            <field name="name">sale.order.form</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='payment_term_id']" position="after">
+                      <label for="transporter_id" attrs="{'readonly': [['state', 'in', ['done']]]}"/>
+                        <div>
+                            <field name='transporter_id' domain="[('transporter','=',True)]"/><br/>
+                            <button name="show_shipment_wizard" type='object' class="btn btn-link">
+                            <span>Add Shipment Infomation</span>
+                            </button>
+                        </div>
+                </xpath>
+                <xpath expr = "//div[@name = 'button_box']" position="inside">
+                    <button class="oe_stat_button" type="object"  name="show_picking_transport"  icon="fa-tasks">
+                        <field name='picking_transport_count' widget="statinfo" string='Shipments'/>
+                    </button>
+                </xpath>
+                <xpath expr="//page[last()]" position="after">
+                    <page string="Transport Details">
+                        <group>
+                            <group>
+                                <field name="vehicle_id" domain="[('transporter_id','=', transporter_id)]" attrs="{'readonly': [['state', 'in', ['done']]]}" readonly='1'/> 
+                                <field name='vehicle_driver' attrs="{'readonly': [['state', 'in', ['done']]]}" readonly='1'/>
+                                <field name="picking_type" readonly='1'/>
+                            </group>
+                            <group>
+                                <field name='transporter_route_id' domain="[('transporter_id','=',transporter_id)]" attrs="{'readonly': [['state', 'in', ['done']]]}" readonly='1'/>
+                                <field name="pick_date" readonly='1'/>
+                                <field name="arrive_date" readonly='1'/>
+                            </group>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+        
+        <record id="transport_management_search_form" model="ir.ui.view">
+            <field name="name">sale.order.form</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.sale_order_view_search_inherit_sale"/>
+            <field name="arch" type="xml">
+                <xpath expr="//search" position="inside">
+                    <field name="transporter_id"/>
+                    <filter name="Transporter" context="{'group_by':'transporter_id'}"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>
+

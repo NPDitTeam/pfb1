@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<odoo>
+    <record id="sh_project_task_update_wizard_form_view" model="ir.ui.view">
+        <field name="name">sh.project.task.mass.tag.wizard.form</field>
+        <field name="model">sh.project.task.mass.update.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Update Mass Wizard">
+                <group>
+                    <group string="Update Assign To">
+                        <field name="update_assign_to_bool" />
+                        <field name="assign_to" attrs="{'invisible': [('update_assign_to_bool', '=', False)]}" />
+                    </group>
+                    <group string="Update Tag">
+                        <field name="update_tags_bool" />
+                        <field name="update_method_tags" attrs="{'invisible': [('update_tags_bool', '=', False)]}" widget="radio" />
+                        <field name="update_tags" attrs="{'invisible': [('update_tags_bool', '=', False)]}" widget="many2many_tags" />
+                    </group>
+                    <group string="Update Deadline">
+                        <field name="update_deadline_bool" />
+                        <field name="deadline" attrs="{'invisible': [('update_deadline_bool', '=', False)]}" />
+                    </group>
+                    <group string="Update Stage">
+                        <field name="update_stage_bool" />
+                        <field name="stage_id" attrs="{'invisible': [('update_stage_bool', '=', False)]}" />
+                    </group>
+                    <group string="Update Project">
+                        <field name="update_project_bool" />
+                        <field name="project_id" attrs="{'invisible': [('update_project_bool', '=', False)]}" />
+                    </group>
+                </group>
+                <footer>
+                    <button name="update_record" class="btn btn-primary" type="object" string="Done" />
+                    <button string="Cancel" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="sh_project_task_mass_tag_wizard_action" model="ir.actions.act_window">
+        <field name="name">Update Mass Tag</field>
+        <field name="res_model">sh.project.task.mass.update.wizard</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

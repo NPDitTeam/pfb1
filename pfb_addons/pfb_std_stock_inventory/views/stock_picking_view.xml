@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="stock_move_view_tree_inherit" model="ir.ui.view">
+        <field name="name">stock.move.view.tree.inherit</field>
+        <field name="model">stock.move</field>
+        <field name="inherit_id" ref="stock.view_move_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//tree" position="replace">
+                <tree string="Moves" create="0">
+                    <field name="date"  decoration-danger="(state not in ('cancel','done')) and date &gt; current_date"/>
+                    <field name="reference"/>
+                    <field name="picking_type_id" invisible="1"/>
+                    <field name="create_date" invisible="1" groups="base.group_no_one"/>
+                    <field name="product_id"/>
+                    <field name="location_id" options="{'no_create': True}" string="From"/>
+                    <field name="location_dest_id" options="{'no_create': True}" string="To"/>
+                    <field name="product_uom_qty"/>
+                    <field name="product_uom" options="{'no_open': True, 'no_create': True}" string="Unit of Measure" groups="uom.group_uom"/>
+                    <field name="state" widget="badge" decoration-success="state == 'done'" decoration-info="state not in ('done', 'cancel')"/>
+                </tree>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="stock_move_line_tree_inherit" model="ir.ui.view">
+        <field name="name">stock.move.line.tree.inherit</field>
+        <field name="model">stock.move.line</field>
+        <field name="inherit_id" ref="stock.view_move_line_tree"/>
+        <field name="arch" type="xml">
+            <field name="date" position="after">
+                <field name="picking_type_id" />
+            </field>
+        </field>
+    </record>
+
+</odoo>

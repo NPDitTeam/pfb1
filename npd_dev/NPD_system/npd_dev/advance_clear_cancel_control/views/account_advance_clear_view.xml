@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- ซ่อนปุ่ม Cancel ใน Advance Clear ตามสิทธิ์ผู้ใช้ -->
+        <record id="view_advance_clear_form_cancel_control" model="ir.ui.view">
+            <field name="name">account.advance.clear.form.cancel.control</field>
+            <field name="model">account.advance.clear</field>
+            <field name="inherit_id" ref="account_advance.account_advance_clear_form_view"/>
+            <field name="arch" type="xml">
+                <!-- เพิ่ม field computed สำหรับตรวจสอบสิทธิ์ -->
+                <xpath expr="//field[@name='avance_cl_approve_show']" position="after">
+                    <field name="allow_cancel_advance_clear_show" invisible="1"/>
+                </xpath>
+
+                <!-- ซ่อนปุ่ม Cancel ที่ state=draft -->
+                <xpath expr="//button[@name='action_cancel_draft']" position="attributes">
+                    <attribute name="attrs">{'invisible': ['|', ('allow_cancel_advance_clear_show', '=', False), ('state', '!=', 'draft')]}</attribute>
+                    <attribute name="states"/>
+                </xpath>
+
+                <!-- ซ่อนปุ่ม Cancel ที่ state=post -->
+                <xpath expr="//button[@name='cancel_advance']" position="attributes">
+                    <attribute name="attrs">{'invisible': ['|', ('allow_cancel_advance_clear_show', '=', False), ('state', '!=', 'post')]}</attribute>
+                    <attribute name="states"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

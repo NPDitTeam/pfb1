@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================ -->
+    <!-- Wizard Form: ค้นหาและดำเนินการรับชำระใหม่   -->
+    <!-- ============================================ -->
+    <record id="view_payment_reprocess_wizard_form" model="ir.ui.view">
+        <field name="name">payment.reprocess.wizard.form</field>
+        <field name="model">payment.reprocess.wizard</field>
+        <field name="arch" type="xml">
+            <form string="ค้นหาและดำเนินการรับชำระใหม่">
+                <sheet>
+                    <!-- แถบเตือน -->
+                    <div class="alert alert-info" role="alert"
+                         attrs="{'invisible': [('is_searched', '=', True)]}">
+                        <strong>วิธีใช้:</strong>
+                        กำหนดช่วงวันที่/เวลา แล้วกด "ค้นหา" เพื่อแสดงรายการ Payment ที่ถูกยกเลิก
+                    </div>
+
+                    <div class="alert alert-warning" role="alert"
+                         attrs="{'invisible': [('is_searched', '=', False)]}">
+                        <strong>คำเตือน:</strong>
+                        เมื่อกด "ดำเนินการใหม่" ระบบจะทำอัตโนมัติ:
+                        <strong>Reset to Draft → Refresh Invoice → Post ใหม่</strong>
+                    </div>
+
+                    <!-- ===== ฟอร์มค้นหา ===== -->
+                    <group string="ค้นหาตามช่วงวันที่/เวลาที่ยกเลิก (รูปแบบ: YYYY-MM-DD HH:MM:SS)">
+                        <group>
+                            <field name="date_from" placeholder="2026-02-26 17:15:00"/>
+                        </group>
+                        <group>
+                            <field name="date_to" placeholder="2026-03-03 13:31:00"/>
+                        </group>
+                    </group>
+
+                    <field name="is_searched" invisible="1"/>
+
+                    <!-- ปุ่มค้นหา -->
+                    <div style="margin-bottom: 15px;">
+                        <button name="action_search"
+                                string="ค้นหา"
+                                type="object"
+                                class="btn-primary oe_highlight"
+                                icon="fa-search"/>
+                        <button name="action_select_all"
+                                string="เลือกทั้งหมด"
+                                type="object"
+                                class="btn-secondary ml-2"
+                                attrs="{'invisible': [('is_searched', '=', False)]}"/>
+                        <button name="action_deselect_all"
+                                string="ยกเลิกเลือกทั้งหมด"
+                                type="object"
+                                class="btn-secondary ml-2"
+                                attrs="{'invisible': [('is_searched', '=', False)]}"/>
+                    </div>
+
+                    <!-- ===== ผลลัพธ์ ===== -->
+                    <group attrs="{'invisible': [('is_searched', '=', False)]}">
+                        <field name="result_count" string="จำนวนที่พบ"/>
+                    </group>
+
+                    <field name="line_ids"
+                           nolabel="1"
+                           attrs="{'invisible': [('is_searched', '=', False)]}">
+                        <tree string="รายการ Payment ที่ถูกยกเลิก"
+                              editable="bottom"
+                              decoration-success="status == 'success'"
+                              decoration-danger="status == 'error'"
+                              decoration-muted="selected == False">
+                            <field name="selected"/>
+                            <field name="payment_name" string="เลขที่ Payment"/>
+                            <field name="move_name" string="Journal Entry"/>
+                            <field name="partner_name" string="ลูกค้า"/>
+                            <field name="payment_type" string="ประเภท"/>
+                            <field name="amount" string="ยอดชำระ"/>
+                            <field name="journal_name" string="สมุดรายวัน"/>
+                            <field name="cancel_time_thai" string="วัน/เวลายกเลิก"/>
+                            <field name="status" string="สถานะ"
+                                   widget="badge"
+                                   decoration-success="status == 'success'"
+                                   decoration-danger="status == 'error'"
+                                   decoration-info="status == 'pending'"/>
+                            <field name="error_message" string="ข้อผิดพลาด"
+                                   attrs="{'invisible': [('status', '!=', 'error')]}"/>
+                        </tree>
+                    </field>
+
+                </sheet>
+
+                <footer>
+                    <button name="action_reprocess_selected"
+                            string="ดำเนินการรับชำระใหม่"
+                            type="object"
+                            class="btn-primary oe_highlight"
+                            attrs="{'invisible': ['|', ('is_searched', '=', False), ('result_count', '=', 0)]}"
+                            confirm="คุณต้องการดำเนินการรับชำระใหม่สำหรับรายการที่เลือกหรือไม่? ระบบจะ Reset to Draft, Refresh Invoice และ Post ใหม่โดยอัตโนมัติ"/>
+                    <button string="ปิด" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================ -->
+    <!-- Action เปิด Wizard                          -->
+    <!-- ============================================ -->
+    <record id="action_payment_reprocess_wizard" model="ir.actions.act_window">
+        <field name="name">ดำเนินการรับชำระใหม่</field>
+        <field name="res_model">payment.reprocess.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ============================================ -->
+    <!-- เมนู (อยู่ใต้ Accounting)                    -->
+    <!-- ============================================ -->
+    <menuitem id="menu_payment_reprocess_wizard"
+              name="ดำเนินการรับชำระใหม่"
+              parent="account.menu_finance_receivables"
+              action="action_payment_reprocess_wizard"
+              groups="npd_payment_reprocess.group_payment_reprocess"
+              sequence="99"/>
+
+</odoo>

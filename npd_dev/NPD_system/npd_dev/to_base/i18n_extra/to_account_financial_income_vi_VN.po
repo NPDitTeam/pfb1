@@ -1,0 +1,63 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* base
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-12-25 05:01+0000\n"
+"PO-Revision-Date: 2021-12-25 05:01+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: base
+#: model:ir.module.module,summary:base.module_to_account_financial_income
+msgid ""
+"\n"
+"Add Financial Income Account Type"
+msgstr ""
+"\n"
+"Tạo thêm kiểu tài khoản Doanh thu Tài chính"
+
+#. module: base
+#: model:ir.module.module,description:base.module_to_account_financial_income
+msgid ""
+"\n"
+"Key Features\n"
+"============\n"
+"* New Account Type\n"
+"\n"
+"  * Name: Financial Income\n"
+"  * xml_id: to_account_financial_income.data_account_type_financial_income\n"
+"\n"
+"Editions Supported\n"
+"==================\n"
+"1. Community Edition\n"
+"2. Enterprise Edition\n"
+"\n"
+"    "
+msgstr ""
+"\n"
+"Tính năng\n"
+"=========\n"
+"* Kiểu tài khoản mới\n"
+"\n"
+"  * Tên: Doanh thu Tài chính\n"
+"  * xml_id: to_account_financial_income.data_account_type_financial_income\n"
+"\n"
+"Ấn bản được Hỗ trợ\n"
+"==================\n"
+"1. Ấn bản Community\n"
+"2. Ấn bản Enterprise\n"
+"\n"
+"    "
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_to_account_financial_income
+msgid "Financial Income Account Type"
+msgstr "Kiểu tài khoản Doanh thu Tài chính"

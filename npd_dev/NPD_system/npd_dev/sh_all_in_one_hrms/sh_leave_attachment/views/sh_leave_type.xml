@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_leave_type_view_inherit" model="ir.ui.view">
+        <field name="name">sh.leave.type.view.inherit</field>
+        <field name="model">hr.leave.type</field>
+        <field name="inherit_id" ref="hr_holidays.edit_holiday_status_form" />
+        <field name="arch" type="xml">
+            <field name="request_unit" position="after">
+                <field name="sh_leave_attachment" groups="sh_all_in_one_hrms.group_enable_sh_leave_attachment"/>
+                <field name="no_of_days" attrs="{'invisible':[('sh_leave_attachment','=',False)]}" groups="sh_all_in_one_hrms.group_enable_sh_leave_attachment"/>
+            </field>
+        </field>
+    </record>
+    <record id="sh_leave_request_view_inherit" model="ir.ui.view">
+        <field name="name">sh.leave.request.view.inherit</field>
+        <field name="model">hr.leave</field>
+        <field name="inherit_id" ref="hr_holidays.hr_leave_view_form" />
+        <field name="arch" type="xml">
+            <field name="name" position="before">
+                <field name="sh_leave_req_attachment" attrs="{'required':[('leave_attach','=', True)]}" groups="sh_all_in_one_hrms.group_enable_sh_leave_attachment"/>
+                <field name="leave_attach" invisible="1" groups="sh_all_in_one_hrms.group_enable_sh_leave_attachment"/>
+            </field>
+        </field>
+    </record>
+</odoo>

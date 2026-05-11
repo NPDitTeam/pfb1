@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View สำหรับ สาขา -->
+    <record id="view_branch_tree" model="ir.ui.view">
+        <field name="name">hr.branch.custom.tree</field>
+        <field name="model">hr.branch.custom</field>
+        <field name="arch" type="xml">
+            <tree string="สาขา" editable="bottom">
+                <field name="id" string="รหัส"/>
+                <field name="name" string="ชื่อสาขา"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View สำหรับ สาขา -->
+    <record id="view_branch_form" model="ir.ui.view">
+        <field name="name">hr.branch.custom.form</field>
+        <field name="model">hr.branch.custom</field>
+        <field name="arch" type="xml">
+            <form string="สาขา">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="id" string="รหัส" readonly="1"/>
+                            <field name="name" string="ชื่อสาขา"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action สำหรับ สาขา (ใช้แสดงผลหลัง sync) -->
+    <record id="action_branch" model="ir.actions.act_window">
+        <field name="name">สาขา</field>
+        <field name="res_model">hr.branch.custom</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                สร้างสาขาใหม่
+            </p>
+        </field>
+    </record>
+
+    <!-- Server Action สำหรับซิงค์และเปิดหน้าสาขา -->
+    <record id="action_sync_and_open_branch" model="ir.actions.server">
+        <field name="name">สาขา</field>
+        <field name="model_id" ref="model_hr_branch_custom"/>
+        <field name="state">code</field>
+        <field name="code">action = model.sync_and_open_view()</field>
+    </record>
+</odoo>

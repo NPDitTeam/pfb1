@@ -1,0 +1,70 @@
+<odoo>
+	<data>
+		<record id="calendar_meeting_room_view_tree" model="ir.ui.view">
+			<field name="name">calendar.meeting.room.tree</field>
+			<field name="model">calendar.meeting.room</field>
+			<field name="arch" type="xml">
+				<tree string="Meeting Room">
+					<field name="name" />
+					<field name="capacity" />
+					<field name="location" />
+				</tree>
+			</field>
+		</record>
+
+		<record id="calendar_meeting_room_view_form" model="ir.ui.view">
+			<field name="name">calendar.meeting.room.form</field>
+			<field name="model">calendar.meeting.room</field>
+			<field name="arch" type="xml">
+				<form string="Meeting Room">
+					<sheet>
+					    <widget name="web_ribbon" title="Archived" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}"/>
+						<div class="oe_title">
+							<div class="oe_edit_only">
+								<label for="name" />
+							</div>
+							<h1>
+								<field name="name" />
+							</h1>
+						</div>
+						<notebook>
+							<page string="Meeting Room Details">
+								<group>
+									<group>
+										<field name="capacity" />
+										<field name="active" invisible="1" />
+									</group>
+									<group>
+										<field name="location" />
+									</group>
+								</group>
+							</page>
+						</notebook>
+					</sheet>
+				</form>
+			</field>
+		</record>
+
+		<record id="calendar_meeting_room_view_search" model="ir.ui.view">
+            <field name="name">calendar.meeting.room.search</field>
+            <field name="model">calendar.meeting.room</field>
+            <field name="arch" type="xml">
+                 <search>
+                     <field name="name" />
+                     <field name="capacity" />
+                     <field name="location" />
+                     <filter name="ftr_active" string="Archived" domain="[('active', '=', False)]"/>
+                 </search>
+            </field>
+        </record>
+
+		<record id="calendar_meeting_room_action" model="ir.actions.act_window">
+			<field name="name">Meeting Room</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">calendar.meeting.room</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+
+		<menuitem id="calendar_meeting_room_menu" name="Meeting Rooms" action="calendar_meeting_room_action" parent="calendar.menu_calendar_configuration" groups="base.group_no_one" />
+	</data>
+</odoo>

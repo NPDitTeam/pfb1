@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Wizard Form View -->
+        <record id="view_stock_report_wizard" model="ir.ui.view">
+            <field name="name">stock.report.wizard.form</field>
+            <field name="model">stock.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="🔍 เงื่อนไขรายงานสินค้าเช่า">
+                    <sheet>
+                        <div class="oe_title">
+                            <h2>กำหนดเงื่อนไขในการดึงข้อมูล</h2>
+                        </div>
+                        <group>
+                            <group string="🏢 สาขา">
+                                <field name="branch_ids"
+                                       widget="many2many_tags"
+                                       placeholder="เลือกสาขา (เว้นว่างเพื่อดูทุกสาขา)"
+                                       options="{'no_create': True}"/>
+                            </group>
+                            <group string="📦 สินค้า">
+                                <field name="product_ids"
+                                       widget="many2many_tags"
+                                       placeholder="เลือกสินค้า (เว้นว่างเพื่อดูทั้งหมด)"
+                                       options="{'no_create': True}"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="filter_type" widget="radio"/>
+                        </group>
+                        <group>
+                            <div class="alert alert-info" role="alert">
+                                <i class="fa fa-info-circle"/> <strong>หมายเหตุ:</strong>
+                                <ul>
+                                    <li>ระบบจะแสดงเฉพาะสินค้าที่มีรหัส (R) ในชื่อ</li>
+                                    <li>เว้นว่างสาขาจะแสดงทุกสาขา</li>
+                                    <li>เว้นว่างสินค้าจะแสดงทุกรายการ</li>
+                                </ul>
+                            </div>
+                        </group>
+                    </sheet>
+                    <footer>
+                        <button name="action_generate_report"
+                                type="object"
+                                string="🔍 ค้นหารายงาน"
+                                class="btn-primary"/>
+                        <button string="ยกเลิก"
+                                class="btn-secondary"
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Wizard Action -->
+        <record id="action_stock_report_wizard" model="ir.actions.act_window">
+            <field name="name">รายงานสินค้าเช่า</field>
+            <field name="res_model">stock.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="view_id" ref="view_stock_report_wizard"/>
+        </record>
+
+        <!-- เมนูสำหรับเรียก Wizard -->
+        <menuitem id="menu_stock_report_wizard"
+                  name="รายงานสินค้าเช่า"
+                  parent="menu_stock_reports"
+                  action="action_stock_report_wizard"
+                  sequence="10"/>
+    </data>
+</odoo>

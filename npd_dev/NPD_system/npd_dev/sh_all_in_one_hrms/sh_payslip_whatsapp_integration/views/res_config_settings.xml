@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <!-- 	Payroll -->
+    <record id="sh_show_whatsapp_send_hr_payroll_res_config_settings" model="ir.ui.view">
+        <field name="name">Whatsapp send</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="sh_hr_payroll.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@data-key='hr_payroll']" position="inside">
+                <h2 groups="sh_all_in_one_hrms.group_hr_payroll_whatsapp_feature">Whatsapp send</h2>
+                <div class="row mt16 o_settings_container" groups="sh_all_in_one_hrms.group_hr_payroll_whatsapp_feature">
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="payroll_information_in_message" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="payroll_information_in_message" />
+                            <div class="text-muted">
+                                Show Payroll Information in messsage
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="payroll_signature" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="payroll_signature" />
+                            <div class="text-muted">
+                                Show Signature
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="payroll_send_pdf_in_message" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="payroll_send_pdf_in_message" />
+                            <div class="text-muted">
+                                Send Report Url in Message
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

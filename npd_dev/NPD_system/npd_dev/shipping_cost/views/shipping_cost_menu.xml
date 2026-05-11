@@ -1,0 +1,27 @@
+<odoo>
+    <data>
+        <!-- Action สำหรับเมนู -->
+        <record id="action_shipping_cost" model="ir.actions.act_window">
+            <field name="name">การกำหนดค่าขนส่ง</field>
+            <field name="res_model">shipping.cost</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    ยังไม่มีข้อมูลการกำหนดค่าขนส่งเพิ่มข้อมูลใหม่เพื่อเริ่มต้น
+                </p>
+            </field>
+        </record>
+
+        <!-- เมนูหลักของทะเบียนรถ -->
+        <menuitem id="menu_shipping_cost_main"
+          name="การกำหนดค่าขนส่ง"
+          parent="sale.menu_sale_config"/>
+
+
+        <!-- เมนูรายการทะเบียนรถ -->
+        <menuitem id="menu_shipping_cost"
+                  name="การกำหนดค่าขนส่ง"
+                  parent="menu_shipping_cost_main"
+                  action="action_shipping_cost"/>
+    </data>
+</odoo>

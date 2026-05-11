@@ -1,0 +1,78 @@
+<odoo>
+    <report
+            string="______Journal______"
+            id="payment_voucher_pdf_menu"
+            model="account.move"
+            name="npd_npd_journal_voucher_qweb.payment_menu"
+            file="npd_npd_journal_voucher_qweb.payment_menu"
+            report_type="qweb-pdf"
+            print_report_name="'[%s]' % object.display_name"
+            paperformat="npd_npd_journal_voucher_qweb.paperformat_journal_voucher"
+    />
+
+    <report
+            string="ใบสำคัญจ่าย"
+            id="payment_voucher_pdf_report"
+            model="account.move"
+            name="npd_npd_journal_voucher_qweb.payment_voucher_pdf"
+            file="npd_npd_journal_voucher_qweb.payment_voucher_pdf"
+            report_type="qweb-pdf"
+            print_report_name="'[%s]' % object.display_name"
+            paperformat="npd_npd_journal_voucher_qweb.paperformat_journal_payment_voucher_cash_pdf"
+    />
+    <report
+            string="ใบสำคัญจ่าย (สด)"
+            id="payment_voucher_cash_pdf_report"
+            model="account.move"
+            name="npd_npd_journal_voucher_qweb.payment_voucher_cash_pdf"
+            file="npd_npd_journal_voucher_qweb.payment_voucher_cash_pdf"
+            report_type="qweb-pdf"
+            print_report_name="'[%s]' % object.display_name"
+            paperformat="npd_npd_journal_voucher_qweb.paperformat_journal_voucher_payment_voucher_pdf"
+    />
+    <report
+            string="ใบสำคัญรับ"
+            id="receipt_voucher_pdf_report"
+            model="account.move"
+            name="npd_npd_journal_voucher_qweb.receipt_voucher_pdf"
+            file="npd_npd_journal_voucher_qweb.receipt_voucher_pdf"
+            report_type="qweb-pdf"
+            print_report_name="'[%s]' % object.display_name"
+            paperformat="npd_npd_journal_voucher_qweb.paperformat_journal_voucher_receipt"
+    />
+
+    <report
+            string="ใบสำคัญรับ (สด)"
+            id="receipt_cash_voucher_pdf_report"
+            model="account.move"
+            name="npd_npd_journal_voucher_qweb.receipt_cash_voucher_pdf"
+            file="npd_npd_journal_voucher_qweb.receipt_cash_voucher_pdf"
+            report_type="qweb-pdf"
+            print_report_name="'[%s]' % object.display_name"
+            paperformat="npd_npd_journal_voucher_qweb.paperformat_journal_voucher_receipt"
+    />
+
+    <report
+            string="ใบสำคัญทั่วไป"
+            id="journal_voucher_pdf_report"
+            model="account.move"
+            name="npd_npd_journal_voucher_qweb.journal_voucher_pdf"
+            file="npd_npd_journal_voucher_qweb.journal_voucher_pdf"
+            report_type="qweb-pdf"
+            print_report_name="'[%s]' % object.display_name"
+            paperformat="npd_npd_journal_voucher_qweb.paperformat_journal_voucher_payment_voucher_pdf"
+    />
+
+    <report
+            string="ใบสำคัญซื้อ"
+            id="vendors_bills_pdf_report"
+            model="account.move"
+            name="npd_npd_journal_voucher_qweb.vendors_bills_pdf"
+            file="npd_npd_journal_voucher_qweb.vendors_bills_pdf"
+            report_type="qweb-pdf"
+            print_report_name="'[%s]' % object.display_name"
+            paperformat="npd_npd_journal_voucher_qweb.paperformat_journal_payment_voucher_cash_pdf"
+    />
+
+
+</odoo>

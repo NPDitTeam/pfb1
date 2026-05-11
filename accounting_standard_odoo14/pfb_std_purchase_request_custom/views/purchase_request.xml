@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+    <data>
+        <record id="view_purchase_request_form_std_custom" model="ir.ui.view">
+            <field name="name">view_purchase_request_form_std_custom</field>
+            <field name="model">purchase.request</field>
+            <field name="inherit_id" ref="purchase_request.view_purchase_request_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='line_ids']/form//field[@name='cancelled']" position="after">
+                    <field name="suggest_vendor"/>
+                    <field name="tax_id"/>
+                    <field name="price_tax" invisible="1"/>
+                    <field name="price_subtotal"/>
+                </xpath>
+                <xpath expr="//field[@name='line_ids']/tree//field[@name='purchase_state']" position="after">
+                    <field name="suggest_vendor"/>
+                    <field name="tax_id"/>
+                    <field name="price_tax" invisible="1"/>
+                    <field name="price_subtotal"/>
+                </xpath>
+                <xpath expr="//field[@name='line_ids']/form//field[@name='estimated_cost']" position="attributes">
+                    <attribute name="string">Est. Unit Cost</attribute>
+                </xpath>
+
+                <xpath expr="//field[@name='line_ids']//field[@name='estimated_cost']" position="attributes">
+                    <attribute name="string">Est. Unit Cost</attribute>
+                </xpath>
+                <xpath expr="//field[@name='line_ids']" position="after">
+                    <group class="oe_subtotal_footer oe_right">
+                        <field name="currency_id" invisible="1"/>
+                        <field name="amount_untaxed" force_save="1"/>
+                        <field name="amount_tax" force_save="1"/>
+                        <field name="amount_total" force_save="1"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+        <record id="view_purchase_request_line_make_purchase_order_std_custom" model="ir.ui.view">
+            <field name="name">view_purchase_request_line_make_purchase_order_std_custom</field>
+            <field name="model">purchase.request.line.make.purchase.order</field>
+            <field name="inherit_id" ref="purchase_request.view_purchase_request_line_make_purchase_order"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='item_ids']/tree/field[@name='product_id']" position="after">
+                    <field name="suggest_vendor" invisible="1"/>
+                    <field name="analytic_account_id" invisible="1"/>
+                    <field name="date_required" invisible="1"/>
+                    <!--<field name="project_id"/>-->
+                </xpath>
+
+            </field>
+        </record>
+
+        <record id="purchase_request_line_form_std_custom" model="ir.ui.view">
+            <field name="name">purchase_request_line_form_std_custom</field>
+            <field name="model">purchase.request.line</field>
+            <field name="inherit_id" ref="purchase_request.purchase_request_line_form"/>
+            <field name="arch" type="xml">
+                <field name="cancelled" position="replace">
+                    <field name="cancelled"
+                           attrs="{'readonly': ['|',('request_state', 'in', ('draft')),('purchase_state', 'in', ('draft'))]}"></field>
+                </field>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="std_pr_form">
+            <field name="name">std_pr_form</field>
+            <field name="model">purchase.request</field>
+            <field name="inherit_id" ref="purchase_request.view_purchase_request_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='origin']" position="after">
+                    <field name="amount_total"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_purchase_request_tree_std_custom" model="ir.ui.view">
+            <field name="name">view_purchase_request_tree_std_custom</field>
+            <field name="model">purchase.request.line</field>
+            <field name="inherit_id" ref="purchase_request.purchase_request_line_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='date_required']" position="after">
+                    <field name="rfq_numbers"/>
+                    <field name="po_numbers"/>
+                    <field name="product_categ"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

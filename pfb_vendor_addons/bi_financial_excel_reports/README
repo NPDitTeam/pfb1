@@ -1,0 +1,7 @@
+date: 27/5/2021
+version:14.0.0.1
+Update:
+	Add New Button "Print Excel" in Profit Loss Report.
+
+=> 14.0.0.2 :  Add French, Spanish , Arabic and Dutch translation in module also improved an index.
+14.0.0.3 ==>fixed issue of multi company.

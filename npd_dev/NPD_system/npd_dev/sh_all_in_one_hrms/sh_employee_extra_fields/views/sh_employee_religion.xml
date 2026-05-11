@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<odoo>
+    <!-- Sh Employee Religion views and action -->
+    <record id="sh_employee_religion_form_view" model="ir.ui.view">
+        <field name="name">sh.employee.religion.form</field>
+        <field name="model">sh.employee.religion</field>
+        <field name="arch" type="xml">
+            <form string="Religion">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_employee_religion_tree_view" model="ir.ui.view">
+        <field name="name">sh.employee.religion.tree</field>
+        <field name="model">sh.employee.religion</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" string="Name" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="sh_employee_religion_search_view" model="ir.ui.view">
+        <field name="name">sh.employee.religion.search</field>
+        <field name="model">sh.employee.religion</field>
+        <field name="arch" type="xml">
+            <search string="Religion">
+                <field name="name" string="Name" />
+                <group expand="0" string="Group by...">
+                    <filter string="Religion" name="name" context="{'group_by': 'name'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="sh_employee_religion_view_actions" model="ir.actions.act_window">
+        <field name="name">Religion</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.employee.religion</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_nonemoving_stock,nonemoving.stock,model_nonemoving_stock,,1,1,1,1
+access_nonemoving_stock_excel,nonemoving.stock.excel,model_nonemoving_stock_excel,,1,1,1,1
+
+
+
+

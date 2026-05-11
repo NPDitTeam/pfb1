@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- Tree View -->
+  <record id="view_hr_checkin_distance_tree" model="ir.ui.view">
+    <field name="name">hr.checkin.distance.tree</field>
+    <field name="model">hr.checkin.distance</field>
+    <field name="arch" type="xml">
+      <tree string="Check-in Distance">
+        <field name="branch_name" invisible="1"/>
+        <field name="branch_id"/>
+        <field name="distance_meter"/>
+        <field name="latitude"/>
+        <field name="longitude"/>
+      </tree>
+    </field>
+  </record>
+
+  <!-- Form View -->
+  <record id="view_hr_checkin_distance_form" model="ir.ui.view">
+    <field name="name">hr.checkin.distance.form</field>
+    <field name="model">hr.checkin.distance</field>
+    <field name="arch" type="xml">
+      <form string="Check-in Distance">
+        <header>
+          <button name="sync_and_open_view"
+                  type="object"
+                  string="🔄 ดึงข้อมูลจาก PHP"
+                  class="oe_highlight" attrs="{'invisible': True}"/>
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <h1>
+              <field name="branch_name" invisible="1"/>
+              <field name="branch_id" placeholder="เลือกสาขา..."/>
+            </h1>
+          </div>
+
+          <group>
+            <group string="ข้อมูลพื้นฐาน">
+              <field name="distance_meter"/>
+            </group>
+            <group string="พิกัดที่ตั้ง">
+              <field name="latitude"/>
+              <field name="longitude"/>
+            </group>
+          </group>
+
+          <!-- แผนที่ทั้ง 2 แบบ -->
+          <notebook>
+
+            <page string="📊 ข้อมูลแผนที่" attrs="{'invisible': [('latitude', '=', False)]}">
+              <div class="alert alert-success" role="alert" style="margin-bottom: 20px;">
+                <h5><i class="fa fa-map"></i> แผนที่และข้อมูลสาขา</h5>
+                <p class="mb-0">
+                  แสดงข้อมูลแผนที่ พิกัด และลิงก์สำหรับเปิดใน Google Maps
+                </p>
+              </div>
+              <!-- Static Map Display -->
+              <field name="map_display" widget="html" nolabel="1"/>
+              <div style="text-align: center; margin-top: 15px;">
+                <button name="action_open_map_circle"
+                        type="object"
+                        string="🗺️ เปิดแผนที่พร้อมวงกลมรัศมี Check-in"
+                        class="btn btn-primary btn-lg"/>
+              </div>
+            </page>
+
+
+          </notebook>
+
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- Action -->
+  <record id="action_hr_checkin_distance" model="ir.actions.act_window">
+    <field name="name">จัดการระยะ Check-in</field>
+    <field name="res_model">hr.checkin.distance</field>
+    <field name="view_mode">tree,form</field>
+  </record>
+
+  <!-- Server Action สำหรับ sync -->
+  <record id="server_action_sync_hr_checkin_distance" model="ir.actions.server">
+    <field name="name">Sync Check-in Distance</field>
+    <field name="model_id" ref="model_hr_checkin_distance"/>
+    <field name="state">code</field>
+    <field name="code">action = model.sync_and_open_view()</field>
+  </record>
+
+  <!-- Menu -->
+  <menuitem id="menu_hr_checkin_distance"
+            name="จัดการระยะ Check-in"
+            parent="main_employee_salary_menu"
+            action="action_hr_checkin_distance"
+            sequence="20"/>
+
+</odoo>

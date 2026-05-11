@@ -1,0 +1,387 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* generic_excel_reports
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 13.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-03-05 14:46+0000\n"
+"PO-Revision-Date: 2021-03-05 14:46+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__sub_model_field_ids
+msgid " Sub model Fields"
+msgstr "الحقول النموذجية الفرعية"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_form
+msgid ""
+"<span class=\"o_stat_text\">Add</span>\n"
+"                                    <span class=\"o_stat_text\">Context Action</span>"
+msgstr ""
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_form
+msgid ""
+"<span class=\"o_stat_text\">Remove</span>\n"
+"                                    <span class=\"o_stat_text\">Context Action</span>"
+msgstr ""
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_wizard_form
+msgid "Are you sure to print report?"
+msgstr "هل أنت متأكد من طباعة التقرير؟"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__cmp_background_color
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__header_background_color
+msgid "Background Color"
+msgstr "لون الخلفية"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__cmp_bold
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__header_bold
+msgid "Bold"
+msgstr "بالخط العريض"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_wizard_form
+msgid "Cancel"
+msgstr "يلغي"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_wizard_form
+msgid "Close"
+msgstr "قريب"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_template_configuration_form
+msgid "Company Style"
+msgstr "أسلوب الشركة"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_field_ids_one2many__create_uid
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__create_uid
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report_wizard__create_uid
+#: model:ir.model.fields,field_description:generic_excel_reports.field_sub_model_field_ids_one2many__create_uid
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__create_uid
+msgid "Created by"
+msgstr "انشأ من قبل"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_field_ids_one2many__create_date
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__create_date
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report_wizard__create_date
+#: model:ir.model.fields,field_description:generic_excel_reports.field_sub_model_field_ids_one2many__create_date
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__create_date
+msgid "Created on"
+msgstr "تم إنشاؤها على"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_field_ids_one2many__display_name
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__display_name
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report_wizard__display_name
+#: model:ir.model.fields,field_description:generic_excel_reports.field_sub_model_field_ids_one2many__display_name
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__display_name
+msgid "Display Name"
+msgstr "اسم العرض"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_form
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_wizard_form
+msgid "Excel Report"
+msgstr "تقرير Excel"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__excel_sheet_name
+msgid "Excel Sheet Name"
+msgstr "اسم ورقة Excel"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_template_configuration_form
+msgid "Excel Title"
+msgstr "عنوان Excel"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__field_ids
+msgid "Fields"
+msgstr "مجالات"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_field_ids_one2many__field_id
+#: model:ir.model.fields,field_description:generic_excel_reports.field_sub_model_field_ids_one2many__field_id
+msgid "Fields Name"
+msgstr "اسم الحقول"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_form
+msgid "Fields To Print"
+msgstr "حقول للطباعة"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__cmp_font_color
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__header_font_color
+msgid "Font Color"
+msgstr "لون الخط"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__cmp_font_name
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__header_font_name
+msgid "Font Name"
+msgstr "اسم الخط"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__cmp_font_size
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__header_font_size
+msgid "Font Size"
+msgstr "حجم الخط"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_tree
+msgid "GLoble Report"
+msgstr "تقرير GLobal"
+
+#. module: generic_excel_reports
+#: model:ir.actions.act_window,name:generic_excel_reports.action_generate_globle_report
+#: model:ir.model.fields,field_description:generic_excel_reports.field_field_ids_one2many__generic_id
+#: model:ir.model.fields,field_description:generic_excel_reports.field_sub_model_field_ids_one2many__sub_model_generic_id
+#: model:ir.ui.menu,name:generic_excel_reports.menu_generate_globle_report
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_wizard_form
+msgid "Generic Excel Report"
+msgstr "تقرير Excel عام"
+
+#. module: generic_excel_reports
+#: model:ir.ui.menu,name:generic_excel_reports.generic_report_excel
+msgid "Generic Excel Report Configure"
+msgstr "تكوين تقرير Excel العام"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__field_id
+msgid "Group BY"
+msgstr "مجموعة من"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__header_name
+msgid "Header Name"
+msgstr "اسم الرأس"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_template_configuration_form
+msgid "Header Style"
+msgstr "نمط الرأس"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_wizard_form
+msgid "Here is the Excel Report:"
+msgstr "هنا هو تقرير Excel:"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_field_ids_one2many__id
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__id
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report_wizard__id
+#: model:ir.model.fields,field_description:generic_excel_reports.field_sub_model_field_ids_one2many__id
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__id
+msgid "ID"
+msgstr "بطاقة تعريف"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__cmp_italic
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__header_italic
+msgid "Italic"
+msgstr "مائل"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_field_ids_one2many__label
+#: model:ir.model.fields,field_description:generic_excel_reports.field_sub_model_field_ids_one2many__label
+msgid "Label"
+msgstr "ملصق"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_field_ids_one2many____last_update
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report____last_update
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report_wizard____last_update
+#: model:ir.model.fields,field_description:generic_excel_reports.field_sub_model_field_ids_one2many____last_update
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration____last_update
+msgid "Last Modified on"
+msgstr "تاريخ آخر تعديل"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_field_ids_one2many__write_uid
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__write_uid
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report_wizard__write_uid
+#: model:ir.model.fields,field_description:generic_excel_reports.field_sub_model_field_ids_one2many__write_uid
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__write_uid
+msgid "Last Updated by"
+msgstr "آخر تحديث بواسطة"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_field_ids_one2many__write_date
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__write_date
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report_wizard__write_date
+#: model:ir.model.fields,field_description:generic_excel_reports.field_sub_model_field_ids_one2many__write_date
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__write_date
+msgid "Last Updated on"
+msgstr "آخر تحديث في"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__name
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__name
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_form
+msgid "Name"
+msgstr "اسم"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__model_name
+msgid "Object"
+msgstr "موضوع"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_wizard_form
+msgid "Or"
+msgstr "أو"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_wizard_form
+msgid "Print"
+msgstr "مطبعة"
+
+#. module: generic_excel_reports
+#: code:addons/generic_excel_reports/models/generic_excel_report.py:0
+#, python-format
+msgid "Print (%s)"
+msgstr "طباعة (٪ s)"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__company_check
+msgid "Print Company Detail"
+msgstr "طباعة تفاصيل الشركة"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__check_total
+msgid "Print Total"
+msgstr "طباعة المجموع"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__sheet_per_page
+msgid "Record Per Sheet"
+msgstr "سجل لكل ورقة"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_form
+msgid "Remove the contextual action to use this report on related documents"
+msgstr "قم بإزالة الإجراء السياقي لاستخدام هذا التقرير في المستندات ذات الصلة"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_wizard_form
+msgid "Report Generated"
+msgstr "تم إنشاء التقرير"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__ref_ir_act_window
+msgid "Sidebar action"
+msgstr "عمل الشريط الجانبي"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report_wizard__state
+msgid "State"
+msgstr "حالة"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__sub_model_name
+msgid "Sub Model Name"
+msgstr "اسم الموديل الفرعي"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_form
+msgid "Sub model Fields To Print"
+msgstr "نموذج فرعي حقول للطباعة"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report__template_id
+msgid "Template"
+msgstr "نموذج"
+
+#. module: generic_excel_reports
+#: model:ir.actions.act_window,name:generic_excel_reports.action_template_configuration_menu
+#: model:ir.ui.menu,name:generic_excel_reports.template_configuration_menu
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_template_configuration_form
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_template_configuration_tree
+msgid "Template Configuration"
+msgstr "تكوين القالب"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_globle_report_form
+msgid "Template For Report"
+msgstr "نموذج للتقرير"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_template_configuration_form
+msgid "Template Name"
+msgstr "اسم القالب"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__sum_background_color
+msgid "Total Background Color"
+msgstr "إجمالي لون الخلفية"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_template_configuration__total_Font_color
+msgid "Total Font Color"
+msgstr "إجمالي لون الخط"
+
+#. module: generic_excel_reports
+#: model_terms:ir.ui.view,arch_db:generic_excel_reports.view_template_configuration_form
+msgid "Total Style"
+msgstr "مجموع ستايل"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields.selection,name:generic_excel_reports.selection__generic_excel_report_wizard__state__choose
+msgid "choose"
+msgstr "أختر"
+
+#. module: generic_excel_reports
+#: model:ir.model,name:generic_excel_reports.model_field_ids_one2many
+msgid "field.ids.one2many"
+msgstr "field.ids.one2many"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report_wizard__data
+msgid "file"
+msgstr "ملف"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields,field_description:generic_excel_reports.field_generic_excel_report_wizard__name
+msgid "filename"
+msgstr "اسم الملف"
+
+#. module: generic_excel_reports
+#: model:ir.model,name:generic_excel_reports.model_generic_excel_report
+msgid "generic.excel.report"
+msgstr "generic.excel.report"
+
+#. module: generic_excel_reports
+#: model:ir.model,name:generic_excel_reports.model_generic_excel_report_wizard
+msgid "generic.excel.report.wizard"
+msgstr "generic.excel.report.wizard"
+
+#. module: generic_excel_reports
+#: model:ir.model.fields.selection,name:generic_excel_reports.selection__generic_excel_report_wizard__state__get
+msgid "get"
+msgstr "احصل على"
+
+#. module: generic_excel_reports
+#: model:ir.model,name:generic_excel_reports.model_sub_model_field_ids_one2many
+msgid "sub.model.field.ids.one2many"
+msgstr "sub.model.field.ids.one2many"
+
+#. module: generic_excel_reports
+#: model:ir.model,name:generic_excel_reports.model_template_configuration
+msgid "template.configuration"
+msgstr "template.configuration"

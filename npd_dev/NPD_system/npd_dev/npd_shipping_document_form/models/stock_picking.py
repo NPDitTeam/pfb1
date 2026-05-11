@@ -1,0 +1,30 @@
+from odoo import models, fields, api, _
+from bahttext import bahttext
+from odoo.tools import format_date
+import logging
+_logger = logging.getLogger(__name__)
+
+class SaleOrder(models.Model):
+    _inherit = 'stock.picking'
+
+    # def get_baht_text(self):
+    #     calc = sum(self.order_line.mapped('pfb_amount'))
+    #     sum_amount = self.amount_total + self.pfb_amount
+    #     return bahttext(sum_amount)
+
+    def get_baht_text_inventory_overview_rental_return_form(self):
+        total_amount = 00.00
+        return bahttext(total_amount)
+
+    def _get_formatted_commitment_date(self):
+        if self.sale_id and self.sale_id.commitment_date:
+            return format_date(self.env, self.sale_id.commitment_date, date_format='dd/MM/yyyy')
+        return ""
+
+    def _get_report_values(self, docids, data=None):
+        docs = self.env["stock.picking"].browse(docids)
+        for doc in docs:
+            _logger.info("move_ids_without_package: %s", doc.move_ids_without_package)
+        return {
+            "docs": docs,
+        }

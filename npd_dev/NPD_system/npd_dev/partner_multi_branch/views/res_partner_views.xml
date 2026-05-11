@@ -1,0 +1,15 @@
+<odoo>
+  <record id="view_partner_form_inherit_branch_ids" model="ir.ui.view">
+    <field name="name">res.partner.form.inherit.branch_ids</field>
+    <field name="model">res.partner</field>
+    <field name="inherit_id" ref="base.view_partner_form"/>
+    <field name="arch" type="xml">
+      <!-- วางไว้ท้ายฟอร์ม เพื่อให้แสดงได้แน่ๆ -->
+      <xpath expr="//sheet" position="inside">
+        <group string="สาขาเพิ่มเติม">
+          <field name="branch_ids" widget="many2many_tags"/>
+        </group>
+      </xpath>
+    </field>
+  </record>
+</odoo>

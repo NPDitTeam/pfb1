@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="assets_backend" name="time_track assets" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <script type="text/javascript" src="/sh_all_in_one_pms/static/src/js/time_track.js"></script>
+            <link rel="stylesheet" href="/sh_all_in_one_pms/static/src/scss/time_track.scss" />
+        </xpath>
+    </template>
+</odoo>

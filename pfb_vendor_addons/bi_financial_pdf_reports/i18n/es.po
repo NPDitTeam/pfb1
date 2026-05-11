@@ -1,0 +1,627 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* bi_financial_pdf_reports
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 13.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-06 11:40+0000\n"
+"PO-Revision-Date: 2021-10-06 11:40+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+msgid ": General ledger"
+msgstr ": Libro mayor"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid ": Trial Balance"
+msgstr ": Balance de prueba"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_balancesheet
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid "<strong>Date from :</strong>"
+msgstr "<strong>Fecha de :</strong>"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_balancesheet
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid "<strong>Date to :</strong>"
+msgstr "<strong>Fecha hasta:</strong>"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid "<strong>Display Account:</strong>"
+msgstr "<strong>Mostrar cuenta:</strong>"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+msgid "<strong>Display Account</strong>"
+msgstr "<strong>Mostrar cuenta</strong>"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+msgid "<strong>Journals:</strong>"
+msgstr "<strong>Revistas:</strong>"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+msgid "<strong>Sorted By:</strong>"
+msgstr "<strong>Ordenado por:</strong>"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_balancesheet
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid "<strong>Target Moves:</strong>"
+msgstr "<strong>Movimientos de destino:</strong>"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid "Account"
+msgstr "Cuenta"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__children_ids
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.bi_financial_pdf_reports_account_financial_report_form
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.bi_financial_pdf_reports_account_financial_report_tree
+msgid "Account Report"
+msgstr "Informe de cuenta"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__account_report_id
+#: model:ir.ui.menu,name:bi_financial_pdf_reports.menu_account_report_configuration
+msgid "Account Reports"
+msgstr "Informes de cuenta"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__type__account_type
+msgid "Account Type"
+msgstr "Tipo de cuenta"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__account_type_ids
+msgid "Account Types"
+msgstr "Tipos de cuenta"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model,name:bi_financial_pdf_reports.model_accounting_report_bi
+msgid "Accounting Report"
+msgstr "Informe contable"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__account_ids
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__type__accounts
+msgid "Accounts"
+msgstr "Cuentas"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__accounting_report_bi__display_account__all
+msgid "All"
+msgstr "Todos"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__accounting_report_bi__target_move__all
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_balancesheet
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid "All Entries"
+msgstr "Todas las entradas"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__accounting_report_bi__target_move__posted
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_balancesheet
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid "All Posted Entries"
+msgstr "Todas las entradas publicadas"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid "All accounts"
+msgstr "Todas las cuentas"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+msgid "All accounts'"
+msgstr "Todas las cuentas'"
+
+#. module: bi_financial_pdf_reports
+#: model:account.financial.report,name:bi_financial_pdf_reports.bi_account_financial_report_assets0
+msgid "Assets"
+msgstr "Activos"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__style_overwrite__0
+msgid "Automatic formatting"
+msgstr "Formateo automático"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_balancesheet
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid "Balance"
+msgstr "Equilibrio"
+
+#. module: bi_financial_pdf_reports
+#: model:account.financial.report,name:bi_financial_pdf_reports.bi_account_financial_report_balancesheet0
+#: model:ir.actions.act_window,name:bi_financial_pdf_reports.bi_financial_pdf_reports_action_balance_sheet
+#: model:ir.actions.report,name:bi_financial_pdf_reports.action_report_balancesheet
+#: model:ir.ui.menu,name:bi_financial_pdf_reports.bi_financial_pdf_reports_menu_balance_sheet
+msgid "Balance Sheet"
+msgstr "Hoja de balance"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.account_trail_balance_form
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.bi_financial_pdf_reports_form_account_report_custom
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.bi_financial_pdf_reports_form_general_ledger_custom_form
+msgid "Cancel"
+msgstr "Cancelar"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid "Code"
+msgstr "Código"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__label_filter
+msgid "Column Label"
+msgstr "Etiqueta de columna"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__company_id
+msgid "Company"
+msgstr "Empresa"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.bi_financial_pdf_reports_form_account_report_custom
+msgid "Comparison"
+msgstr "Comparación"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__create_uid
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__create_uid
+msgid "Created by"
+msgstr "Creado por"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__create_date
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__create_date
+msgid "Created on"
+msgstr "Creado en"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_balancesheet
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid "Credit"
+msgstr "Crédito"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+msgid "Currency"
+msgstr "Divisa"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__accounting_report_bi__filter_cmp__filter_date
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__accounting_report_bi__sortby__sort_date
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+msgid "Date"
+msgstr "Fecha"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.bi_financial_pdf_reports_form_account_report_custom
+msgid "Dates"
+msgstr "fechas"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_balancesheet
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid "Debit"
+msgstr "Débito"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__display_account
+msgid "Display Accounts"
+msgstr "Mostrar cuentas"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__debit_credit
+msgid "Display Debit/Credit Columns"
+msgstr "Mostrar columnas de débito / crédito"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__display_name
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__display_name
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_report_bi_financial_pdf_reports_report_balancesheet__display_name
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_report_bi_financial_pdf_reports_report_generalledger__display_name
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_report_bi_financial_pdf_reports_report_trialbalance__display_name
+msgid "Display Name"
+msgstr "Nombre para mostrar"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__display_detail__detail_flat
+msgid "Display children flat"
+msgstr "Mostrar niños planos"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__display_detail__detail_with_hierarchy
+msgid "Display children with hierarchy"
+msgstr "Mostrar hijas con jerarquía"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__display_detail
+msgid "Display details"
+msgstr "Mostrar detalles"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__enable_filter
+msgid "Enable Comparison"
+msgstr "Habilitar comparación"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__date_to
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__date_to_cmp
+msgid "End Date"
+msgstr "Fecha final"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+msgid "Entry Label"
+msgstr "Etiqueta de entrada"
+
+#. module: bi_financial_pdf_reports
+#: model:account.financial.report,name:bi_financial_pdf_reports.bi_account_financial_report_expense0
+msgid "Expense"
+msgstr "Gastos"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__filter_cmp
+msgid "Filter by"
+msgstr "Filtrado por"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__style_overwrite
+msgid "Financial Report Style"
+msgstr "Estilo de informe financiero"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.actions.act_window,name:bi_financial_pdf_reports.action_account_report_configuration
+#: model:ir.ui.menu,name:bi_financial_pdf_reports.bi_menu_finance_report
+#: model:ir.ui.menu,name:bi_financial_pdf_reports.menu_financial_report
+msgid "Financial Reports"
+msgstr "Reportes financieros"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,help:bi_financial_pdf_reports.field_account_financial_report__sign
+msgid ""
+"For accounts that are typically more debited than credited and that you "
+"would like to print as negative amounts in your reports, you should reverse "
+"the sign of the balance; e.g.: Expense account. The same applies for "
+"accounts that are typically more credited than debited and that you would "
+"like to print as positive amounts in your reports; e.g.: Income account."
+msgstr ""
+
+#. module: bi_financial_pdf_reports
+#: model:ir.actions.act_window,name:bi_financial_pdf_reports.bi_financial_pdf_reports_action_general_ledger
+#: model:ir.actions.report,name:bi_financial_pdf_reports.action_report_general_ledger
+#: model:ir.ui.menu,name:bi_financial_pdf_reports.bi_financial_pdf_reports_menu_general_ledger
+msgid "General Ledger"
+msgstr "Libro mayor"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__id
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__id
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_report_bi_financial_pdf_reports_report_balancesheet__id
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_report_bi_financial_pdf_reports_report_generalledger__id
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_report_bi_financial_pdf_reports_report_trialbalance__id
+msgid "ID"
+msgstr "IDENTIFICACIÓN"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,help:bi_financial_pdf_reports.field_accounting_report_bi__initial_balance
+msgid ""
+"If you selected date, this field allow you to add a row to display the "
+"amount of debit/credit/balance that precedes the filter you've set."
+msgstr ""
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__initial_balance
+msgid "Include Initial Balances"
+msgstr "Incluir saldos iniciales"
+
+#. module: bi_financial_pdf_reports
+#: model:account.financial.report,name:bi_financial_pdf_reports.bi_account_financial_report_income0
+msgid "Income"
+msgstr "Ingreso"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__style_overwrite__5
+msgid "Italic Text (smaller)"
+msgstr "Texto en cursiva (más pequeño)"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+msgid "JRNL"
+msgstr ""
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__accounting_report_bi__sortby__sort_journal_partner
+msgid "Journal & Partner"
+msgstr "Diario y compañera"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+msgid "Journal and Partner"
+msgstr "Diario y compañera"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__journal_ids
+msgid "Journals"
+msgstr "Revistas"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report____last_update
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi____last_update
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_report_bi_financial_pdf_reports_report_balancesheet____last_update
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_report_bi_financial_pdf_reports_report_generalledger____last_update
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_report_bi_financial_pdf_reports_report_trialbalance____last_update
+msgid "Last Modified on"
+msgstr "Última modificación el"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__write_uid
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__write_uid
+msgid "Last Updated by"
+msgstr "Última actualización por"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__write_date
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__write_date
+msgid "Last Updated on"
+msgstr "Ultima actualización en"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__level
+msgid "Level"
+msgstr "Nivel"
+
+#. module: bi_financial_pdf_reports
+#: model:account.financial.report,name:bi_financial_pdf_reports.bi_account_financial_report_liability0
+#: model:account.financial.report,name:bi_financial_pdf_reports.bi_account_financial_report_liabilitysum0
+msgid "Liability"
+msgstr "Responsabilidad"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__style_overwrite__1
+msgid "Main Title 1 (bold, underlined)"
+msgstr "Título principal 1 (negrita, subrayado)"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+msgid "Move"
+msgstr "Moverse"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_balancesheet
+msgid "Name"
+msgstr "Nombre"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__accounting_report_bi__filter_cmp__filter_no
+msgid "No Filters"
+msgstr "Sin filtros"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__display_detail__no_detail
+msgid "No detail"
+msgstr "Sin detalle"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__style_overwrite__4
+msgid "Normal Text"
+msgstr "Texto normal"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__parent_id
+msgid "Parent"
+msgstr "Madre"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+msgid "Partner"
+msgstr "Pareja"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__sign__1
+msgid "Preserve balance sign"
+msgstr "Conservar el signo de equilibrio"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.account_trail_balance_form
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.bi_financial_pdf_reports_form_account_report_custom
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.bi_financial_pdf_reports_form_general_ledger_custom_form
+msgid "Print"
+msgstr "Impresión"
+
+#. module: bi_financial_pdf_reports
+#: model:account.financial.report,name:bi_financial_pdf_reports.bi_account_financial_report_profitloss_toreport0
+msgid "Profit (Loss) to report"
+msgstr "Beneficio (pérdida) para informar"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.ui.menu,name:bi_financial_pdf_reports.bi_financial_pdf_reports_menu_profit_loss
+msgid "Profit Loss"
+msgstr "Pérdida de beneficios"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.actions.act_window,name:bi_financial_pdf_reports.bi_financial_pdf_reports_action_profit_loss
+msgid "Profit Loss Sheet"
+msgstr "Hoja de pérdidas y ganancias"
+
+#. module: bi_financial_pdf_reports
+#: model:account.financial.report,name:bi_financial_pdf_reports.bi_account_financial_report_profitandloss0
+msgid "Profit and Loss"
+msgstr "Ganancia y perdida"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+msgid "Ref"
+msgstr "Árbitra"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.bi_financial_pdf_reports_account_financial_report_form
+msgid "Report"
+msgstr "Reporte"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__name
+msgid "Report Name"
+msgstr "Reportar nombre"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.account_trail_balance_form
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.bi_financial_pdf_reports_form_account_report_custom
+msgid "Report Options"
+msgstr "Opciones de informe"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__account_report_id
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__type__account_report
+msgid "Report Value"
+msgstr "Valor del informe"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__sign__-1
+msgid "Reverse balance sign"
+msgstr "Signo de equilibrio inverso"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__sequence
+msgid "Sequence"
+msgstr "Secuencia"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__sign
+msgid "Sign on Reports"
+msgstr "Iniciar sesión en informes"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__style_overwrite__6
+msgid "Smallest Text"
+msgstr "Texto más pequeño"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__sortby
+msgid "Sort by"
+msgstr "Ordenar por"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__date_from
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__date_from_cmp
+msgid "Start Date"
+msgstr "Fecha de inicio"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_accounting_report_bi__target_move
+msgid "Target Moves"
+msgstr "Movimientos de destino"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,help:bi_financial_pdf_reports.field_accounting_report_bi__label_filter
+msgid ""
+"This label will be displayed on report to show the balance computed for the "
+"given comparison filter."
+msgstr ""
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,help:bi_financial_pdf_reports.field_accounting_report_bi__debit_credit
+msgid ""
+"This option allows you to get more details about the way your balances are "
+"computed. Because it is space consuming, we do not allow to use it while "
+"doing a comparison."
+msgstr ""
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__style_overwrite__2
+msgid "Title 2 (bold)"
+msgstr "Título 2 (negrita)"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__style_overwrite__3
+msgid "Title 3 (bold, smaller)"
+msgstr "Título 3 (negrita, más pequeña)"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.actions.act_window,name:bi_financial_pdf_reports.action_trial_balance_report
+#: model:ir.actions.report,name:bi_financial_pdf_reports.action_report_trial_balance
+#: model:ir.ui.menu,name:bi_financial_pdf_reports.menu_trial_balance_report
+msgid "Trial Balance"
+msgstr "Balance de prueba"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,field_description:bi_financial_pdf_reports.field_account_financial_report__type
+msgid "Type"
+msgstr "Escribe"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__account_financial_report__type__sum
+msgid "View"
+msgstr "Vista"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__accounting_report_bi__display_account__not_zero
+msgid "With balance is not equal to 0"
+msgstr "Con saldo no es igual a 0"
+
+#. module: bi_financial_pdf_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid "With balance not equal to zero"
+msgstr "Con saldo no igual a cero"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields.selection,name:bi_financial_pdf_reports.selection__accounting_report_bi__display_account__movement
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_generalledger
+#: model_terms:ir.ui.view,arch_db:bi_financial_pdf_reports.report_trialbalance
+msgid "With movements"
+msgstr "Con movimientos"
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model.fields,help:bi_financial_pdf_reports.field_account_financial_report__style_overwrite
+msgid ""
+"You can set up here the format you want this record to be displayed. If you "
+"leave the automatic formatting, it will be computed based on the financial "
+"reports hierarchy (auto-computed field 'level')."
+msgstr ""
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model,name:bi_financial_pdf_reports.model_account_financial_report
+msgid "account.financial.report"
+msgstr ""
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model,name:bi_financial_pdf_reports.model_report_bi_financial_pdf_reports_report_balancesheet
+msgid "report.bi_financial_pdf_reports.report_balancesheet"
+msgstr ""
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model,name:bi_financial_pdf_reports.model_report_bi_financial_pdf_reports_report_generalledger
+msgid "report.bi_financial_pdf_reports.report_generalledger"
+msgstr ""
+
+#. module: bi_financial_pdf_reports
+#: model:ir.model,name:bi_financial_pdf_reports.model_report_bi_financial_pdf_reports_report_trialbalance
+msgid "report.bi_financial_pdf_reports.report_trialbalance"
+msgstr ""

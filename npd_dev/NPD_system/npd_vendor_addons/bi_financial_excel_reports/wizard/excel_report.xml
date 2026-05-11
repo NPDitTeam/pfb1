@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<openerp>
+    <data>
+        <record id="view_excel_report" model="ir.ui.view">
+            <field name="name">view.excel.report</field>
+            <field name="model">excel.report</field>
+            <field name="arch" type="xml">
+                <form string="Genrated xls File">
+                    <group>
+                        <field name="file_name" invisible="1"/>
+                        <field name="excel_file" readonly="1" filename="file_name"/>
+                    </group>
+                    <footer>
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        <odoo>
+    <data>
+        <!-- Balance Sheet Inherit Form View to Modify it -->
+        <record id="bi_financial_pdf_reports_form_account_report_profitloss_custom_inherit_form_add_print_excel_button"
+                model="ir.ui.view">
+            <field name="name">bi.profit.loss.pdf.reports.form.account.report.custom.inherit.form.add.print.excel.button
+            </field>
+            <field name="model">accounting.report.bi</field>
+            <field name="inherit_id"
+                   ref="bi_financial_pdf_reports.bi_financial_pdf_reports_form_account_report_profitloss"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//footer/button[@name='check_report_profit']" position="after">
+                    <!-- Add your fields or attributes here -->
+                    <button name="check_report" string="Print Excel" type="object" default_focus="1"
+                            class="oe_highlight" context="{'report_type':'excel'}"/>
+                </xpath>
+
+            </field>
+        </record>
+    </data>
+</odoo>
+    </data>
+</openerp>

@@ -1,0 +1,660 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* sh_barcode_scanner
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-10-17 07:36+0000\n"
+"PO-Revision-Date: 2020-10-17 07:36+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inventory_barcode_scanner_res_config_settings_form
+msgid "Add new product in picking in Draft, Waiting or Ready state."
+msgstr "在处于草稿，等待或就绪状态的拣配中添加新产品。"
+
+#. module: sh_barcode_scanner
+#: code:addons/sh_barcode_scanner/models/stock_move.py:0
+#: code:addons/sh_barcode_scanner/models/stock_move.py:0
+#: code:addons/sh_barcode_scanner/models/stock_move.py:0
+#: code:addons/sh_barcode_scanner/models/stock_move.py:0
+#: code:addons/sh_barcode_scanner/models/stock_picking.py:0
+#, python-format
+msgid "Alert!"
+msgstr "警报！"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_bom_barcode_scanner_type__all
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_inven_adjt_barcode_scanner_type__all
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_inventory_barcode_scanner_type__all
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_invoice_barcode_scanner_type__all
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_purchase_barcode_scanner_type__all
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_sale_barcode_scanner_type__all
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_scrap_barcode_scanner_type__all
+msgid "All"
+msgstr "全部"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_bom_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inven_adjt_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inventory_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_invoice_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_purchase_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_sale_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_scrap_barcode_scanner_res_config_settings_form
+msgid "Auto close alert/error message"
+msgstr "自动关闭警报/错误消息"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_bom_barcode_scanner_auto_close_popup
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_bom_barcode_scanner_auto_close_popup
+msgid "Auto close alert/error message after (BOM)"
+msgstr "（BOM）之后自动关闭警报/错误消息"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_inven_adjt_barcode_scanner_auto_close_popup
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_inven_adjt_barcode_scanner_auto_close_popup
+msgid "Auto close alert/error message after (Inventory Adjustment)"
+msgstr "（库存调整）之后自动关闭警报/错误消息"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_invoice_barcode_scanner_auto_close_popup
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_invoice_barcode_scanner_auto_close_popup
+msgid "Auto close alert/error message after (Invoice)"
+msgstr "（发票）后自动关闭警报/错误消息"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_inventory_barcode_scanner_auto_close_popup
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_inventory_barcode_scanner_auto_close_popup
+msgid "Auto close alert/error message after (Picking)"
+msgstr "拾取后自动关闭警报/错误消息"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_purchase_barcode_scanner_auto_close_popup
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_purchase_barcode_scanner_auto_close_popup
+msgid "Auto close alert/error message after (Purchase)"
+msgstr "购买后自动关闭警报/错误消息"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_scrap_barcode_scanner_auto_close_popup
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_scrap_barcode_scanner_auto_close_popup
+msgid "Auto close alert/error message after (Scrap)"
+msgstr "报废后自动关闭警报/错误消息"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_sale_barcode_scanner_auto_close_popup
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_sale_barcode_scanner_auto_close_popup
+msgid "Auto close alert/error message after (sale)"
+msgstr "售后自动关闭警报/错误消息"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_bom_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inven_adjt_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inventory_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_invoice_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_purchase_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_sale_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_scrap_barcode_scanner_res_config_settings_form
+msgid "Auto close alert/error message after millisecond"
+msgstr "毫秒后自动关闭警报/错误消息"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_bom_barcode_scanner_res_config_settings_form
+msgid "BOM Barcode Scanner"
+msgstr "BOM条码扫描器"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_bom_barcode_scanner_type__barcode
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_inven_adjt_barcode_scanner_type__barcode
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_inventory_barcode_scanner_type__barcode
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_invoice_barcode_scanner_type__barcode
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_purchase_barcode_scanner_type__barcode
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_sale_barcode_scanner_type__barcode
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_scrap_barcode_scanner_type__barcode
+msgid "Barcode"
+msgstr "条码"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_account_move___barcode_scanned
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_mrp_bom___barcode_scanned
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_purchase_order___barcode_scanned
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_sale_order___barcode_scanned
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_inventory___barcode_scanned
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_move___barcode_scanned
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_picking___barcode_scanned
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_scrap___barcode_scanned
+msgid "Barcode Scanned"
+msgstr "条码扫描"
+
+#. module: sh_barcode_scanner
+#: model:ir.model,name:sh_barcode_scanner.model_mrp_bom
+msgid "Bill of Material"
+msgstr "物料清单"
+
+#. module: sh_barcode_scanner
+#: model:ir.model,name:sh_barcode_scanner.model_mrp_bom_line
+msgid "Bill of Material Line"
+msgstr "物料清单行"
+
+#. module: sh_barcode_scanner
+#: model:ir.model,name:sh_barcode_scanner.model_res_company
+msgid "Companies"
+msgstr "公司介绍"
+
+#. module: sh_barcode_scanner
+#: model:ir.model,name:sh_barcode_scanner.model_res_config_settings
+msgid "Config Settings"
+msgstr "配置设置"
+
+#. module: sh_barcode_scanner
+#: code:addons/sh_barcode_scanner/models/stock_inventory.py:0
+#, python-format
+msgid "Could not get values of the inventory lines for this scanned product"
+msgstr "无法获得此扫描产品的库存行的值"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inven_adjt_barcode_scanner_inventory_form
+msgid "Counted"
+msgstr "已计算"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_account_move__display_name
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_account_move_line__display_name
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_mrp_bom__display_name
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_mrp_bom_line__display_name
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_purchase_order__display_name
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_purchase_order_line__display_name
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__display_name
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_sale_order__display_name
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_sale_order_line__display_name
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_inventory__display_name
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_inventory_line__display_name
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_move__display_name
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_picking__display_name
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_scrap__display_name
+msgid "Display Name"
+msgstr "显示名称"
+
+#. module: sh_barcode_scanner
+#: code:addons/sh_barcode_scanner/models/stock_scrap.py:0
+#: code:addons/sh_barcode_scanner/models/stock_scrap.py:0
+#: code:addons/sh_barcode_scanner/models/stock_scrap.py:0
+#: code:addons/sh_barcode_scanner/models/stock_scrap.py:0
+#: code:addons/sh_barcode_scanner/models/stock_scrap.py:0
+#: code:addons/sh_barcode_scanner/models/stock_scrap.py:0
+#, python-format
+msgid "Error!"
+msgstr "错误！"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_bom_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inven_adjt_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inventory_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_invoice_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_purchase_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_sale_barcode_scanner_res_config_settings_form
+msgid "Highlight last scanned product with color"
+msgstr "用颜色突出显示上次扫描的产品"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_account_move__id
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_account_move_line__id
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_mrp_bom__id
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_mrp_bom_line__id
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_purchase_order__id
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_purchase_order_line__id
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__id
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__id
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_sale_order__id
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_sale_order_line__id
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_inventory__id
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_inventory_line__id
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_move__id
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_picking__id
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_scrap__id
+msgid "ID"
+msgstr "ID"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_bom_barcode_scanner_type__int_ref
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_inven_adjt_barcode_scanner_type__int_ref
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_inventory_barcode_scanner_type__int_ref
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_invoice_barcode_scanner_type__int_ref
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_purchase_barcode_scanner_type__int_ref
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_sale_barcode_scanner_type__int_ref
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_scrap_barcode_scanner_type__int_ref
+msgid "Internal Reference"
+msgstr "内部参考"
+
+#. module: sh_barcode_scanner
+#: code:addons/sh_barcode_scanner/models/stock_inventory.py:0
+#: model:ir.model,name:sh_barcode_scanner.model_stock_inventory
+#, python-format
+msgid "Inventory"
+msgstr "存货"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inventory_barcode_scanner_res_config_settings_form
+msgid "Inventory Barcode Scanner"
+msgstr "库存条形码扫描仪"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inven_adjt_barcode_scanner_inventory_form
+msgid "Inventory Details"
+msgstr "库存明细"
+
+#. module: sh_barcode_scanner
+#: model:ir.model,name:sh_barcode_scanner.model_stock_inventory_line
+msgid "Inventory Line"
+msgstr "库存线"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_invoice_barcode_scanner_res_config_settings_form
+msgid "Invoices Barcode Scanner"
+msgstr "发票条形码扫描仪"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_inventory_barcode_scanner_is_add_product
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_inventory_barcode_scanner_is_add_product
+msgid "Is add new product in picking?"
+msgstr "在挑选新产品吗？"
+
+#. module: sh_barcode_scanner
+#: model:ir.model,name:sh_barcode_scanner.model_account_move
+msgid "Journal Entry"
+msgstr "日记帐分录"
+
+#. module: sh_barcode_scanner
+#: model:ir.model,name:sh_barcode_scanner.model_account_move_line
+msgid "Journal Item"
+msgstr "日记帐项目"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_account_move____last_update
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_account_move_line____last_update
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_mrp_bom____last_update
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_mrp_bom_line____last_update
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_purchase_order____last_update
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_purchase_order_line____last_update
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company____last_update
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings____last_update
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_sale_order____last_update
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_sale_order_line____last_update
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_inventory____last_update
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_inventory_line____last_update
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_move____last_update
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_picking____last_update
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_scrap____last_update
+msgid "Last Modified on"
+msgstr "最后修改时间"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_account_move_line__sh_invoice_barcode_scanner_is_last_scanned
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_mrp_bom_line__sh_bom_barcode_scanner_is_last_scanned
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_purchase_order_line__sh_purchase_barcode_scanner_is_last_scanned
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_sale_order_line__sh_sale_barcode_scanner_is_last_scanned
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_inventory_line__sh_inven_adjt_barcode_scanner_is_last_scanned
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_move__sh_inventory_barcode_scanner_is_last_scanned
+msgid "Last Scanned?"
+msgstr "上次扫描？"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_bom_barcode_scanner_last_scanned_color
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_bom_barcode_scanner_last_scanned_color
+msgid "Last scanned Color? (BOM)"
+msgstr "上次扫描的颜色？ （BOM）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_inven_adjt_barcode_scanner_last_scanned_color
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_inven_adjt_barcode_scanner_last_scanned_color
+msgid "Last scanned Color? (Inventory Adjustment)"
+msgstr "上次扫描的颜色？ （库存调整）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_invoice_barcode_scanner_last_scanned_color
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_invoice_barcode_scanner_last_scanned_color
+msgid "Last scanned Color? (Invoice)"
+msgstr "上次扫描的颜色？ （发票）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_inventory_barcode_scanner_last_scanned_color
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_inventory_barcode_scanner_last_scanned_color
+msgid "Last scanned Color? (Picking)"
+msgstr "上次扫描的颜色？ （捡）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_purchase_barcode_scanner_last_scanned_color
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_purchase_barcode_scanner_last_scanned_color
+msgid "Last scanned Color? (Purchase)"
+msgstr "上次扫描的颜色？ （购买）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_sale_barcode_scanner_last_scanned_color
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_sale_barcode_scanner_last_scanned_color
+msgid "Last scanned Color? (sale)"
+msgstr "上次扫描的颜色？ （销售）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_bom_barcode_scanner_move_to_top
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_bom_barcode_scanner_move_to_top
+msgid "Last scanned Move To Top? (BOM)"
+msgstr "上次扫描的移至顶部？ （BOM）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_inven_adjt_barcode_scanner_move_to_top
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_inven_adjt_barcode_scanner_move_to_top
+msgid "Last scanned Move To Top? (Inventory Adjustment)"
+msgstr "上次扫描的移至顶部？ （库存调整）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_invoice_barcode_scanner_move_to_top
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_invoice_barcode_scanner_move_to_top
+msgid "Last scanned Move To Top? (Invoice)"
+msgstr "上次扫描的移至顶部？ （发票）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_inventory_barcode_scanner_move_to_top
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_inventory_barcode_scanner_move_to_top
+msgid "Last scanned Move To Top? (Picking)"
+msgstr "上次扫描的移至顶部？ （捡）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_purchase_barcode_scanner_move_to_top
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_purchase_barcode_scanner_move_to_top
+msgid "Last scanned Move To Top? (Purchase)"
+msgstr "上次扫描的移至顶部？ （购买）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_sale_barcode_scanner_move_to_top
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_sale_barcode_scanner_move_to_top
+msgid "Last scanned Move To Top? (sale)"
+msgstr "上次扫描的移至顶部？ （销售）"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_bom_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inven_adjt_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inventory_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_invoice_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_purchase_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_sale_barcode_scanner_res_config_settings_form
+msgid "Move last scanned product to top"
+msgstr "将最后扫描的产品移到顶部"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inven_adjt_barcode_scanner_inventory_form
+msgid "On Hand"
+msgstr "手上"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inven_adjt_barcode_scanner_inventory_form
+msgid "Package"
+msgstr "包裹"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_bom_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inven_adjt_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inventory_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_invoice_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_purchase_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_sale_barcode_scanner_res_config_settings_form
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_scrap_barcode_scanner_res_config_settings_form
+msgid "Play sound with warning message"
+msgstr "播放带有警告消息的声音"
+
+#. module: sh_barcode_scanner
+#: code:addons/sh_barcode_scanner/models/stock_move.py:0
+#, python-format
+msgid "Pls add all product items in line than rescan."
+msgstr "请在行中添加所有产品项，然后重新扫描。"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_bom_barcode_scanner_type
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_bom_barcode_scanner_type
+msgid "Product Scan Options (BOM)"
+msgstr "产品扫描选项（BOM）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_inven_adjt_barcode_scanner_type
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_inven_adjt_barcode_scanner_type
+msgid "Product Scan Options (Inventory Adjustment)"
+msgstr "产品扫描选项（库存调整）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_invoice_barcode_scanner_type
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_invoice_barcode_scanner_type
+msgid "Product Scan Options (Invoice)"
+msgstr "产品扫描选项（发票）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_inventory_barcode_scanner_type
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_inventory_barcode_scanner_type
+msgid "Product Scan Options (Picking)"
+msgstr "产品扫描选项（拾取）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_purchase_barcode_scanner_type
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_purchase_barcode_scanner_type
+msgid "Product Scan Options (Purchase)"
+msgstr "产品扫描选项（购买）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_scrap_barcode_scanner_type
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_scrap_barcode_scanner_type
+msgid "Product Scan Options (Scrap)"
+msgstr "产品扫描选项（废料）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_sale_barcode_scanner_type
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_sale_barcode_scanner_type
+msgid "Product Scan Options (sale)"
+msgstr "产品扫描选项（销售）"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_purchase_barcode_scanner_res_config_settings_form
+msgid "Purchase Barcode Scanner"
+msgstr "购买条形码扫描仪"
+
+#. module: sh_barcode_scanner
+#: model:ir.model,name:sh_barcode_scanner.model_purchase_order
+msgid "Purchase Order"
+msgstr "采购订单"
+
+#. module: sh_barcode_scanner
+#: model:ir.model,name:sh_barcode_scanner.model_purchase_order_line
+msgid "Purchase Order Line"
+msgstr "采购订单行"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_bom_barcode_scanner_type__sh_qr_code
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_inven_adjt_barcode_scanner_type__sh_qr_code
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_inventory_barcode_scanner_type__sh_qr_code
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_invoice_barcode_scanner_type__sh_qr_code
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_purchase_barcode_scanner_type__sh_qr_code
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_sale_barcode_scanner_type__sh_qr_code
+#: model:ir.model.fields.selection,name:sh_barcode_scanner.selection__res_company__sh_scrap_barcode_scanner_type__sh_qr_code
+msgid "QR Code"
+msgstr "二维码"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inven_adjt_barcode_scanner_inventory_form
+msgid "Refresh quantity"
+msgstr "刷新数量"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_sale_barcode_scanner_res_config_settings_form
+msgid "Sale Barcode Scanner"
+msgstr "销售条形码扫描仪"
+
+#. module: sh_barcode_scanner
+#: model:ir.model,name:sh_barcode_scanner.model_sale_order
+msgid "Sales Order"
+msgstr "销售订单"
+
+#. module: sh_barcode_scanner
+#: model:ir.model,name:sh_barcode_scanner.model_sale_order_line
+msgid "Sales Order Line"
+msgstr "销售订单行"
+
+#. module: sh_barcode_scanner
+#: code:addons/sh_barcode_scanner/models/account.py:0
+#: code:addons/sh_barcode_scanner/models/mrp_bom.py:0
+#: code:addons/sh_barcode_scanner/models/purchase.py:0
+#: code:addons/sh_barcode_scanner/models/sale.py:0
+#: code:addons/sh_barcode_scanner/models/stock_inventory.py:0
+#: code:addons/sh_barcode_scanner/models/stock_move.py:0
+#: code:addons/sh_barcode_scanner/models/stock_move.py:0
+#: code:addons/sh_barcode_scanner/models/stock_move.py:0
+#: code:addons/sh_barcode_scanner/models/stock_move.py:0
+#: code:addons/sh_barcode_scanner/models/stock_picking.py:0
+#: code:addons/sh_barcode_scanner/models/stock_picking.py:0
+#: code:addons/sh_barcode_scanner/models/stock_picking.py:0
+#, python-format
+msgid "Scanned Internal Reference/Barcode not exist in any product!"
+msgstr "扫描的内部参考/条形码在任何产品中都不存在！"
+
+#. module: sh_barcode_scanner
+#: model:ir.model,name:sh_barcode_scanner.model_stock_scrap
+msgid "Scrap"
+msgstr "废料"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_scrap_barcode_scanner_res_config_settings_form
+msgid "Scrap Barcode Scanner"
+msgstr "废条码扫描器"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_inventory_line__sequence
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_stock_move__sequence
+msgid "Sequence"
+msgstr "顺序"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inven_adjt_barcode_scanner_inventory_form
+msgid "Start Inventory Scanning"
+msgstr "开始库存扫描"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inven_adjt_barcode_scanner_res_config_settings_form
+msgid "Stock Adjustment Barcode Scanner"
+msgstr "库存调整条码扫描器"
+
+#. module: sh_barcode_scanner
+#: model:ir.model,name:sh_barcode_scanner.model_stock_move
+msgid "Stock Move"
+msgstr "库存变动"
+
+#. module: sh_barcode_scanner
+#: code:addons/sh_barcode_scanner/models/account.py:0
+#: code:addons/sh_barcode_scanner/models/account.py:0
+#, python-format
+msgid ""
+"There is no income account defined for this product: \"%s\". You may have to"
+" install a chart of account from Accounting app, settings menu."
+msgstr ""
+“没有为此产品定义收入帐户：\“％s \”。您可能必须”
+“通过“会计”应用程序的“设置”菜单安装会计科目表。”
+
+#. module: sh_barcode_scanner
+#: model:ir.model,name:sh_barcode_scanner.model_stock_picking
+msgid "Transfer"
+msgstr "转移"
+
+#. module: sh_barcode_scanner
+#: model_terms:ir.ui.view,arch_db:sh_barcode_scanner.sh_inven_adjt_barcode_scanner_inventory_form
+msgid "UoM"
+msgstr "单位"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,help:sh_barcode_scanner.field_account_move___barcode_scanned
+#: model:ir.model.fields,help:sh_barcode_scanner.field_mrp_bom___barcode_scanned
+#: model:ir.model.fields,help:sh_barcode_scanner.field_purchase_order___barcode_scanned
+#: model:ir.model.fields,help:sh_barcode_scanner.field_sale_order___barcode_scanned
+#: model:ir.model.fields,help:sh_barcode_scanner.field_stock_inventory___barcode_scanned
+#: model:ir.model.fields,help:sh_barcode_scanner.field_stock_move___barcode_scanned
+#: model:ir.model.fields,help:sh_barcode_scanner.field_stock_picking___barcode_scanned
+#: model:ir.model.fields,help:sh_barcode_scanner.field_stock_scrap___barcode_scanned
+msgid "Value of the last barcode scanned."
+msgstr "最后扫描的条形码的值。"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_bom_barcode_scanner_warn_sound
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_bom_barcode_scanner_warn_sound
+msgid "Warning Sound? (BOM)"
+msgstr "警告声？ （BOM）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_inven_adjt_barcode_scanner_warn_sound
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_inven_adjt_barcode_scanner_warn_sound
+msgid "Warning Sound? (Inventory Adjustment)"
+msgstr "警告声？ （库存调整）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_invoice_barcode_scanner_warn_sound
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_invoice_barcode_scanner_warn_sound
+msgid "Warning Sound? (Invoice)"
+msgstr "警告声？ （发票）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_inventory_barcode_scanner_warn_sound
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_inventory_barcode_scanner_warn_sound
+msgid "Warning Sound? (Picking)"
+msgstr "警告声？ （捡）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_purchase_barcode_scanner_warn_sound
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_purchase_barcode_scanner_warn_sound
+msgid "Warning Sound? (Purchase)"
+msgstr "警告声？ （购买）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_scrap_barcode_scanner_warn_sound
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_scrap_barcode_scanner_warn_sound
+msgid "Warning Sound? (Scrap)"
+msgstr "警告声？ （废料）"
+
+#. module: sh_barcode_scanner
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_company__sh_sale_barcode_scanner_warn_sound
+#: model:ir.model.fields,field_description:sh_barcode_scanner.field_res_config_settings__sh_sale_barcode_scanner_warn_sound
+msgid "Warning Sound? (sale)"
+msgstr "警告声？ （销售）"
+
+#. module: sh_barcode_scanner
+#: code:addons/sh_barcode_scanner/models/account.py:0
+#: code:addons/sh_barcode_scanner/models/purchase.py:0
+#: code:addons/sh_barcode_scanner/models/sale.py:0
+#: code:addons/sh_barcode_scanner/models/stock_inventory.py:0
+#: code:addons/sh_barcode_scanner/models/stock_move.py:0
+#: code:addons/sh_barcode_scanner/models/stock_picking.py:0
+#, python-format
+msgid "You can not scan item in %s state."
+msgstr "您无法扫描处于％s状态的项目。"
+
+#. module: sh_barcode_scanner
+#: code:addons/sh_barcode_scanner/models/stock_picking.py:0
+#, python-format
+msgid ""
+"You can not scan product item for Detailed Operations directly here, Pls "
+"click detail button (at end each line) and than rescan your product item."
+msgstr ""
+“您不能直接在此处扫描产品项的详细操作，请”
+“单击详细信息按钮（每行末尾），然后重新扫描您的产品。”
+
+#. module: sh_barcode_scanner
+#: code:addons/sh_barcode_scanner/models/stock_picking.py:0
+#, python-format
+msgid "You must first select a Operation Type."
+msgstr "您必须首先选择一种操作类型。"
+
+#. module: sh_barcode_scanner
+#: code:addons/sh_barcode_scanner/models/account.py:0
+#, python-format
+msgid "You must first select a partner!"
+msgstr "您必须首先选择一个合作伙伴！"

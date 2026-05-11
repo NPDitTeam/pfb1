@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- 	New Overtime Request notification -->
+    <record id="send_new_overtime_request_notification" model="mail.template">
+        <field name="name">Post New Overtime Request Notification</field>
+        <field name="model_id" ref="model_sh_hr_overtime" />
+        <field name="partner_to">${object.employee_id.parent_id.user_id.partner_id.id}</field>
+        <field name="subject">${object.employee_id.name} - Overtime Request ${object.name}</field>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                Hello <b>${object.employee_id.parent_id.user_id.partner_id.name}</b>, <br />
+                <br />
+                Overtime Request - <b>${object.name}</b> submitted by <b>${object.employee_id.name}</b>.<br />
+                <div style="display: inline-block; margin: 15px 0px; text-align: center;">
+                    <a
+                        href="/mail/view?model=sh.hr.overtime&amp;res_id=${object.id}"
+                        target="_blank"
+                        style="padding: 5px 10px; color: #ffffff; text-decoration: none; background-color: #875a7b; border: 1px solid #875a7b; border-radius: 3px;"
+                    >
+                        Click here to view
+                    </a>
+                </div>
+                <br />
+                Thank you.
+            </div>
+        </field>
+        <field name="lang">${object.employee_id.user_id.partner_id.lang}</field>
+        <field name="auto_delete" eval="True" />
+    </record>
+
+    <!-- 	Overtime Request Approve notification	 -->
+    <record id="send_overtime_request_approved_notification" model="mail.template">
+        <field name="name">New Overtime Approved Notification</field>
+        <field name="model_id" ref="model_sh_hr_overtime" />
+        <field name="partner_to">${object.employee_id.user_id.partner_id.id}</field>
+        <field name="subject">${object.employee_id.name} - Overtime Request Approved ${object.name}</field>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                Hello <b>${object.employee_id.name}</b>, <br />
+                <br />
+                Overtime Request - <b>${object.name}</b> Approved by <b>${object.employee_id.parent_id.user_id.partner_id.name}</b>.<br />
+                <div style="display: inline-block; margin: 15px 0px; text-align: center;">
+                    <a
+                        href="/mail/view?model=sh.hr.overtime&amp;res_id=${object.id}"
+                        target="_blank"
+                        style="padding: 5px 10px; color: #ffffff; text-decoration: none; background-color: #875a7b; border: 1px solid #875a7b; border-radius: 3px;"
+                    >
+                        Click here to view
+                    </a>
+                </div>
+                <br />
+                Thank you.
+            </div>
+        </field>
+        <field name="lang">${object.employee_id.user_id.partner_id.lang}</field>
+        <field name="auto_delete" eval="True" />
+    </record>
+
+    <!-- 	Overtime Request Reject notification	 -->
+    <record id="send_overtime_request_reject_notification" model="mail.template">
+        <field name="name">New Overtime Request Refused Notification </field>
+        <field name="model_id" ref="model_sh_hr_overtime" />
+        <field name="partner_to">${object.employee_id.user_id.partner_id.id}</field>
+        <field name="subject">${object.employee_id.name} - Overtime Request Rejected ${object.name}</field>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                Hello <b>${object.employee_id.name}</b>, <br />
+                <br />
+                Overtime Request - <b>${object.name}</b> Rejected by <b>${object.employee_id.parent_id.user_id.partner_id.name}</b>.<br />
+                <div style="display: inline-block; margin: 15px 0px; text-align: center;">
+                    <a
+                        href="/mail/view?model=sh.hr.overtime&amp;res_id=${object.id}"
+                        target="_blank"
+                        style="padding: 5px 10px; color: #ffffff; text-decoration: none; background-color: #875a7b; border: 1px solid #875a7b; border-radius: 3px;"
+                    >
+                        Click here to view
+                    </a>
+                </div>
+                <br />
+                Thank you.
+            </div>
+        </field>
+        <field name="lang">${object.employee_id.user_id.partner_id.lang}</field>
+        <field name="auto_delete" eval="True" />
+    </record>
+</odoo>

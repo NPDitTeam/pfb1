@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- ✅ Tree View (แก้ไขแล้ว ใช้ related fields) -->
+        <record id="view_tree_sale_order_rent_cash_report" model="ir.ui.view">
+            <field name="name">sale.order.rent.cash.report.tree</field>
+            <field name="model">sale.order.rent.cash.report</field>
+            <field name="arch" type="xml">
+                <tree string="รายงานยอดถือเงินสดจากเช่า" >
+                    <field name="sale_order_id" widget="many2one"/>
+
+                    <field name="branch_display_name"/>
+                    <field name="customer_id" widget="many2one"/>
+                    <field name="cash" decoration-success="cash=='คืนแล้ว'"/>
+
+                </tree>
+            </field>
+        </record>
+
+        <!-- ✅ Form View (ยังคงใช้ Many2one ได้ปกติ) -->
+        <record id="view_form_sale_order_rent_cash_report" model="ir.ui.view">
+            <field name="name">sale.order.rent.cash.report.form</field>
+            <field name="model">sale.order.rent.cash.report</field>
+            <field name="arch" type="xml">
+                <form string="รายงานยอดถือเงินสดจากเช่า" >
+                    <sheet>
+                        <group>
+
+                            <field name="sale_order_id"/>
+                             <field name="branch_display_name"/>
+<!--                            <field name="branch_id" invisible="1"/>-->
+
+                            <field name="customer_id"/>
+                            <field name="cash" decoration-success="cash=='คืนแล้ว'"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_search_sale_order_rent_cash_report" model="ir.ui.view">
+    <field name="name">sale.order.rent.cash.report.search</field>
+    <field name="model">sale.order.rent.cash.report</field>
+    <field name="arch" type="xml">
+        <search string="ค้นหารายงานยอดถือเงินสดจากเช่า">
+            <field name="sale_order_id"/>
+
+            <field name="branch_display_name"/>
+            <field name="customer_id"/>
+            <field name="cash" decoration-success="cash=='คืนแล้ว'"/>
+        </search>
+    </field>
+</record>
+
+
+        <!-- ✅ Action Window -->
+        <record id="action_sale_order_rent_cash_report" model="ir.actions.act_window">
+    <field name="name">รายงานยอดถือเงินสดจากเช่า</field>
+    <field name="res_model">sale.order.rent.cash.report</field>
+    <field name="view_mode">tree,form</field>
+    <field name="search_view_id" ref="view_search_sale_order_rent_cash_report"/>
+</record>
+
+        <!-- ✅ Menu Item -->
+        <menuitem id="menu_sale_order_rent_cash_report"
+                  name="รายงานยอดถือเงินสดจากเช่า"
+                  parent="menu_stock_dashboard_root"
+                  action="action_sale_order_rent_cash_report"
+                  sequence="12"/>
+    </data>
+</odoo>

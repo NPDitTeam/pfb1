@@ -1,0 +1,26 @@
+<odoo>
+    <record id="account_payment_invoice_inherit_invoice" model="ir.ui.view">
+        <field name="name">account.payment.invoice.view.form.inherit</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+
+            <!-- เพิ่มฟิลด์อ้างอิง r_move_id -->
+            <xpath expr="//field[@name='ref']" position="after">
+                <field name="note"/>
+                <!-- <field name="r_move_id" readonly="1"/> -->
+
+            </xpath>
+
+            <!-- เพิ่มปุ่มรีเวิร์ค -->
+<!--            <xpath expr="//header" position="inside">-->
+<!--                <button name="action_rework_reverse_move"-->
+<!--                        type="object"-->
+<!--                        string="reverse"-->
+<!--                        class="btn btn-danger"-->
+<!--                       />-->
+<!--            </xpath>-->
+
+        </field>
+    </record>
+</odoo>

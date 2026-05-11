@@ -1,0 +1,1219 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <template id="assets_common" name="l10n_ch_isr_report" inherit_id="web.report_assets_common">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/css"
+                  href="pfb_npd_inventory_overview_rental_return_form/static/report.css"/>
+        </xpath>
+    </template>
+
+    <record id="paperformat_stock_form_test" model="report.paperformat">
+        <field name="name">A4 Custom</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">75</field>
+        <field name="margin_bottom">155</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">75</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <report
+            id="action_pfb_npd_inventory_overview_rental_return_form"
+            string="ใบคืนการเช่า"
+            name="pfb_npd_inventory_overview_rental_return_form.form_stock_npd_pfb"
+            model="stock.picking"
+            report_type="qweb-pdf"
+            print_report_name="'ใบคืนการเช่า - %s' % (object.name)"
+            paperformat="pfb_npd_inventory_overview_rental_return_form.paperformat_stock_form_test"
+    />
+
+    <template id="so_form_header">
+         <style>
+            .font_weight {
+                font-weight: 800;
+            }
+            .address-line {
+                font-size: 13px;
+                margin-top: 5px;
+            }
+            .tax-id {
+                font-size: 13px;
+                margin-top: -10px;
+                display: block;
+            }
+            .header-container {
+                display: flex;
+                align-items: flex-start;
+            }
+            .company-info {
+                margin-left: 40px;
+                 margin-top: 30px;
+            }
+            .document-info {
+                margin-top: 15px;
+<!--                margin-left: -20px;-->
+            }
+            .text-rent {
+                font-size: 11px;
+                margin-top: -10px
+            }
+            .date-info {
+                margin-top: -10px;
+            }
+            .doc-post {
+                font-size: 12px;
+            }
+        </style>
+        <div class="row">
+            <div class="col-1" style="margin-top: 30px;">
+                <img src="web/binary/company_logo" class="img-responsive"/>
+            </div>
+            <div class="col-1"/>
+            <div class="col-7 company-info line-distance">
+                <h1 class="font_weight"><strong>ใบคืนการเช่า</strong></h1>
+                <h6><strong><span t-esc="doc.company_id.name"/></strong></h6>
+                <p>
+                  <span t-field="doc.branch_id.address" style="line-height: 1.5;font-size: 14px;"/>
+                </p>
+                <p class="doc-post" style="position: fixed; right: 60px; top: 255px;">
+                  เวลาออกเอกสาร
+                <t t-esc="(doc.create_date + datetime.timedelta(hours=7)).strftime('%H:%M:%S')" />
+                </p>
+                <p class="doc-post" style="position: fixed; right: 60px; top: 280px;">
+                  <t t-esc="doc.sale_id.pricelist_id.name" />
+                </p>
+            </div>
+            <div class="col-4" style="margin-top: 30px;">
+                <table width="100%">
+                    <tr style="">
+                        <td style="display:block;width: 200px;text-align: center;padding-top: 5px; padding-right: -80px;">
+                            <p class="text-center document-info"><h4><strong>เลขที่ใบคืน</strong></h4></p>
+                            <p class="text-center"><strong><span t-esc="doc.name"/></strong></p>
+                            <p class="text-center text-rent"><strong>ใบกำกับการเช่า</strong></p>
+                            <p class="text-center text-rent"><span t-esc="doc.sale_id.name"/></p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="row" style="margin-bottom: 10px;"/>
+    </template>
+
+    <template id="so_form_title_top">
+        <style>
+            .rounded-square {
+                border: 1px solid #000;
+                border-radius: 10px;
+                padding: 20px;
+
+                font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+<!--                margin: auto; /* Center align */-->
+            }
+            .preserve-whitespace {
+                white-space: pre; !important
+            }
+
+            .text-partner {
+                font-size: 13px;
+            }
+        </style>
+        <div class="rounded-square">
+            <div class="row">
+                <div class="col-12">
+                    <div>
+                        <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                            <tr>
+                                <td class="text-left">
+                                    <strong>วันที่เช่าสินค้า <span t-esc="doc.start_x_date.strftime('%d') + ' ' + {1: 'มกราคม', 2: 'กุมภาพันธ์', 3: 'มีนาคม', 4: 'เมษายน', 5: 'พฤษภาคม', 6: 'มิถุนายน', 7: 'กรกฎาคม', 8: 'สิงหาคม', 9: 'กันยายน', 10: 'ตุลาคม', 11: 'พฤศจิกายน', 12: 'ธันวาคม'}[int(doc.start_x_date.strftime('%m'))] + ' ' + str(int(doc.start_x_date.strftime('%Y')) + 543)"/> ถึง <span t-esc="doc.end_x_date.strftime('%d') + ' ' + {1: 'มกราคม', 2: 'กุมภาพันธ์', 3: 'มีนาคม', 4: 'เมษายน', 5: 'พฤษภาคม', 6: 'มิถุนายน', 7: 'กรกฎาคม', 8: 'สิงหาคม', 9: 'กันยายน', 10: 'ตุลาคม', 11: 'พฤศจิกายน', 12: 'ธันวาคม'}[int(doc.end_x_date.strftime('%m'))] + ' ' + str(int(doc.end_x_date.strftime('%Y')) + 543)"/></strong>
+                                </td>
+                                <td class="text-right">
+                                    <strong>วันที่คืนสินค้า</strong>
+                                    <strong t-esc="doc.return_date.strftime('%d') + ' ' + {1: 'มกราคม', 2: 'กุมภาพันธ์', 3: 'มีนาคม', 4: 'เมษายน', 5: 'พฤษภาคม', 6: 'มิถุนายน', 7: 'กรกฎาคม', 8: 'สิงหาคม', 9: 'กันยายน', 10: 'ตุลาคม', 11: 'พฤศจิกายน', 12: 'ธันวาคม'}[int(doc.return_date.strftime('%m'))] + ' ' + str(int(doc.return_date.strftime('%Y')) + 543)"/>
+                                </td>
+<!--                                <td class="text-right">-->
+<!--                                    <strong>ใช้งานทั้งสิ้น-->
+<!--                                    <span t-esc="(doc.return_date.date() - doc.start_x_date).days"/>-->
+<!--                                    วัน </strong>-->
+<!--                                </td>-->
+                                <td class="text-right">
+                                    <strong>ใช้งานทั้งสิ้น
+                                        <span t-esc="1 if (doc.return_date.date() == doc.start_x_date) else (doc.return_date.date() - doc.start_x_date).days"/>
+                                    วัน</strong>
+                                </td>
+
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row" style="margin-bottom: 5px;"/>
+    </template>
+
+    <template id="so_form_title">
+        <table width="100%">
+                <tr style="font-size: 13px;">
+                    <td width="15%" style="padding-left: 60px;">
+                        <strong>ผู้เช่า :</strong>
+                    </td>
+                    <td width="85%" class="text-left">
+                      <span t-esc="doc.partner_id.name"/>
+                    </td>
+                </tr>
+                <tr style="font-size: 13px;">
+                    <td width="15%" style="padding-left: 60px;">
+                        <strong>ที่อยู่ :</strong>
+                    </td>
+                    <td width="85%" class="text-left">
+                        <span  t-esc="doc.partner_id.street"/>
+                        <span  t-esc="doc.partner_id.street2"/>
+                        <span  t-esc="doc.partner_id.city"/>
+                        <span  t-esc="doc.partner_id.state_id.name"/>
+                        <span  t-esc="doc.partner_id.zip"/>
+                        <span>[<span t-esc="doc.partner_id.phone"/>]</span>
+                        <br/>
+                        <strong>ผู้ติดต่อ :</strong>
+                        <span t-esc="doc.partner_id.name"/>
+                    </td>
+                </tr>
+            </table>
+    </template>
+
+    <template id="so_form_detail_top">
+         <style>
+            .preserve-whitespace {
+                white-space: pre;
+            }
+            .line-distance {
+                line-height: 1.5;
+                font-size: 13px !important;
+            }
+            .small-font {
+                font-size: 13px !important;
+            }
+            .border_report {
+                border-bottom: 1px solid black !important;
+                border-top: 1px solid black !important
+            }
+        </style>
+        <table width="100%">
+            <thead>
+                <tr style="border-bottom: 1px solid black !important;">
+                    <th width="1%" class="text-center line-distance small-font number-col border_report">ลำดับ</th>
+                    <th width="28%" class="text-center line-distance small-font list-col border_report">รายการสินค้า</th>
+                    <th width="9%" class="text-center line-distance small-font weight-col border_report">น้ำหนัก</th>
+                    <th width="9%" class="text-center line-distance small-font adjusted-col border_report">ปรับหาย</th>
+                    <th width="11%" class="text-center line-distance small-font repair-col border_report">ปรับชำรุด</th>
+                    <th width="11%" class="text-center line-distance small-font quantity-col border_report">
+                        จำนวนเช่า</th>
+                    <th width="11%" class="text-center line-distance small-font return-col border_report"><strong>
+                        จำนวนคืน</strong></th>
+                    <th width="9%" class="text-center line-distance small-font price-col border_report">ราคา/หน่วย</th>
+                    <th width="11%" class="text-center line-distance small-font total-col border_report"><strong>
+                        รวมเป็นเงิน</strong></th>
+                </tr>
+            </thead>
+            <tbody>
+                <t t-set="data_debit" t-value="[]"/>
+                <t t-set="discount_total_d" t-value="0.0"/>
+                    <t t-if="doc.sale_id.invoice_ids">
+    <t t-foreach="doc.sale_id.invoice_ids" t-as="inv">
+        <t t-foreach="inv.debit_note_ids" t-as="de">
+            <t t-if="de.state == 'posted'">
+            <t t-set="tag_name" t-value="0"/>
+            <t t-foreach="de.invoice_line_ids" t-as="line">
+                <t t-if="line.analytic_tag_ids">
+                    <t t-foreach="line.analytic_tag_ids" t-as="tag">
+                         <!-- ตั้งค่า tag_name ตามเงื่อนไข -->
+                        <t t-if="tag.name == 'D' and de.reason_code_id and de.reason_code_id.name == 'สินค้าชำรุด'">
+                            <t t-set="tag_name" t-value="1"/>
+                        </t>
+                        <t t-if="tag.name == 'L' and de.reason_code_id and de.reason_code_id.name == 'สินค้าหาย'">
+                            <t t-set="tag_name" t-value="2"/>
+                            <t t-if="line.discount_method == 'per'">
+                                <t t-set="discount_total_d" t-value="discount_total_d + ((line.quantity * line.price_unit) * line.discount_amount / 100)"/>
+                            </t>
+                            <t t-else="">
+                                <t t-set="discount_total_d" t-value="discount_total_d + line.discount_amount"/>
+                            </t>
+                        </t>
+
+                        <t t-set="key" t-value="str(line.product_id.id) + '-' + tag.name"/>
+
+                        <!-- ตรวจสอบว่ามีรายการที่ตรงกับ key อยู่ใน data_debit -->
+                        <t t-if="any(item['key'] == key for item in data_debit)">
+                            <!-- อัปเดต subtotal ของรายการที่มีอยู่ -->
+                            <t t-foreach="data_debit" t-as="item">
+                                <t t-if="item['key'] == key">
+                                    <!-- ⭐ เปลี่ยนจาก price_subtotal_without_discount เป็น price_total_full ⭐ -->
+                                    <t t-set="item['subtotal']"
+                                       t-value="item['subtotal'] + (line.price_total_full if line.is_lost_item else line.price_subtotal_without_discount)"/>
+                                    <t t-set="item['qty']"
+                                       t-value="item['qty'] + line.quantity"/>
+                                </t>
+                            </t>
+                        </t>
+                        <t t-else="">
+                            <!-- เพิ่มรายการใหม่ถ้าไม่พบ key เดิม -->
+                            <!-- ⭐ เปลี่ยนจาก price_subtotal_without_discount เป็น price_total_full ⭐ -->
+                            <t t-set="data_debit"
+                               t-value="data_debit + [{
+                                   'key': key,
+                                   'product_id': line.product_id.id,
+                                   'analytic_tag': tag.name,
+                                   'subtotal': line.price_total_full if line.is_lost_item else line.price_subtotal_without_discount,
+                                   'subtotal_price_total_full': line.price_total_full if line.is_lost_item else line.price_total_full,
+                                   'qty': line.quantity,
+                                   'reason_code': de.reason_code_id.name if de.reason_code_id else ''
+                               }]"/>
+                        </t>
+                    </t>
+                </t>
+            </t>
+            </t>
+        </t>
+    </t>
+</t>
+<!--                <t t-if="doc.sale_id.invoice_ids">-->
+<!--                    <t t-foreach="doc.sale_id.invoice_ids" t-as="inv">-->
+<!--                        <t t-foreach="inv.debit_note_ids" t-as="de">-->
+<!--                            <t t-set="tag_name" t-value="0"/>-->
+<!--                            <t t-foreach="de.invoice_line_ids" t-as="line">-->
+<!--                                <t t-if="line.analytic_tag_ids">-->
+<!--                                    <t t-foreach="line.analytic_tag_ids" t-as="tag">-->
+<!--                                         &lt;!&ndash; ตั้งค่า tag_name ตามเงื่อนไข &ndash;&gt;-->
+<!--                                        <t t-if="tag.name == 'D' and de.reason_code_id and de.reason_code_id.name == 'สินค้าชำรุด'">-->
+<!--                                            <t t-set="tag_name" t-value="1"/>-->
+<!--                                        </t>-->
+<!--                                        <t t-if="tag.name == 'L' and de.reason_code_id and de.reason_code_id.name == 'สินค้าหาย'">-->
+<!--                                            <t t-set="tag_name" t-value="2"/>-->
+<!--                                            <t t-set="discount_total_d" t-value="discount_total_d + line.discount_amount"/>-->
+<!--                                        </t>-->
+<!--                                        &lt;!&ndash; สร้าง key จาก product_id และ analytic_tag &ndash;&gt;-->
+<!--                                        <t t-set="key" t-value="str(line.product_id.id) + '-' + tag.name"/>-->
+
+<!--                                        &lt;!&ndash; ตรวจสอบว่ามีรายการที่ตรงกับ key อยู่ใน data_debit &ndash;&gt;-->
+<!--                                        <t t-if="any(item['key'] == key for item in data_debit)">-->
+<!--                                            &lt;!&ndash; อัปเดต subtotal ของรายการที่มีอยู่ &ndash;&gt;-->
+<!--                                            <t t-foreach="data_debit" t-as="item">-->
+<!--                                                <t t-if="item['key'] == key">-->
+<!--                                                    <t t-set="item['subtotal']"-->
+<!--                                                       t-value="item['subtotal'] + line.price_subtotal_without_discount"/>-->
+<!--                                                    <t t-set="item['qty']"-->
+<!--                                                       t-value="item['qty'] + line.quantity"/>-->
+<!--                                                </t>-->
+<!--                                            </t>-->
+<!--                                        </t>-->
+<!--                                        <t t-else="">-->
+<!--                                            &lt;!&ndash; เพิ่มรายการใหม่ถ้าไม่พบ key เดิม &ndash;&gt;-->
+<!--                                            &lt;!&ndash;   t-value="data_debit + [{'key': key, 'product_id': line.product_id.id, 'analytic_tag': tag.name, 'subtotal': line.price_subtotal_without_discount, 'qty': line.quantity}]"/>&ndash;&gt;-->
+
+<!--                                            <t t-set="data_debit"-->
+<!--                                                   t-value="data_debit + [{'key': key, 'product_id': line.product_id.id, 'analytic_tag': tag.name, 'subtotal': line.price_subtotal_without_discount, 'qty': line.quantity, 'reason_code': de.reason_code_id.name if de.reason_code_id else ''}]"/>-->
+
+<!--                                        </t>-->
+<!--                                    </t>-->
+<!--                                </t>-->
+<!--                            </t>-->
+<!--                        </t>-->
+<!--                    </t>-->
+<!--                </t>-->
+                <t t-set="returned_product_ids" t-value="doc.move_ids_without_package.mapped('product_id').ids"/>
+
+                <t t-foreach="doc.sale_id.order_line" t-as="l">
+                    <t t-if="l.price_subtotal &gt;= 0">
+                        <t t-if="l.price_subtotal &gt;= 0 and l.product_id.id in returned_product_ids">
+                        <tr>
+                            <td class="text-center line-distance number-col">
+                                <span t-esc="l_index + 1"/>
+                            </td>
+                            <td class="text-left line-distance list-col">
+                                <span t-esc="l.name"/>
+                            </td>
+                            <td class="text-right line-distance weight-col">
+                                <span t-esc="'{0:,.2f}'.format(l.second_uom_qty)"/>
+                            </td>
+
+                            <!-- คอลัมน์ adjusted-col สำหรับ analytic_tag 'L' -->
+                            <td class="text-right line-distance adjusted-col">
+                                <t t-set="adjusted_subtotal" t-value="0.0"/>
+                                <t t-set="adjusted_qty" t-value="0.0"/>
+                                <t t-foreach="data_debit" t-as="item">
+<!--                                    <t t-if="item['product_id'] == l.product_id.id and item['analytic_tag'] == 'L'">-->
+                                    <t t-if="item['product_id'] == l.product_id.id and item['analytic_tag'] == 'L' and item['reason_code'] == 'สินค้าหาย'">
+
+                                        <t t-set="adjusted_subtotal" t-value="item['subtotal_price_total_full']"/>
+                                        <t t-set="adjusted_qty" t-value="item['qty']"/>
+                                    </t>
+                                </t>
+                                <span t-esc="'{0:,.2f}'.format(adjusted_subtotal)"/>
+                            </td>
+
+                            <!-- คอลัมน์ repair-col สำหรับ analytic_tag 'D' -->
+                            <td class="text-right line-distance repair-col">
+                                <t t-set="repair_subtotal" t-value="0.0"/>
+                                <t t-foreach="data_debit" t-as="item">
+                                    <t t-if="item['product_id'] == l.product_id.id and item['analytic_tag'] == 'D' and item['reason_code'] == 'สินค้าชำรุด'">
+                                        <t t-set="repair_subtotal" t-value="item['subtotal']"/>
+                                    </t>
+                                </t>
+                                <span t-esc="'{0:,.2f}'.format(repair_subtotal)"/>
+                            </td>
+
+                            <!-- คอลัมน์ quantity-col -->
+                            <td class="text-right line-distance quantity-col">
+                                <span t-esc="'{0:,.0f}'.format(l.pfb_quantity)"/>
+                            </td>
+
+                            <!-- คอลัมน์ return-col (คำนวณจาก pfb_quantity - adjusted_subtotal) -->
+                            <td class="text-right line-distance return-col">
+                              <t t-if="adjusted_subtotal == 0 and repair_subtotal == 0">
+                                <span t-esc="'{0:,.0f}'.format(l.pfb_quantity)"/>
+                              </t>
+                              <t t-else="">
+                                <t t-if="adjusted_subtotal">
+                                    <span t-esc="'{0:,.0f}'.format(l.pfb_quantity - adjusted_qty)"/>
+                                </t>
+                                <t t-else="">
+                                    <span t-esc="'{0:,.0f}'.format(l.pfb_quantity)"/>
+                                </t>
+                              </t>
+                            </td>
+
+                            <td class="text-right line-distance price-col">
+                                <span t-esc="'{0:,.2f}'.format(l.price_unit)"/>
+                            </td>
+                            <td class="text-right line-distance total-total-col">
+                                <span t-esc="'{0:,.2f}'.format(
+                                (doc.return_date.date() - doc.start_x_date).days
+                                *
+                                (l.pfb_quantity * l.price_unit)
+                                )"/>
+                            </td>
+                        </tr>
+                        </t>
+                    </t>
+                </t>
+
+            </tbody>
+
+        </table>
+    </template>
+
+    <template id="so_form_footer">
+        <div style="display: block; width: 940px; position: fixed; left: 10px; top: 660px;">
+            <style>
+                <!--            .rounded-square {-->
+                <!--                border: 1px solid #000;-->
+                <!--                border-radius: 10px;-->
+                <!--                padding: 20px;-->
+                <!--                width: 100%;-->
+                <!--                font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;-->
+                <!--                margin: auto;-->
+                <!--            }-->
+
+                .rounded-square .bold {
+                font-weight: bold;
+                }
+                .blank-square {
+                border-radius: 10px;
+                height: 100px;
+                width: 100px;
+                margin-top: 20px;
+                }
+
+                .text-left {
+                text-align: left;
+                }
+
+                .text-right {
+                text-align: right;
+                }
+
+                .mt-1 {
+                margin-top: 1rem;
+                }
+
+                .mb-1 {
+                margin-bottom: 1rem;
+                }
+
+                .mr-1 {
+                margin-right: 1rem;
+                }
+
+                table {
+                width: 97%;
+                }
+                .small-font {
+                font-size: 14px !important;
+                }
+                .rounded-square {
+                border: 1px solid #000;
+                border-radius: 10px;
+                padding: 20px;
+                width: 100%;
+                font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+                }
+                <!--            .row {-->
+                <!--                display: flex;-->
+                <!--                align-items: center;-->
+                <!--                justify-content: space-between;-->
+                <!--            }-->
+                .text-left {
+                text-align: left;
+                }
+                .amount-text {
+                font-size: 25px;
+                font-weight: bold;
+                }
+                .move-text {
+                margin: 0 20px;
+                font-size: 25px;
+                }
+                .preserve-whitespace {
+                white-space: nowrap;
+                }
+                .inline-text {
+                display: inline-block;
+                vertical-align: middle;
+                margin-right: 10px;
+                }
+            </style>
+<!--            <p class="text-right" style="font-size: 13px; margin-bottom: 0;">ค่าเช่าที่เกิดขึ้นจริง-->
+<!--                (วันใช้งานทั้งสิ้น)x(ค่าเช่าต่อวัน) |-->
+<!--                <span t-esc="(doc.return_date.date() - doc.start_x_date).days"/>-->
+<!--                x-->
+<!--                <span t-esc="'{0:,.2f}'.format((doc.sale_id.amount_total + doc.sale_id.discount_amt_line) / ((doc.end_x_date - doc.start_x_date).days))"/>-->
+<!--                &lt;!&ndash;            <span t-esc="'{0:,.2f}'.format(doc.amount_total / ((doc.end_x_date - doc.start_x_date).days))"/>&ndash;&gt;-->
+<!--                =-->
+<!--                &lt;!&ndash;            <span t-esc="'{0:,.2f}'.format(doc.amount_total)"/>&ndash;&gt;-->
+<!--                <span t-esc="'{0:,.2f}'.format((doc.sale_id.amount_total + doc.sale_id.discount_amt_line) / ((doc.end_x_date - doc.start_x_date).days) * (doc.return_date.date() - doc.start_x_date).days )"/>-->
+<!--            </p>-->
+
+            <p class="text-right" style="font-size: 13px; margin-bottom: 0;">
+                ค่าเช่าที่เกิดขึ้นจริง (วันใช้งานทั้งสิ้น)x(ค่าเช่าต่อวัน) |
+
+                <!-- คำนวณจำนวนวันใช้งาน (ถ้าวันเดียวกันให้คิดเป็น 1 วัน) -->
+                <span t-set="days_used"
+                      t-value="1 if (doc.return_date.date() == doc.start_x_date) else (doc.return_date.date() - doc.start_x_date).days"/>
+                <span t-esc="days_used"/> x
+
+                <!-- คำนวณค่าเช่าต่อวัน (ถ้าวันเริ่มต้นและวันสิ้นสุดเท่ากัน ให้หารด้วย 1) -->
+                <span t-set="rental_per_day"
+                      t-value="(doc.sale_id.amount_total + doc.sale_id.total_rental_discount) / (1 if (doc.end_x_date == doc.start_x_date) else (doc.end_x_date - doc.start_x_date).days)"/>
+                <span t-esc="'{0:,.2f}'.format(rental_per_day)"/> =
+
+                <!-- คำนวณค่าเช่าที่เกิดขึ้นจริง -->
+                <span t-set="total_rent" t-value="rental_per_day * days_used"/>
+                <span t-esc="'{0:,.2f}'.format(total_rent)"/>
+            </p>
+
+
+            <div class="mt-1" style="border-bottom: 1px solid black"/>
+            <div class="row" style="margin-bottom: 5px;"/>
+            <div class="row">
+                <div class="col-7">
+                    <div class="rounded-square">
+                        <table>
+                            <tr>
+                                <td class="text-right bold">ค่าเช่าสินค้าเริ่มต้น</td>
+                                <td class="text-right bold" style="padding-right: 100px;"><span
+                                        t-esc="'{0:,.2f}'.format(doc.sale_id.amount_total + doc.sale_id.total_rental_discount)"/></td>
+                            </tr>
+                            <tr>
+                                <td class="text-right bold">ค่าประกันสินค้า</td>
+                                <td class="text-right bold" style="padding-right: 100px;"><span
+                                        t-esc="'{0:,.2f}'.format(doc.sale_id.pfb_amount)"/></td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">ค่าเช่าสินค้าต่อวัน</td>
+<!--                                <td class="text-right" style="padding-right: 100px;"><span-->
+<!--                                        t-esc="'{0:,.2f}'.format((doc.sale_id.amount_total + doc.sale_id.total_rental_discount) / ((doc.end_x_date - doc.start_x_date).days))"/></td>-->
+                           <td class="text-right" style="padding-right: 100px;"><span
+                                        t-esc="'{0:,.2f}'.format((doc.sale_id.amount_total) / ((doc.end_x_date - doc.start_x_date).days))"/></td>
+
+<!--                                <span t-esc="(doc.end_x_date - doc.start_x_date).days"/>-->
+<!--                                <span t-esc="(doc.sale_id.amount_total + doc.sale_id.total_rental_discount)"/>-->
+				</tr>
+                        </table>
+                    </div>
+                    <div class="row" style="margin-bottom: 5px;"/>
+                    <div class="rounded-square">
+                        <div>
+                            <table style="display: inline-block;">
+                                <tr>
+                                    <td class="text-left small-font" style="padding-bottom: 5px;">
+                                        หมายเหตุ : <span t-raw="str(doc.note).replace('&lt;p&gt;', '').replace('&lt;/p&gt;', '') if isinstance(doc.note, str) else ''"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="blank-square"/>
+                    </div>
+                </div>
+
+                <div class="col-1"/>
+                <div class="col-4">
+                    <!-- สร้างตัวแปรเริ่มต้น -->
+                    <t t-set="data_debit" t-value="[]"/>
+                    <t t-set="total_d" t-value="0.0"/>
+                    <t t-set="discount_total_d" t-value="0.0"/>
+                    <t t-set="total_l" t-value="0.0"/>
+                    <t t-set="tag_name" t-value="0"/>
+
+                    <!-- ตรวจสอบว่ามี invoice -->
+                    <t t-if="doc.sale_id.invoice_ids">
+                        <t t-foreach="doc.sale_id.invoice_ids" t-as="inv">
+                            <t t-foreach="inv.debit_note_ids" t-as="de">
+                                <t t-if="de.state == 'posted'">
+                                <t t-set="tag_name" t-value="0"/>
+                                <t t-foreach="de.invoice_line_ids" t-as="line">
+                                    <t t-if="line.analytic_tag_ids">
+                                        <t t-foreach="line.analytic_tag_ids" t-as="tag">
+                                            <t t-if="tag.name == 'D' and de.reason_code_id and de.reason_code_id.name == 'สินค้าชำรุด'">
+                                                <t t-set="tag_name" t-value="1"/>
+                                            </t>
+                                            <t t-if="tag.name == 'L' and de.reason_code_id and de.reason_code_id.name == 'สินค้าหาย'">
+                                                <t t-set="tag_name" t-value="2"/>
+                                                <t t-if="line.discount_method == 'per'">
+                                                    <t t-set="discount_total_d" t-value="discount_total_d + ((line.quantity * line.price_unit) * line.discount_amount / 100)"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-set="discount_total_d" t-value="discount_total_d + line.discount_amount"/>
+                                                </t>
+
+<!--                                                <t t-set="discount_total_d" t-value="discount_total_d + line.discount_amount"/>-->
+                                            </t>
+
+                                            <t t-set="key" t-value="str(line.product_id.id) + '-' + tag.name"/>
+
+                                            <t t-if="any(item['key'] == key for item in data_debit)">
+                                                <t t-foreach="data_debit" t-as="item">
+                                                    <t t-if="item['key'] == key">
+                                                        <!-- ⭐ เปลี่ยนที่นี่ด้วย ⭐ -->
+                                                        <t t-set="item['subtotal']"
+                                                           t-value="item['subtotal'] + (line.price_total_full if line.is_lost_item else line.price_subtotal_without_discount)"/>
+                                                    </t>
+                                                </t>
+                                            </t>
+                                            <t t-else="">
+                                                <!-- ⭐ เปลี่ยนที่นี่ด้วย ⭐ -->
+                                                <t t-set="data_debit"
+                                                   t-value="data_debit + [{
+                                                       'key': key,
+                                                       'product_id': line.product_id.id,
+                                                       'analytic_tag': tag.name,
+                                                       'subtotal': line.price_total_full if line.is_lost_item else line.price_subtotal_without_discount,
+                                                       'reason_code': de.reason_code_id.name if de.reason_code_id else ''
+                                                   }]"/>
+                                            </t>
+                                        </t>
+                                    </t>
+                                </t>
+                                <t t-if="tag_name == 1">
+                                    <t t-set="total_d" t-value="total_d + (de.amount_price_total_full)"/>
+                                </t>
+                                <t t-if="tag_name == 2">
+                                    <!-- ⭐ ใช้ price_total_full สำหรับกรณีสินค้าหาย ⭐ -->
+                                    <t t-set="has_lost_item" t-value="any(line.is_lost_item for line in de.invoice_line_ids)"/>
+                                    <t t-if="has_lost_item">
+                                        <t t-set="total_l" t-value="total_l + sum(line.price_total_full for line in de.invoice_line_ids if line.is_lost_item)"/>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-set="total_l" t-value="total_l + (de.amount_price_total_full)"/>
+                                    </t>
+                                </t>
+                                </t>
+                            </t>
+                        </t>
+                    </t>
+                    <div>
+
+                        <!-- สร้างตัวแปรเริ่มต้น -->
+                        <t t-set="value_16" t-value="0"/>
+                        <t t-if="doc.approval_state == 'approved'">
+                            <t t-set="value_17" t-value="doc.rent_discount"/>
+                         </t>
+                        <t t-else="">
+                            <t t-set="value_17" t-value="0.00"/>
+                         </t>
+<!--                        <t t-set="value_17" t-value="doc.sale_id.total_rental_discount"/>-->
+                        <t t-set="value_18" t-value="0"/>
+
+                        <!-- คำนวณ value_16 -->
+                        <!-- กำหนดให้ today เป็น offset-aware datetime -->
+                        <t t-set="today" t-value="context_timestamp(datetime.datetime.now())"/>
+
+                        <!-- ทำให้ doc.scheduled_date เป็น offset-aware datetime -->
+                        <t t-if="doc.scheduled_date">
+                            <t t-set="scheduled_date_aware" t-value="context_timestamp(doc.scheduled_date)"/>
+                        </t>
+
+                        <!-- คำนวณ days_difference -->
+                        <!--<t t-if="scheduled_date_aware and doc.end_x_date and doc.start_x_date">-->
+                        <!--    <t t-set="days_difference" t-value="(today - scheduled_date_aware).days"/>-->
+                        <!--    <t t-if="days_difference > 0">-->
+                        <!--        <t t-set="days_total" t-value="(doc.end_x_date - doc.start_x_date).days"/>-->
+                        <!--        <t t-if="days_total > 0">-->
+                        <!--            <t t-set="value_16"-->
+                        <!--               t-value="days_difference * (doc.sale_id.amount_total / ((doc.end_x_date - doc.start_x_date).days))"/>-->
+                        <!--        </t>-->
+                        <!--    </t>-->
+                        <!--</t>-->
+
+<!--                        <t t-set="value_16" t-value="((doc.sale_id.amount_total + doc.sale_id.discount_amt_line) / ((doc.end_x_date - doc.start_x_date).days) *-->
+<!--                        (doc.return_date.date() - doc.start_x_date).days ) - (doc.sale_id.amount_total + doc.sale_id.discount_amt_line)"/>-->
+                        <t t-set="days_used"
+                           t-value="1 if (doc.return_date.date() == doc.start_x_date) else (doc.return_date.date() - doc.start_x_date).days"/>
+
+                        <t t-set="rental_per_day"
+                           t-value="(doc.sale_id.amount_total) /
+                                    (1 if (doc.end_x_date == doc.start_x_date) else (doc.end_x_date - doc.start_x_date).days)"/>
+
+                        <t t-set="total_rent" t-value="rental_per_day * days_used"/>
+
+                        <t t-set="value_16"
+                           t-value="total_rent - (doc.sale_id.amount_total)"/>
+
+                        <!-- คำนวณ value_18 -->
+                        <t t-set="value_18" t-value="value_16 - value_17"/>
+                        <table>
+                            <tr>
+                                <td class="text-right"
+                                    style="font-size: 15px; padding-right: 10px; white-space: nowrap;"><strong>
+                                    เก็บค่าเช่าส่วนต่าง</strong></td>
+                                <td class="text-right" style="font-size: 15px; white-space: nowrap;">
+                                    <strong>
+<!--                                    <span t-esc="'{0:,.2f}'.format(value_16)"/></strong>-->
+<!--					<t t-if="not doc.sale_id.deposit_ref">-->
+                                        <t t-set="deposit_ref" t-value="doc.sale_id.deposit_ref or ''"/>
+                                        <t t-set="deposit_count" t-value="len(deposit_ref.split(',')) if deposit_ref else 0"/>
+<!--                                        บิลที่ไม่ต่ออายุ deposit_count == 0-->
+                                        <t t-if="deposit_count == 0">
+
+                                                <t t-if="doc.sale_id.campaign_id.name in ['โปร 2026 ส่งฟรีไม่เกิน 25 Km.', 'โปร 2026 ส่งฟรีไม่เกิน 35 Km.']">
+                                                    <t t-set="today_date" t-value="context_timestamp(datetime.datetime.now()).date()"/>
+                                                    <t t-if="today_date &gt; doc.end_x_date">
+                                                        <span t-esc="'{0:,.2f}'.format(value_16)"/>
+                                                        <t t-set="value_18" t-value="value_16 - value_17"/>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span>0.00</span>
+                                                        <t t-set="value_18" t-value="0 - value_17"/>
+                                                    </t>
+                                                </t>
+
+                                                <!-- ถ้าไม่ใช่โปรส่งฟรี ให้เช็คเรทเดือน -->
+                                                <t t-elif="'เรทเดือน' in (doc.sale_id.pricelist_id.name or '')">
+                                                <!-- เช็คว่า SO นี้ถูกอ้างอิงใน deposit_ref ของ SO อื่นหรือไม่ -->
+                                                <t t-set="is_referenced_by_other" t-value="env['sale.order'].search([('deposit_ref', '=', doc.sale_id.name), ('state', '=', 'sale')], limit=1)"/>
+
+                                                <t t-if="deposit_count == 0 and not is_referenced_by_other and doc.return_date.date() &lt;= doc.end_x_date">
+                                                    <span>0.00</span>
+                                                    <t t-set="value_18" t-value="0 - value_17"/>
+                                                </t>
+
+                                                <t t-elif="deposit_count == 0 and not is_referenced_by_other and doc.return_date.date() &gt; doc.end_x_date">
+
+                                                    <span t-esc="'{0:,.2f}'.format(value_16)"/>
+                                                    <t t-set="value_18" t-value="value_16 - value_17"/>
+                                                </t>
+
+                                                <t t-elif="deposit_count == 0 and  is_referenced_by_other and doc.return_date.date() &gt; doc.end_x_date">
+
+                                                    <span t-esc="'{0:,.2f}'.format(value_16)"/>
+                                                    <t t-set="value_18" t-value="value_16 - value_17"/>
+                                                </t>
+
+                                                <t t-elif="deposit_count == 0 and is_referenced_by_other">
+                                                    <!-- SO นี้ถูกต่ออายุโดย SO อื่น → คิดค่าเช่าส่วนต่างปกติ -->
+                                                    <span>0.00</span>
+                                                    <t t-set="value_18" t-value="0 - value_17"/>
+                                                </t>
+
+
+
+                                                <t t-else="">
+
+                                                    <t t-set="diff_days" t-value="1 if (doc.return_date.date() == doc.start_x_date) else (doc.return_date.date() - doc.start_x_date).days"/>
+                                                    <t t-if="diff_days &lt; 30">
+                                                        <span>0.00</span>
+
+                                                         <t t-set="value_18" t-value=" 0 - value_17"/>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span t-esc="'{0:,.2f}'.format(value_16)"/>
+
+                                                        <t t-set="value_18" t-value=" value_16 - value_17"/>
+                                                    </t>
+                                                </t>
+                                            </t>
+                                            <t t-else="">
+                                                <span t-esc="'{0:,.2f}'.format(value_16)"/>
+
+                                                <t t-set="value_18" t-value=" value_16 - value_17"/>
+                                            </t>
+                                        </t>
+                                        <t t-else="">
+
+                                                <!-- ใหม่ - เช็คทุก ref ใน deposit_ref -->
+                                                <t t-set="deposit_refs" t-value="[ref.strip() for ref in deposit_ref.split(',')]"/>
+
+                                                <!-- ค้นหา stock.picking ทั้งหมดจากทุก ref -->
+                                                <t t-set="related_pickings" t-value="env['stock.picking'].search([('group_id.name', 'in', deposit_refs)])"/>
+
+                                                <!-- เช็คว่ามี end_x_date ที่ != doc.end_x_date หรือไม่ -->
+                                                <t t-set="has_diff_end_date" t-value="1 if any(rp.end_x_date != doc.end_x_date for rp in related_pickings) else 0"/>
+
+                                                <!-- Debug -->
+<!--                                                <div style="border: 1px solid #ccc; padding: 5px; margin: 5px 0 5px 0; font-size: 11px; background: #f9f9f9; min-width: 400px; max-width: 600px; text-align: left; word-wrap: break-word;">-->
+<!--                                                    <strong>Debug Info:</strong><br/>-->
+<!--                                                    deposit_ref: <t t-esc="deposit_ref"/><br/>-->
+<!--                                                    deposit_refs (list): <t t-esc="deposit_refs"/><br/>-->
+<!--                                                    count: <t t-esc="len(deposit_refs)"/><br/>-->
+<!--                                                    <t t-if="related_pickings">-->
+<!--                                                        found pickings: <t t-esc="len(related_pickings)"/> รายการ<br/>-->
+<!--                                                        <t t-foreach="related_pickings" t-as="rp">-->
+<!--                                                            - <t t-esc="rp.name"/> | group: <t t-esc="rp.group_id.name"/> | end_x_date: <t t-esc="rp.end_x_date"/><br/>-->
+<!--                                                        </t>-->
+<!--                                                        current end_x_date: <t t-esc="doc.end_x_date"/><br/>-->
+<!--                                                        has_diff_end_date: <t t-esc="has_diff_end_date"/> <t t-if="has_diff_end_date == 1">(มีความแตกต่าง)</t><t t-else="">(ทุกตัวเท่ากัน)</t><br/>-->
+<!--                                                    </t>-->
+<!--                                                    <t t-else="">-->
+<!--                                                        picking not found<br/>-->
+<!--                                                    </t>-->
+<!--                                                </div>-->
+
+                                                <!-- ตรวจสอบจากทุก picking ที่พบ -->
+                                                <t t-if="related_pickings">
+                                                    <!-- ใช้ has_diff_end_date == 0 แทน max_prev_end_x_date == doc.end_x_date -->
+                                                    <t t-if="has_diff_end_date == 0 and doc.return_date.date() &lt;= doc.end_x_date">
+                                                    <!-- เช็คโปรโมชั่นส่งฟรีก่อน -->
+                                                    <t t-if="doc.sale_id.campaign_id.name in ['โปร 2026 ส่งฟรีไม่เกิน 25 Km.', 'โปร 2026 ส่งฟรีไม่เกิน 35 Km.']">
+                                                        <span>0.00</span>
+                                                        <t t-set="value_18" t-value="0 - value_17"/>
+                                                    </t>
+
+                                                    <!-- ถ้าไม่ใช่โปรส่งฟรี ให้เช็คเรทเดือน -->
+                                                    <t t-elif="'เรทเดือน' in (doc.sale_id.pricelist_id.name or '')">
+                                                            <t t-set="diff_days" t-value="1 if (doc.return_date.date() == doc.start_x_date) else (doc.return_date.date() - doc.start_x_date).days"/>
+                                                            <t t-if="diff_days &lt; 30">
+                                                                <span>0.00</span>
+                                                                <t t-set="value_18" t-value="0 - value_17"/>
+                                                            </t>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <span t-esc="'{0:,.2f}'.format(value_16)"/>
+                                                            <t t-set="value_18" t-value="value_16 - value_17"/>
+                                                        </t>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span t-esc="'{0:,.2f}'.format(value_16)"/>
+                                                        <t t-set="value_18" t-value="value_16 - value_17"/>
+                                                    </t>
+                                                </t>
+                                                </t>
+<!--                                        </t>-->
+<!--                                        <t t-else="">-->
+<!--                                                <span t-esc="'{0:,.2f}'.format(value_16)"/>-->
+
+<!--                                                <t t-set="value_18" t-value=" value_16 - value_17"/>-->
+<!--                                        </t>-->
+
+                                        </strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right" style="color: green; padding-right: 10px; white-space: nowrap;">
+                                    ส่วนลดค่าเช่าสินค้า
+
+                                </td>
+
+<!--                                <t t-if="doc.sale_id.button_convert_visible_send_r == True and doc.sale_id.total_rental_discount">-->
+
+<!--                                    <td class="text-right" style="color: green; white-space: nowrap;"><span-->
+<!--                                                                    t-esc="'{0:,.2f}'.format(value_17)"/></td>-->
+<!--                                </t>-->
+                                <t t-if="doc.approval_state == 'approved'">
+                                                                        <td class="text-right" style="color: green; white-space: nowrap;"><span
+                                                                    t-esc="'{0:,.2f}'.format(value_17)"/></td>
+                                </t>
+                                <t t-else="">
+                                    <td class="text-right" style="white-space: nowrap;"><span style="color:red;">0.00</span></td>
+
+
+                                </t>
+                            </tr>
+                            <tr>
+                                <td class="text-right"
+                                    style="font-size: 20px; padding-top: 85px; padding-right: 10px; white-space: nowrap;"><strong>
+                                    เก็บค่าเช่าส่วนต่างสุทธิ</strong></td>
+                                <td class="text-right"
+                                    style="font-size: 20px; position: relative; white-space: nowrap;">
+                                    <strong><span t-esc="'{0:,.2f}'.format(value_18)"/></strong>
+                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background-color: black;"/>
+                                    <div style="position: absolute; bottom: -3px; left: 0; right: 0; height: 1px; background-color: black;"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right" style="padding-right: 10px; white-space: nowrap;"><strong>
+                                    ค่าปรับชำรุดสินค้า</strong></td>
+                                <td class="text-right" style="white-space: nowrap;"><strong><span
+                                        t-esc="'{0:,.2f}'.format(total_d)"/></strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-right" style="padding-right: 10px; white-space: nowrap;"><strong>
+                                    ค่าปรับหายสินค้า</strong></td>
+                                <td class="text-right" style="white-space: nowrap;"><strong><span
+                                        t-esc="'{0:,.2f}'.format(total_l)"/></strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-right"
+                                    style="color: green; padding-right: 10px; white-space: nowrap;"><strong>
+                                    ส่วนลดปรับหายสินค้า</strong></td>
+                                <td class="text-right" style="color: green;"><strong><span
+                                        t-esc="'{0:,.2f}'.format(discount_total_d)"/></strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-right" style="font-size: 20px; padding-right: 10px;"><strong>
+                                  <t t-if="((value_18+(total_l)+total_d) - discount_total_d) &lt; 0">
+                                    คืนเงินสุทธิ
+                                  </t>
+                                  <t t-else="">
+                                    เก็บเงินเพิ่มสุทธิ
+                                  </t>
+                                    </strong></td>
+                                <td class="text-right" style="font-size: 20px; position: relative;">
+                                    <strong>
+                                        <span t-esc="'{0:,.2f}'.format((value_18+(total_l)+total_d) - discount_total_d)"/>
+                                    </strong>
+                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background-color: black;"/>
+                                    <div style="position: absolute; bottom: -3px; left: 0; right: 0; height: 1px; background-color: black;"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="row" style="margin-bottom: 5px;"/>
+            <div class="rounded-square">
+                <div class="row">
+                    <div class="col-2" style="margin-top: 6px;">
+                        <strong>คืนเงินประกันสุทธิ</strong>
+                    </div>
+<!--                    <div class="col-6 text-right" style="margin-top: 6px;">-->
+<!--                        (<t t-esc="doc.currency_id.with_context({'lang': 'th_TH'}).amount_to_text((doc.sale_id.pfb_amount - ((value_18+(total_l)+total_d) - discount_total_d)))"/>-->
+<!--                        )-->
+<!--                    </div>-->
+<!--                    <div class="col-1 move-text" style="margin-top: 0;">-->
+<!--                        |-->
+<!--                    </div>-->
+<!--                    <div class="col-3 text-right amount-text" style="margin-left: -25px;">-->
+<!--                        <strong><span-->
+<!--                                t-esc="'{0:,.2f}'.format(doc.sale_id.pfb_amount - ((value_18+(total_l)+total_d) - discount_total_d))"/></strong>-->
+
+<!--                    </div>-->
+                    <div class="col-6 text-right" style="margin-top: 6px;">
+                        <t t-if="doc.no_deduction">
+                            (<t t-esc="doc.currency_id.with_context({'lang': 'th_TH'}).amount_to_text(doc.sale_id.pfb_amount)"/>)
+                        </t>
+                        <t t-else="">
+                            (<t t-esc="doc.currency_id.with_context({'lang': 'th_TH'}).amount_to_text((doc.sale_id.pfb_amount - ((value_18+(total_l)+total_d) - discount_total_d)))"/>
+                            )
+                        </t>
+                        </div>
+                        <div class="col-1 move-text" style="margin-top: 0;">
+                            |
+                        </div>
+                    <div class="col-3 text-right amount-text" style="margin-left: -25px;">
+                        <t t-if="doc.no_deduction">
+                            <strong>
+                                <span t-esc="'{0:,.2f}'.format(doc.sale_id.pfb_amount)" style="font-size: 28px;"/>
+                            </strong>
+                        </t>
+                        <t t-else="">
+                            <strong>
+                                <span
+                                  t-esc="'{0:,.2f}'.format(doc.sale_id.pfb_amount - ((value_18+(total_l)+total_d) - discount_total_d))" style="font-size: 28px;"/>
+                            </strong>
+                        </t>
+                        </div>
+<!--                        <div style="border: 1px solid #ddd; padding: 10px; margin-top: 10px; font-size: 14px; line-height: 1.5;">-->
+<!--    <h4><strong>📊 ค่าที่ใช้ในการคำนวณ</strong></h4>-->
+<!--    <table width="100%" style="border-collapse: collapse;">-->
+<!--        <tr>-->
+<!--            <td><strong>ค่าเช่าส่วนต่าง (value_18):</strong></td>-->
+<!--            <td class="text-right"><span t-esc="'{0:,.2f}'.format(value_18)"/></td>-->
+<!--        </tr>-->
+<!--        <tr>-->
+<!--            <td><strong>ค่าเช่าที่เกิดขึ้นจริง (value_16):</strong></td>-->
+<!--            <td class="text-right"><span t-esc="'{0:,.2f}'.format(value_16)"/></td>-->
+<!--        </tr>-->
+<!--        <tr>-->
+<!--            <td><strong>ค่าปรับหายสินค้า (total_l):</strong></td>-->
+<!--            <td class="text-right"><span t-esc="'{0:,.2f}'.format(total_l)"/></td>-->
+<!--        </tr>-->
+<!--        <tr>-->
+<!--            <td><strong>ค่าปรับชำรุดสินค้า (total_d):</strong></td>-->
+<!--            <td class="text-right"><span t-esc="'{0:,.2f}'.format(total_d)"/></td>-->
+<!--        </tr>-->
+<!--        <tr>-->
+<!--            <td><strong>ส่วนลดค่าปรับหายสินค้า (discount_total_d):</strong></td>-->
+<!--            <td class="text-right"><span t-esc="'{0:,.2f}'.format(discount_total_d)"/></td>-->
+<!--        </tr>-->
+<!--        <tr>-->
+<!--            <td><strong>ค่าประกันสินค้า (pfb_amount):</strong></td>-->
+<!--            <td class="text-right"><span t-esc="'{0:,.2f}'.format(doc.sale_id.pfb_amount)"/></td>-->
+<!--        </tr>-->
+<!--        <tr>-->
+<!--            <td><strong>วันที่เช่าสินค้า:</strong></td>-->
+<!--            <td class="text-right"><span t-esc="doc.start_x_date.strftime('%d/%m/%Y')"/></td>-->
+<!--        </tr>-->
+<!--        <tr>-->
+<!--            <td><strong>วันที่กำหนดคืนสินค้า:</strong></td>-->
+<!--            <td class="text-right"><span t-esc="doc.end_x_date.strftime('%d/%m/%Y')"/></td>-->
+<!--        </tr>-->
+<!--        <tr>-->
+<!--            <td><strong>วันที่คืนสินค้าจริง:</strong></td>-->
+<!--            <td class="text-right"><span t-esc="doc.return_date.strftime('%d/%m/%Y')"/></td>-->
+<!--        </tr>-->
+<!--        <tr>-->
+<!--            <td><strong>จำนวนวันใช้งานจริง:</strong></td>-->
+<!--            <td class="text-right"><span t-esc="1 if (doc.return_date.date() == doc.start_x_date) else (doc.return_date.date() - doc.start_x_date).days"/> วัน</td>-->
+<!--        </tr>-->
+<!--        <tr>-->
+<!--            <td><strong>ค่าเช่าต่อวัน:</strong></td>-->
+<!--            <td class="text-right"><span t-esc="'{0:,.2f}'.format((doc.sale_id.amount_total + doc.sale_id.total_rental_discount) / ((doc.end_x_date - doc.start_x_date).days))"/></td>-->
+<!--        </tr>-->
+<!--    </table>-->
+<!--</div>-->
+
+
+
+
+                </div>
+            </div>
+
+
+
+
+
+            <div class="row" style="margin-bottom: 5px;"/>
+            <div>
+                <div class="row">
+                    <div class="col-3">
+                        <div>
+                            <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                                <tr>
+                                    <td class="text-center"><strong>ผู้รับเงิน</strong></td>
+                                    <br/>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="font-size: 13px; margin-top: 10;">ㅤ</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">.....................................</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="font-size: 13px; margin-top: 10;">ㅤ</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">วันที่.........................................</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div>
+                            <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                                <tr>
+                                    <td class="text-center"><strong>ผู้เช่าสินค้า</strong></td>
+                                    <br/>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="font-size: 13px; margin-top: 10;">ㅤ</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">.....................................</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="font-size: 13px; margin-top: 10;">ㅤ</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">วันที่.........................................</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div>
+                            <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                                <tr>
+                                    <td class="text-center"><strong>ผู้รับสินค้า</strong></td>
+                                    <br/>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="font-size: 13px; margin-top: 10;">ㅤ</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">.....................................</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="font-size: 13px; margin-top: 10;">ㅤ</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">วันที่.........................................</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div>
+                            <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                                <tr>
+                                    <td class="text-center"><strong>ผู้ลงข้อมูล</strong></td>
+                                    <br/>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="font-size: 13px; margin-top: 10;">ㅤ</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="position: relative;">
+                                        <span style="display:block;width:160px;font-size: 13px;position: absolute; bottom: -15px; left: 10%;transform: translateX(-50%); background-color: white; padding: 0 5px;">
+                                            <span t-field="doc.sale_id.create_uid"/>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <!--<tr>-->
+                                <!--    <td class="text-center" style="font-size: 13px; margin-bottom: 10;"><span-->
+                                <!--            t-field="doc.sale_id.create_uid"/></td>-->
+                                <!--</tr>-->
+                                <tr>
+                                    <td class="text-center">.....................................</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="font-size: 13px; margin-top: 10;">ㅤ</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="position: relative;">
+                                        <span style="font-size: 13px;position: absolute; bottom: -15px; left: 35%; transform: translateX(-50%); background-color: white; padding: 0 5px;">
+                                            <span t-field="doc.sale_id.create_date" t-options='{"widget": "date"}'/>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">วันที่........................................</td>
+                                </tr>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row" style="margin-bottom: 5px;"/>
+            <div class="row">
+                <div class="col-6">
+                    <div>
+                        <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                            <tr>
+                                <td style="font-size: 13px;">
+                                    กรุณาตรวจสอบความถูกต้องของเอกสารเเละสินค้าที่เช่า ก่อนออกจากสาขาห้ามตัด ต่อ เชื่อม
+                                    เจาะรู หรือ ดัดแปลงสินค้า มิฉะนั้นจะมีค่าปรับชำรุดหรือปรับหายเปิดทำการเวลา
+                                    08:00-16:00 น.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="font-size: 13px;">
+                                    หยุดทุกวันอาทิตย์เเละวันหยุดตามปฎิทินบริษัทฯ
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="font-size: 13px;">
+                                    <strong>ทางบริษัทฯ ไม่รับคืนสินค้าในวันอาทิตย์หรือวันหยุดของบริษัทฯ</strong>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-7">
+                    <div>
+                        <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                            <tr>
+                              <t t-set="sum_qty" t-value="0"/>
+                              <t t-foreach="doc.sale_id.order_line" t-as="l">
+                                <t t-if="l.price_subtotal &gt;= 0">
+                                  <t t-set="sum_qty" t-value="sum_qty + l.second_uom_qty * l.pfb_quantity"/>
+                                </t>
+                              </t>
+                                <t t-set="wei" t-value="sum(doc.move_ids_without_package.mapped('second_uom_qty'))"/>
+                                <td class="text-right" style="font-size: 23px; padding-right: 80px;">
+                                    <strong>น้ำหนักรวมสินค้ารวมสุทธิ
+                                    <span t-esc="'{0:,.2f}'.format(sum_qty)"/> กก.</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right" style="padding-right: 80px; font-size: 13px;">
+                                    <strong>วันที่พิมพ์เอกสาร :
+
+                                        <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y')"/>
+                                        เวลา :
+                                        <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%H:%M:%S')"/>
+                                    </strong>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="form_stock_npd_pfb">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.basic_layout">
+                    <t t-set="multi" t-value="0"/>
+                    <t t-set="ply" t-value="0"/>
+                    <t t-set="wei" t-value="0"/>
+
+                    <div class="header">
+                      <table width="100%" border="1">
+                        <tr>
+                            <td>
+                              <t t-call="pfb_npd_inventory_overview_rental_return_form.so_form_header"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                              <t t-call="pfb_npd_inventory_overview_rental_return_form.so_form_title_top"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                              <t t-call="pfb_npd_inventory_overview_rental_return_form.so_form_title"/>
+                            </td>
+                        </tr>
+                      </table>
+                      <t t-call="pfb_npd_inventory_overview_rental_return_form.so_form_footer"/>
+                    </div>
+
+                    <table width="100%" border="1">
+                        <tr>
+                            <td>
+<!--                                Detail-->
+                                <t t-call="pfb_npd_inventory_overview_rental_return_form.so_form_detail_top"/>
+                            </td>
+                        </tr>
+                    </table>
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+</odoo>

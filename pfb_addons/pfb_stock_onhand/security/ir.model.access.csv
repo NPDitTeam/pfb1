@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_stock_onhand_report_wizard,access.stock.onhand.report.wizard,model_stock_onhand_report_wizard,base.group_user,1,1,1,0
+access_report_stock_onhand_report,access.report.stock.onhand.report,model_report_stock_onhand_report,base.group_user,1,1,1,0
+access_stock_onhand_view,access.stock.onhand.view,model_stock_onhand_view,base.group_user,1,1,1,0

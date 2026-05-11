@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="sh_project_task_report_doc">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-foreach="docs" t-as="a">
+                    <style>
+                        .row:last-child .col-3 {
+                            border-bottom: 1px solid #000;
+                        }
+                    </style>
+                    <div class="page" style="border: 2px solid #000; margin-top: 25px;">
+                        <div class="row">
+                            <div class="col-12" style="text-align: center; line-height: 2;">
+                                <span style="font-size: 18px;" t-field="a.name" />
+                                (
+                                <span style="font-size: 18px;" t-field="a.stage_id" />
+                                )
+                            </div>
+                        </div>
+                        <hr style="border-top: 2px solid #000; margin: 0px;" />
+                        <div class="row" style="margin: 0px 0px 0px 2px; padding: 0px;">
+                            <div class="col-12">
+                                <div style="margin: 0rem;">
+                                    <div>
+                                        <div class="row" style="line-height: 16px;">
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                <span style="font-size: 16px; font-weight: bold;">Project Name:</span>
+                                            </div>
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                <span style="font-size: 16px;" t-field="a.project_id" />
+                                            </div>
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                <span style="font-size: 16px; font-weight: bold;">Assign To:</span>
+                                            </div>
+                                            <div class="col-3" style="padding: 5px 0px 5px 10px;">
+                                                <span style="font-size: 16px;" t-field="a.user_id" />
+                                            </div>
+                                        </div>
+                                        <div class="row" style="line-height: 16px;">
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                <span style="font-size: 16px; font-weight: bold;">Customer Name:</span>
+                                            </div>
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                <span style="font-size: 16px;" t-field="a.partner_id" />
+                                            </div>
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                <span style="font-size: 16px; font-weight: bold;">Assign Date:</span>
+                                            </div>
+                                            <div class="col-3" style="padding: 5px 10px 5px 10px;">
+                                                <span style="font-size: 16px;" t-field="a.date_assign" />
+                                            </div>
+                                        </div>
+                                        <div class="row" style="line-height: 16px;">
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                <span style="font-size: 16px; font-weight: bold;">Customer Email:</span>
+                                            </div>
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                <span style="font-size: 16px;" t-field="a.email_from" />
+                                            </div>
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                <span style="font-size: 16px; font-weight: bold;">Deadline Date:</span>
+                                            </div>
+                                            <div class="col-3" style="padding: 5px 10px 5px 10px;">
+                                                <span style="font-size: 16px;" t-field="a.date_deadline" />
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                <t t-if="a.sh_priority"><span style="font-size: 16px; font-weight: bold;">Priority:</span></t>
+                                            </div>
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                <t t-if="a.sh_priority"><span style="font-size: 16px;" t-field="a.sh_priority" /></t>
+                                            </div>
+
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                <t t-if="a.sh_user_ids"><span style="font-size: 16px; font-weight: bold;">Responsible Users:</span></t>
+                                            </div>
+                                            <div class="col-3" style="padding: 5px 0px 5px 10px;">
+                                                <t t-if="a.sh_user_ids"><span style="font-size: 16px;" t-field="a.sh_user_ids" /></t>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <t t-if="a.description">
+                            <div class="row" style="margin: 0px; padding: 0px;">
+                                <div class="col-12" style="padding: 0px;">
+                                    <div style="margin: 0px 1px; padding: 0px;">
+                                        <div style="background-color: aliceblue; border-top: 1px solid #000; border-bottom: 1px solid #000; text-align: center; padding: 12px;">
+                                            <span style="font-size: 16px; font-weight: bold;">Description</span>
+                                        </div>
+                                        <div>
+                                            <span style="width: 20%; font-size: 16px; word-break: break-all; border-right: 0px;" t-field="a.description" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                        <t t-if="a.child_ids and a.check_bool_enable_task_sub_task==True">
+                            <!-- <p style="page-break-after:always;"> </p> -->
+
+                            <div class="row" style="margin: 0px; padding: 0px; line-height: 16px;">
+                                <div class="col-12">
+                                    <div style="margin: 0px; padding: 0px;">
+                                        <div>
+                                            <div class="row">
+                                                <div class="col-12" style="background-color: aliceblue; border-top: 1px solid #000; border-bottom: 1px solid #000; text-align: center; padding: 12px;">
+                                                    <span style="font-size: 16px; font-weight: bold;">Sub Tasks</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-8">
+                                                <div class="row">
+                                                    <div class="col-4" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                        Task
+                                                    </div>
+
+                                                    <div class="col-4" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                        Assign To
+                                                    </div>
+
+                                                    <div class="col-4" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                        Assign Date
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="row">
+                                                    <div class="col-6" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">Deadline</div>
+                                                    <div class="col-6" style="padding: 5px 0px 5px 10px;">Stage</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <t t-if="a.child_ids">
+                                            <t t-foreach="a.child_ids" t-as="sub">
+                                                <div>
+                                                    <div class="row" style="line-height: 16px;">
+                                                        <div class="col-8">
+                                                            <div class="row">
+                                                                <div class="col-4" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                                    <p style="font-size: 16px; margin-bottom: 0px;" t-field="sub.name" />
+                                                                </div>
+                                                                <div class="col-4" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                                    <p style="font-size: 16px; margin-bottom: 0px;" t-field="sub.user_id" />
+                                                                </div>
+                                                                <div class="col-4" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                                    <p style="font-size: 16px; margin-bottom: 0px;" t-field="sub.date_assign" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <div class="row">
+                                                                <div class="col-6" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                                    <p style="font-size: 16px; margin-bottom: 0px;" t-field="sub.date_deadline" />
+                                                                </div>
+                                                                <div class="col-6" style="padding: 5px 0px 5px 10px; min-height: 40px;">
+                                                                    <p style="font-size: 16px; margin-bottom: 0px;" t-field="sub.stage_id" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                        <t t-if="a.planned_hours">
+                            <div class="row" style="margin: 0px; padding: 0px; line-height: 16px;">
+                                <div class="col-12">
+                                    <div style="margin: 0px 2px; padding: 0px;">
+                                        <div>
+                                            <div class="row" style="line-height: 16px;">
+                                                <div class="col-12" style="background-color: aliceblue; border-top: 1px solid #000; border-bottom: 1px solid #000; text-align: center; padding: 12px;">
+                                                    <span style="font-size: 16px; font-weight: bold;">Timesheets</span>
+                                                </div>
+                                            </div>
+                                            <div class="row" style="line-height: 16px;">
+                                                <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                    <span style="font-size: 16px; font-weight: bold;">Planned Hours:</span>
+                                                </div>
+                                                <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                    <span style="font-size: 16px;" t-field="a.planned_hours" />
+                                                </div>
+                                                <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                    <span style="font-size: 16px; font-weight: bold;">Progress:</span>
+                                                </div>
+                                                <div class="col-3" style="padding: 5px 0px 5px 5px;">
+                                                    <span style="font-size: 16px;" t-field="a.progress" />
+                                                    %
+                                                </div>
+                                            </div>
+                                            <div class="row" style="line-height: 16px;">
+                                                <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                    <span style="font-size: 16px; font-weight: bold;">Sub Tasks:</span>
+                                                </div>
+                                                <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                    <span style="font-size: 16px;" t-field="a.subtask_planned_hours" />
+                                                    planned hours
+                                                </div>
+                                                <div class="col-3" style="border-right: 1px solid #000;"></div>
+                                                <div class="col-3"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row" style="margin: 0px;">
+                                <div class="col-12">
+                                    <div style="text-align: left;">
+                                        <div style="margin: 0px 2px; padding: 0px;">
+                                            <div class="row" style="line-height: 16px;">
+                                                <div class="col-3" style="border-right: 1px solid #000; margin: 0px 0px; padding: 5px 0px 5px 10px; font-size: 16px;">Date</div>
+                                                <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px; font-size: 16px;">Employee</div>
+                                                <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px; font-size: 16px;">Description</div>
+                                                <div class="col-3" style="padding: 5px 0px 5px 10px; font-size: 16px;">Duration(in hours)</div>
+                                            </div>
+                                        </div>
+                                        <div style="margin: 0px 2px; padding: 0px;">
+                                            <t t-if="a.timesheet_ids">
+                                                <t t-foreach="a.timesheet_ids" t-as="time">
+                                                    <div class="row" style="line-height: 16px;">
+                                                        <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                            <p style="font-size: 16px; margin-bottom: 0px;" t-field="time.date" />
+                                                        </div>
+                                                        <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                            <p style="font-size: 16px; margin-bottom: 0px;" t-field="time.employee_id" />
+                                                        </div>
+                                                        <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                            <p style="font-size: 16px; margin-bottom: 0px;" t-field="time.name" />
+                                                        </div>
+                                                        <div class="col-3" style="padding: 5px 0px 5px 10px;">
+                                                            <p style="font-size: 16px; margin-bottom: 0px;" t-field="time.unit_amount" />
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="shhhh" style="float: right; margin-right: 110px;">
+                                        <span style="font-size: 16px; font-weight: bold;">Hours Spent:</span>
+                                        <span style="font-size: 16px;" t-field="a.effective_hours" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="shhhh" style="float: right; margin-right: 110px;">
+                                        <span style="font-size: 16px; font-weight: bold;">Remaining Hours:</span>
+                                        <span style="font-size: 16px;" t-field="a.remaining_hours" />
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                        <hr style="border-top: 2px solid #000; margin: 0px;" groups="sh_all_in_one_pms.group_enable_task_custom_checklist" />
+
+                        <div class="row" style="margin: 0px; padding: 0px;" groups="sh_all_in_one_pms.group_enable_task_custom_checklist">
+                            <div class="col-12" t-if="a.custom_checklist_ids">
+                                <div style="margin: 0px; padding: 0px;">
+                                    <div style="margin: 0px 1px; padding: 0px;">
+                                        <div class="row">
+                                            <div class="col-12" style="text-align: center; background-color: aliceblue; border-bottom: 1px solid #000; font-size: 16px; font-weight: bold; padding: 12px;">
+                                                <span>Checklist</span>
+                                            </div>
+                                        </div>
+                                        <div class="row" style="line-height: 16px;">
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                <span style="font-size: 15px; font-weight: bold;">Completed Checklist :</span>
+                                            </div>
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">
+                                                <span style="font-size: 16px;" t-field="a.custom_checklist" />
+                                            </div>
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;"></div>
+                                            <div class="col-3" style="padding: 5px 0px 5px 10px;"></div>
+                                        </div>
+                                        <div class="row" style="vertical-align: top;">
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">Name</div>
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">Description</div>
+                                            <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px;">Date</div>
+                                            <div class="col-3" style="padding: 5px 0px 5px 10px;">State</div>
+                                        </div>
+                                    </div>
+                                    <t t-if="a.custom_checklist_ids">
+                                        <t t-foreach="a.custom_checklist_ids" t-as="project">
+                                            <div>
+                                                <div class="row" style="line-height: 16px;">
+                                                    <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px; margin-left: 1px;">
+                                                        <p style="font-size: 16px; margin-bottom: 0px;" t-field="project.name" />
+                                                    </div>
+                                                    <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px; margin-left: -1px;">
+                                                        <p style="font-size: 16px; margin-bottom: 0px;" t-field="project.description" />
+                                                    </div>
+                                                    <div class="col-3" style="border-right: 1px solid #000; padding: 5px 0px 5px 10px; margin-left: 1px;">
+                                                        <p style="font-size: 16px; margin-bottom: 0px;" t-field="project.updated_date" />
+                                                    </div>
+                                                    <div class="col-3" style="padding: 5px 0px 5px 10px;">
+                                                        <p style="font-size: 16px; margin-bottom: 0px;" t-field="project.state" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="sh_project_task" model="ir.actions.report">
+        <field name="name">Task Detail</field>
+        <field name="model">project.task</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">sh_all_in_one_pms.sh_project_task_report_doc</field>
+        <field name="report_file">sh_all_in_one_pms.sh_project_task_report_doc</field>
+        <field name="binding_model_id" ref="model_project_task" />
+        <field name="binding_type">report</field>
+        <field name="print_report_name">'Projec Tassk Detail'</field>
+    </record>
+</odoo>

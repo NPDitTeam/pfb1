@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Sequences for Picking Transport Info -->
+        <record id="picking_transport_seq" model = "ir.sequence">
+            <field name="name">Picking Transport Sequence</field>
+            <field name="code">picking.transport.seq</field>
+            <field name="prefix">SHN/</field>
+            <field name="padding">4</field>
+        </record>
+
+        <record id="picking_transport_seq1" model = "ir.sequence">
+            <field name="name">Picking Transport Route Sequence</field>
+            <field name="code">picking.transport.route.seq</field>
+            <field name="prefix">SHRN/</field>
+            <field name="padding">4</field>
+        </record>
+
+    </data>
+</odoo>

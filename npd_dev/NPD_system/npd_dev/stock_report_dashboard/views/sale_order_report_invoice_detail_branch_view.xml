@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Search View -->
+        <record id="view_search_sale_order_report_invoice_detail_branch" model="ir.ui.view">
+            <field name="name">sale.order.report.invoice.detail.branch.search</field>
+            <field name="model">sale.order.report.invoice.detail.branch</field>
+            <field name="arch" type="xml">
+                <search string="ค้นหารายงาน">
+                    <field name="branch_name"/>
+                    <field name="partner_name"/>
+                    <field name="sale_id"/>
+                    <field name="user_name"/>
+
+                    <filter string="มียอดค้างชำระ"
+                            name="has_due"
+                            domain="[('due_amount', '>', 0)]"/>
+                    <filter string="ชำระครบแล้ว"
+                            name="fully_paid"
+                            domain="[('due_amount', '=', 0)]"/>
+
+                    <separator/>
+
+                    <filter string="วันนี้"
+                            name="today"
+                            domain="[('due_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                    <filter string="เดือนนี้"
+                            name="this_month"
+                            domain="[('due_date', '>=', (context_today()).strftime('%Y-%m-01'))]"/>
+
+                    <group expand="0" string="จัดกลุ่มตาม">
+                        <filter string="สาขา" name="group_by_branch" context="{'group_by': 'branch_name'}"/>
+                        <filter string="ลูกค้า" name="group_by_partner" context="{'group_by': 'partner_name'}"/>
+                        <filter string="ผู้รับผิดชอบ" name="group_by_user" context="{'group_by': 'user_name'}"/>
+                        <filter string="วันที่ครบกำหนด" name="group_by_due_date" context="{'group_by': 'due_date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Tree View -->
+        <record id="view_tree_sale_order_report_invoice_detail_branch" model="ir.ui.view">
+            <field name="name">sale.order.report.invoice.detail.branch.tree</field>
+            <field name="model">sale.order.report.invoice.detail.branch</field>
+            <field name="arch" type="xml">
+                <tree string="รายงานใบแจ้งหนี้ค้างชำระ(สาขา)"
+                      decoration-danger="due_amount > 0 and due_date &lt; current_date"
+                      decoration-warning="due_amount > 0 and due_date == current_date"
+                      decoration-success="due_amount == 0">
+                    <field name="branch_name"/>
+                    <field name="due_date"/>
+                    <field name="sale_id"/>
+                    <field name="partner_name"/>
+                    <field name="due_amount" sum="รวมยอดค้างชำระ" widget="monetary"/>
+                    <field name="paid_date"/>
+                    <field name="paid_amount" sum="รวมยอดชำระแล้ว" widget="monetary"/>
+                    <field name="user_name"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Pivot View -->
+        <record id="view_pivot_sale_order_report_invoice_detail_branch" model="ir.ui.view">
+            <field name="name">sale.order.report.invoice.detail.branch.pivot</field>
+            <field name="model">sale.order.report.invoice.detail.branch</field>
+            <field name="arch" type="xml">
+                <pivot string="วิเคราะห์ใบแจ้งหนี้">
+                    <field name="branch_name" type="row"/>
+                    <field name="due_date" type="col" interval="month"/>
+                    <field name="due_amount" type="measure"/>
+                    <field name="paid_amount" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+        <!-- Graph View -->
+        <record id="view_graph_sale_order_report_invoice_detail_branch" model="ir.ui.view">
+            <field name="name">sale.order.report.invoice.detail.branch.graph</field>
+            <field name="model">sale.order.report.invoice.detail.branch</field>
+            <field name="arch" type="xml">
+                <graph string="กราฟใบแจ้งหนี้" type="bar">
+                    <field name="branch_name"/>
+                    <field name="due_amount" type="measure"/>
+                </graph>
+            </field>
+        </record>
+
+        <!-- Action Window สำหรับดูรายงาน -->
+        <record id="action_view_sale_order_report_invoice_detail_branch" model="ir.actions.act_window">
+            <field name="name">ดูรายงานใบแจ้งหนี้ค้างชำระ</field>
+            <field name="res_model">sale.order.report.invoice.detail.branch</field>
+            <field name="view_mode">tree,pivot,graph</field>
+            <field name="search_view_id" ref="view_search_sale_order_report_invoice_detail_branch"/>
+            <field name="context">{'search_default_has_due': 1}</field>
+        </record>
+
+        <!-- เมนูสำหรับดูรายงาน (แยกจาก wizard) -->
+<!--        <menuitem id="menu_view_sale_order_report_invoice_detail_branch"-->
+<!--                  name="📋 ดูรายงานใบแจ้งหนี้(สาขา)"-->
+<!--                  parent="menu_stock_dashboard_root"-->
+<!--                  action="action_view_sale_order_report_invoice_detail_branch"-->
+<!--                  sequence="15"/>-->
+    </data>
+</odoo>

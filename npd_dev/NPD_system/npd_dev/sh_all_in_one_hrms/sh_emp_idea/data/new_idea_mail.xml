@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- 	New idea notification for responsible person -->
+    <record id="send_new_idea_notification_responsible_user" model="mail.template">
+        <field name="name">Post New Idea Notification To Responsible Persons </field>
+        <field name="model_id" ref="model_sh_idea" />
+        <field name="partner_to"></field>
+        <field name="subject">${object.created_by.company_id.name} -Idea ${object.name} - ${object.subject}</field>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                Hello There,
+                <br />
+                <br />
+                Idea <b>${object.subject}</b> - <b>${object.name}</b> submitted by <b>${object.created_by.partner_id.name}</b>.<br />
+                <div style="display: inline-block; margin: 15px 0px; text-align: center;">
+                    <a href="/mail/view?model=sh.idea&amp;res_id=${object.id}" target="_blank" style="padding: 5px 10px; color: #ffffff; text-decoration: none; background-color: #875a7b; border: 1px solid #875a7b; border-radius: 3px;">
+                        Click here to view
+                    </a>
+                </div>
+                <br />
+                Thank you.
+            </div>
+        </field>
+        <field name="lang">${object.created_by.partner_id.lang}</field>
+        <field name="auto_delete" eval="True" />
+    </record>
+
+    <!-- 	Idea Approve notification for idea created user	 -->
+    <record id="send_idea_approved_notification_created_user" model="mail.template">
+        <field name="name">Idea Approved Notification to Created User </field>
+        <field name="model_id" ref="model_sh_idea" />
+        <field name="partner_to">${object.created_by.partner_id.id}</field>
+        <field name="subject">${object.created_by.company_id.name} -Idea ${object.name} - ${object.subject} - Approved</field>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                Hello There,
+                <br />
+                <br />
+                Your Idea <b>${object.subject}</b> - <b>${object.name}</b> Approved by <b>${object.approved_by.name}</b> Successfully.<br />
+                <div style="display: inline-block; margin: 15px 0px; text-align: center;">
+                    <a href="/mail/view?model=sh.idea&amp;res_id=${object.id}" target="_blank" style="padding: 5px 10px; color: #ffffff; text-decoration: none; background-color: #875a7b; border: 1px solid #875a7b; border-radius: 3px;">
+                        Click here to view
+                    </a>
+                </div>
+                <br />
+                Thank you.
+            </div>
+        </field>
+        <field name="lang">${object.created_by.partner_id.lang}</field>
+        <field name="auto_delete" eval="True" />
+    </record>
+
+    <!-- 	Idea Refused notification for idea created user	 -->
+    <record id="send_idea_refused_notification_created_user" model="mail.template">
+        <field name="name">Idea Refused Notification to Created User </field>
+        <field name="model_id" ref="model_sh_idea" />
+        <field name="partner_to">${object.created_by.partner_id.id}</field>
+        <field name="subject">${object.created_by.company_id.name} -Idea ${object.name} - ${object.subject} - Refused</field>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                Hello There,
+                <br />
+                <br />
+                Your Idea <b>${object.subject}</b> - <b>${object.name}</b> Refused by <b>${object.refused_by.name}</b>.<br />
+                <div style="display: inline-block; margin: 15px 0px; text-align: center;">
+                    <a href="/mail/view?model=sh.idea&amp;res_id=${object.id}" target="_blank" style="padding: 5px 10px; color: #ffffff; text-decoration: none; background-color: #875a7b; border: 1px solid #875a7b; border-radius: 3px;">
+                        Click here to view
+                    </a>
+                </div>
+                <br />
+                Thank you.
+            </div>
+        </field>
+        <field name="lang">${object.created_by.partner_id.lang}</field>
+        <field name="auto_delete" eval="True" />
+    </record>
+</odoo>

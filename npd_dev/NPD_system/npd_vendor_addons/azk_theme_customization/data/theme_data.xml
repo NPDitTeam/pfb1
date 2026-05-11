@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+  
+    <record model="azk.theme.customization" id="azka_theme">
+        <field name="name">Azka Theme</field>
+       
+        <field name="top_panel_bg">#3b3399</field>
+        <field name="top_panel_bg_active">True</field>
+        <field name="top_panel_border">#994E01</field>
+        <field name="top_panel_border_active">True</field>
+        <field name="top_panel_font">#FFFFFF</field>
+        <field name="top_panel_font_active">True</field>
+        <field name="top_panel_active_item_font">#FFFFFF</field>
+        <field name="top_panel_active_item_font_active">True</field>
+        <field name="top_panel_active_item_bg">#762823</field>
+        <field name="top_panel_active_item_bg_active">True</field>
+        <field name="top_panel_hover_item_font">#fcfcfc</field>
+        <field name="top_panel_hover_item_font_active">True</field>
+        <field name="top_panel_hover_item_bg">#9F0808</field>
+        <field name="top_panel_hover_item_bg_active">True</field>
+        
+         <field name="left_panel_bg">#2c3234</field>
+        <field name="left_panel_bg_active">True</field>
+        <field name="left_panel_font_color">#59291C</field>
+        <field name="left_panel_font_color_active">True</field>
+        <field name="left_panel_menu">#59291C</field>
+        <field name="left_panel_menu_active">True</field>
+        <field name="left_panel_active_item_font">#762823</field>
+        <field name="left_panel_active_item_font_active">True</field>
+        <field name="left_panel_active_item_bg">#8B0702</field>
+        <field name="left_panel_active_item_bg_active">True</field>
+        <field name="left_panel_hover_item_font">#F0EFEF</field>
+        <field name="left_panel_hover_item_font_active">True</field>
+        <field name="left_panel_hover_item_bg">#A71306</field>
+        <field name="left_panel_hover_item_bg_active">True</field>
+        
+         <field name="content_bg">#d5d3cc</field>
+        <field name="content_bg_active">True</field>
+        <field name="content_button">#EC1C24</field>
+        <field name="content_button_active">True</field>
+        <field name="content_form_title">#EC1C24</field>
+        <field name="content_form_title_active">True</field>
+        <field name="content_form_link">#EC1C24</field>
+        <field name="content_form_link_active">True</field>
+        <field name="content_loader">#FDDE63</field>
+        <field name="content_loader_active">True</field>
+        <field name="content_loader_text">#000000</field>
+        <field name="content_loader_text_active">True</field>
+        
+    </record>
+ 
+</odoo>

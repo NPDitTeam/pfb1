@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- equiment.request : views -->
+    <record id="asset_equipment_request_view_search" model="ir.ui.view">
+        <field name="name">equipment.request.search</field>
+        <field name="model">asset.request</field>
+        <field name="arch" type="xml">
+            <search string="asset Request Search">
+                <field name="name"/>
+<!--                <field name="category_id"/>-->
+                <field name="technician_user_id"/>
+                <field name="equipment_id"/>
+                <field name="owner_user_id"/>
+                <field name="stage_id"/>
+<!--                <field name="asset_team_id"/>-->
+                <separator/>
+                <filter string="To do" domain="[('stage_id.done', '=', False)]" name="todo"/>
+                <filter string="Cancelled" name="kanban_state_block" domain="[('kanban_state', '=', 'blocked')]"/>
+                <filter string="In Progress" name="progress" domain="[('kanban_state', '=', 'normal')]"/>
+                <filter string="Approved" name="done" domain="[('kanban_state', '=', 'done')]"/>
+                <filter string="Top Priorities" name="top_priority" domain="[('priority', '=', '3')]"/>
+                <separator/>
+                <filter string="Unscheduled Asset" domain="[('schedule_date', '=', False)]" name="unscheduled"/>
+                <separator/>
+                <filter string="My Requests" name="my_requests" domain="[('owner_user_id', '=', uid)]"/>
+                <separator/>
+                <filter string="Unread Messages" name="message_needaction" domain="[('message_needaction','=',True)]"/>
+                <separator/>
+                <filter string="Archived" name="inactive" domain="[('archive','=',True)]"/>
+                <group expand='0' string='Group by...'>
+                    <filter name="asigned" string='Assigned' domain="[]" context="{'group_by': 'technician_user_id'}"/>
+<!--                    <filter name="category" string='Category' domain="[]" context="{'group_by' : 'category_id'}"/>-->
+                    <filter name="stages" string='Stages' domain="[]" context="{'group_by' : 'stage_id'}"/>
+                    <filter string='Created By' name='created_by' domain="[]" context="{'group_by': 'owner_user_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="asset_equipment_request_view_form" model="ir.ui.view">
+        <field name="name">equipment.request.form</field>
+        <field name="model">asset.request</field>
+        <field name="arch" type="xml">
+            <form string="Asset Request">
+                <field name="archive" invisible="1"/>
+                <header>
+                    <field name="stage_id" widget="statusbar" clickable="true" readonly="1"
+                           attrs="{'invisible': [('archive', '=', True)]}"/>
+                </header>
+                <sheet>
+                    <div attrs="{'invisible': [('archive', '=', False)]}">
+                        <span class="label label-warning pull-right">Canceled</span>
+                    </div>
+                    <div class="oe_right">
+                        <field name="kanban_state" class="oe_inline" widget="kanban_state_selection"/>
+                    </div>
+                    <div class="oe_title">
+<!--                        <label for="name" class="oe_edit_only" string="Subject"/>-->
+                        <h1>
+                            <field name="name" placeholder="Asset Subject"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="owner_user_id" string="Requested By"/>
+                            <field name="equipment_id" />
+<!--                            <field name="category_id"/>-->
+                        </group>
+                        <group>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <field name='description' placeholder="Internal Note ......."/>
+                        </page>
+                        <page string="Miscellaneous">
+                            <group>
+                                <group>
+                                    <field name="asset_type" widget="radio"/>
+                                    <field name="request_date"/>
+                                    <field name="close_date"/>
+                                </group>
+                                <group>
+<!--                                    <field name="asset_team_id"/>-->
+                                    <field name="technician_user_id" string="Responsible"/>
+<!--                                    <label for="schedule_date" string="schedule date" name="schedule_date"/>-->
+                                    <div class="o_row">
+                                        <field name="schedule_date"/>
+<!--                                        <label string="for" for="for" name="for"/>-->
+                                        <field name="duration" class="oe_inline"/>
+                                        hours
+                                    </div>
+                                    <field name="priority" widget="priority"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="asset_equipment_request_view_kanban" model="ir.ui.view">
+        <field name="name">equipment.request.kanban</field>
+        <field name="model">asset.request</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="stage_id">
+                <field name="stage_id"/>
+                <field name="color"/>
+                <field name="priority"/>
+                <field name="equipment_id"/>
+                <field name="technician_user_id"/>
+                <field name="owner_user_id"/>
+<!--                <field name="category_id"/>-->
+                <field name="kanban_state"/>
+                <field name="message_needaction_counter"/>
+
+                <templates>
+                    <t t-name="kanban-tooltip">
+                        <ul class="oe_kanban_tooltip">
+                            <li>
+                                <b>Own:</b>
+                                <field name="owner_user_id"/>
+                            </li>
+                        </ul>
+                    </t>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="{{!selection_mode ? 'oe_kanban_color_' + kanban_getcolor(record.color.raw_value) : ''}} oe_kanban_card oe_kanban_global_click">
+                            <div class="o_dropdown_kanban dropdown" t-if="!selection_mode">
+                                <a role="button" class="dropdown-toggle o-no-caret btn" data-toggle="dropdown"
+                                   data-display="static" href="#" aria-label="Dropdown menu" title="Dropdown menu">
+                                    <span class="fa fa-ellipsis-v"/>
+                                </a>
+                                <div class="dropdown-menu" role="menu">
+                                    <t t-if="widget.editable">
+                                        <a role="menuitem" type="edit" class="dropdown-item">Edit...</a>
+                                    </t>
+                                    <t t-if="widget.deletable">
+                                        <a role="menuitem" type="delete" class="dropdown-item">Delete</a>
+                                    </t>
+                                    <div role="separator" class="dropdown-divider"></div>
+                                    <div role="separator" class="dropdown-header">Record Colour</div>
+                                    <ul class="oe_kanban_colorpicker" data-field="color"/>
+                                </div>
+                            </div>
+
+                            <div class="oe_kanban_content" tooltip="kanban-tooltip">
+<!--                                <div class="o_kanban_record_top">-->
+<!--                                    <b class="o_kanban_record_title">-->
+<!--                                        <field name="name"/>-->
+<!--                                        <small>-->
+<!--                                            <field name="equipment_id"/>-->
+<!--                                        </small>-->
+<!--                                    </b>-->
+<!--                                </div>-->
+                                <div class="o_kanban_record_body">
+                                    <div>
+                                        <b>
+                                            <field name="name"/>
+                                        </b>
+                                        <br/>
+                                        <span name="owner_user_id" t-if="record.owner_user_id.raw_value">
+                                            <field name="owner_user_id"/>
+                                            <br/>
+                                        </span>
+                                        <span class="oe_grey" t-if="record.equipment_id.raw_value">
+                                            <field name="equipment_id"/>
+                                            <br/>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <t t-if="record.message_needaction_counter.raw_value">
+                                            <span class='oe_kanban_mail_new' title='Unread Messages'>
+                                                <i class='fa fa-comments'/>
+                                                <t t-raw="record.message_needaction_counter.raw_value"/>
+                                            </span>
+                                        </t>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <div class="pull-left" groups="base.group_user">
+                                            <field name="priority" widget="priority"/>
+                                        </div>
+                                        <field name="owner_user_id" widget="many2one_avatar_user"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="oe_clear"></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="asset_equipment_request_view_tree" model="ir.ui.view">
+        <field name="name">equipment.request.tree</field>
+        <field name="model">asset.request</field>
+        <field name="arch" type="xml">
+            <tree string="asset Request" decoration-bf="message_needaction==True">
+                <field name="message_needaction" invisible="1"/>
+                <field name="name"/>
+                <field name="request_date" groups="base.group_no_one"/>
+                <field name="owner_user_id"/>
+                <field name="technician_user_id"/>
+<!--                <field name="category_id"/>-->
+                <field name="stage_id"/>
+                <field name="archive"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="asset_equipment_request_view_graph" model="ir.ui.view">
+        <field name="name">equipment.request.graph</field>
+        <field name="model">asset.request</field>
+        <field name="arch" type="xml">
+            <graph string="asset Request">
+                <field name="technician_user_id"/>
+                <field name="stage_id"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="asset_equipment_request_view_pivot" model="ir.ui.view">
+        <field name="name">equipment.request.pivot</field>
+        <field name="model">asset.request</field>
+        <field name="arch" type="xml">
+            <pivot string="asset Request">
+                <field name="technician_user_id"/>
+                <field name="stage_id"/>
+            </pivot>
+        </field>
+    </record>
+
+
+    <record id="asset_equipment_view_calendar" model="ir.ui.view">
+        <field name="name">equipment.request.calendar</field>
+        <field name="model">asset.request</field>
+        <field name="arch" type="xml">
+            <calendar date_start="schedule_date" color="technician_user_id">
+                <field name="name"/>
+                <field name="technician_user_id"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- equiment.request : actions -->
+<!--    <record id="asset_equipment_request_action" model="ir.actions.act_window">-->
+<!--        <field name="name">Asset Requests</field>-->
+<!--        <field name="res_model">asset.request</field>-->
+<!--        <field name="view_mode">kanban,tree,form,pivot,graph,calendar</field>-->
+<!--        <field name="view_id" ref="asset_equipment_request_view_kanban"/>-->
+<!--        <field name="context">{'default_technician_user_id': uid}</field>-->
+<!--        <field name="help" type="html">-->
+<!--            <p class="oe_view_nocontent_create">-->
+<!--                Click to add a new asset request.-->
+<!--            </p>-->
+<!--        </field>-->
+<!--    </record>-->
+
+<!--    <record id="asset_equipment_request_action_link" model="ir.actions.act_window">-->
+<!--        <field name="name">Asset Requests</field>-->
+<!--        <field name="res_model">asset.request</field>-->
+<!--        <field name="view_mode">kanban,tree,form,pivot,graph,calendar</field>-->
+<!--        <field name="search_view_id" ref="asset_equipment_request_view_search"/>-->
+<!--        <field name="view_id" ref="asset_equipment_request_view_kanban"/>-->
+<!--        <field name="context">{-->
+<!--            'search_default_category_id': [active_id],-->
+<!--            'default_category_id': active_id,-->
+<!--            }-->
+<!--        </field>-->
+<!--        <field name="help" type="html">-->
+<!--            <p class="oe_view_nocontent_create">-->
+<!--                Click to add a new asset request.-->
+<!--            </p>-->
+<!--        </field>-->
+<!--    </record>-->
+
+<!--    <record id="asset_equipment_request_action_from_equipment" model="ir.actions.act_window">-->
+<!--        <field name="name">Asset Requests</field>-->
+<!--        <field name="res_model">asset.request</field>-->
+<!--&lt;!&ndash;        <field name="src_model">asset.equipment</field>&ndash;&gt;-->
+<!--        <field name="view_mode">kanban,tree,form,pivot,graph,calendar</field>-->
+<!--        <field name="context">{-->
+<!--            'default_equipment_id': active_id,-->
+<!--            }-->
+<!--        </field>-->
+<!--        <field name="domain">[('equipment_id', '=', active_id)]</field>-->
+<!--    </record>-->
+
+    <record id="asset_equipment_todo_request_action_from_dashboard" model="ir.actions.act_window">
+        <field name="name">Asset Requests</field>
+        <field name="res_model">asset.request</field>
+        <field name="view_mode">kanban,tree,form,pivot,graph,calendar</field>
+<!--        <field name="context">{-->
+<!--            'default_asset_team_id': active_id,-->
+<!--            }-->
+<!--        </field>-->
+<!--        <field name="domain">[('asset_team_id', '=', active_id), ('asset_type', 'in',-->
+<!--            context.get('asset_type', ['preventive', 'corrective']))]-->
+<!--        </field>-->
+    </record>
+
+    <record id="asset_equipment_request_action_cal" model="ir.actions.act_window">
+        <field name="name">Asset Requests</field>
+        <field name="res_model">asset.request</field>
+        <field name="view_mode">calendar,kanban,tree,form,pivot,graph</field>
+        <field name="view_id" ref="asset_equipment_view_calendar"/>
+    </record>
+
+
+</odoo>

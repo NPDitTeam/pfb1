@@ -1,0 +1,117 @@
+.row {
+    margin-right: 0px;
+    margin-left: 0px;
+}
+/*html .o_web_client > .o_action_manager {
+    overflow: scroll;
+}*/
+
+.u-group-1, .u-group-2 {
+    width: 40%;
+    margin: 27px 15px;
+}
+
+.u-group-3, .u-group-4 , .u-group-5  , .u-group-6 {
+  width: 22%;
+  margin: 27px 15px 19px 20px;
+}
+
+@media only screen and (min-width:1250px){
+    .u-group-4-b1 {
+        width: 37%;
+    }
+/*    .pways-row-2-b5-col-3 {
+        height: 67%;
+    }
+    .pways-row-2-col-3 {
+        height: 67%;
+    }
+   .pways-row-3-col-3 {
+        height: 79%;
+    }
+    .pways-row-3-b5-col-3 {
+        height: 89%;
+    }
+    .pways-row-4-col-2 {
+        height: 87%;
+    }
+    .pways-table {
+        height: 100%;
+    }*/
+}
+.pways-row-2-b5-col-3{
+    font-size: x-small;
+    width: 100%;
+    background-color: #fff8f89c !important;
+}
+.pways-row-3-b3-col-3 {
+    font-size: small;
+    width: 100%;
+    background-color: #fff8f89c !important;
+  }
+.pways-row-3-b4-col-3{
+    font-size: small;
+    width: 100%;
+    background-color: #fff8f89c !important;
+  }
+.o_newspaper_dashboard{
+  text-align: -webkit-center;
+  width: 100%;
+}
+.u-sheet{
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+}
+.u-data{
+	margin-left: 25px;
+}
+.u-grey-10{
+  color: #111111;
+  height: 100px;
+  background-color: #e5e5e5;
+}
+.u-group-4-b1 {
+    margin: 27px 15px;
+}
+
+.pways-col-1{
+    font-size: large;
+    background-color: #307c00;
+    width: 100%;
+    color: white;
+}
+.pways-col-2{
+    font-size: large;
+    background-color: #307c00;
+    width: 100%;
+    color: white;
+}
+
+.pways-row-1-col-2{
+    font-weight: bold;
+    font-size: large;
+    width: 100%;
+    height: 72%;
+    background-color: #fff8f89c !important;
+}
+.pways-row-2-col-2{
+    font-weight: bold;
+    font-size: large;
+    width: 100%;
+    height: 72%;
+    background-color: #fff8f89c !important;
+}
+
+.pways-table{
+  text-align: center;
+  width: 100%;
+}
+.pways-table-td{
+  font-weight: bold;
+  font-size: small;
+}
+.pways-table-td-r3-c1{
+  font-weight: bold;
+  font-size: small;
+}

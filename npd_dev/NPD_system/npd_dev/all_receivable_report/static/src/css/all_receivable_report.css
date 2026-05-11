@@ -1,0 +1,49 @@
+/* All Receivable Report - Table Scroll Fix */
+.o_list_view .o_list_table {
+    table-layout: auto !important;
+}
+
+.o_list_view .o_list_table th,
+.o_list_view .o_list_table td {
+    white-space: nowrap;
+}
+
+/* ปรับความกว้างคอลัมน์ */
+.o_list_view .o_list_table .o_data_cell {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* คอลัมน์ที่อยู่ให้ wrap ได้ */
+.o_list_view .o_list_table td[data-name="partner_address"] {
+    white-space: normal;
+    max-width: 250px;
+    min-width: 150px;
+}
+
+/* คอลัมน์ชื่อลูกค้า */
+.o_list_view .o_list_table td[data-name="partner_name"] {
+    min-width: 150px;
+    max-width: 250px;
+}
+
+/* คอลัมน์ตัวเลข */
+.o_list_view .o_list_table td[data-name="rent_amount"],
+.o_list_view .o_list_table td[data-name="lost_penalty_amount"],
+.o_list_view .o_list_table td[data-name="damage_penalty_amount"],
+.o_list_view .o_list_table td[data-name="vat_amount"],
+.o_list_view .o_list_table td[data-name="amount_total"],
+.o_list_view .o_list_table td[data-name="amount_residual"] {
+    min-width: 100px;
+    text-align: right;
+}
+
+/* Container ให้ scroll ได้ */
+.o_content {
+    overflow-x: auto !important;
+}
+
+.o_list_renderer {
+    overflow-x: auto !important;
+}

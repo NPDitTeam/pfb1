@@ -1,0 +1,56 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* base
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-12-25 05:01+0000\n"
+"PO-Revision-Date: 2021-12-25 05:01+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: base
+#: model:ir.module.module,summary:base.module_to_equipment_image
+msgid ""
+"\n"
+"Add an image and a worksheet for an equipment"
+msgstr ""
+"\n"
+"Thêm hình ảnh và Bản vẽ cho một Thiết bị"
+
+#. module: base
+#: model:ir.module.module,description:base.module_to_equipment_image
+msgid ""
+"\n"
+"Key Features\n"
+"============\n"
+"* Adding an image for an equipment. The image will be used on Kanban / Form views\n"
+"* Adding a Worksheet (a PDF document) which is viewable and downloadable from the equipment form view. This is useful for storing equipment's manual/instruction\n"
+"\n"
+"Supported Editions\n"
+"==================\n"
+"1. Community Edition\n"
+"2. Enterprise Edition\n"
+"    "
+msgstr ""
+"\n"
+"Tính năng nổi bật\n"
+"=================\n"
+"* Thêm hình ảnh cho thiết bị bên trong giao diện form và hiển thị bên ngoài giao diện thẻ Kanban.\n"
+"* Thêm trang Bản vẽ/Hướng dẫn để bạn có thể tải lên và xem nhanh tài liệu PDF liên quan đến thiết bị này (bản vẽ, sách hướng dẫn, v.v.) ngay trên giao diện Thiết bị. Tính năng này sẽ giúp bạn lưu trữ thông tin tập trung và dễ dàng tìm kiếm.\n"
+"\n"
+"Ấn bản được Hỗ trợ\n"
+"==================\n"
+"1. Ấn bản Community\n"
+"2. Ấn bản Enterprise\n"
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_to_equipment_image
+msgid "Equipment Image & Worksheet"
+msgstr "Hình ảnh và Bản vẽ Thiết bị"

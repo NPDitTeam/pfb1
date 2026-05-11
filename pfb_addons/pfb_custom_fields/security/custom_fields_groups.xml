@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Added two user groups for custom field creation -->
+<odoo>
+    <record id="module_custom_fields" model="ir.module.category">
+        <field name="name">Custom Fields</field>
+        <field name="description">
+            Custom Fields Permissions
+        </field>
+        <field name="sequence">5</field>
+    </record>
+    <record id="custom_fields_group_user"
+            model="res.groups">
+        <field name="name">User</field>
+        <field name="category_id"
+               ref="pfb_custom_fields.module_custom_fields"/>
+    </record>
+    <record id="custom_fields_group_administrator"
+            model="res.groups">
+        <field name="name">Administrator</field>
+        <field name="category_id"
+               ref="pfb_custom_fields.module_custom_fields"/>
+        <field name="implied_ids"
+               eval="[(4, ref('pfb_custom_fields.custom_fields_group_user'))]"/>
+        <field name="users"
+               eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+    </record>
+</odoo>

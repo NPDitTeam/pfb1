@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="view_po_document_type_form" model="ir.ui.view">
+       <field name="name">po.document.type.form</field>
+      <field name="model">po.document.type</field>
+        <field name="arch" type="xml">
+            <form string="Job">
+                <sheet>
+                    <div class="oe_button_box" name="button_box"/>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder=""/>
+                        </h1>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_po_document_type_tree" model="ir.ui.view">
+        <field name="name">po.document.type.type.tree</field>
+        <field name="model">po.document.type</field>
+        <field name="arch" type="xml">
+            <tree string="Job Position Types">
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_po_document_position_type" model="ir.actions.act_window">
+        <field name="name">Document Type</field>
+        <field name="res_model">po.document.type</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+            </p>
+            <p>
+            </p>
+        </field>
+    </record>
+
+
+
+    <record id="inherit_view_purchase_request_form" model="ir.ui.view">
+        <field name="name">purchase.request.document_type</field>
+        <field name="model">purchase.request</field>
+        <field name="inherit_id" ref="purchase_request.view_purchase_request_form"/>
+        <field name="arch" type="xml">
+            <field name="group_id" position="after">
+                <field name="document_type"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="inherit_view_purchase_order_form" model="ir.ui.view">
+        <field name="name">purchase.order.document_type</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <field name="origin" position="before">
+                <field name="document_type"/>
+                <field name="department_id"/>
+            </field>
+        </field>
+    </record>
+
+
+       <record id="inherit_view_purchase_request_line_make_purchase_order" model="ir.ui.view">
+        <field name="name">purchase.request.line.make.purchase.order.document_type</field>
+        <field name="model">purchase.request.line.make.purchase.order</field>
+        <field name="inherit_id" ref="purchase_request.view_purchase_request_line_make_purchase_order"/>
+        <field name="arch" type="xml">
+            <field name="sync_data_planned" position="after">
+                <field name="document_type"  invisible="1"/>
+            </field>
+        </field>
+    </record>
+
+
+    <menuitem
+        id="menu_po_document_type"
+        name="Settings"
+        sequence="12"
+        parent="purchase_request.parent_menu_purchase_request"
+        groups="purchase_request.group_purchase_request_user,purchase_request.group_purchase_request_manager"
+    />
+
+
+        <menuitem
+            id="menu_action_po_document_position_type"
+            name="Document Type"
+            action="action_po_document_position_type"
+            parent="menu_po_document_type"
+            groups="purchase_request.group_purchase_request_user,purchase_request.group_purchase_request_manager"
+            sequence="701"/>
+
+
+</odoo>

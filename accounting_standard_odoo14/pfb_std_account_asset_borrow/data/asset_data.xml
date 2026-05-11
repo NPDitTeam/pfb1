@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!--borrow stage-->
+        <!-- Standard stages for Asset Request -->
+        <record id="borrow_stage_0" model="asset.borrow.stage">
+            <field name="name">New Request</field>
+            <field name="sequence" eval="1" />
+            <field name="fold" eval="False" />
+            <field name="borrow_state">new</field>
+        </record>
+        <record id="borrow_stage_1" model="asset.borrow.stage">
+            <field name="name">Requested</field>
+            <field name="sequence" eval="2" />
+            <field name="fold" eval="False" />
+            <field name="borrow_state">requested</field>
+        </record>
+        <record id="borrow_stage_3" model="asset.borrow.stage">
+            <field name="name">Approved</field>
+            <field name="sequence" eval="3" />
+            <field name="fold" eval="False" />
+            <field name="done" eval="True" />
+            <field name="borrow_state">approved</field>
+        </record>
+        <record id="borrow_stage_4" model="asset.borrow.stage">
+            <field name="name">Rejected</field>
+            <field name="sequence" eval="4" />
+            <field name="fold" eval="False" />
+            <field name="done" eval="True" />
+            <field name="borrow_state">rejected</field>
+        </record>
+        <record id="borrow_stage_5" model="asset.borrow.stage">
+            <field name="name">Returned</field>
+            <field name="sequence" eval="5" />
+            <field name="fold" eval="False" />
+            <field name="borrow_state">returned</field>
+        </record>
+
+        <!--provide stage-->
+        <!-- Standard stages for Asset Request -->
+        <record id="provide_stage_0" model="asset.provide.stage">
+            <field name="name">New Request</field>
+            <field name="sequence" eval="1" />
+            <field name="fold" eval="False" />
+            <field name="provide_state">new</field>
+        </record>
+        <record id="provide_stage_1" model="asset.provide.stage">
+            <field name="name">Requested</field>
+            <field name="sequence" eval="2" />
+            <field name="fold" eval="False" />
+            <field name="provide_state">requested</field>
+        </record>
+        <record id="provide_stage_3" model="asset.provide.stage">
+            <field name="name">Approved</field>
+            <field name="sequence" eval="3" />
+            <field name="fold" eval="False" />
+            <field name="done" eval="True" />
+            <field name="provide_state">approved</field>
+        </record>
+        <record id="provide_stage_4" model="asset.provide.stage">
+            <field name="name">Rejected</field>
+            <field name="sequence" eval="4" />
+            <field name="fold" eval="False" />
+            <field name="done" eval="True" />
+            <field name="provide_state">rejected</field>
+        </record>
+
+        <!--transfer stage-->
+        <!-- Standard stages for Asset Request -->
+        <record id="request_stage_0" model="asset.request.stage">
+            <field name="name">New Request</field>
+            <field name="sequence" eval="1" />
+            <field name="fold" eval="False" />
+        </record>
+        <record id="request_stage_1" model="asset.request.stage">
+            <field name="name">Requested</field>
+            <field name="sequence" eval="2" />
+            <field name="fold" eval="False" />
+        </record>
+        <record id="request_stage_3" model="asset.request.stage">
+            <field name="name">Approved</field>
+            <field name="sequence" eval="3" />
+            <field name="fold" eval="False" />
+            <field name="done" eval="True" />
+        </record>
+        <record id="request_stage_4" model="asset.request.stage">
+            <field name="name">Cancelled</field>
+            <field name="sequence" eval="4" />
+            <field name="fold" eval="False" />
+            <field name="done" eval="True" />
+        </record>
+
+
+         <record id="mt_req_created" model="mail.message.subtype">
+            <field name="name">Request Created</field>
+            <field name="res_model">asset.request</field>
+            <field name="hidden" eval="True"/>
+            <field name="description">Asset Request created</field>
+        </record>
+        <record id="mt_req_status" model="mail.message.subtype">
+            <field name="name">Status Changed</field>
+            <field name="res_model">asset.request</field>
+            <field name="default" eval="True"/>
+            <field name="description">Status changed</field>
+        </record>
+
+         <!-- email alias for asset requests -->
+<!--        <record id="mail_alias_equipment" model="mail.alias">-->
+<!--            <field name="alias_name">helpdesk</field>-->
+<!--            <field name="alias_model_id" ref="model_asset_request"/>-->
+<!--            <field name="alias_user_id" ref="base.user_root"/>-->
+<!--        </record>-->
+        
+        <record id="mt_borrow_req_created" model="mail.message.subtype">
+            <field name="name">Request Created</field>
+            <field name="res_model">asset.borrow.request</field>
+            <field name="hidden" eval="True"/>
+            <field name="description">Asset Borrow Request created</field>
+        </record>
+        <record id="mt_borrow_req_status" model="mail.message.subtype">
+            <field name="name">Status Changed</field>
+            <field name="res_model">asset.borrow.request</field>
+            <field name="default" eval="True"/>
+            <field name="description">Status changed</field>
+        </record>
+        <record id="mt_provide_req_created" model="mail.message.subtype">
+            <field name="name">Request Created</field>
+            <field name="res_model">asset.provide.request</field>
+            <field name="hidden" eval="True"/>
+            <field name="description">Asset Borrow Request created</field>
+        </record>
+        <record id="mt_provide_req_status" model="mail.message.subtype">
+            <field name="name">Status Changed</field>
+            <field name="res_model">asset.provide.request</field>
+            <field name="default" eval="True"/>
+            <field name="description">Status changed</field>
+        </record>
+    </data>
+
+</odoo>

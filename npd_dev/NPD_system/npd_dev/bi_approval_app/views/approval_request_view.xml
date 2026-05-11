@@ -1,0 +1,109 @@
+<odoo>
+    <data>
+        <!-- Approval Request Tree View -->
+        <record model="ir.ui.view" id="view_approval_request_tree">
+            <field name="name">approval.request.tree</field>
+            <field name="model">approval.request</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="Approval Requests" create="false">
+                    <field name="name"/>
+                    <field name="request_by"/>
+                    <field name="request_date"/>
+                    <field name="approver_ids" widget="many2many_tags"/>
+                    <field name="next_approver_id"/>
+                    <field name="pending_approvers_count"/>
+                    <field name="approval_name_type_id"/>
+                    <field name="payment"/>
+                    <field name="state" widget="badge"
+                        decoration-warning="state == 'submit'"
+                        decoration-success="state == 'approve'"
+                        decoration-info="state == 'draft'"
+                        decoration-danger="state == 'cancel'"
+                        optional="show" on_change="1"
+                        modifiers="{'readonly':true,'required':true}"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Approval Request Form View -->
+        <record id="view_approval_request_form" model="ir.ui.view">
+            <field name="name">approval.request.form</field>
+            <field name="model">approval.request</field>
+            <field name="arch" type="xml">
+                <form string="Approval Request">
+                    <header>
+
+                        <button name="action_submit" string="Submit" class="oe_highlight" type="object" attrs="{'invisible':['|',('is_request_by_current_user', '!=', True), ('state', 'in', ['submit', 'approve'])]}"/>
+                        <button name="action_cancel" string="Cancel" type="object" attrs="{'invisible':['|',('is_request_by_current_user', '!=', True), ('state', 'in', ['cancel', 'approve'])]}"/>
+                        <button name="set_draft" string="Reset To Draft" type="object" attrs="{'invisible':['|',('is_request_by_current_user', '!=', True), ('state', 'in', ['cancel', 'approve', 'draft'])]}"/>
+                        <button name="%(bi_approval_app.action_file_attachment_wizard)d" string="Attach Documents" class="oe_highlight" type="action" attrs="{'invisible':['|',('is_request_by_current_user', '!=', True), ('state', 'in', ['cancel', 'approve'])]}"/>
+                        <button name="action_approve" string="Approve" class="oe_highlight" type="object" attrs="{'invisible': ['|', '|', ('is_request_by_current_user', '=', True), ('is_approved', '=', True), ('state', 'in', ['draft', 'cancel', 'approve'])]}"/>
+
+                        <button name="action_refuse" string="Refuse" type="object" attrs="{'invisible':['|',('is_request_by_current_user', '=', True), ('state', 'in', ['draft', 'cancel'])]}"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,submit,approve,cancel"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title mb24">
+                            <h1>
+                                <field name="name" class="text-break" default_focus="1" attrs="{'readonly':[('state', 'in', ['approve'])]}"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="request_by"/>
+                                <field name="approval_name_id" attrs="{'readonly':[('state', 'not in', ['draft'])]}"/>
+                                <field name="approval_name_type_id" attrs="{'readonly':[('state', 'not in', ['draft'])]}"/>
+                                <field name="contact_status" invisible="1"/>
+                                <field name="period_status" invisible="1"/>
+                                <field name="date_status" invisible="1"/>
+                                <field name="item_status" invisible="1"/>
+                                <field name="quality_status" invisible="1"/>
+                                <field name="amount_status" invisible="1"/>
+                                <field name="payment_status" invisible="1"/>
+                                <field name="location_status" invisible="1"/>
+                                <field name="contact_number" attrs="{'required': [('contact_status','=', 'required')], 'invisible':[('contact_status','=', 'none')]}"/>
+                                <field name="payment" attrs="{'required': [('payment_status','=', 'required')], 'invisible':[('payment_status','=', 'none')]}"/>
+                                <field name="amount" attrs="{'required': [('amount_status','=', 'required')], 'invisible':[('amount_status','=', 'none')]}"/>
+                                <field name="quality" attrs="{'required': [('quality_status','=', 'required')], 'invisible':[('quality_status','=', 'none')]}"/>
+                                <field name="next_approver_id"/>
+                                <field name="pending_approvers_count"/>
+                                <field name="is_request_by_current_user" invisible="1"/>
+                                <field name="approved_ids" invisible="1"/>
+                                <field name="is_approved" invisible="1"/>
+                            </group>
+                            <group>
+                                <field name="request_date" attrs="{'required': [('date_status','=', 'required')], 'invisible':[('date_status','=', 'none')]}"/>
+                                <field name="product_id" attrs="{'required': [('item_status','=', 'required')], 'invisible':[('item_status','=', 'none')]}"/>
+                                <field name="location" attrs="{'required': [('location_status','=', 'required')], 'invisible':[('location_status','=', 'none')]}"/>
+                                <field name="date_from" class="oe_inline" attrs="{'required': [('period_status','=', 'required')], 'invisible':[('period_status','=', 'none')]}"/>
+                                <field name="date_to" class="oe_inline" attrs="{'required': [('period_status','=', 'required')], 'invisible':[('period_status','=', 'none')]}"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page name="description_page" string="Description">
+                                <field name="description" type="html" options="{'collaborative': true}"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record model="ir.actions.act_window" id="action_approval_request_view">
+            <field name="name">Approval Request</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">approval.request</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_approval_request_tree"/>
+        </record>
+
+        <!-- Menuitem -->
+        <menuitem id="menu_approvals_request" name="All Requests" action="action_approval_request_view" parent="bi_approval_app.main_menu_approval_config" sequence="2"/>
+    </data>
+</odoo>

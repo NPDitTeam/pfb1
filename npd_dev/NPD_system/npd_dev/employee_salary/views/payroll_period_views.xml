@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Tree View -->
+        <record id="payroll_period_tree_view" model="ir.ui.view">
+            <field name="name">payroll.period.tree</field>
+            <field name="model">payroll.period</field>
+            <field name="arch" type="xml">
+                <tree string="รอบทำเงินเดือน" decoration-success="state=='done'" decoration-danger="state=='error'" decoration-info="state=='processing'">
+                    <field name="name"/>
+                    <field name="month"/>
+                    <field name="year"/>
+                    <field name="cutoff_start_day"/>
+                    <field name="cutoff_end_day"/>
+                    <field name="payment_date"/>
+                    <field name="auto_run_date"/>
+                    <field name="payroll_count"/>
+                    <field name="success_count"/>
+                    <field name="error_count"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form View -->
+        <record id="payroll_period_form_view" model="ir.ui.view">
+            <field name="name">payroll.period.form</field>
+            <field name="model">payroll.period</field>
+            <field name="arch" type="xml">
+                <form string="รอบทำเงินเดือน">
+                    <header>
+                        <button name="action_run_auto_payroll"
+                                string="รันทำเงินเดือน Auto"
+                                type="object"
+                                class="oe_highlight"
+                                attrs="{'invisible': [('state', 'not in', ['draft', 'error'])]}"
+                                confirm="ยืนยันรันทำเงินเดือน Auto สำหรับพนักงานทุกคนที่เปิด Auto?"/>
+                        <button name="action_refresh_payrolls"
+                                string="อัพเดตข้อมูลเงินเดือน"
+                                type="object"
+                                class="oe_highlight"
+                                attrs="{'invisible': [('state', '!=', 'done')]}"
+                                confirm="อัพเดตข้อมูล OT/สาย/ขาด/ลา ของพนักงานทุกคนในรอบนี้?"/>
+                        <button name="action_generate_year"
+                                string="สร้างรอบทั้งปี"
+                                type="object"
+                                attrs="{'invisible': [('state', '!=', 'draft')]}"
+                                confirm="สร้างรอบเงินเดือนทั้ง 12 เดือนของปีนี้?"/>
+                        <button name="action_reset_to_draft"
+                                string="รีเซ็ตเป็นร่าง"
+                                type="object"
+                                attrs="{'invisible': [('state', '=', 'draft')]}"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,processing,done"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_payrolls"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-list">
+                                <field name="payroll_count" widget="statinfo" string="รายการเงินเดือน"/>
+                            </button>
+                        </div>
+                        <group>
+                            <group string="ข้อมูลรอบ">
+                                <field name="month"/>
+                                <field name="year"/>
+                                <field name="payment_date"/>
+                                <field name="auto_run_date"/>
+                            </group>
+                            <group string="การตัดรอบ">
+                                <field name="cutoff_start_day"/>
+                                <field name="cutoff_end_day"/>
+                            </group>
+                        </group>
+                        <group string="พนักงานทดสอบ (ว่าง = รันทุกคน)">
+                            <field name="test_employee_ids" nolabel="1" widget="many2many_tags"/>
+                        </group>
+                        <group string="ผลการรัน" attrs="{'invisible': [('state', '=', 'draft')]}">
+                            <group>
+                                <field name="success_count"/>
+                                <field name="error_count"/>
+                            </group>
+                        </group>
+                        <group string="Log" attrs="{'invisible': [('log', '=', False)]}">
+                            <field name="log" nolabel="1" readonly="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Search View -->
+        <record id="payroll_period_search_view" model="ir.ui.view">
+            <field name="name">payroll.period.search</field>
+            <field name="model">payroll.period</field>
+            <field name="arch" type="xml">
+                <search string="ค้นหารอบเงินเดือน">
+                    <field name="year"/>
+                    <field name="month"/>
+                    <filter name="filter_draft" string="ร่าง" domain="[('state', '=', 'draft')]"/>
+                    <filter name="filter_done" string="เสร็จสิ้น" domain="[('state', '=', 'done')]"/>
+                    <filter name="filter_error" string="มีข้อผิดพลาด" domain="[('state', '=', 'error')]"/>
+                    <group expand="0" string="จัดกลุ่ม">
+                        <filter name="group_year" string="ปี" context="{'group_by': 'year'}"/>
+                        <filter name="group_state" string="สถานะ" context="{'group_by': 'state'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record id="payroll_period_action" model="ir.actions.act_window">
+            <field name="name">รอบทำเงินเดือน</field>
+            <field name="res_model">payroll.period</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    สร้างรอบทำเงินเดือนใหม่
+                </p>
+                <p>กำหนดรอบตัดเงินเดือน เช่น วันที่ 25 ถึง 24 และรันทำเงินเดือนอัตโนมัติ</p>
+            </field>
+        </record>
+    </data>
+</odoo>

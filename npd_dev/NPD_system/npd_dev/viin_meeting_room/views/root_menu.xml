@@ -1,0 +1,3 @@
+<odoo>
+	<menuitem id="calendar_event_menu_config" name="Configuration" parent="calendar.mail_menu_calendar" sequence="5" groups="base.group_system" />
+</odoo>

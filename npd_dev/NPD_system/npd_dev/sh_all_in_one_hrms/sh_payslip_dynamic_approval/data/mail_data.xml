@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="email_template_for_approve_hr_payslip" model="mail.template">
+            <field name="name">Payslip: Approve Payslip</field>
+            <field name="model_id" ref="sh_all_in_one_hrms.model_hr_payslip" />
+            <field name="subject">Submit for Approval</field>
+            <field name="email_from"></field>
+            <field name="email_to"></field>
+
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        <h2>
+                            <b>Submit for Approval: ${object.name}</b>
+                        </h2>
+                        <br />
+                        <br />
+                        <p>
+                            Dear Approver,
+                            <br />
+                            <br />
+                            This is inform you that payslip is submitted for approval.
+                            <br />
+                            <b>User:</b>
+                            ${object.user_id.name}
+                            <br />
+                            <b>Total Payslip Amount:</b>
+                            ${format_amount(object.net_amount, object.contract_id.currency_id)}
+                            <br />
+                            <b>Approval Level:</b>
+                            ${object.approval_level_id.name}
+                            <br />
+                            <b>Minimum Amount:</b>
+                            ${format_amount(object.approval_level_id.min_amount, object.contract_id.currency_id)}
+                            <br />
+                            <br />
+                            Payslip Approval information as below
+                        </p>
+                        <br />
+                        <br />
+                        
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Level</th>
+                                    <th scope="col">Approvers</th>
+                                    <th scope="col">Approved Date</th>
+                                    <th scope="col">Approved By</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                            </thead>
+                            % for line in object.approval_info_line:
+                                <tbody>
+                                    <tr>
+                                        <th>${line.level}</th>
+                                        <td>
+                                            % if line.user_ids:
+                                                % for user in line.user_ids:
+                                                    <i>${user.name},</i>
+                                                % endfor
+
+                                            % else:
+                                                % for group in line.group_ids:
+                                                    <i>${group.name},</i>
+                                                % endfor
+                                                
+                                            % endif
+                                        </td>
+                                        <td>${line.approval_date}</td>
+                                        <td>${line.approved_by.name}</td>
+                                        <td>${line.status}</td>
+                                    </tr>
+                                </tbody>
+                            % endfor
+                        </table>
+                        <br />
+                        <br />
+                        if you are authorize approver as per approval level.<br />
+                        You can use the following link and approve the payslip<br /><br />
+
+                        <div style="display: inline-block; margin: 15px; text-align: center">
+                            <a href="/mail/view?model=hr.payslip&amp;res_id = ${object.id}" target="_blank"
+                                style="padding: 5px 10px; color: #FFFFFF; text-decoration: none; background-color: #875A7B; border: 1px solid #875A7B; border-radius: 3px"
+                            >Payslip Ref: #${object.number}</a>
+                        </div><br />
+                        Thanks.
+                    </p>
+                </div>
+            </field>
+        </record>
+
+        <record id="email_template_for_reject_hr_payslip" model="mail.template">
+            <field name="name">Payslip: Reject Payslip</field>
+            <field name="model_id" ref="sh_all_in_one_hrms.model_hr_payslip" />
+            <field name="subject">Reject Payslip</field>
+            <field name="email_from"></field>
+            <field name="email_to"></field>
+
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        <h2>
+                            <b>Payslip Rejected: ${object.name}</b>
+                        </h2>
+                        <br />
+                        <br />
+                        Dear User!!,
+                        <br />
+                        <br />
+                        Rejected Payslip Information.<br />
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Reject By</th>
+                                    <th scope="col">Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <td>${object.rejection_date}</td>
+                                <td>${object.reject_by.name}</td>
+                                <td>${object.reject_reason}</td>
+                            </tbody>
+                        </table><br /><br />
+                        You can use the following link to access the Payslip.<br /><br />
+                        <div style="display: inline-block; margin: 15px; text-align: center">
+                            <a href="/mail/view?model=hr.payslip&amp;res_id=${object.id}" target="_blank"
+                                style="padding: 5px 10px; color: #FFFFFF; text-decoration: none; background-color: #875A7B; border: 1px solid #875A7B; border-radius: 3px"
+                            >Payslip Ref: #${object.number}</a>
+                        </div><br />
+                        Thanks.
+                    </p>
+                </div>
+            </field>
+        </record>
+
+        <record id="email_template_for_confirm_hr_payslip" model="mail.template">
+            <field name="name">Payslip: Confirm Payslip</field>
+            <field name="model_id" ref="sh_all_in_one_hrms.model_hr_payslip" />
+            <field name="subject">Confirm Payslip</field>
+            <field name="email_from"></field>
+            <field name="partner_to"></field>
+
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        <h2>
+                            <b>Payslip Confirmed: ${object.name}</b>
+                        </h2>
+                        <br />
+                        <br />
+                        Dear User!!,
+                        <br />
+                        <br />
+                        This is inform you that your payslip is confirmed.<br />
+                        You can use the following link to access the payslip.<br /><br />
+                        <div style="display: inline-block; margin: 15px; text-align: center">
+                            <a href="/mail/view?model=hr.payslip&amp;res_id=${object.id}" target="_blank"
+                                style="padding: 5px 10px; color: #FFFFFF; text-decoration: none; background-color: #875A7B; border: 1px solid #875A7B; border-radius: 3px"
+                            >Payslip Ref: #${object.number}</a>
+                        </div><br />
+                        Thanks.
+                    </p>
+                </div>
+            </field>
+        </record>
+
+    </data>
+</odoo>

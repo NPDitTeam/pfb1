@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_quatation_order_form_add_rent_date" model="ir.ui.view"> <!--ชื่อ id ที่จะต้องเปลี่ยน-->
+        <field name="name">view.quatation_order.form.add.rent.date</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='delivery_block_id']" position="after">
+                <field name="start_rent_date"/>
+<field name="date_order_x" invisible="1"/>
+<!--                <field name="end_rent_date"/>-->
+                 <field name="end_rent_date" decoration-danger="is_past_due"/>
+                <field name="is_past_due" invisible="1"/>
+
+
+<!--                กรณี ซ่อนฟิลด์ แบบมีเงื่อนไข-->
+<!--                <field name="x_date" attrs="{'invisible': [('pfb_so_type', '=', 'rent')]}"/>-->
+            </xpath>
+             <xpath expr="//field[@name='ignore_exception']" position="after">
+                 <field name="on_site" />
+<!--                 <field name="menu_name" />-->
+<!--                  <field name="on_site" attrs="{'invisible': [('menu_name', '=', 'Sales Orders Rent')]}"/>-->
+
+
+                 <!-- ฟิลด์ที่ใช้ตกแต่ง (Decoration Fields) -->
+                    <field name="cash" readonly="1"/>
+                     <field name="is_due_date" invisible="1"/>
+                    <field name="is_overdue" invisible="1"/>
+                    <field name="is_nearly_due" invisible="1"/>
+                    <field name="is_in_rent" invisible="1"/>
+                    <field name="is_ready" invisible="1"/>
+                    <field name="is_done" invisible="1"/>
+
+                    <!-- ฟิลด์ Rental Status -->
+                    <field name="rental_status" readonly="1"
+                   decoration-danger="rental_status == 'overdue'"
+                           decoration-warning="rental_status == 'nearly_due'"
+                   decoration-info="rental_status == 'in_rent'"
+                   decoration-muted="rental_status == 'ready'"
+                   decoration-success="rental_status == 'done'"
+                   decoration-primary="rental_status == 'due_date'"
+                   widget="badge" optional="show"/>
+
+
+
+
+                    <field name="rent_days_remaining" readonly="1" decoration-bf="1" optional="show"/>
+            <field name="rent_days_overdue" readonly="1" decoration-bf="1" optional="show"/>
+                <field name="related_returns" widget="many2many_tags" invisible="1"/>
+
+                <field name="check_state"  invisible="1"/>
+		<field name="deposit_ref" readonly="1"/>
+		<field name="debt_payment_type"
+                                       widget="selection"
+                                       options="{'horizontal': True}"
+                                       placeholder="เลือกประเภทการรับชำระหนี้"
+                                       />
+                     </xpath>
+
+
+               <xpath expr="//field[@name='state_sale']" position="after">
+
+                    <field name="contact_type" required="1"/>
+                     <field name="sales_contact" required="1"/>
+            </xpath>
+
+        </field>
+    </record>
+
+
+     <record id="view_sale_order_tree_inherit" model="ir.ui.view">
+    <field name="name">sale.order.tree.inherit</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.view_order_tree"/>
+    <field name="arch" type="xml">
+        <data>
+            <!-- เพิ่มฟิลด์ is_past_due ลงใน Tree View -->
+            <xpath expr="//tree" position="inside">
+                <field name="is_past_due" invisible="1"/> <!-- ซ่อนฟิลด์ -->
+                <field name="end_rent_date"/>
+                <field name="cash" readonly="1"/>
+            </xpath>
+
+            <!-- เพิ่ม decoration-danger -->
+            <xpath expr="//tree" position="attributes">
+                <attribute name="decoration-danger">is_past_due</attribute>
+            </xpath>
+
+<xpath expr="//field[@name='date_order']" position="after">
+                 <field name="date_order_x" />
+                     </xpath>
+
+        </data>
+    </field>
+</record>
+
+<record id="view_sale_order_search_inherit_rental_status" model="ir.ui.view">
+    <field name="name">sale.order.search.inherit.rental.status</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+    <field name="arch" type="xml">
+        <xpath expr="//filter[@name='salesperson']" position="after">
+            <separator/>
+            <filter name="filter_rental_status_overdue"
+                    string="เกินกำหนด (Overdue)"
+                    domain="[('rental_status', '=', 'overdue')]"/>
+            <filter name="filter_rental_status_nearly_due"
+                    string="ใกล้ครบกำหนด (Nearly Due)"
+                    domain="[('rental_status', '=', 'nearly_due')]"/>
+            <filter name="filter_rental_status_due_date"
+                    string="ครบกำหนด (Due Today)"
+                    domain="[('rental_status', '=', 'due_date')]"/>
+            <filter name="filter_rental_status_in_rent"
+                    string="อยู่ระหว่างการเช่า (In Rent)"
+                    domain="[('rental_status', '=', 'in_rent')]"/>
+            <filter name="filter_rental_status_ready"
+                    string="ทำราคา (Ready)"
+                    domain="[('rental_status', '=', 'ready')]"/>
+            <filter name="filter_rental_status_done"
+                    string="ปิดบิล (Done)"
+                    domain="[('rental_status', '=', 'done')]"/>
+        </xpath>
+    </field>
+</record>
+
+    <record id="view_sale_order_tree_inherit1" model="ir.ui.view">
+    <field name="name">sale.order.tree.inherit</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.view_order_tree"/>
+    <field name="arch" type="xml">
+        <data>
+            <!-- เพิ่มสีแดงให้กับทั้งแถบของรายการถ้า rental_status == 'overdue' -->
+        <xpath expr="//tree" position="attributes">
+            <attribute name="default_order">rent_days_overdue desc</attribute>
+            <attribute name="decoration-danger">rental_status == 'overdue'</attribute>
+            <attribute name="decoration-warning">rental_status == 'nearly_due'</attribute>
+            <attribute name="decoration-primary">rental_status == 'due_date'</attribute>
+<!--            <attribute name="decoration-info">rental_status == 'in_rent'</attribute>-->
+<!--            <attribute name="decoration-muted">rental_status == 'ready'</attribute>-->
+<!--            <attribute name="decoration-success">rental_status == 'done'</attribute>-->
+        </xpath>
+
+            <xpath expr="//tree/field[@name='invoice_status']"   position="after">
+                    <field name="rental_status" readonly="1"
+                       decoration-danger="rental_status == 'overdue'"
+                  decoration-warning="rental_status == 'nearly_due'"
+                   decoration-info="rental_status == 'in_rent'"
+                   decoration-muted="rental_status == 'ready'"
+                   decoration-success="rental_status == 'done'"
+                   decoration-primary="rental_status == 'due_date'"
+                   widget="badge" optional="show"/>
+
+                <field name="is_due_date" invisible="1"/>
+                <field name="is_overdue" invisible="1"/>
+                <field name="is_nearly_due" invisible="1"/>
+                <field name="is_in_rent" invisible="1"/>
+                <field name="is_ready" invisible="1"/>
+                <field name="is_done" invisible="1"/>
+               <field name="cash" readonly="1"/>
+
+
+            </xpath>
+            <xpath expr="//field[@name='rental_status']" position="after">
+                     <field name="rent_days_remaining" readonly="1" decoration-bf="1" optional="show"/>
+            <field name="rent_days_overdue" readonly="1" decoration-bf="1" optional="show"/>
+                     </xpath>
+
+<xpath expr="//field[@name='date_order']" position="after">
+                 <field name="date_order_x" />
+                     </xpath>
+        </data>
+    </field>
+</record>
+
+
+
+</odoo>

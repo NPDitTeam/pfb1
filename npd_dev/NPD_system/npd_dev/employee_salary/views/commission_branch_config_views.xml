@@ -1,0 +1,53 @@
+<odoo>
+    <!-- Tree View (รายการสาขา) -->
+    <record id="view_commission_branch_config_tree" model="ir.ui.view">
+        <field name="name">commission.branch.config.tree</field>
+        <field name="model">commission.branch.config</field>
+        <field name="arch" type="xml">
+            <tree string="ตั้งค่าคอมมิชชั่นสาขา">
+                <field name="branch_id" string="สาขา"/>
+                <field name="employee_count" string="จำนวนพนักงาน"/>
+                <field name="total_ratio" string="สัดส่วนรวม"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View (เลือกสาขา → แสดงพนักงาน) -->
+    <record id="view_commission_branch_config_form" model="ir.ui.view">
+        <field name="name">commission.branch.config.form</field>
+        <field name="model">commission.branch.config</field>
+        <field name="arch" type="xml">
+            <form string="ตั้งค่าคอมมิชชั่นสาขา">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="branch_id"/>
+                        </group>
+                        <group>
+                            <field name="total_ratio"/>
+                            <field name="employee_count"/>
+                        </group>
+                    </group>
+                    <button name="action_refresh_employees"
+                            type="object"
+                            string="🔄 รีเฟรชรายชื่อพนักงาน"
+                            class="btn-secondary mb-3"/>
+                    <field name="line_ids">
+                        <tree editable="bottom">
+                            <field name="employee_id" string="พนักงาน"/>
+                            <field name="position_name" string="ตำแหน่ง"/>
+                            <field name="ratio" string="สัดส่วน"/>
+                        </tree>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_commission_branch_config" model="ir.actions.act_window">
+        <field name="name">ตั้งค่าคอมมิชชั่นสาขา</field>
+        <field name="res_model">commission.branch.config</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

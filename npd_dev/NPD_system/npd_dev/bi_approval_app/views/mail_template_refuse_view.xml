@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<odoo>
+    <data noupdate="1">
+        <record id="line_template_approval_refuse" model="mail.template">
+            <field name="name">Applicant: Approval Refuse</field>
+            <field name="model_id" ref="bi_approval_app.model_my_approval"/>
+            <field name="subject">Approval Request Refuse Notification</field>
+            <field name="body_html" type="html">
+                <field eval="True" name="email_from">${object.env.user.company_id.name} &lt;${object.env.user.company_id.email or user.email | safe}&gt;</field>
+                <field eval="True" name="email_to">Purchaser</field>
+                <field eval="True" name="partner_to">${object.request_by.partner_id.id}</field>
+                <div>
+                    สวัสดีค่ะ/ครับ,<br/><br/>
+                    การขออนุมัติของคุณถูกปฏิเสธค่ะ/ครับ.<br/><br/>
+                    รายละเอียดการขออนุมัติ:<br/>
+                    <ul>
+                        <li>ชื่อคำขอ: ${object.name}</li>
+                        <li>ผู้ขออนุมัติ: ${object.request_by.name}</li>
+                        <li>วันที่ขอ: ${object.request_date}</li>
+                        <li>รายละเอียด: ${object.description}</li>
+                        <li>ผู้อนุมัติ: <t t-foreach="object.user_ids" t-as="user">${user.name}<t t-if="not loop.last">, </t></t></li>
+                        <li>ปฏิเสธโดย: ${object.env.user.name}</li>
+                        <li>สถานะ: ${object.state}</li>
+                    </ul>
+                    ขอบคุณค่ะ/ครับ,
+                </div>
+            </field>
+        </record>
+    </data>
+</odoo>

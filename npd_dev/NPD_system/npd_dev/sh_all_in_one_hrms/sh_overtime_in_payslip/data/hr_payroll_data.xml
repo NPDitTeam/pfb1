@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="hr_rule_overtime" model="hr.salary.rule">
+            <field name="name">Overtime</field>
+            <field name="sequence" eval="10" />
+            <field name="code">OT</field>
+            <field name="category_id" ref="sh_hr_payroll.ALW" />
+            <field name="condition_select">none</field>
+            <field name="amount_select">code</field>
+            <field name="amount_python_compute">result = contract.get_ovetime_data(employee,payslip)</field>
+        </record>
+    </data>
+</odoo>

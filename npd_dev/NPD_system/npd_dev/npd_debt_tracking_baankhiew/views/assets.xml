@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="assets_backend" name="npd_debt_tracking_baankhiew assets" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <script type="text/javascript" src="/npd_debt_tracking_baankhiew/static/src/js/debt_tracking_baankhiew.js"></script>
+        </xpath>
+    </template>
+</odoo>

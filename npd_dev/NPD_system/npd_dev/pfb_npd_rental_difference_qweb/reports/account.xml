@@ -1,0 +1,361 @@
+<odoo>
+    <!-- Header -->
+    <template id="external_all_acc_layout_standard">
+        <div t-attf-class="header o_company_#{company.id}_layout" t-att-style="report_header_style"
+             style="margin-bottom: 0px !important;">
+            <style> @font-face {
+                        font-family: 'Sarabun';
+                        src: url('/pfb_npd_rental_difference_qweb/static/src/fonts/Sarabun-Regular.ttf') format('truetype');
+                        font-weight: normal;
+                        font-style: normal;
+                    }
+                    @font-face {
+                        font-family: 'Sarabun';
+                        src: url('/pfb_npd_rental_difference_qweb/static/src/fonts/Sarabun-Bold.ttf') format('truetype');
+                        font-weight: bold;
+                        font-style: normal;
+                    }
+                table, td, th {  font-family: "DejaVu Sans", "Loma", "FreeSans", sans-serif;
+                border: none !important;
+                }
+                .table-border{
+                border: 1px solid #000000 !important;
+                border-collapse: collapse;
+                }
+                .column140{ color: #090909; width:140px; }
+                .column100 { color: #090909; width:100px; }
+                .column260{ color: #090909; width:260px; padding-left: 20px; }
+                .column550{ width:550px; }
+                .column410{ color: #090909; width:475px; }
+                .column130{ color: #090909; width:130px; font-size:16px; }
+                .column120 { color: #090909; width:120px; }
+                .column320{ width:320px; }
+                .column290 { color: #090909; width:290px; }
+                .column50 { color: #090909; width:50px; }
+                .column60 { color: #090909; width:60px; }
+                .column59 { color: #090909; width:59px; }
+                .column70 { color: #090909; width:70px; }
+                .column80 { color: #090909; width:80px; }
+                .column370{ width:370px; }
+                .column330{ width:330px; }
+                .column350{ width:350px; }
+                .watermark1 { position: fixed; top:493px; left: 15px; }
+                .column170{ color: #090909; width:170px; }
+                .column190{ color: #090909; width:190px; }
+                .column180{ width:180px; }
+                .header_text { font-size:18px; }
+                .header2 { border-left:2px solid white; }
+                .header3 { display: block; width: 80px; border:2px solid black; font-size:18px; }
+            </style>
+            <table class="table table-sm" style="margin-bottom: 0px !important;">
+                <tr>
+                    <td class="text-center column100">
+                        <br/><br/>
+                        <img t-if="company.logo" t-att-src="image_data_uri(company.logo)" style="max-height: 80px;" alt="Logo"/>
+                    </td>
+                    <td class="column310 header2 text-left" style="font-size:16px;">
+                        <br/><br/>
+                        <strong t-field="company.partner_id.name" style="font-size:18px;"/>
+                        <br/>
+                        <strong t-field="user.branch_id.address" style="font-size: 14px;"/>
+                        <br/>
+                        <strong style="font-size: 14px;">เลขประจำตัวผู้เสียภาษีอากร :</strong>
+                        <strong t-field="company.partner_id.vat"/><span t-if="user.branch_id.telephone == '00000'">(สำนักงานใหญ่)</span>
+                        <br/>
+                    </td>
+                    <td class="text-center" style="font-size:18px;">
+                        <br/>
+                        <b>ต้นฉบับ</b>
+                        <br/><br/>
+                        <b>ใบแจ้งหนี้<br/>ค่าเช่าส่วนต่าง
+                        </b>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div t-attf-class="article o_report_layout_standard o_company_#{company.id}_layout"
+             t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <t t-raw="0"/>
+        </div>
+        <div t-attf-class="footer o_company_#{company.id}_layout">
+            <style>
+                table, td, th { font-family: "DejaVu Sans", "Loma", "FreeSans", sans-serif; border: none !important; }
+                .table-border tr td{ border: 1px solid #000000 !important; border-collapse: collapse; }
+                .column70 { width:70px; }
+                .column370 { width:370px; }
+                .column320 { width:320px; }
+                .column120 { width:120px; }
+                .no_border{ border-bottom: 2px solid white; }
+                .no_border tr{ border-top: 2px solid white; border-bottom: 2px solid white; }
+                .no_border td{ border-left: 2px solid white; border-right: 2px solid white; }
+            </style>
+            <br/>
+            <div class="row" style="margin-top: 20px; font-size: 18px;">
+                <div class="col-3" style="text-align: center;">
+                    <br/><br/>
+                    <strong style="font-size: 18px;">ลงชื่อ..............................................</strong><br/>
+                    <strong style="font-size: 18px;">ผู้รับสินค้า</strong><br/>
+                    <strong style="font-size: 18px;">วันที่..............................................</strong>
+                </div>
+                <div class="col-3" style="text-align: center;">
+                    <br/><br/>
+                    <strong style="font-size: 18px;">ลงชื่อ..............................................</strong><br/>
+                    <strong style="font-size: 18px;">ผู้ส่งสินค้า</strong><br/>
+                    <strong style="font-size: 18px;">วันที่..............................................</strong>
+                </div>
+                <div class="col-3" style="text-align: center;">
+                    <br/><br/>
+                    <strong style="font-size: 18px;">ลงชื่อ..............................................</strong><br/>
+                    <strong style="font-size: 18px;">ผู้มีอำนาจอนุมัติ</strong><br/>
+                    <strong style="font-size: 18px;">วันที่..............................................</strong>
+                </div>
+                <div class="col-3" style="text-align: center;">
+                    <br/>
+                    <t t-if="o.document_type == 'tax_invoice'"></t>
+                    <t t-else=""><br/></t>
+                    <strong style="font-size: 18px;">ลงชื่อ
+                        <t t-if="o.document_type == 'tax_invoice'">
+                            <img t-att-src="'/pfb_npd_rental_difference_qweb/static/description/signature_npd.png'" style="max-height: 60px;"/>
+                        </t>
+                        <t t-else="">..............................................</t>
+                    </strong><br/>
+                    <strong style="font-size: 18px;">ผู้มีอำนาจอนุมัติ</strong><br/>
+                    <strong style="font-size: 18px;">วันที่..............................................</strong>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="external_all_acc_layout">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+        <t t-if="not company">
+            <t t-if="company_id"><t t-set="company" t-value="company_id"/></t>
+            <t t-elif="o and 'company_id' in o"><t t-set="company" t-value="o.company_id.sudo()"/></t>
+            <t t-else="else"><t t-set="company" t-value="res_company"/></t>
+        </t>
+        <t t-call="pfb_npd_rental_difference_qweb.external_all_acc_layout_standard">
+            <t t-raw="0"/>
+        </t>
+    </template>
+
+    <!--    ใบแจ้งหนี้ค่าเช่าส่วนต่าง -->
+    <template id="report_tax_invoice">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="pfb_npd_rental_difference_qweb.external_all_acc_layout">
+                    <style>
+                        table, td, th { border-left: 1px solid black; border-right: 1px solid black; table-layout: fixed; width: 100%; }
+                        .table thead tr { border: 1px solid black; }
+                        .table tbody td { border: none; }
+                        .table-bordered { border-bottom: none; }
+                        .column30{ width:30px; } .column35{ width:35px; }
+                        .column140{ color: #090909; width:140px; }
+                        .column100 { color: #090909; width:100px; }
+                        .column230{ color: #090909; width:230px; }
+                        .column260{ color: #090909; width:260px; padding-left: 20px; }
+                        .column340{ color: #090909; width:340px; }
+                        .column130{ color: #090909; width:130px; font-size:16px; }
+                        .column120 { color: #090909; width:120px; }
+                        .column50 { color: #090909; width:50px; }
+                        .column55 { color: #090909; width:55px; }
+                        .column65 { color: #090909; width:65px; }
+                        .column70 { color: #090909; width:70px; }
+                        .column80 { color: #090909; width:80px; }
+                        .watermark1 { position: fixed; top: 298px; }
+                        .column170{ color: #090909; width:170px; }
+                        .column190{ color: #090909; width:190px; }
+                        .column180{ width:180px; }
+                        .header_text { font-size:15px; }
+                        .header { border: 1px solid #000000; padding: 2px; border-radius: 15px; }
+                        .header2 { border-left:2px solid white; }
+                        .header3 { text-align: center; border: 1px solid black !important; height: 20px; }
+                        .line_ids { border-right: 1px solid black !important; font-size: 16px !important; }
+                        .line_ids_right { border-right: 1px solid black !important;}
+                        .none_left { border-left: 1px solid white !important;}
+                        .none_right { border-left: 1px solid white !important;}
+                        .none_top { border-top: 1px solid white !important;}
+                        .none_bottom { border-bottom: 1px solid white !important;}
+                    </style>
+                    <div class="page">
+                        <br/>
+                        <table class="table_asset table table-sm table-condensed" style="font-size: 14px;">
+                            <thead>
+                                <tr style="border: 1px solid black !important;">
+                                    <td rowspan="1" class="column35 header3 ">
+                                        <strong style="font-size: 14px;">ลูกค้า</strong><br/>
+                                        <strong style="font-size: 14px;">ที่อยู่</strong>
+                                    </td>
+                                    <td rowspan="1" colspan="4" class="column340 header3" style="text-align: left;">
+                                        <strong style="font-size: 14px;"><t style="font-size: 18px;" t-esc="o.partner_id.name"/></strong><br/>
+                                        <strong style="font-size: 14px;">
+                                            <t t-esc="o.partner_id.street"/>
+                                            <t t-esc="o.partner_id.street2"/>
+                                            <t t-esc="o.partner_id.city"/>
+                                            <t t-esc="o.partner_id.state_id.name"/>
+                                            <t t-esc="o.partner_id.zip"/>
+                                        </strong>
+                                    </td>
+                                    <td class="column80 text-center header3" style="vertical-align: middle;">
+                                        <strong style="font-size: 14px;">เลขที่</strong>
+                                    </td>
+                                    <td class="column80 text-center header3" style="vertical-align: middle;">
+                                        <strong style="font-size: 14px;"><t style="font-size: 14px;" t-esc="o.name"/></strong>
+                                    </td>
+                                </tr>
+                                <tr style="border: 1px solid black !important;">
+                                    <td style="border-top: hidden;"><strong style="font-size: 14px;">Tax ID.</strong></td>
+                                    <td rowspan="1" colspan="4" style="border-top: hidden;border-left:1px solid black;">
+                                        <strong style="font-size: 14px;"><t style="font-size: 14px;" t-esc="o.partner_id.vat"/></strong>
+                                        <t t-if="o.partner_id.branch == '00000'">
+                                            <strong style="font-size: 14px;">สำนักงานใหญ่</strong>
+                                        </t>
+                                        <t t-else="">
+                                            <strong style="font-size: 14px;">สาขาที่ <t style="font-size: 14px;" t-esc="o.partner_id.branch"/></strong>
+                                        </t>
+                                    </td>
+                                    <td class="column80 text-center header3" style="vertical-align: middle;">
+                                        <strong style="font-size: 14px;">วันที่</strong>
+                                    </td>
+                                    <td class="column80 text-center header3" style="vertical-align: middle;">
+                                        <strong style="font-size: 14px;"><t style="font-size: 14px;" t-esc="o.invoice_date"/></strong>
+                                    </td>
+                                </tr>
+                                <tr style="border: 1px solid black !important;">
+                                    <td rowspan="1" class="column35 header3 ">
+                                        <strong style="font-size: 14px;">สถานที่</strong><br/>
+                                        <strong style="font-size: 14px;">ส่งสินค้า</strong>
+                                    </td>
+                                    <td rowspan="1" colspan="4" class="column340 header3" style="text-align: left;">
+                                        <strong style="font-size: 14px;"><t style="font-size: 14px;" t-esc="o.partner_shipping_id.name"/></strong><br/>
+                                        <strong style="font-size: 14px;">
+                                            <t style="font-size: 14px;" t-esc="o.partner_shipping_id.street"/>
+                                            <t style="font-size: 14px;" t-esc="o.partner_shipping_id.street2"/>
+                                            <t style="font-size: 14px;" t-esc="o.partner_shipping_id.city"/>
+                                            <t style="font-size: 14px;" t-esc="o.partner_shipping_id.state_id.name"/>
+                                            <t style="font-size: 14px;" t-esc="o.partner_shipping_id.zip"/>
+                                        </strong>
+                                    </td>
+                                    <td class="column80 text-center header3" style="vertical-align: middle;">
+                                        <strong style="font-size: 14px;">รหัสลูกค้า</strong>
+                                    </td>
+                                    <td class="column80 text-center header3" style="vertical-align: middle;">
+                                        <strong style="font-size: 14px;"><t style="font-size: 14px;" t-esc="o.ref"/></strong>
+                                    </td>
+                                </tr>
+                            </thead>
+                        </table>
+                        <table class="table_asset table table-sm table-condensed" style="font-size: 14px;">
+                            <thead>
+                                <tr style="border: 1px solid black !important;">
+                                    <td class="column35 header3" style="vertical-align: middle;"><strong style="font-size: 14px;">ลำดับ</strong></td>
+                                    <td class="column55 header3" style="vertical-align: middle;"><strong style="font-size: 14px;">รหัสสินค้า</strong></td>
+                                    <td class="column230 text-center header3" style="vertical-align: middle;"><strong style="font-size: 14px;">รายการ</strong></td>
+                                    <td class="column55 text-center header3" style="vertical-align: middle;"><strong style="font-size: 14px;">จำนวน</strong></td>
+                                    <td class="column55 text-center header3" style="vertical-align: middle;"><strong style="font-size: 14px;">หน่วย</strong></td>
+                                    <td class="column55 text-center header3" style="vertical-align: middle;"><strong style="font-size: 14px;">ราคาต่อหน่วย</strong></td>
+                                    <td class="column55 text-center header3" style="vertical-align: middle;"><strong style="font-size: 14px;">ส่วนลด(%)</strong></td>
+                                    <td class="column55 text-center header3" style="vertical-align: middle;"><strong style="font-size: 14px;">จำนวนเงิน</strong></td>
+                                </tr>
+                            </thead>
+                            <tbody name="line_body" class="line_body">
+                                <t t-set="total_discount" t-value="0"/>
+                                <t t-set="count_line" t-value="0"/>
+                                <t t-set="discount" t-value="0"/>
+                                <t t-set="total_line" t-value="len(o.invoice_line_ids)"/>
+                                <t t-foreach="o.invoice_line_ids" t-as="line">
+                                    <tr>
+                                        <td class="text-center line_ids" style="vertical-align: middle;"><span style="font-size: 14px;" t-esc="line_index+1"/></td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;"><span style="font-size: 14px;" t-esc="line.product_id.default_code"/></td>
+                                        <td class="text-left line_ids" style="vertical-align: middle;"><span style="font-size: 14px;" t-esc="line.name"/></td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;"><span style="font-size: 14px;" t-esc="line.quantity"/></td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;"><span style="font-size: 14px;" t-esc="line.product_uom_id.name"/></td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;"><span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(line.price_unit)"/></td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;"><span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(line.discount)"/></td>
+                                        <td class="text-right line_ids" style="vertical-align: middle;">
+                                            <span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(line.price_subtotal)"/>
+                                            <t t-set="discount" t-value="discount +((line.quantity*line.price_unit)-line.price_subtotal)"/>
+                                        </td>
+                                        <t t-set="total_discount" t-value="total_discount + (line.discount or 0)"/>
+                                    </tr>
+                                </t>
+                                <t t-foreach="range(9-total_line)" t-as="x">
+                                    <tr>
+                                        <td class="text-center line_ids" style="vertical-align: middle;"><span style="color: white;">|</span></td>
+                                        <td class="text-left line_ids" style="vertical-align: middle;"></td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;"></td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;"></td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;"></td>
+                                        <td class="text-right line_ids" style="vertical-align: middle;"></td>
+                                        <td class="text-right line_ids" style="vertical-align: middle;"></td>
+                                        <td class="text-right line_ids" style="vertical-align: middle;"></td>
+                                    </tr>
+                                </t>
+                                <tr style="border: 1px solid black !important;">
+                                    <td colspan="5" class="text-left" style="font-size: 12px;">
+                                        <strong style="font-size: 12px;">หมายเหตุ :</strong><br/>
+                                        <t t-if="request.db == 'NPD_S_Group_New'"><span style="font-size: 12px;">1. กรณีชำระเงินโดยเช็คกรุณาสั่งจ่ายเช็คขีดคร่อมในนาม " บริษัท นภดล เอส กรุ๊ป จำกัด</span></t>
+                                        <t t-if="request.db == 'NPD_S_Group_New_V2'"><span style="font-size: 12px;">1. กรณีชำระเงินโดยเช็คกรุณาสั่งจ่ายเช็คขีดคร่อมในนาม " บริษัท นภดล เอส กรุ๊ป จำกัด</span></t>
+                                        <t t-if="request.db == 'test'"><span style="font-size: 12px;">1. กรณีชำระเงินโดยเช็คกรุณาสั่งจ่ายเช็คขีดคร่อมในนาม " บริษัท นภดล เอส กรุ๊ป จำกัด</span></t>
+                                        <t t-if="request.db == 'NPD_Steeltech_New'"><span style="font-size: 12px;">1. กรณีชำระเงินโดยเช็คกรุณาสั่งจ่ายเช็คขีดคร่อมในนาม " บริษัท เอ็นพีดี สตีลเทค จำกัด</span></t>
+                                        <t t-if="request.db == 'NPD_Logistics_New'"><span style="font-size: 12px;">1. กรณีชำระเงินโดยเช็คกรุณาสั่งจ่ายเช็คขีดคร่อมในนาม " บริษัท เอ็นพีดี โลจิสติกส์ จำกัด</span></t>
+                                        <t t-if="request.db == 'NPD_Intertrading_New'"><span style="font-size: 12px;">1. กรณีชำระเงินโดยเช็คกรุณาสั่งจ่ายเช็คขีดคร่อมในนาม " บริษัท นภดล อินเตอร์เทรดดิ้ง จำกัด</span></t>
+                                        <t t-if="request.db == 'NPD_Bangkok_New'"><span style="font-size: 12px;">1. กรณีชำระเงินโดยเช็คกรุณาสั่งจ่ายเช็คขีดคร่อมในนาม " บริษัท นภดล กรุงเทพ จำกัด</span></t><span style="font-size: 12px;">" เท่านั้น</span><br/>
+                                        <span style="font-size: 12px;">2. สินค้าตามรายการข้างต้นแม้จะได้ส่งมอบให้แก่ผู้ซื้อแล้วก็ยังคงเป็นทรัพย์สินของผู้ขายจนกว่าผู้ซื้อจะได้ชำระเงินเรียบร้อยแล้ว</span><br/>
+                                        <span style="font-size: 12px;">3. บริษัทฯ ขอสงวนสิทธิ์ในการแก้ไขใบกำกับภาษีภายใน 7 วัน นับจากวันที่ระบุในใบกำกับภาษี</span><br/>
+                                        <table style="width: 100%; border-collapse: collapse; border: none;">
+                                            <tr>
+                                                <td style="width: 80%; text-align: left; border: none; padding: 0;">
+                                                    <strong style="font-size: 14px;">การชำระเงิน</strong> <input type="checkbox" style="list-style-type: none; padding: 0; margin-left: 16px;"/> เงินสด<br/>
+                                                    <input type="checkbox" style="list-style-type: none; padding: 0; margin-left: 93px;"/> โอนเงิน<br/>
+                                                    <input type="checkbox" style="list-style-type: none; padding: 0; margin-left: 93px;"/> เช็ค
+                                                </td>
+                                                <td style="width: 20%; text-align: right; border: none; padding: 0;">
+                                                    <t t-if="request.db == 'NPD_S_Group_New'"><img t-att-src="'/pfb_npd_rental_difference_qweb/static/description/นภดล เอส กรุ๊ป.png'" style="max-height: 80px;"/></t>
+                                                    <t t-if="request.db == 'NPD_S_Group_New_V2'"><img t-att-src="'/pfb_npd_rental_difference_qweb/static/description/นภดล เอส กรุ๊ป.png'" style="max-height: 80px;"/></t>
+                                                    <t t-if="request.db == 'test'"><img t-att-src="'/pfb_npd_rental_difference_qweb/static/description/นภดล เอส กรุ๊ป.png'" style="max-height: 80px;"/></t>
+                                                    <t t-if="request.db == 'NPD_Steeltech_New'"><img t-att-src="'/pfb_npd_rental_difference_qweb/static/description/สตีลเทค.png'" style="max-height: 80px;"/></t>
+                                                    <t t-if="request.db == 'NPD_Logistics_New'"><img t-att-src="'/pfb_npd_rental_difference_qweb/static/description/เอ็นพีดี โลจิสติกส์.png'" style="max-height: 80px;"/></t>
+                                                    <t t-if="request.db == 'NPD_Intertrading_New'"><img t-att-src="'/pfb_npd_rental_difference_qweb/static/description/นภดล อินเตอร์เทรดดิ้ง.png'" style="max-height: 80px;"/></t>
+                                                    <t t-if="request.db == 'NPD_Bangkok_New'"><img t-att-src="'/pfb_npd_rental_difference_qweb/static/description/นภดล กรุงเทพ.png'" style="max-height: 80px;"/></t>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td colspan="2" class="text-right" style="border: 1px solid black !important;">
+                                        <strong style="font-size: 14px;">รวมเงิน/Total</strong><br/>
+                                        <strong style="font-size: 14px;">ส่วนลด/Disc.%</strong><br/>
+                                        <strong style="font-size: 14px;">มูลค่าสินค้า/Val. Amt</strong><br/>
+                                        <strong style="font-size: 14px;">ภาษีมูลค่าเพิ่ม/VAT 7%</strong><br/>
+                                        <strong style="font-size: 14px;">ภาษีหัก ณ ที่จ่าย/WHT</strong>
+                                    </td>
+                                    <td class="text-right">
+                                        <span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(o.amount_untaxed)"/><br/>
+                                        <span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(total_discount)"/><br/>
+                                        <span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(o.amount_untaxed)"/><br/>
+                                        <span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(o.amount_tax)"/><br/>
+                                        <span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(o.amount_untaxed * 0.05)"/>
+                                    </td>
+                                </tr>
+                                <tr style="border: 1px solid black !important;">
+                                    <td colspan="2" style="font-size:16px;">
+                                        <strong style="font-size: 14px;">ตัวอักษร :</strong>
+                                    </td>
+                                    <td colspan="3" class="text-center" style="border: 0px solid black !important;">
+                                        (<t t-esc="convert_amount_to_text(o.amount_total)"/>)
+                                    </td>
+                                    <td colspan="2" class="text-right" style="border: 1px solid black !important;">
+                                        <strong style="font-size: 14px;">สุทธิ / Net Amount</strong>
+                                    </td>
+                                    <td class="text-right" style="border: 1px solid black !important;">
+                                        <span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(o.amount_total)"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

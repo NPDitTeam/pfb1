@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "WebFetch(domain:ai.google.dev)",
+      "WebFetch(domain:platform.openai.com)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "mcp__desktop-commander__read_file",
+      "Bash(xargs grep -l \"clear_amount\")",
+      "Read(//c/Program Files/Odoo 14.0.20231205/server/**)",
+      "Bash(find '/Program Files/Odoo 14.0.20231205/server/odoo/pfb1/npd_dev/NPD_system/npd_dev/advance_clear_ai_check' -type f -name *.py)",
+      "Bash(find '/Program Files/Odoo 14.0.20231205/server/odoo/addons/stock/models/' -type f -name *.py)"
+    ]
+  }
+}

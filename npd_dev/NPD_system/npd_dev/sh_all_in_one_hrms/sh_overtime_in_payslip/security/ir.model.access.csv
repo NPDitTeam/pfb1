@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sh_overtime_config_weekday,access_sh_overtime_config_weekday,model_sh_overtime_config_weekday,sh_hr_payroll.group_hr_payroll_user,1,1,1,1
+access_sh_overtime_config_weekend,access_sh_overtime_config_weekend,model_sh_overtime_config_weekend,sh_hr_payroll.group_hr_payroll_user,1,1,1,1

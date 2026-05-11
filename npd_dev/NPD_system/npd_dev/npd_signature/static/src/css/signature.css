@@ -1,0 +1,117 @@
+/* NPD Signature Styles */
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Dancing+Script&family=Great+Vibes&family=Allura&family=Sacramento&display=swap');
+
+/* Signature Preview Container */
+.signature_text_preview_container {
+    margin: 15px 0;
+}
+
+.signature_text_preview {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 30px;
+    margin: 15px 0;
+    background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.signature_preview_text {
+    display: inline-block;
+    padding: 10px 20px;
+}
+
+/* Signature Draw Widget */
+.signature_draw_widget {
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    background: #ffffff;
+    min-height: 200px;
+}
+
+/* Signature Preview Image */
+.signature_preview_image {
+    max-width: 100%;
+    max-height: 150px;
+}
+
+/* Font Preview Classes */
+.signature-font-cursive1 {
+    font-family: 'Pacifico', cursive !important;
+}
+
+.signature-font-cursive2 {
+    font-family: 'Dancing Script', cursive !important;
+}
+
+.signature-font-cursive3 {
+    font-family: 'Great Vibes', cursive !important;
+}
+
+.signature-font-cursive4 {
+    font-family: 'Allura', cursive !important;
+}
+
+.signature-font-cursive5 {
+    font-family: 'Sacramento', cursive !important;
+}
+
+/* Kanban Signature Image */
+.o_kanban_record .o_kanban_image_fill_left {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Form Signature Final */
+.signature_final_preview {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+    background: #fff;
+    display: inline-block;
+}
+
+/* Color Picker Enhancement */
+.o_field_color input[type="color"] {
+    width: 60px;
+    height: 35px;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+}
+
+/* Generate Button */
+.o_generate_signature {
+    margin-top: 10px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .signature_text_preview {
+        padding: 15px;
+        min-height: 80px;
+    }
+    
+    .signature_draw_widget {
+        min-height: 150px;
+    }
+}
+
+/* Animation for signature preview */
+.signature_preview_text span {
+    transition: all 0.3s ease;
+}
+
+/* Ribbon for default signature */
+.web_ribbon {
+    position: absolute;
+    right: -5px;
+    top: -5px;
+    z-index: 1;
+}

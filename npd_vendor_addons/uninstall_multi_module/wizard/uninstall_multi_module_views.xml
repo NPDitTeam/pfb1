@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <data>
+        <!-- Multi Payslip Wizard -->
+        <record id="multi_module_uninstall_form_wizard" model="ir.ui.view">
+            <field name="name">ir.module.module.multi.uninstall.wizard.form</field>
+            <field name="model">ir.module.module.multi.uninstall.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <h4>Are you sure that you want to uninstall all selected modules?</h4>
+                    <p>Note: all selected module not in installed state will be ignored.</p>
+                    <footer>
+                        <button name="uninstall_multi_module" string="Uninstall" type="object"
+                                class="oe_highlight"/>
+                        or
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_multi_module_uninstall" model="ir.actions.act_window">
+            <field name="name">Uninstall Modules</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">ir.module.module.multi.uninstall.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="binding_model_id" ref="base.model_ir_module_module"/>
+        </record>
+    </data>
+</odoo>

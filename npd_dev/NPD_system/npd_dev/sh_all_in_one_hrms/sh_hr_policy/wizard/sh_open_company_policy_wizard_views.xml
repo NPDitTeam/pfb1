@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<odoo>
+    <!-- Company Policy Wizard and action -->
+    <record id="sh_company_policy_wizard_form_view" model="ir.ui.view">
+        <field name="name">sh.company.policy.wizard.form</field>
+        <field name="model">sh.company.policy.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <field name="company_id" invisible="1" />
+                <field name="sh_policy" widget="html" />
+                <footer />
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_company_policy_wizard_actions" model="ir.actions.act_window">
+        <field name="name">Company Policy</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.company.policy.wizard</field>
+        <field name="view_mode">form</field>
+    </record>
+</odoo>

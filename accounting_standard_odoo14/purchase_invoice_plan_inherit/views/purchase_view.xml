@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="purchase_order_form_plan_inherit" model="ir.ui.view">
+        <field name="name">purchase.order.form</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase_invoice_plan.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='use_invoice_plan']" position="attributes">
+                <attribute name="attrs">{'invisible': [('order_sequence', '=', False)]}</attribute>
+            </xpath>
+            <xpath expr="//label[@for='use_invoice_plan']" position="attributes">
+                <attribute name="attrs">{'invisible': [('order_sequence', '=', False)]}</attribute>
+            </xpath>
+            <xpath expr="//field[@name='hide_button']" position="before">
+                <group>
+                    <group>
+                        <field
+                                name="date_start_plan"
+                                attrs="{'invisible': [('invoice_plan_ids', '=', [])]}"
+                        />
+                    </group>
+                    <group>
+                        <button
+                                name="re_calculate_invoice_plan"
+                                string="Re Calculate Invoice Plan"
+                                type="object"
+                                class="oe_highlight"
+                                attrs="{'invisible': ['|', ('invoice_plan_ids', '=', []), ('invoice_count', '>', 0)]}"
+                        />
+                    </group>
+                </group>
+            </xpath>
+            <xpath expr="//field[@name='invoice_plan_ids']" position="replace">
+                <field
+                        name="invoice_plan_ids"
+                        context="{'tree_view_ref': 'view_purchase_invoice_plan_tree'}"
+                        attrs="{'readonly': [('state', '!=', 'draft')],'invisible': [('invoice_plan_ids', '=', [])]}"
+                />
+            </xpath>
+        </field>
+    </record>
+</odoo>

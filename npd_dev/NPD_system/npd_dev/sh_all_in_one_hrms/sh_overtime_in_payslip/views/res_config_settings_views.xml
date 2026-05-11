@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_overtime_config_hr_payroll_res_config_settings" model="ir.ui.view">
+        <field name="name">Overtime Config</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="sh_hr_payroll.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@data-key='hr_payroll']" position="inside">
+                <div class="row mt16 o_settings_container">
+                    <div class="col-lg-12 col-12 o_setting_box">
+                        <button name="%(sh_overtime_config_weekday_action)d" type="action" string="Click here to OT Configuration for Week days" class="btn-link" />
+                        <br />
+                        <button name="%(sh_overtime_config_weekend_action)d" type="action" string="Click here to OT Configuration for Week End" class="btn-link" />
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

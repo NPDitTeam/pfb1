@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    
+    <!-- Text Signature Preview Template -->
+    <t t-name="TextSignaturePreviewTemplate">
+        <div class="o_field_text_signature_preview">
+            <div class="signature_text_preview">
+                <div class="signature_preview_text">
+                    <span class="text-muted">กรุณากรอกข้อความ</span>
+                </div>
+            </div>
+            <t t-if="widget.mode === 'edit'">
+                <button type="button" class="btn btn-primary o_generate_signature mt-2">
+                    <i class="fa fa-magic"/> สร้างลายเซ็น
+                </button>
+            </t>
+        </div>
+    </t>
+
+</templates>

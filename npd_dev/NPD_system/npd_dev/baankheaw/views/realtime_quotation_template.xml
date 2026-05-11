@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="action_realtime_rental_bill" model="ir.actions.act_window">
+        <field name="name">ใบบิลเช่า</field>
+        <field name="res_model">baankheaw.rental_bill_summary</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p>📌 รายงานนี้แสดงข้อมูลใบบิลเช่าจากระบบภายนอก</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_realtime_rental_bill"
+              name="ใบบิลเช่า"
+              parent="baankheaw_menu_root"
+              action="action_realtime_rental_bill"
+              sequence="26"
+              groups="base.group_user"/>
+
+    <record id="view_realtime_rental_bill_tree" model="ir.ui.view">
+        <field name="name">baankheaw.rental_bill_summary.tree</field>
+        <field name="model">baankheaw.rental_bill_summary</field>
+        <field name="arch" type="xml">
+            <tree string="ใบบิลเช่า" default_order="renth_date desc">
+                <field name="renth_id" optional="hide"/>
+                <field name="renth_date"/>
+                <field name="branch_name"/>
+                <field name="renth_cusid"/>
+                <field name="cus_name"/>
+                <field name="name" optional="hide"/>
+                <field name="emp_nickname" optional="hide"/>
+                <field name="renth_datestart" optional="hide"/>
+                <field name="renth_dateend" optional="hide"/>
+                <field name="renth_date_return"/>
+                <field name="renth_rentactual_return"/>
+                <field name="renth_remark" optional="hide"/>
+                <field name="product_list"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_realtime_rental_bill_form" model="ir.ui.view">
+        <field name="name">baankheaw.rental_bill_summary.form</field>
+        <field name="model">baankheaw.rental_bill_summary</field>
+        <field name="arch" type="xml">
+            <form string="รายละเอียดใบบิลเช่า">
+                <header>
+                    <button name="action_update_realtime_rental_bill_data"
+                            type="object"
+                            string="🔄 อัปเดตข้อมูลใบบิลเช่า"
+                            class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="ข้อมูลเอกสาร">
+                            <field name="renth_id" readonly="1"/>
+                            <field name="renth_date"/>
+                            <field name="branch_name"/>
+                            <field name="renth_sitelocation"/>
+                            <field name="renth_dowhat"/>
+                        </group>
+                        <group string="ข้อมูลการเช่าและการคืน">
+                            <field name="renth_datestart"/>
+                            <field name="renth_dateend"/>
+                            <field name="renth_date_return"/>
+                        </group>
+                    </group>
+
+                    <group string="ข้อมูลลูกค้า">
+                        <group>
+                            <field name="renth_cusid"/>
+                            <field name="cus_name"/>
+                            <field name="cus_cpnname"/>
+                            <field name="cus_cpntaxid"/>
+                        </group>
+                        <group>
+                            <field name="cus_cpntel"/>
+                            <field name="cus_cpnadd"/>
+                            <field name="renth_customerincome"/>
+                        </group>
+                    </group>
+
+                    <group string="ข้อมูลผู้บันทึกและเซลล์">
+                        <group>
+                            <field name="name"/>
+                            <field name="emp_nickname"/>
+                        </group>
+                        <group>
+                            <field name="renth_salename"/>
+                        </group>
+                    </group>
+
+                    <group string="รายละเอียดค่าใช้จ่าย">
+                        <group>
+                            <field name="renth_rentbegin"/>
+                            <field name="renth_insure"/>
+                            <field name="renth_transport"/>
+                        </group>
+                        <group>
+                            <field name="renth_discount_return"/>
+                            <field name="renth_rentactual_return"/>
+                        </group>
+                    </group>
+
+                    <group string="รายการสินค้า">
+                        <field name="product_list" nolabel="1"/>
+                    </group>
+
+                    <group string="หมายเหตุ">
+                        <field name="renth_remark" nolabel="1"/>
+                    </group>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

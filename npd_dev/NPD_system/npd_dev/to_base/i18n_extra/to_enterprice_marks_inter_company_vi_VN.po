@@ -1,0 +1,71 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* base
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-12-25 05:06+0000\n"
+"PO-Revision-Date: 2021-12-25 05:06+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: base
+#: model:ir.module.module,description:base.module_to_enterprice_marks_inter_company
+msgid ""
+"\n"
+"What it does\n"
+"============\n"
+"When using the Community edition, some features that are only available in the Enterprise edition will still be visible in the settings,\n"
+"but will be labeled Enterprise and cannot be selected. If these features can be used with one or more alternative modules developed by Viindoo,\n"
+"this module will replace the Enterprise labels and directs the user to the settings of those features.\n"
+"\n"
+"Key Features\n"
+"============\n"
+"* This module provides the options to enabling inter-company transaction features\n"
+"* This module will be auto installed\n"
+"\n"
+"Supported Editions\n"
+"==================\n"
+"1. Community Edition\n"
+"2. Enterprise Edition\n"
+"\n"
+"    "
+msgstr ""
+"\n"
+"Mô tả\n"
+"=====\n"
+"Khi sử dụng ấn bản Community, một số các tính năng chỉ có ở bản Enterprise sẽ vẫn hiển thị ở phần cài đặt,\n"
+"tuy nhiên sẽ được gắn nhãn Enterprise và không thể tích chọn. Nếu những tính năng này có thể được sử dụng\n"
+"với một hoặc nhiều mô-đun thay thế khác do Viindoo phát triển, mô-đun này sẽ thay thế các nhãn Enterprise\n"
+"và điều hướng người dùng đến phần cài đặt của những tính năng đó.\n"
+"\n"
+"Tính năng nổi bật\n"
+"=================\n"
+"* Module cung cấp tùy chọn thiết lập để kích hoạt tính năng giao dịch liên công ty\n"
+"* Module được cài đặt tự động\n"
+"\n"
+"Ấn bản được Hỗ trợ\n"
+"==================\n"
+"1. Ấn bản Community\n"
+"2. Ấn bản Enterprise\n"
+"\n"
+"    "
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_to_enterprice_marks_inter_company
+msgid "Enterprise Marks - Inter-Company"
+msgstr "Kích hoạt chức năng đa công ty"
+
+#. module: base
+#: model:ir.module.module,summary:base.module_to_enterprice_marks_inter_company
+msgid "Replace Enterprise Edition marks regarding Inter-Company flows"
+msgstr ""
+"\n"
+"Thay thế tuỳ chọn kích hoạt tính năng Quy trình liên công ty mặc định của Odoo EE với Quy trình liên công ty của Viindoo\n"
+"    \t"

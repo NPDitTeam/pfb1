@@ -1,0 +1,26 @@
+<odoo noupdate="1">
+    <!-- Sequences -->
+<!--    <record id="seq_purchase_po" model="ir.sequence">-->
+<!--        <field name="name">Type Purchase Order</field>-->
+<!--        <field name="code">purchase.po</field>-->
+<!--        <field name="prefix">PO</field>-->
+<!--        <field name="padding">3</field>-->
+<!--        <field name="company_id" eval="False" />-->
+<!--    </record>-->
+
+    <record id="seq_purchase_sv" model="ir.sequence">
+        <field name="name">Type Purchase Service</field>
+        <field name="code">purchase.sv</field>
+        <field name="prefix">SV</field>
+        <field name="padding">3</field>
+        <field name="company_id" eval="False" />
+    </record>
+
+    <record id="seq_purchase_ct" model="ir.sequence">
+        <field name="name">Type Purchase Contract</field>
+        <field name="code">purchase.ct</field>
+        <field name="prefix">CT</field>
+        <field name="padding">3</field>
+        <field name="company_id" eval="False" />
+    </record>
+</odoo>

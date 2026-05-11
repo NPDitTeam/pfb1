@@ -1,0 +1,58 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* base
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-11 07:09+0000\n"
+"PO-Revision-Date: 2023-01-11 07:09+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: base
+#: model:ir.module.module,summary:base.module_viin_procurement_approval_purchase
+msgid ""
+"\n"
+"The module adds the to view all supply approvals on purchase orders.\n"
+msgstr ""
+"\n"
+"Mô-đun bổ sung thêm tính năng xem tất cả phê duyệt cung ứng trên đơn mua.\n"
+
+#. module: base
+#: model:ir.module.module,description:base.module_viin_procurement_approval_purchase
+msgid ""
+"\n"
+"What it does\n"
+"============\n"
+"\n"
+"The module adds the to view all supply approvals on purchase orders.\n"
+"\n"
+"Editions Supported\n"
+"==================\n"
+"1. Community Edition\n"
+"2. Enterprise Edition\n"
+"    "
+msgstr ""
+"\n"
+"Mô tả\n"
+"=====\n"
+"\n"
+"Mô-đun bổ sung thêm tính năng xem tất cả phê duyệt cung ứng trên đơn mua.\n"
+"\n"
+"Ấn bản được Hỗ trợ\n"
+"==================\n"
+"1. Ấn bản Community\n"
+"2. Ấn bản Enterprise\n"
+"\n"
+"    "
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_viin_procurement_approval_purchase
+msgid "Supply Approvals - Purchase"
+msgstr "Phê duyệt cung ứng - Mua hàng"

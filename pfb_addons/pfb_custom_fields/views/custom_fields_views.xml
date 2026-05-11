@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Menus, form , tree view for model custom fields -->
+<odoo>
+
+    <record id="custom_fields_view_tree" model="ir.ui.view">
+        <field name="name">custom.fields.view.tree</field>
+        <field name="model">custom.fields</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="field_description"/>
+                <field name="model_id"/>
+                <field name="status"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id='custom_fields_view_form' model='ir.ui.view'>
+        <field name="name">custom.fields.view.form</field>
+        <field name="model">custom.fields</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="is_add_to_form" invisible="1" />
+                    <field name="is_add_to_tree" invisible="1" />
+                    <button name="action_remove_field_from_tree_view"
+                            string="Remove From Tree View" type="object"
+                            class="oe_highlight btn-danger"
+                            confirm="Do you want to remove field ? (Tree view)"
+                            attrs="{'invisible': [('is_add_to_tree', '=', False)]}"
+                            groups="pfb_custom_fields.custom_fields_group_administrator"
+                        />
+                    <button name="action_remove_field_from_form_view"
+                            string="Remove From Form View" type="object"
+                            class="oe_highlight btn-danger"
+                            confirm="Do you want to remove field ? (Form view)"
+                            attrs="{'invisible': [('is_add_to_form', '=', False)]}"
+                            groups="pfb_custom_fields.custom_fields_group_administrator"
+                        />
+                    <button name="action_create_custom_fields"
+                            string="Create Field"
+                            type="object" class="oe_highlight"
+                            attrs="{'invisible': [('status', '!=', 'field_setup')]}"
+                            groups="pfb_custom_fields.custom_fields_group_administrator"
+                        />
+                    <button name="update_field_color"
+                            string="Update Field Color" 
+                            type="object"
+                            class="oe_highlight"
+                            attrs="{'invisible': [('status', '!=', 'form')]}"
+                            groups="pfb_custom_fields.custom_fields_group_administrator"
+                        />
+                    <button name="reset_to_default_style"
+                            string="Reset Style" 
+                            type="object"
+                            class="oe_highlight"
+                            attrs="{'invisible': [
+                                '|',
+                                ('status', '!=', 'form'),
+                                ('default_style', '=', True)
+                            ]}"
+                            groups="pfb_custom_fields.custom_fields_group_administrator"
+                        />
+                    <button name="submit_field_to_setup"
+                            string="Submit to setup"
+                            type="object"
+                            class="oe_highlight"
+                            attrs="{'invisible': [('status', '!=', 'draft')]}"
+                            groups="pfb_custom_fields.custom_fields_group_administrator"
+                        />
+
+                    <button name="action_add_field_to_form_view"
+                            string="Add to Form View" type="object"
+                            class="oe_highlight"
+                            attrs="{'invisible': [
+                            '|',
+                            ('is_add_to_form', '=', True),
+                            ('is_field_in_form', '=', False),
+                            ]}"
+                        />
+
+                    <button name="action_add_field_to_tree_view"
+                            string="Add to Tree View" type="object"
+                            class="oe_highlight"
+                            attrs="{'invisible': [
+                            '|',
+                            ('is_field_in_tree', '=', False),
+                            ('is_add_to_tree','=', True)]}"
+                            groups="pfb_custom_fields.custom_fields_group_administrator"
+                        />
+                    <field name="status" 
+                           widget="statusbar"
+                           statusbar_visible="draft,field_setup,field_created,form,tree" 
+                        />
+                </header>
+                <sheet>
+                    <field name="default_style" invisible="1" />
+                    <group>
+                        <group string="Field Info">
+                            <field name="name"
+                                    attrs="{'readonly': [('status', 'not in', ['draft', 'field_setup'])]}"
+                                />
+                            <field name="field_description" />
+                            <!-- <field name="state" readonly="1" -->
+                            <!--        groups="base.group_no_one"/> -->
+                            <field name="model_id"
+                                   attrs="{'readonly': [('status', 'not in', ['draft', 'field_setup'])]}"
+                                   options='{"no_open": False, "no_create": True}'
+                                   domain="[('state', '=', 'base')]"
+                                   context="{'custom_field': True}"
+                                />
+                            <field name="field_type"
+                                   attrs="{'readonly': [('status', 'not in', ['draft', 'field_setup'])]}"
+                                />
+                            <field name="ref_model_id"
+                                   options='{"no_open": True, "no_create": True}'
+                                   attrs="{'required': [('field_type','in',['many2one','many2many'])],
+                                           'readonly': [('field_type','not in',['many2one','many2many'])],
+                                           'invisible': [('field_type','not in',['many2one','many2many'])]}" />
+                            <field name="widget_id" 
+                                   widget="selection"
+                                   attrs="{'invisible': [('field_type','not in',['binary', 'many2many', 'selection', 'float', 'many2one'])]}" />
+                            <field name="selection_field"
+                                   placeholder="[('blue', 'Blue'),('yellow', 'Yellow')]"
+                                   attrs="{'required': [('field_type','in',['selection','reference'])],
+                                           'readonly': [('field_type','not in',['selection','reference'])],
+                                           'invisible': [('field_type','not in',['selection','reference'])]}"/>
+                        </group>
+                        <group string="Display Position"
+                               attrs="{'invisible': [('status', 'in', ['draft','field_setup'])]}"
+                            >
+                            <field name='is_field_in_form' 
+                                   attrs="{'invisible': [('status', 'in', ['draft','field_setup'])]}"
+                                />
+                            <field name='is_field_in_tree' 
+                                   attrs="{'invisible': [('status', 'in', ['draft','field_setup'])]}"
+                                />
+                        </group>
+                    </group>
+                    <group string="Extra Properties"
+                           attrs="{'invisible': [('status', '=', 'draft')]}">
+                        <group>
+                            <field name="is_extra_features" />
+                        </group>
+                    </group>
+                    <group attrs="{'invisible': ['|', ('status', '=', 'draft'), ('is_extra_features', '=', False)]}">
+                        <group>
+                            <field name="help"
+                                   string="Help (text on hover)"
+                                />
+                        </group>
+                        <group>
+                            <field name="required" 
+                                />
+                            <field name="store"
+                                   string="Store (Save to database)"
+                                />
+                            <field name="copied"
+                                   string="Copied (Copy data on duplicate)"
+                                />
+                            <field name="readonly"
+                                   string="Readonly"
+                                />
+                            <field name="index"
+                                   string="Index (Database index)"
+                                />
+                        </group>
+                    </group>
+
+                    <notebook attrs="{'invisible': [('status', '=', 'draft')]}">
+                        <page string="Form view" attrs="{'invisible': [('is_field_in_form', '=', False)]}">
+                            <group>
+                                <field name="custom_field_id" 
+                                       attrs="{'required': [('is_field_in_form', '=', True)],
+                                               'readonly': [('status', '=', 'form')]}"
+                                       options='{"no_open": True, "no_create": True}' 
+                                       context="{'custom_field': True}"
+                                    />
+                                <field name="position" 
+                                       attrs="{'required': [('is_field_in_form', '=', True)],
+                                               'readonly': [('status', '=', 'form')]}"
+                                    />
+                                <field name="form_view_id"
+                                        attrs="{'invisible': [('status', '=', 'form')],
+                                                'required': [('is_field_in_form', '=', True)]
+                                        }"
+                                       options="{'no_create_edit': True}" />
+                                <field name="custom_form_view_id" invisible="1" />
+                                <field name="form_view_inherit" />
+                            </group>
+                            <group string="Field style only effect in Form view">
+                                <group>
+                                    <field name="field_color" widget="color" />
+                                </group>
+                                <group>
+                                    <field name="field_bold" />
+                                    <field name="field_italic" />
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Tree view"
+                              attrs="{'invisible': [('is_field_in_tree', '=', False)]}" >
+                            <group>
+                                <field name="tree_view_id" 
+                                       attrs="{'invisible': ['|',('is_field_in_tree', '=', False) ,('status','in',['tree','draft'])],
+                                               'required': [('is_field_in_tree', '=', True)],
+                                               'readonly': [('is_add_to_tree', '=', True)]}" />
+                                <field name="custom_tree_view_id" 
+                                       attrs="{'invisible': [('status','in',['form','draft'])],
+                                               'required': [('status', '=', 'tree')],
+                                               'readonly': [('is_add_to_tree', '=', True)]}" />
+                                <field name="tree_view_inherit"
+                                       attrs="{'invisible': [('is_field_in_tree', '=', False)],
+                                               'readonly': [
+                                                       '|',
+                                                       ('is_field_in_tree', '=', True),
+                                                       ('is_add_to_tree', '=', True)
+                                                   ]}" />
+                                <field name="custom_field_id_tree" 
+                                       readonly="0" 
+                                       options="{'no_create_edit': True}"
+                                       attrs="{'invisible': [('is_field_in_tree', '=', False)],
+                                               'required': [('is_field_in_tree', '=', True)],
+                                               'readonly': [('is_add_to_tree', '=', True)]}" />
+                                <field name="tree_position" 
+                                       attrs="{'invisible': [('is_field_in_tree', '=', False)],
+                                               'required': [('is_field_in_tree', '=', True)],
+                                               'readonly': [('is_add_to_tree', '=', True)]}" />
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id='custom_fields_action' model='ir.actions.act_window'>
+        <field name="name">Custom Fields</field>
+        <field name="res_model">custom.fields</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create New Custom Field!
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="custom_fields_menu_root"
+              name="Custom Fields"
+              groups="custom_fields_group_user,custom_fields_group_administrator"
+              web_icon="pfb_custom_fields,static/web_icon.png"
+              sequence="01"
+    />
+
+    <menuitem id="custom_fields_menu"
+              name="Fields"
+              parent="custom_fields_menu_root"
+              sequence="1"/>
+
+    <menuitem id="custom_fields_menu_create"
+              name="Create Fields"
+              parent="custom_fields_menu"
+              action="custom_fields_action"
+              sequence="2"/>
+
+</odoo>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="view_users_form_extends_to_add_validity_fields">
+            <field name="name">view.users.form.extends.to.add.validity.fields</field>
+            <field name="model">res.users</field>
+            <field name="inherit_id" ref="base.view_users_form"/>
+            <field name="arch" type="xml">
+               <xpath expr="//page[@name='access_rights']" position="inside">
+                <group>
+                    <field name="user_time_validity"/>
+                    <field name="start_date" attrs="{'invisible': [('user_time_validity','=',False)], 'required': [('user_time_validity','=',True)]}"/>
+                    <field name="end_date" attrs="{'invisible': [('user_time_validity','=',False)], 'required': [('user_time_validity','=',True)]}"/>
+                    <field name="message" attrs="{'invisible': [('user_time_validity','=',False)], 'required': [('user_time_validity','=',True)]}" />
+                </group>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

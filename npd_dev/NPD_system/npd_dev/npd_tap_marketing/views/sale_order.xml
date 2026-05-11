@@ -1,0 +1,22 @@
+<odoo>
+    <data>
+        <record id="view_order_form_inherit" model="ir.ui.view">
+            <field name="name">sale.order.form.inherit.marketing</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook" position="inside">
+                    <page string="การตลาด">
+                        <group string="ข้อมูลการตลาด">
+                            <field name="campaign_id"/>
+                            <field name="medium_id"/>
+                            <field name="source_id"/>
+                            <field name="customer_channel_id" required="1" options="{'no_create_edit': False}"/>
+                            <field name="freelance_salesperson_id" options="{'no_create_edit': False}"/>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

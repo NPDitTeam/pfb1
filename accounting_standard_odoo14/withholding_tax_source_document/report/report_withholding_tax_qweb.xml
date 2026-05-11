@@ -1,0 +1,21 @@
+<odoo>
+     <template id="report_withholding_tax" inherit_id="l10n_th_withholding_tax_report.report_withholding_tax">
+   <xpath expr="//div[1]//div[3]//div[1]//div[1]//div[11]" position="replace">
+             <div class="act_as_cell" style="width: 5%;">Ref Doc.</div>
+        </xpath>
+         <xpath expr="//div[1]//div[3]//t[2]//div[1]//div[11]" position="replace">
+              <div class="act_as_cell left" style="width: 5%;">
+                            <span t-field="o.cert_id.name" />
+                        </div>
+        </xpath>
+        <xpath expr="//div[1]//div[3]//div[1]//div[1]//div[11]" position="after">
+            <div class="act_as_cell" style="width: 15%;">Source Document</div>
+        </xpath>
+
+         <xpath expr="//div[1]//div[3]//t[2]//div[1]//div[11]" position="after">
+              <div class="act_as_cell left" style="width: 11%;">
+                            <span t-field="o.cert_id.source_document" />
+                        </div>
+        </xpath>
+    </template>
+</odoo>

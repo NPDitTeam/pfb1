@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_generalledger_inherit_add_branch_filter"
+              inherit_id="bi_financial_pdf_reports.report_generalledger">
+        <xpath expr="//div[@class='page']/div[1][@class='row mt32']" position="replace">
+            <div class="row mt32">
+                <div style="width:25%;">
+                    <strong>Journals:</strong>
+                    <p t-esc="', '.join([ lt or '' for lt in print_journal ])"/>
+                </div>
+                <div style="width:25%;">
+                    <strong>Display Account</strong>
+                    <p>
+                        <span t-if="data['display_account'] == 'all'">All accounts'</span>
+                        <span t-if="data['display_account'] == 'movement'">With movements</span>
+                        <span t-if="data['display_account'] == 'not_zero'">With balance not equal to zero</span>
+                    </p>
+                </div>
+                <div style="width:25%;">
+                    <strong>Target Moves:</strong>
+                    <p t-if="data['target_move'] == 'all'">All Entries</p>
+                    <p t-if="data['target_move'] == 'posted'">All Posted Entries</p>
+                </div>
+                <t t-if="data['print_branch']">
+                    <div style="width:25%;">
+                        <strong>Branch:</strong>
+                        <p t-esc="', '.join([ lt or '' for lt in print_branch ])"/>
+                    </div>
+                </t>
+            </div>
+
+
+        </xpath>
+
+    </template>
+</odoo>

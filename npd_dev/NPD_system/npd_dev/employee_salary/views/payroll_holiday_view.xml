@@ -1,0 +1,54 @@
+<odoo>
+    <!-- Action for Holiday Template -->
+    <record id="action_payroll_holiday" model="ir.actions.act_window">
+        <field name="name">กำหนดวันหยุด</field>
+        <field name="res_model">payroll.holiday</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Menu Item for Holiday Template -->
+    <!-- Placed before the Payroll menu (sequence 10 < 20) -->
+    <menuitem id="sub_payroll_holiday_menu"
+              name="กำหนดวันหยุด"
+              parent="main_employee_salary_menu"
+              action="action_payroll_holiday"
+              sequence="10"/>
+
+    <!-- Tree View -->
+    <record id="view_payroll_holiday_tree" model="ir.ui.view">
+        <field name="name">payroll.holiday.tree</field>
+        <field name="model">payroll.holiday</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="year"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_payroll_holiday_form" model="ir.ui.view">
+        <field name="name">payroll.holiday.form</field>
+        <field name="model">payroll.holiday</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name" readonly="1"/>
+                        <field name="year"/>
+                    </group>
+                    <notebook>
+                        <page string="รายการวันหยุด">
+                            <field name="line_ids">
+                                <tree editable="bottom">
+                                    <field name="date"/>
+                                    <field name="name"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

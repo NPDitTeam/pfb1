@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="inherited_res_users_form" model="ir.ui.view">
+        <field name="name">inherited.res.users.form</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='signature']" position="after">
+                <label for="digital_signature" string="Signature" class="oe_edit_only" />
+                <h2>
+                    <field name="digital_signature" widget="signature"/>
+                </h2>
+                <field name="line_token" />
+                 <field name="is_active" />
+                <field name="force_date_readonly" />
+                <field name="partner_ageing_show" />
+
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

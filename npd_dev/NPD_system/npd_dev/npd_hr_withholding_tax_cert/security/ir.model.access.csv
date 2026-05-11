@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_hr_withholding_tax_cert,hr.withholding.tax.cert,model_hr_withholding_tax_cert,base.group_user,1,1,1,1
+access_hr_withholding_tax_cert_line,hr.withholding.tax.cert.line,model_hr_withholding_tax_cert_line,base.group_user,1,1,1,1
+access_generate_hr_wt_cert,generate.hr.wt.cert,model_generate_hr_wt_cert,base.group_user,1,1,1,1
+access_send_hr_wt_cert_email,send.hr.wt.cert.email,model_send_hr_wt_cert_email,base.group_user,1,1,1,1

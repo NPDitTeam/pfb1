@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="bi_financial_pdf_reports_form_account_report_profitloss" model="ir.ui.view">
+            <field name="name">Accounting Report</field>
+            <field name="model">accounting.report.bi</field>
+            <field name="arch" type="xml">
+                <form string="Report Options">
+                    <field name="company_id" invisible="1"/> <!-- invisible="1"/> -->
+                    <group>
+                        <group>
+                            <field name="account_report_id" invisible="1"/>
+                            <field name="target_move" widget="radio"/>
+                            <field name="enable_filter"/>
+                        </group>
+                        <group>
+                            <field name="debit_credit" attrs="{'invisible': [('enable_filter','=',True)]}"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="journal_ids" widget="many2many_tags" options="{'no_create': True}" invisible="1"/>
+                        <notebook tabpos="up" colspan="4">
+                            <page string="Comparison" name="comparison"
+                                  attrs="{'invisible': [('enable_filter','=',False)]}">
+                                <group>
+                                    <field name="label_filter" attrs="{'required': [('enable_filter', '=', True)]}"/>
+                                    <field name="filter_cmp"/>
+                                </group>
+                                <group string="Dates" attrs="{'invisible':[('filter_cmp', '!=', 'filter_date')]}">
+                                    <field name="date_from_cmp"
+                                           attrs="{'required':[('filter_cmp', '=', 'filter_date')]}"/>
+                                    <field name="date_to_cmp"
+                                           attrs="{'required':[('filter_cmp', '=', 'filter_date')]}"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </group>
+                    <footer>
+                        <button name="check_report_profit" string="Print" type="object" default_focus="1"
+                                class="oe_highlight"/>
+                        <button string="Cancel" class="btn btn-default" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        
+        <record id="bi_financial_pdf_reports_action_profit_loss" model="ir.actions.act_window">
+            <field name="name">Profit Loss Sheet</field>
+            <field name="res_model">accounting.report.bi</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="bi_financial_pdf_reports_form_account_report_profitloss"/>
+            <field name="context" eval="{'default_account_report_id':ref('bi_financial_pdf_reports.bi_account_financial_report_profitandloss0')}"/>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="bi_financial_pdf_reports_menu_profit_loss" name="Profit Loss" action="bi_financial_pdf_reports_action_profit_loss"
+                  parent="bi_menu_finance_report"/>
+
+
+
+    </data>
+</odoo>

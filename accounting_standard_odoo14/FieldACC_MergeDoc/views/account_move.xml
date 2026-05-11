@@ -1,0 +1,21 @@
+<odoo>
+    <record model="ir.ui.view" id="form_account_move_add_field_inherit">
+        <field name="name">form.account.move.add.field.inherit</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='invoice_origin']" position="after">
+                <field name="amount_total_payment" force_save="1" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='invoice_date']" position="after">
+                <field name="date_string_shot" />
+                <field name="date_string_full" invisible="1"/>
+                <field name="formatted_total_debit" force_save="1" invisible="1"/>
+                <field name="formatted_total_credit" force_save="1" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='amount_total']" position="after">
+                <field name="amount_text" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<data noupdate="0">
+		<record id="sample_import_inventory_xls" model="ir.attachment">
+        <field name="name">import_inventory.xls</field>
+        <field name="type">binary</field>
+        <field name="datas" type="base64" file="import_inventory/Sample XLS-CSV File/import_inventory.xls"/>
+    </record>
+
+
+    <record id="sample_import_inventory_csv" model="ir.attachment">
+        <field name="name">import_inventory.csv</field>
+        <field name="type">binary</field>
+        <field name="datas" type="base64" file="import_inventory/Sample XLS-CSV File/import_inventory.csv"/>
+    </record>
+    
+</data>
+</odoo>

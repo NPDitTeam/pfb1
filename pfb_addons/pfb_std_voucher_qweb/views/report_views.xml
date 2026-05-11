@@ -1,0 +1,39 @@
+<odoo>
+
+    <!-- PDF REPORTS -->
+    <record id="action_cash_receipt_pdf_report" model="ir.actions.report">
+        <field name="name">ใบรับเงิน</field>
+        <field name="model">account.voucher</field>
+        <field name="report_name">pfb_std_voucher_qweb.cash_receipt_pdf_report_pdf</field>
+        <field name="report_file">pfb_std_voucher_qweb.cash_receipt_pdf_report_pdf</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="paperformat_id" ref="pfb_std_voucher_qweb.paperformat_voucher"/>
+        <field name="print_report_name">'%s%s' % (object.number, object.state == 'draft' and '-draft' or '')</field>
+        <field name="binding_type">report</field>
+    </record>
+
+
+    <record id="action_account_advance_clear_report_pdf" model="ir.actions.report">
+        <field name="name">ใบรับเงิน (เงินสด)</field>
+        <field name="model">account.advance.clear</field>
+        <field name="report_name">pfb_std_voucher_qweb.account_advance_clear_report_pdf</field>
+        <field name="report_file">pfb_std_voucher_qweb.account_advance_clear_report_pdf</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="paperformat_id" ref="pfb_std_voucher_qweb.paperformat_voucher_advance_clear"/>
+        <field name="print_report_name">'%s%s' % (object.name, object.state == 'draft' and '-draft' or '')</field>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_account_advance_clear_report_pdf2" model="ir.actions.report">
+        <field name="name">ใบรับเงิน (โอนเงิน)</field>
+        <field name="model">account.advance.clear</field>
+        <field name="report_name">pfb_std_voucher_qweb.account_advance_clear_report_pdf2</field>
+        <field name="report_file">pfb_std_voucher_qweb.account_advance_clear_report_pdf2</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="paperformat_id" ref="pfb_std_voucher_qweb.paperformat_voucher_advance_clear"/>
+        <field name="print_report_name">'%s%s' % (object.name, object.state == 'draft' and '-draft' or '')</field>
+        <field name="binding_type">report</field>
+    </record>
+
+
+</odoo>

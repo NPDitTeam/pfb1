@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <template id="assets_common" name="l10n_ch_isr_report" inherit_id="web.report_assets_common">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/css" href="pfb_npd_payment_tax_invoice/static/report.css"/>
+        </xpath>
+    </template>
+
+    <record id="paperformat_payment_tax_invoice_test" model="report.paperformat">
+        <field name="name">A5 Custom</field>
+        <field name="default" eval="False" />
+        <field name="format">A5</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">5</field>
+        <field name="margin_bottom">5</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False" />
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <report
+            id="action_pfb_npd_payment_tax_invoice"
+            string="ใบกำกับภาษี"
+            name="pfb_npd_payment_tax_invoice.tax_invoice_payment_npd_pfb"
+            model="account.payment"
+            report_type="qweb-pdf"
+            print_report_name="'ใบกำกับภาษี - %s' % (object.name)"
+            paperformat="pfb_npd_payment_tax_invoice.paperformat_payment_tax_invoice_test"
+    />
+
+    <template id="so_form_header">
+<!--        <style>-->
+<!--            .font_weight {-->
+<!--                font-weight: 800;-->
+<!--            }-->
+<!--            .address-line {-->
+<!--                font-size: 14px;-->
+<!--                margin-top: -3px;-->
+<!--            }-->
+<!--            .phone-line {-->
+<!--                font-size: 14px;-->
+<!--                margin-top: -5px;-->
+<!--            }-->
+<!--            .number-line {-->
+<!--                font-size: 14px;-->
+<!--                margin-top: -5px;-->
+<!--            }-->
+<!--            .tax-id {-->
+<!--                font-size: 14px;-->
+<!--                margin-top: -10px;-->
+<!--                display: block;-->
+<!--            }-->
+<!--            .header-container {-->
+<!--                display: flex;-->
+<!--                align-items: flex-start;-->
+<!--            }-->
+<!--            .company-info {-->
+<!--                margin-left: 40px;-->
+<!--            }-->
+<!--            .document-info {-->
+<!--                margin-top: 15px;-->
+<!--&lt;!&ndash;                margin-left: -20px;&ndash;&gt;-->
+<!--            }-->
+<!--            .text-date {-->
+<!--                font-size: 14px;-->
+<!--                margin-top: -10px-->
+<!--            }-->
+<!--            .date-info {-->
+<!--                margin-top: -10px;-->
+<!--            }-->
+<!--        </style>-->
+        <div class="row line-distance">
+            <div class="col-1">
+                <img src="web/binary/company_logo" class="img-responsive" />
+            </div>
+            <div class="col-1"/>
+            <div class="col-7 company-info">
+                <b>
+<!--                    <h5><strong><span t-esc="doc.company_id.name"/></strong></h5>-->
+                    <h5 style="line-height: 1.6; overflow: visible;" ><strong><span t-esc="doc.company_id.name"/></strong></h5>
+                </b>
+                <p>
+                  <span t-field="doc.branch_id.address" style="line-height: 1.5;font-size: 14px;"/>
+                </p>
+                 <p class="number-line">
+                    เลขประจำตัวผู้เสียภาษี <span t-esc="doc.company_id.vat"></span>
+                    <span t-if="user.branch_id.telephone == '00000'">(สำนักงานใหญ่)</span>
+                </p>
+<!--                <p class="address-line">-->
+<!--                    <span t-esc="doc.company_id.street"></span>-->
+<!--                    <span t-esc="doc.company_id.street2"></span>-->
+<!--                    <span t-esc="doc.company_id.city"></span>-->
+<!--                    จังหวัด<span t-esc="doc.company_id.state_id.name"></span>-->
+<!--                    <span t-esc="doc.company_id.zip"></span>-->
+<!--                </p>-->
+<!--                <p class="phone-line">-->
+<!--                    โทรศัพท์ / แฟกซ์ <span t-esc="doc.company_id.fax"></span> โทร. <span t-esc="doc.company_id.phone"></span>-->
+<!--                </p>-->
+<!--                <p class="number-line">-->
+<!--                    เลขประจำตัวผู้เสียภาษี <span t-esc="doc.company_id.vat"></span>-->
+<!--                    <span t-if="doc.company_id.branch == '00000'">(สำนักงานใหญ่)</span>-->
+<!--                </p>-->
+<!--                <p class="address-line" style="line-height: 1.3;font-size: 15px;">-->
+<!--                                    <span t-esc="doc.company_id.streetdoc.company_id.street"></span>-->
+<!--                                    <span t-esc="doc.company_id.street2"></span>-->
+<!--                                    <span t-esc="doc.company_id.city"></span>-->
+<!--                                    จังหวัด<span t-esc="doc.company_id.state_id.name"></span>-->
+<!--                                    <span t-esc="doc.company_id.zip"></span>-->
+<!--                                </p>-->
+<!--                                <p class="phone-line" style="line-height: 1.3;font-size: 15px;">-->
+<!--                                    โทรศัพท์ / แฟกซ์ <span t-esc="doc.company_id.fax"></span> โทร. <span t-esc="doc.company_id.phone"></span>-->
+<!--                                </p>-->
+<!--                                <p class="number-line" style="line-height: 1.3;font-size: 15px;">-->
+<!--                                    เลขประจำตัวผู้เสียภาษี <span t-esc="doc.company_id.vat"></span>-->
+<!--&lt;!&ndash;                                    <span t-if="doc.company_id.branch == '00000'">(สำนักงานใหญ่)</span>&ndash;&gt;-->
+<!--                                    <span t-if="user.branch_id.telephone == '00000'">(สำนักงานใหญ่)</span>-->
+
+<!--                                </p>-->
+            </div>
+<!--            <div class="col-1"></div>-->
+            <div class="col-4">
+                <table width="100%">
+                    <tr style="">
+                        <td style="display:block;width: 150px;text-align: center;padding-top: 5px;">
+                            <p class="text-center document-info"><h4><strong>ใบกำกับภาษี</strong></h4></p>
+                            <p class="text-center"><h5><strong>Tax Invoice</strong></h5></p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="row" style="margin-bottom: 5px;"></div>
+    </template>
+
+    <template id="so_form_title" >
+<!--        <style>-->
+<!--            .container-table {-->
+<!--                width: 19.5cm;-->
+<!--                height: 11.5cm;-->
+<!--&lt;!&ndash;                border: 1px solid black;&ndash;&gt;-->
+<!--                padding: 5px;-->
+<!--                box-sizing: border-box;-->
+<!--                font-size: 14px;-->
+<!--            }-->
+<!--            .invoice-table {-->
+<!--                width: 100%;-->
+<!--                border-collapse: collapse;-->
+<!--                margin-bottom: 10px;-->
+<!--                font-size: 14px;-->
+<!--            }-->
+<!--            .invoice-table, .invoice-table th, .invoice-table td {-->
+<!--                border: 1px solid black;-->
+<!--                font-size: 14px;-->
+<!--            }-->
+<!--            .invoice-table th, .invoice-table td {-->
+<!--                padding: 5px;-->
+<!--&lt;!&ndash;                text-align: right;&ndash;&gt;-->
+<!--                vertical-align: top;-->
+<!--                font-size: 14px;-->
+<!--            }-->
+<!--            .bold {-->
+<!--                font-weight: bold;-->
+<!--                font-size: 14px;-->
+<!--            }-->
+<!--            .text-right {-->
+<!--                text-align: right;-->
+<!--                font-size: 14px;-->
+<!--            }-->
+<!--            .text-center {-->
+<!--                text-align: center;-->
+<!--                font-size: 14px;-->
+<!--            }-->
+<!--            .preserve-whitespace {-->
+<!--                white-space: pre;-->
+<!--            }-->
+<!--            .customer-info {-->
+<!--                margin-top: -5px;-->
+<!--            }-->
+<!--            .purchase-info {-->
+<!--                margin-top: -5px;-->
+<!--            }-->
+<!--        </style>-->
+
+        <table class="container-table invoice-table line-distance" style="font-size: 18px;" >
+            <tr>
+                <div style="display: flex; justify-content: space-between;">
+                    <td colspan="2">
+                        <p>
+                            <span class="text-left">ชื่อลูกค้า :</span>
+                            <span class="text-left"><span t-esc="doc.partner_id.name"/></span>
+                        </p>
+                        <p class="customer-info">
+                            <span class="preserve-whitespace">        ที่อยู่ :</span>
+                            <span t-esc="doc.partner_id.street"/>
+                            <span t-esc="doc.partner_id.street2"/>
+                            <span t-esc="doc.partner_id.city"/>
+                            <span t-esc="doc.partner_id.state_id.name"/>
+                            <span t-esc="doc.partner_id.zip"/>
+                        </p>
+                        <p class="customer-info">
+                            <span class="preserve-whitespace">                      เลขประจำตัวผู้เสียภาษี</span>
+                            <span t-esc="doc.partner_id.vat"/>
+<!--                            <span t-if="doc.partner_id.branch == '00000'">(สำนักงานใหญ่)</span>-->
+<!--                            <span t-else="doc.partner_id.branch"/> สาขา <span t-esc="doc.partner_id.branch"/>-->
+<!--                            <t t-if="len(doc.partner_id.branch) == 5">(สำนักงานใหญ่)</t>-->
+<!--                            <t t-else="" t-esc="doc.partner_id.branch"/>-->
+                        </p>
+                    </td>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <td colspan="2">
+                        <p>
+                            <span class="text-left">เลขที่ / NO.</span>
+                            <span t-esc="doc.name"/>
+                        </p>
+                        <p class="customer-info">
+                            <span class="text-left">วันที่ / DATE</span>
+                            <span t-esc="doc.date.strftime('%d') + ' ' + {1: 'ม.ค.', 2: 'ก.พ.', 3: 'มี.ค.', 4: 'เม.ย.', 5: 'พ.ค.', 6: 'มิ.ย.', 7: 'ก.ค.', 8: 'ส.ค.', 9: 'ก.ย.', 10: 'ต.ค.', 11: 'พ.ย.', 12: 'ธ.ค.'}[int(doc.date.strftime('%m'))] + ' ' + str(int(doc.date.strftime('%Y')) + 543)[-2:]"/>
+                        </p>
+                    </td>
+                </div>
+            </tr>
+            <tr>
+                <th class="text-center" width="10%">ลำดับ<br>NO.</br></th>
+                <th class="text-center" width="60%">รายการ<br>DESCRIPTION</br></th>
+<!--                <th class="text-center" width="17%">ค่าเช่าต่อวัน<br>RENT PER DAYS</br></th>-->
+<!--                <th class="text-center" width="15%">จำนวนวัน<br>NUMBER OF DAYS</br></th>-->
+                <th colspan="2" class="text-center" width="30%">จำนวนเงิน<br>AMOUNT</br></th>
+            </tr>
+<!--            <t t-set="cont_record" t-value="0"/>-->
+<!--            <t t-foreach="doc.reconciled_invoice_ids" t-as="i">-->
+<!--                <t t-foreach="i.line_ids" t-as="l">-->
+<!--                    <t t-if="l.product_id">-->
+<!--                        <t t-set="cont_record" t-value="cont_record + 1"/>-->
+<!--                        <tr>-->
+<!--                            <td class="text-center">-->
+<!--                                <span t-esc="cont_record"/>-->
+<!--                            </td>-->
+<!--                            <td><span t-esc="l.product_id.name"/></td>-->
+<!--                            <td colspan="2" class="text-right"><span t-esc="'{0:,.2f}'.format(l.price_subtotal)"/></td>-->
+<!--                        </tr>-->
+<!--                    </t>-->
+<!--                </t>-->
+<!--            </t>-->
+            <tr>
+                <td class="text-center">1</td>
+                <td>ค่าเช่าเครื่องมือก่อสร้าง</td>
+
+<!--                <t t-if="doc.reconciled_invoice_ids">-->
+<!--                    <t t-set="first_invoice" t-value="doc.reconciled_invoice_ids[0]"/>-->
+<!--                    <t t-if="first_invoice.line_ids and len(first_invoice.line_ids) > 0">-->
+<!--                        <t t-set="first_line" t-value="first_invoice.line_ids[0]"/>-->
+<!--                <t t-foreach="doc.reconciled_invoice_ids[0]" t-as="i">-->
+<!--                    <t t-foreach="i.line_ids[0]" t-as="l">-->
+
+<!--                        <td colspan="1" class="text-right">-->
+<!--                          <t t-if="l.pfb_date_of_rent != 0">-->
+<!--                              <t t-set="total_invoice_amount" t-value="sum(i.amount_total for i in doc.reconciled_invoice_ids)"/>-->
+<!--                              <span t-esc="'{0:,.2f}'.format(total_invoice_amount / l.pfb_date_of_rent)"/>-->
+<!--                          </t>-->
+<!--                            <t t-else="">-->
+<!--                                    <t t-if="doc.pfb_date_of_rent != 0">-->
+<!--                                        <t t-set="total_invoice_amount" t-value="sum(i.amount_total for i in doc.reconciled_invoice_ids)"/>-->
+<!--                                        <span t-esc="'{0:,.2f}'.format(total_invoice_amount / doc.pfb_date_of_rent)"/>-->
+<!--                                    </t>-->
+<!--                               </t>-->
+<!--                        </td>-->
+<!--                        <td colspan="1" class="text-right">-->
+<!--                            <t t-if="l.pfb_date_of_rent != 0">-->
+<!--                            <span t-esc="'{0:,.0f}'.format(l.pfb_date_of_rent)"/>-->
+<!--                            </t>-->
+<!--                            <t t-else="">-->
+<!--                                <t t-if="doc.pfb_date_of_rent != 0">-->
+<!--                                        <span t-esc="'{0:,.0f}'.format(doc.pfb_date_of_rent)"/>-->
+<!--                                </t>-->
+<!--                            </t>-->
+<!--                        </td>-->
+<!--                    </t>-->
+<!--                </t>-->
+                <td colspan="2" class="text-right">
+                        <span t-esc="'{0:,.2f}'.format(doc.amount)"/>
+                </td>
+            </tr>
+            <!-- ดึงยอดจาก invoice จริง (per-line) แล้วคำนวณสัดส่วน รองรับชำระไม่เต็ม -->
+            <t t-set="inv_untaxed" t-value="sum(abs(i.amount_untaxed_signed) for i in doc.reconciled_invoice_ids)"/>
+            <t t-set="inv_total" t-value="sum(abs(i.amount_total_signed) for i in doc.reconciled_invoice_ids)"/>
+            <t t-set="inv_tax" t-value="inv_total - inv_untaxed"/>
+            <t t-if="inv_total">
+                <t t-set="total_vat" t-value="round(doc.total_amount * inv_tax / inv_total, 2)"/>
+                <t t-set="total_untaxed_amount" t-value="doc.total_amount - total_vat"/>
+            </t>
+            <t t-else="">
+                <t t-set="total_untaxed_amount" t-value="doc.total_amount / 1.07"/>
+                <t t-set="total_vat" t-value="doc.total_amount - total_untaxed_amount"/>
+            </t>
+            <tr>
+                <td colspan="2" class="text-left">หมายเหตุ : ในการชำระเงินด้วยเช็คใบเสร็จรับเงินจะสมบูรณ์ต่อเมื่อบริษัทฯ ได้รับเงินตามเช็คเรียบร้อยแล้ว</td>
+                <td colspan="2" style="border-bottom: hidden;">
+                    <br/>
+                    <span style="float: left;">รวมค่าเช่าทั้งสิ้น</span>
+<!--                    <span style="float: right;" t-esc="'{0:,.2f}'.fo    rmat(doc.amount)"/>-->
+<!--                    <t t-set="total_invoice_amount" t-value="sum(i.amount_total for i in doc.reconciled_invoice_ids)"/>-->
+<!--                     <span style="float: right;" t-esc="'{0:,.2f}'.format(total_invoice_amount)"/>-->
+                    <span style="float: right;" t-esc="'{0:,.2f}'.format(doc.amount)"/>
+
+                    <br/><br/>
+                    <span style="float: left;">ภาษีมูลค่าเพิ่ม7%</span>
+                    <span style="float: right;">
+                        <t t-esc="'{0:,.2f}'.format(total_vat)"/>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="text-center">จำนวนเงิน(ตัวอักษร)</td>
+                <td colspan="1" class="text-center"><strong>(<span t-esc="doc.get_baht_text_form_receipt()"/>)</strong></td>
+                <td style="border-top: hidden;" colspan="2">
+                    <span style="float: left;">รวมค่าเช่า(ก่อนภาษีมูลค่าเพิ่ม)</span>
+                    <span style="float: right;">
+                        <t t-esc="'{0:,.2f}'.format(total_untaxed_amount)"/>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" class="line-distance">
+                    <p>
+                        <div class="row" style="margin-bottom: 70px;"/>
+                    </p>
+                    <p class="text-center">
+                        ___________________________________________________________________
+                    </p>
+                    <p class="text-center">
+                        <span>ผู้ให้เช่าสินค้า/Lessor Products</span>
+                    </p>
+<!--                    <p>-->
+<!--                        ชำระเงินโดย-->
+<!--                    </p>-->
+<!--                    <p class="purchase-info">-->
+<!--                        <input type="checkbox" class="preserve-whitespace"-->
+<!--                               t-att-checked="'checked' if doc.payment_method_one_id.type == 'cash' else None"/>-->
+<!--                        <t t-if="doc.payment_method_one_id.type != 'cash'">-->
+<!--                            เงินสด-->
+<!--                        </t>-->
+<!--                        <t t-if="doc.payment_method_one_id.type == 'cash'">-->
+<!--                            เงินสด-->
+<!--                        </t>-->
+<!--                    </p>-->
+<!--                    <p class="purchase-info">-->
+<!--                        <input type="checkbox" class="preserve-whitespace"-->
+<!--                               t-att-checked="'checked' if doc.payment_method_one_id.type == 'bank' else None"/>-->
+<!--                        <t t-if="doc.payment_method_one_id.type != 'bank'">-->
+<!--                            โอนเงิน-->
+<!--                        </t>-->
+<!--                        <t t-if="doc.payment_method_one_id.type == 'bank'">-->
+<!--                            <span t-esc="doc.payment_method_one_id.name"/>-->
+<!--                        </t>-->
+<!--                    </p>-->
+<!--                    <p class="purchase-info">-->
+<!--                        <input type="checkbox" class="preserve-whitespace"-->
+<!--                               t-att-checked="'checked' if doc.payment_method_one_id.type == 'cheque' else None"/>-->
+<!--                        <t t-if="doc.payment_method_one_id.type != 'cheque'">-->
+<!--                            เช็ค-->
+<!--                        </t>-->
+<!--                        <t t-if="doc.payment_method_one_id.type == 'cheque'">-->
+<!--                            เช็ค-->
+<!--                            <span t-esc="doc.cheque_id.name"/>-->
+<!--&lt;!&ndash;                            วันที่ <span t-esc="doc.cheque_id.date_cheque"/>&ndash;&gt;-->
+<!--                            ธนาคาร <span t-esc="doc.cheque_id.bank_id.name"/>-->
+<!--                            สาขา <span t-esc="doc.cheque_id.bank_id.branch_name"/>-->
+<!--                        </t>-->
+<!--                    </p>-->
+                </td>
+
+                <td colspan="2" style="border-left: hidden;">
+                    <p class="text-center">
+                        <img src="/pfb_npd_payment_tax_invoice/static/img/Signature.png" alt="Signature" style="max-width: 300px; height: auto;"/>
+                    </p>
+                    <p class="text-center">ผุ้มีอำนาจลงนาม/Authorized Signature</p>
+                </td>
+            </tr>
+        </table>
+    </template>
+
+    <template id="tax_invoice_payment_npd_pfb">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.basic_layout">
+                    <!-- ✅ ตำแหน่งใส่ CSS -->
+                <style type="text/css">
+                    @font-face {
+                        font-family: 'Sarabun';
+                        src: url('/pfb_npd_payment_tax_invoice/static/src/fonts/Sarabun-Regular.ttf') format('truetype');
+                        font-weight: normal;
+                        font-style: normal;
+                    }
+                    @font-face {
+                        font-family: 'Sarabun';
+                        src: url('/pfb_npd_payment_tax_invoice/static/src/fonts/Sarabun-Bold.ttf') format('truetype');
+                        font-weight: bold;
+                        font-style: normal;
+                    }
+
+                    body, table, td, th {
+                        font-family: 'Sarabun', sans-serif !important;
+
+                    }
+                </style>
+
+                    <table width="100%" border="1">
+                        <tr>
+                            <td>
+<!--                                Header-->
+                                <t t-call="pfb_npd_payment_tax_invoice.so_form_header"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+<!--                                Title-->
+                                <t t-call="pfb_npd_payment_tax_invoice.so_form_title"/>
+                            </td>
+                        </tr>
+                    </table>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<odoo>
+	<data>
+	
+        <!-- Crossovered Budget Views -->
+	       
+		<record id="account_budget_inherit_bi_branch_budget_com" model="ir.ui.view">
+			<field name="name">account.budget.inherit.bi.branch.budget.com</field>
+			<field name="model">crossovered.budget</field>
+			<field name="inherit_id" ref="bi_account_budget.crossovered_budget_view_form" />
+			<field name="arch" type="xml">
+				<field name="creating_user_id" position="after">
+					<field name="branch_id" attrs="{'readonly':[('state','!=','draft')]}"/>
+				</field>
+				
+				<xpath expr="//field[@name='analytic_account_id']" position="attributes">
+	                  <attribute name="domain">[('branch_id', '=', branch_id)]</attribute>
+	            </xpath>
+	            
+	            <xpath expr="//field[@name='general_budget_id']" position="attributes">
+                      <attribute name="domain">[('branch_id', '=', branch_id)]</attribute>
+                </xpath>
+				
+                <xpath expr="//field[@name='crossovered_budget_line']/tree/field[@name='general_budget_id']" position="after">
+                    <field name="branch_id"/>
+                </xpath>
+                
+                <xpath expr="//field[@name='crossovered_budget_line']/form/group/group/field[@name='general_budget_id']" position="after">
+                    <field name="branch_id"/>
+                </xpath>
+                
+			</field>
+		</record>
+		
+		
+		
+		
+		<!-- Crossovered Budget List Views -->
+        
+        <record id="crossovered_budget_view_tree_inherit_bi_branch_budget_com" model="ir.ui.view">
+            <field name="name">crossovered.budget.view.tree.inherit.bi.branch.budget.com</field>
+            <field name="model">crossovered.budget</field>
+            <field name="inherit_id" ref="bi_account_budget.crossovered_budget_view_tree"/>
+            <field name="arch" type="xml">
+                <field name="name" position="after">
+                    <field name="branch_id"/>
+                </field>
+            </field>
+         </record>
+		
+        
+	</data>
+</odoo>

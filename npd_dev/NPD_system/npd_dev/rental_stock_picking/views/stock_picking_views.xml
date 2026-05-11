@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_picking_form_rental" model="ir.ui.view">
+            <field name="name">stock.picking.form.rental</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+
+                <!-- เพิ่มฟิลด์วันที่เช่า หลัง scheduled_date -->
+                <xpath expr="//field[@name='scheduled_date']" position="after">
+                    <field name="start_x_date" string="วันที่เริ่มต้นการเช่า" readonly="0"/>
+                    <field name="end_x_date" string="วันที่สิ้นสุดการเช่า" readonly="0"/>
+                    <field name="is_return_date_readonly" invisible="1"/>
+                </xpath>
+                
+                <!-- เพิ่มฟิลด์วันที่คืน ใน group -->
+                <xpath expr="//sheet/group" position="inside">
+                    <group>
+                        <field name="return_date"
+                               string="วันที่คืน"
+                               attrs="{'readonly': [('is_return_date_readonly', '=', True)]}"/>
+                    </group>
+                </xpath>
+
+            </field>
+        </record>
+
+        <record id="view_picking_tree_rental" model="ir.ui.view">
+            <field name="name">stock.picking.tree.rental</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.vpicktree"/>
+            <field name="arch" type="xml">
+                <!-- ✅ Tree View: วาง field หลัง scheduled_date เท่านั้น (ไม่มี sheet/group ใน tree) -->
+                <xpath expr="//field[@name='scheduled_date']" position="after">
+                    <field name="start_x_date" string="วันที่เริ่มต้นการเช่า" optional="hide"/>
+                    <field name="end_x_date" string="วันที่สิ้นสุดการเช่า" optional="hide"/>
+                    <field name="return_date" string="วันที่คืน" optional="show"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

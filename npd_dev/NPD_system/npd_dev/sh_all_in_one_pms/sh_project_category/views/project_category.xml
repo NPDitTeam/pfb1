@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <!-- Project -->
+    <record id="sh_project_category_form_view_inherit" model="ir.ui.view">
+        <field name="name">project.category.form.view.inherit</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project" />
+        <field name="arch" type="xml">
+            <field name="user_id" position="after">
+                <field name="project_category_id" domain="[('is_active','=',True)]" groups="sh_all_in_one_pms.group_enable_project_category"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="sh_project_category_tree_view_inherit" model="ir.ui.view">
+        <field name="name">project.category.tree.view.inherit</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project" />
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="project_category_id" groups="sh_all_in_one_pms.group_enable_project_category"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="sh_project_category_kanban_view_inherit" model="ir.ui.view">
+        <field name="name">project.category.kanban.inherit</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project_kanban" />
+        <field name="arch" type="xml">
+            <xpath expr="//div//div[1]" position="after">
+                <div>
+                    <span class="oe_kanban_text_maroon"><field name="project_category_id" groups="sh_all_in_one_pms.group_enable_project_category"/></span>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="sh_project_category_search_view_inherit" model="ir.ui.view">
+        <field name="name">project.category.search</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project_project_filter" />
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="project_category_id" groups="sh_all_in_one_pms.group_enable_project_category"/>
+            </field>
+            <xpath expr="//group" position="inside">
+                <filter name="project_category_id" string="Category" context="{'group_by':'project_category_id'}" groups="sh_all_in_one_pms.group_enable_project_category"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Task -->
+
+    <record id="sh_project_task_category_form_view_inherit" model="ir.ui.view">
+        <field name="name">task.category.form.view.inherit</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2" />
+        <field name="arch" type="xml">
+            <field name="user_id" position="after">
+                <field name="project_category_id" domain="[('is_active','=',True)]" groups="sh_all_in_one_pms.group_enable_project_category"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="sh_project_task_category_tree_view_inherit" model="ir.ui.view">
+        <field name="name">task.category.tree.view.inherit</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_tree2" />
+        <field name="arch" type="xml">
+            <field name="project_id" position="after">
+                <field name="project_category_id" groups="sh_all_in_one_pms.group_enable_project_category" />
+            </field>
+        </field>
+    </record>
+
+    <record id="sh_project_task_category_kanban_view_inherit" model="ir.ui.view">
+        <field name="name">project.task.category.kanban.inherit</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_kanban" />
+        <field name="arch" type="xml">
+            <field name="project_id" position="after">
+                <span class="oe_kanban_text_maroon">
+                    <br />
+                    <field name="project_category_id" groups="sh_all_in_one_pms.group_enable_project_category"/>
+                </span>
+            </field>
+        </field>
+    </record>
+
+    <record id="sh_project_task_category_search_view_inherit" model="ir.ui.view">
+        <field name="name">project.task.category.search</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_search_form" />
+        <field name="arch" type="xml">
+            <field name="project_id" position="after">
+                <field name="project_category_id" groups="sh_all_in_one_pms.group_enable_project_category"/>
+            </field>
+            <xpath expr="//group" position="inside">
+                <filter string="Category" name="project_category_id" context="{'group_by':'project_category_id'}" groups="sh_all_in_one_pms.group_enable_project_category"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!--  Project Category -->
+
+    <record id="sh_project_category_form" model="ir.ui.view">
+        <field name="name">project.category.form</field>
+        <field name="model">project.category</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                        </group>
+                        <group>
+                            <field name="is_active" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_project_category_tree" model="ir.ui.view">
+        <field name="name">project.category.tree</field>
+        <field name="model">project.category</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+                <field name="is_active" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="sh_project_category_search" model="ir.ui.view">
+        <field name="name">project.category.search</field>
+        <field name="model">project.category</field>
+        <field name="arch" type="xml">
+            <search string="Search Category">
+                <field name="name" />
+            </search>
+        </field>
+    </record>
+
+    <record id="sh_action_project_category" model="ir.actions.act_window">
+        <field name="name">Project Category</field>
+        <field name="res_model">project.category</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_project_category" name="Project Category" action="sh_action_project_category" parent="project.menu_project_config" sequence="99" groups="sh_all_in_one_pms.group_enable_project_category"/>
+</odoo>

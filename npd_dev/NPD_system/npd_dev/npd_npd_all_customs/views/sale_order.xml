@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="sale.action_quotations_with_onboarding" model="ir.actions.act_window">
+        <field name="name">Quotations</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_id" ref="sale.view_quotation_tree_with_onboarding"/>
+        <field name="view_mode">tree,kanban,form,calendar,pivot,graph,activity</field>
+        <field name="search_view_id" ref="sale.sale_order_view_search_inherit_quotation"/>
+<!--        <field name="context">{'search_default_my_quotation': 1}</field>-->
+        <!--        <field name="context">{'search_default_my_quotation': 1}</field>-->
+<field name="context">{'default_pfb_so_type':'sale'}</field>
+        <field name="domain">[('pfb_so_type','=','sale'),('name', 'like', 'QT%')]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new quotation, the first step of a new sale!
+            </p>
+            <p>
+                Once the quotation is confirmed by the customer, it becomes a sales order.
+                <br/>
+                You will be able to create an invoice and collect the payment.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_quotations_with_onboarding_rent" model="ir.actions.act_window">
+        <field name="name">Quotations Rent</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_id" ref="sale.view_quotation_tree_with_onboarding"/>
+        <field name="view_mode">tree,kanban,form,calendar,pivot,graph,activity</field>
+        <field name="search_view_id" ref="sale.sale_order_view_search_inherit_quotation"/>
+        <!--        <field name="context">{'search_default_my_quotation': 1,'default_pfb_so_type':'rent'}</field>-->
+        <field name="context">{'default_pfb_so_type':'rent'}</field>
+        <field name="domain">[('pfb_so_type','=','rent'),('name', 'like', 'QT%')]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new quotation, the first step of a new sale!
+            </p>
+            <p>
+                Once the quotation is confirmed by the customer, it becomes a sales order.
+                <br/>
+                You will be able to create an invoice and collect the payment.
+            </p>
+        </field>
+    </record>
+
+
+    <record id="sale.action_orders" model="ir.actions.act_window">
+        <field name="name">Sales Orders</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">tree,kanban,form,calendar,pivot,graph,activity</field>
+        <field name="search_view_id" ref="sale.sale_order_view_search_inherit_sale"/>
+        <field name="context">{}</field>
+        <field name="domain">[('state', 'not in', ('draft', 'sent', 'cancel')),('pfb_so_type','=','sale'),('name', 'like', 'SO%')]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new quotation, the first step of a new sale!
+            </p>
+            <p>
+                Once the quotation is confirmed, it becomes a sales order.
+                <br/>
+                You will be able to create an invoice and collect the payment.
+            </p>
+        </field>
+    </record>
+
+<!--    <record id="action_orders_rent" model="ir.actions.act_window">-->
+<!--        <field name="name">Sales Orders Rent</field>-->
+<!--        <field name="type">ir.actions.act_window</field>-->
+<!--        <field name="res_model">sale.order</field>-->
+<!--        <field name="view_mode">tree,kanban,form,calendar,pivot,graph,activity</field>-->
+<!--        <field name="search_view_id" ref="sale.sale_order_view_search_inherit_sale"/>-->
+<!--        <field name="context">{'default_pfb_so_type':'rent'}</field>-->
+<!--        <field name="domain">[('state', 'not in', ( 'sent', 'cancel')),('pfb_so_type','=','rent'),('name', 'like', 'SO%')]</field>-->
+<!--&lt;!&ndash;        <field name="domain">[('state', 'not in', ('draft', 'sent', 'cancel')),('pfb_so_type','=','rent'),('name', 'like', 'SO%')]</field>&ndash;&gt;-->
+<!--        <field name="help" type="html">-->
+<!--            <p class="o_view_nocontent_smiling_face">-->
+<!--                Create a new quotation, the first step of a new sale!-->
+<!--            </p>-->
+<!--            <p>-->
+<!--                Once the quotation is confirmed, it becomes a sales order.-->
+<!--                <br/>-->
+<!--                You will be able to create an invoice and collect the payment.-->
+<!--            </p>-->
+<!--        </field>-->
+<!--    </record>-->
+    <record id="action_orders_rent" model="ir.actions.act_window">
+    <field name="name">Sales Orders Rent</field>
+    <field name="type">ir.actions.act_window</field>
+    <field name="res_model">sale.order</field>
+    <field name="view_mode">tree,kanban,form,calendar,pivot,graph,activity</field>
+    <field name="search_view_id" ref="sale.sale_order_view_search_inherit_sale"/>
+    <field name="context">
+        {'default_pfb_so_type': 'rent', 'menu_name': 'Sales Orders Rent'}
+    </field>
+    <field name="domain">
+        [('state', 'not in', ('sent', 'cancel')),
+         ('pfb_so_type', '=', 'rent'),
+
+         ('name', 'like', 'SO%')]
+    </field>
+    <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">
+            Create a new quotation, the first step of a new sale!
+        </p>
+        <p>
+            Once the quotation is confirmed, it becomes a sales order.
+            <br/>
+            You will be able to create an invoice and collect the payment.
+        </p>
+    </field>
+</record>
+
+
+
+
+
+    <menuitem id="sale_quotations"
+              name="ใบเสนอราคา"
+              parent="sale.sale_order_menu"
+              sequence="1" groups="sales_team.group_sale_salesman"/>
+
+    <menuitem id="sale.menu_sale_quotations"
+              name="ใบเสนอราคาขาย"
+              action="sale.action_quotations_with_onboarding"
+              parent="npd_npd_all_customs.sale_quotations"
+              sequence="1" groups="sales_team.group_sale_salesman"/>
+
+<!--    <menuitem id="menu_quotations_rent"-->
+<!--              name="ใบเสนอราคาเช่า"-->
+<!--              action="action_quotations_with_onboarding_rent"-->
+<!--              parent="npd_npd_all_customs.sale_quotations"-->
+<!--              sequence="2" groups="sales_team.group_sale_salesman"/>-->
+
+    <menuitem id="sale_order"
+              name="ใบกำกับ"
+              parent="sale.sale_order_menu"
+              sequence="2" groups="sales_team.group_sale_salesman"/>
+
+    <menuitem id="sale.menu_sale_order"
+              name="ใบสั่งขาย"
+              action="sale.action_orders"
+              parent="npd_npd_all_customs.sale_order"
+              sequence="1" groups="sales_team.group_sale_salesman"/>
+
+    <menuitem id="menu_sale_order_rent"
+              name="ใบกำกับการเช่า"
+              action="action_orders_rent"
+              parent="npd_npd_all_customs.sale_order"
+              sequence="2" groups="sales_team.group_sale_salesman"/>
+
+    <menuitem
+            id="sale_order_line_menu.sale_order_line_menu"
+            name="Order Lines"
+            action="sale_order_line_menu.action_orders_lines"
+            parent="sale.sale_order_menu"
+            sequence="3"
+    />
+
+    <menuitem
+            action="sale_invoice_plan.action_sale_invoice_plan"
+            id="sale_invoice_plan.menu_sale_invoice_plan"
+            parent="sale.sale_order_menu"
+            sequence="4"/>
+
+<!--    <record id="view_order_form" model="ir.ui.view">-->
+<!--        <field name="name">sale.order.form</field>-->
+<!--        <field name="model">sale.order</field>-->
+<!--        <field name="inherit_id" ref="sale.view_order_form"/>-->
+<!--        <field name="arch" type="xml">-->
+
+<!--            <xpath expr="//header" position="inside">-->
+<!--&lt;!&ndash;                <button name="%(sale.action_view_sale_advance_payment_inv)d" string="รับเงินประกัน"&ndash;&gt;-->
+<!--&lt;!&ndash;                        type="action" class="btn-primary"&ndash;&gt;-->
+<!--&lt;!&ndash;                        attrs="{'invisible': [('invoice_status', '!=', 'to invoice')]}"/>&ndash;&gt;-->
+<!--                <button name="%(npd_npd_all_customs.action_view_sale_rent_inv)d" string="รับเงินประกัน"-->
+<!--                        type="action" context="{'default_advance_payment_method': 'fixed'}"-->
+<!--                        attrs="{'invisible': [('state', '!=', 'sale')]}"/>-->
+
+<!--&lt;!&ndash;<button name="action_update_insurance_amount"&ndash;&gt;-->
+<!--&lt;!&ndash;                        type="object"&ndash;&gt;-->
+<!--&lt;!&ndash;                        string="อัปเดตเงินประกัน"&ndash;&gt;-->
+<!--&lt;!&ndash;                        attrs="{'invisible': ['|', ('deposit_ref', '=', False), ('deposit_ref', '=', '')]}"&ndash;&gt;-->
+
+<!--&lt;!&ndash;                        class="btn-primary"/>&ndash;&gt;-->
+
+<!--            </xpath>-->
+
+
+<!--&lt;!&ndash;            <xpath expr="//sheet//div[hasclass('oe_button_box')]" position="inside">&ndash;&gt;-->
+<!--&lt;!&ndash;                <button name="action_view_rent"&ndash;&gt;-->
+<!--&lt;!&ndash;                            type="object"&ndash;&gt;-->
+<!--&lt;!&ndash;                            class="oe_stat_button"&ndash;&gt;-->
+<!--&lt;!&ndash;                            icon="fa-pencil-square-o"&ndash;&gt;-->
+<!--&lt;!&ndash;                            attrs="{'invisible': [('rent_count', '=', 0)]}">&ndash;&gt;-->
+<!--&lt;!&ndash;                            <field name="rent_count" widget="statinfo" string="รับเงินประกัน"/>&ndash;&gt;-->
+<!--&lt;!&ndash;                        </button>&ndash;&gt;-->
+<!--&lt;!&ndash;            </xpath>&ndash;&gt;-->
+
+<!--            <field name="partner_shipping_id" position="after">-->
+<!--                <field name="pfb_so_type" widget="radio"/>-->
+<!--		<field name="date_order_x" invisible="1"/>-->
+<!--                <field name="pfb_objective_id" attrs="{'invisible': [('pfb_so_type', '=', 'sale')]}"/>-->
+<!--                <field name="pfb_date_of_rent" context="{'pfb_date_of_rent':pfb_date_of_rent}"-->
+<!--                       attrs="{'invisible': [('pfb_so_type', '=', 'sale')]}"/>-->
+<!--                <field name="note_approver" widget="html" invisible="1"/>-->
+<!--		<field name="pfb_amount_insurance_c" invisible="1" />-->
+<!--                <field name="pfb_amount_c" invisible="1" />-->
+
+<!--            </field>-->
+<!--  &lt;!&ndash; เพิ่ม total_rental_discount หลัง amount_untaxed &ndash;&gt;-->
+<!--        <xpath expr="//field[@name='amount_untaxed']" position="after">-->
+<!--            <field name="total_rental_discount" widget="monetary" options="{'currency_field': 'currency_id'}"/>-->
+<!--        </xpath>-->
+
+
+<!--            <xpath expr="//field[@name='order_line']/tree//field[@name='name']" position="after">-->
+<!--                <field name="pfb_so_rent_ok" invisible="1"/>-->
+<!--                <field name="pfb_date_of_rent" force_save="1"-->
+<!--                       attrs="{'pfb_so_rent_ok': [('pfb_so_rent_ok', '=', 0)]}"/>-->
+<!--&lt;!&ndash;                <field name="pfb_quantity" attrs="{'invisible': [('pfb_so_rent_ok', '=',0)]}"/>&ndash;&gt;-->
+
+<!--                <field name="pfb_quantity_readonly" invisible="1"/>-->
+<!--                <field name="product_uom_qty_readonly" invisible="1"/>-->
+
+<!--                <field name="pfb_quantity"-->
+<!--       attrs="{'invisible': [('pfb_so_rent_ok', '=', 0)],-->
+<!--               'readonly': [('pfb_quantity_readonly', '=', True)]}"/>-->
+
+
+
+
+<!--&lt;!&ndash;                <field name="discount_npd" attrs="{'invisible': [('pfb_so_rent_ok', '=',0)]}"/>&ndash;&gt;-->
+<!--                <field name="product_uom_qty_npd" attrs="{'invisible': [('pfb_so_rent_ok', '=',0)]}" invisible="1"/>-->
+<!--            </xpath>-->
+<!--            <xpath expr="//field[@name='order_line']/tree//field[@name='product_uom_qty']" position="replace">-->
+<!--                 <field name="product_uom_qty"-->
+<!--       attrs="{'invisible': [('pfb_so_rent_ok', '=', 0)],-->
+<!--               'readonly': [('product_uom_qty_readonly', '=', True)]}"/>-->
+<!--            </xpath>-->
+
+<!--            <xpath expr="//field[@name='order_line']/tree//field[@name='price_unit']" position="before">-->
+<!--                  <field name="discount_type_selection"/>-->
+<!--<field name="is_manual_qty" invisible="1"/>-->
+<!--            </xpath>-->
+
+
+<!--            <xpath expr="//field[@name='order_line']/tree//field[@name='product_uom']" position="after">-->
+<!--                <field name="pfb_insurance_price" attrs="{'invisible': [('pfb_so_rent_ok', '=',0)]}"/>-->
+<!--            </xpath>-->
+
+<!--            <xpath expr="//tree/field[@name='product_template_id']" position="attributes">-->
+<!--                <attribute name="domain">[-->
+<!--                    ('pfb_rent_ok', '=', pfb_so_rent_ok),-->
+<!--                    '|', ('sale_ok', '=', True),-->
+<!--                    '|', ('company_id', '=', False), ('company_id', '=', parent.company_id)]-->
+<!--                </attribute>-->
+<!--            </xpath>-->
+
+<!--<xpath expr="//group[hasclass('oe_subtotal_footer')]" position="after" attrs="{'invisible': [('pfb_so_rent_ok', '=', 0)]}">-->
+<!--    <group>-->
+<!--        <div style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 15px;">-->
+<!--            <table style="width: 100%; border-collapse: collapse;">-->
+<!--                &lt;!&ndash; ค่าประกันสินค้า &ndash;&gt;-->
+<!--                <tr>-->
+<!--                    <td style="text-align: left; padding-right: 10px; font-weight: bold; width: 70%; color: #333;">ค่าประกันสินค้า:</td>-->
+<!--                    <td style="text-align: right; width: 30%; color: #555;">-->
+<!--                        <field name="pfb_amount_insurance" nolabel="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>-->
+<!--                    </td>-->
+<!--                </tr>-->
+<!--                &lt;!&ndash; ส่วนลดค่าประกันสินค้า &ndash;&gt;-->
+<!--                <tr>-->
+<!--                    <td style="text-align: left; padding-right: 8px; font-weight: bold; color: #333;">ส่วนลดค่าประกันสินค้า:</td>-->
+<!--                    <td style="text-align: right; width: 30%; color: #555;">-->
+<!--                        <field name="pfb_dis_amount_insurance" nolabel="1" widget="monetary" options="{'currency_field': 'currency_id'}" attrs="{'readonly': [('deposit_ref', '!=', False)]}"/>-->
+<!--                    </td>-->
+<!--                </tr>-->
+<!--                &lt;!&ndash; ค่าประกันต่ำสุดไม่เกิน &ndash;&gt;-->
+<!--                <tr>-->
+<!--                    <td style="text-align: left; padding-right: 10px; font-weight: bold; color: red;">ค่าประกันต่ำสุดไม่เกิน:</td>-->
+<!--                    <td style="text-align: right; width: 30%; color: red;">-->
+<!--                        <field name="pfb_insurance_min" nolabel="1" widget="monetary" options="{'currency_field': 'currency_id'}" readonly="1"/>-->
+
+<!--                    </td>-->
+<!--                </tr>-->
+
+<!--                <tr>-->
+<!--                    <td style="text-align: left; padding-right: 8px; font-weight: bold; color: #333;">กรอกจำนวนค่าประกันที่ต้องการ:</td>-->
+<!--                    <td style="text-align: right; width: 30%; color: #555;">-->
+<!--                        <field name="pfb_required_insurance_premium" nolabel="1" widget="monetary" options="{'currency_field': 'currency_id'}" attrs="{'readonly': [('deposit_ref', '!=', False)]}"/>-->
+<!--                    </td>-->
+<!--                </tr>-->
+
+<!--                &lt;!&ndash; ค่าประกันสุทธิ &ndash;&gt;-->
+<!--                <tr style="border-top: 1px solid #ddd;">-->
+<!--                    <td style="text-align: left; padding-right: 10px; font-weight: bold; font-size: 16px; color: #000;">ค่าประกันสุทธิ:</td>-->
+<!--                    <td style="text-align: right; width: 30%; font-weight: bold; font-size: 16px; color: #000;">-->
+<!--                        <field name="pfb_amount" nolabel="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>-->
+<!--                    </td>-->
+<!--                </tr>-->
+
+<!--            </table>-->
+<!--        </div>-->
+<!--    </group>-->
+<!--</xpath>-->
+
+
+
+
+
+
+<!--&lt;!&ndash;            <xpath expr="//group[hasclass('oe_subtotal_footer')]" position="after"&ndash;&gt;-->
+<!--&lt;!&ndash;                   attrs="{'invisible': [('pfb_so_rent_ok', '=',0)]}">&ndash;&gt;-->
+<!--&lt;!&ndash;                <group>&ndash;&gt;-->
+<!--&lt;!&ndash;                    <group class="oe_subtotal_footer oe_right">&ndash;&gt;-->
+<!--&lt;!&ndash;                        <field name="pfb_amount_insurance" widget="monetary"&ndash;&gt;-->
+<!--&lt;!&ndash;                               options="{'currency_field': 'currency_id'}"/>&ndash;&gt;-->
+<!--&lt;!&ndash;                        <field name="pfb_dis_amount_insurance" widget="monetary"&ndash;&gt;-->
+<!--&lt;!&ndash;                               options="{'currency_field': 'currency_id'}"/>&ndash;&gt;-->
+<!--&lt;!&ndash;                        <div class="oe_subtotal_footer_separator oe_inline">&ndash;&gt;-->
+<!--&lt;!&ndash;                            <label for="pfb_amount"/>&ndash;&gt;-->
+<!--&lt;!&ndash;                        </div>&ndash;&gt;-->
+<!--&lt;!&ndash;                        <field name="pfb_amount" nolabel="1" class="oe_subtotal_footer_separator" widget="monetary"&ndash;&gt;-->
+<!--&lt;!&ndash;                               options="{'currency_field': 'currency_id'}"/>&ndash;&gt;-->
+<!--&lt;!&ndash;                    </group>&ndash;&gt;-->
+<!--&lt;!&ndash;                </group>&ndash;&gt;-->
+<!--&lt;!&ndash;            </xpath>&ndash;&gt;-->
+
+<!--            &lt;!&ndash;            <xpath expr="//tree/field[@name='product_template_id']" position="attributes">&ndash;&gt;-->
+<!--            &lt;!&ndash;                <attribute name="context">&ndash;&gt;-->
+<!--            &lt;!&ndash;                    {&ndash;&gt;-->
+<!--            &lt;!&ndash;                    'partner_id': parent.partner_id,&ndash;&gt;-->
+<!--            &lt;!&ndash;                    'quantity': product_uom_qty,&ndash;&gt;-->
+<!--            &lt;!&ndash;                    'pricelist': parent.pricelist_id,&ndash;&gt;-->
+<!--            &lt;!&ndash;                    'uom':product_uom,&ndash;&gt;-->
+<!--            &lt;!&ndash;                    'company_id': parent.company_id,&ndash;&gt;-->
+<!--            &lt;!&ndash;                    'default_list_price': price_unit,&ndash;&gt;-->
+<!--            &lt;!&ndash;                    'default_pfb_date_of_rent': pfb_date_of_rent,&ndash;&gt;-->
+<!--            &lt;!&ndash;                    'default_description_sale': name&ndash;&gt;-->
+<!--            &lt;!&ndash;                    }&ndash;&gt;-->
+<!--            &lt;!&ndash;                </attribute>&ndash;&gt;-->
+<!--            &lt;!&ndash;            </xpath>&ndash;&gt;-->
+<!--        </field>-->
+<!--    </record>-->
+</odoo>

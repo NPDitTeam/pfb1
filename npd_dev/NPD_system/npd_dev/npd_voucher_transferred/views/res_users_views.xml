@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Inherit: res.users form - เพิ่ม checkbox "แสดงปุ่มโอนแล้ว" -->
+    <!-- ============================================================ -->
+    <record id="view_users_form_transfer" model="ir.ui.view">
+        <field name="name">res.users.form.transfer</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <!-- เพิ่ม checkbox ในส่วน Preferences ของ User form -->
+            <xpath expr="//page[@name='references']" position="inside">
+                <group string="สิทธิ์ Voucher Transfer" name="voucher_transfer_grp">
+                    <field name="show_transfer_button"
+                           widget="boolean_toggle"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

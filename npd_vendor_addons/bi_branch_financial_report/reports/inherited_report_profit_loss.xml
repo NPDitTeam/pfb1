@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_profit_loss_inherit_add_branch_filter"
+              inherit_id="bi_financial_pdf_reports.report_profit_loss">
+        <xpath expr="//div[@class='page']//div[@class='row mt32 mb32']" position="replace">
+            <div class="row mt32 mb32">
+                <div style="width:25%;">
+                    <strong>Target Moves:</strong>
+                    <p>
+                        <span t-if="data['target_move'] == 'all'">All Entries</span>
+                        <span t-if="data['target_move'] == 'posted'">All Posted Entries</span>
+                    </p>
+                </div>
+                <t t-if="data['print_branch']">
+                    <div style="width:25%;">
+                        <strong>Branch:</strong>
+                        <p t-esc="', '.join([ lt or '' for lt in print_branch ])"/>
+                    </div>
+                </t>
+
+                <div style="width:25%;">
+                    <t t-if="data['date_from']">
+                        <strong>Date from :</strong>
+                        <p>
+                            <span t-esc="data['date_from']"/>
+                        </p>
+                    </t>
+                </div>
+                <div style="width:25%;">
+                    <t t-if="data['date_to']">
+                        <strong>Date to :</strong>
+                        <p>
+                            <span t-esc="data['date_to']"/>
+                        </p>
+                    </t>
+                </div>
+            </div>
+        </xpath>
+
+    </template>
+</odoo>

@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_project_task_overdue_notify,access_project_task_overdue_notify,model_project_task_overdue_notify,project.group_project_user,1,1,1,1
+access_project_task_overdue_email,access_project_task_overdue_email,model_project_task_overdue_email,project.group_project_user,1,1,1,1

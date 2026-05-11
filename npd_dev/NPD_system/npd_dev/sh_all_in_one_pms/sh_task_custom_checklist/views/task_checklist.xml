@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_task_custom_checklist_form_view" model="ir.ui.view">
+        <field name="name">task.custom.checklist.form</field>
+        <field name="model">task.custom.checklist</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                        </group>
+                        <group>
+                            <field name="description" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_task_custom_checklist_tree_view" model="ir.ui.view">
+        <field name="name">task.custom.checklist.tree</field>
+        <field name="model">task.custom.checklist</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+                <field name="description" />
+            </tree>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="action_menu_task_custom_checklist">
+        <field name="name">Task Custom Checklist</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">task.custom.checklist</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <record id="sh_project_task_custom_checklist_form_view_inherit" model="ir.ui.view">
+        <field name="name">project.task.custom.checklist.form</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2" />
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="custom_checklist" string="Checklist" groups="sh_all_in_one_pms.group_enable_task_custom_checklist">
+                    <button name="%(action_menu_task_custom_checklist)d" type="action" class="oe_stat_button" style="height: 40px; background: White;">
+                        <field name="custom_checklist" string="Checklist Completed" widget="percentpie" style="height: 30px; background: White;" />
+                    </button>
+                    <span style="padding-left: 50px;">Check List </span>
+                    <field name="check_list" widget="many2many_tags" />
+                    <field name="custom_checklist_ids">
+                        <tree editable="bottom">
+                            <field name="name" />
+                            <field name="description" />
+                            <field name="updated_date" />
+                            <field name="state" />
+                            <button string="Complete" name="btn_check" type="object" icon="fa-check" attrs="{'invisible':[('state','=','completed')]}" />
+                            <button string="Cancel" name="btn_close" type="object" icon="fa-close" attrs="{'invisible':[('state','=','cancelled')]}" />
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="sh_project_task_custom_checklist_tree_view_inherit" model="ir.ui.view">
+        <field name="name">project.task.custom.checklist.tree</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_tree2" />
+        <field name="arch" type="xml">
+            <field name="user_id" position="after">
+                <field name="custom_checklist" widget="progressbar" groups="sh_all_in_one_pms.group_enable_task_custom_checklist" />
+            </field>
+        </field>
+    </record>
+
+    <menuitem id="menu_task_custom_checklist" name="Task Custom Checklist" sequence="26" action="action_menu_task_custom_checklist" parent="project.menu_project_config" groups="sh_all_in_one_pms.group_enable_task_custom_checklist" />
+    <menuitem id="menu_import_task_custom_checklist" name="Import Task Custom Checklist" sequence="27" action="sh_all_in_one_pms.sh_import_task_custom_cl_action" parent="project.menu_project_config" groups="sh_all_in_one_pms.group_enable_task_custom_checklist" />
+</odoo>

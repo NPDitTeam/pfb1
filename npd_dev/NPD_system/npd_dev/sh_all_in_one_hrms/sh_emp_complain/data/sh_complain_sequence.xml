@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Sequences for complain -->
+    <record id="seq_complain" model="ir.sequence">
+        <field name="name">Complain</field>
+        <field name="code">sh.complain</field>
+        <field name="prefix"> #</field>
+        <field name="padding">5</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+    </record>
+</odoo>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit CRM Lead Form View - เพิ่มปุ่มโทรและส่งเมล -->
+    <record id="view_crm_lead_form_inherit_call_button" model="ir.ui.view">
+        <field name="name">crm.lead.form.inherit.call.button</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <!-- เพิ่มปุ่มโทรหาลูกค้าและส่งเมลใน header -->
+            <xpath expr="//header" position="inside">
+                <!-- ปุ่มโทรหาลูกค้า -->
+                <button name="action_call_lead_phone"
+                        string="โทรหาลูกค้า"
+                        type="object"
+                        class="btn-success"
+                        icon="fa-phone"
+                        attrs="{'invisible': ['|', ('phone', '=', False), ('phone', '=', '')]}"/>
+                <!-- ปุ่มส่งเมล -->
+                <button name="action_send_lead_email"
+                        string="ส่งเมล"
+                        type="object"
+                        class="btn-info"
+                        icon="fa-envelope"
+                        attrs="{'invisible': ['|', ('email_from', '=', False), ('email_from', '=', '')]}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

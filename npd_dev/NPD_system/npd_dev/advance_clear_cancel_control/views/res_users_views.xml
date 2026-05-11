@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- ขยาย Form View ของผู้ใช้เพื่อเพิ่มแถบสิทธิ์การยกเลิก Advance Clear -->
+        <record id="view_users_form_allow_cancel_advance_clear" model="ir.ui.view">
+            <field name="name">res.users.form.allow.cancel.advance.clear</field>
+            <field name="model">res.users</field>
+            <field name="inherit_id" ref="base.view_users_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='access_rights']" position="after">
+                    <page string="สิทธิ์ยกเลิก Advance Clear" name="advance_clear_cancel_rights">
+                        <group string="สิทธิ์การยกเลิก Advance Clear">
+                            <field name="allow_cancel_advance_clear"/>
+                        </group>
+                        <group>
+                            <div class="alert alert-info" role="alert" style="margin-bottom:0px;">
+                                <p><strong>คำอธิบาย:</strong></p>
+                                <ul>
+                                    <li><strong>อนุญาตให้ยกเลิก Advance Clear:</strong> อนุญาตให้ผู้ใช้กดปุ่ม Cancel ในหน้า Advance Clear ได้</li>
+                                </ul>
+                                <p class="text-danger"><strong>หมายเหตุ:</strong> ผู้ดูแลระบบ (Administrator) มีสิทธิ์ทั้งหมดโดยอัตโนมัติ</p>
+                            </div>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

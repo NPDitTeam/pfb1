@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ===== Paperformat A4 Landscape ===== -->
+    <record id="paperformat_payslip_a4_landscape" model="report.paperformat">
+        <field name="name">Payslip A4 Landscape</field>
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">8</field>
+        <field name="margin_bottom">8</field>
+        <field name="margin_left">10</field>
+        <field name="margin_right">10</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <!-- ===== Report Action ===== -->
+    <record id="action_report_payslip" model="ir.actions.report">
+        <field name="name">ใบแจ้งเงินเดือน / Pay Slip</field>
+        <field name="model">payroll.salary</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">employee_salary.report_payslip_document</field>
+        <field name="report_file">employee_salary.report_payslip_document</field>
+        <field name="print_report_name">'Payslip - %s %s-%s' % (object.employee_code or '', object.month, object.year)</field>
+        <field name="binding_model_id" ref="model_payroll_salary"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="paperformat_payslip_a4_landscape"/>
+    </record>
+
+    <!-- ===== Template ===== -->
+    <template id="report_payslip_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="payslip" t-value="o._get_payslip_api_data()"/>
+                <t t-set="company" t-value="o._get_payslip_company_info()"/>
+                <style>
+                    @font-face {
+                        font-family: 'THSarabun';
+                        src: url('/employee_salary/static/src/fonts/THSarabun.ttf') format('truetype');
+                        font-weight: normal;
+                        font-style: normal;
+                    }
+                    @font-face {
+                        font-family: 'THSarabun';
+                        src: url('/employee_salary/static/src/fonts/THSarabunBold.ttf') format('truetype');
+                        font-weight: bold;
+                        font-style: normal;
+                    }
+                    .payslip-body, .payslip-body * {
+                        font-family: 'THSarabun', 'Sarabun', 'TH Sarabun New', sans-serif !important;
+                    }
+                </style>
+                <div class="article payslip-body" style="font-size: 14pt; color: #000;">
+                    <div class="page" style="padding: 0;">
+
+                        <!-- ===== Header: Logo + Company / Title ===== -->
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px;">
+                            <tr>
+                                <td style="width: 62%; vertical-align: middle;">
+                                    <table>
+                                        <tr>
+                                            <td style="width: 100px; vertical-align: middle;">
+                                                <img src="/employee_salary/static/src/img/npd_logo.png"
+                                                     style="width: 90px; height: 90px;"/>
+                                            </td>
+                                            <td style="vertical-align: middle; padding-left: 10px;">
+                                                <div style="font-size: 16pt; font-weight: bold; line-height: 1.2;">
+                                                    <span t-esc="company['name']"/>
+                                                </div>
+                                                <div style="font-size: 12pt; line-height: 1.3;">
+                                                    <span t-esc="company['address']"/>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td style="width: 38%; text-align: right; vertical-align: middle;">
+                                    <span style="font-size: 20pt; font-weight: bold;">ใบแจ้งเงินเดือน / PAY SLIP</span>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <hr style="margin: 3px 0 8px 0; border: 0; border-top: 1px solid #555;"/>
+
+                        <!-- ===== Employee Info ===== -->
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 12pt;">
+                            <tr>
+                                <td style="width: 33%; padding: 2px 0;">
+                                    <strong>รหัสพนักงาน:</strong>
+                                    <span t-esc="payslip.get('employee_code') or o.employee_code or '-'"/>
+                                </td>
+                                <td style="width: 33%; padding: 2px 0;">
+                                    <strong>ชื่อ:</strong>
+                                    <span t-esc="payslip.get('full_name') or ((o.firstname or '') + ' ' + (o.lastname or '')).strip() or '-'"/>
+                                </td>
+                                <td style="width: 34%; padding: 2px 0;">
+                                    <strong>ตำแหน่ง:</strong>
+                                    <span t-esc="payslip.get('position') or (o.employee_id.position_id.name or '-')"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 2px 0;">
+                                    <strong>วันที่จ่ายเงิน:</strong>
+                                    <span t-esc="o.payment_date and o.payment_date.strftime('%d/%m/%Y') or '-'"/>
+                                </td>
+                                <td style="padding: 2px 0;">
+                                    <strong>แผนก:</strong>
+                                    <span t-esc="payslip.get('department') or (o.employee_id.department_id.name or '-')"/>
+                                </td>
+                                <td style="padding: 2px 0;">
+                                    <strong>ประจำเดือน:</strong>
+                                    <span t-esc="o._get_thai_month_name(o.month)"/>
+                                    <span t-esc="o.year"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- ===== Income + Deduction Tables ===== -->
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12pt;">
+                            <tr>
+                                <!-- Left: Income -->
+                                <td style="width: 50%; vertical-align: top; padding-right: 4px;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr>
+                                                <th style="border-bottom: 1px solid #000; padding: 4px 6px; text-align: left; font-weight: bold;">
+                                                    รายได้ / Income
+                                                </th>
+                                                <th style="border-bottom: 1px solid #000; padding: 4px 6px; text-align: right; font-weight: bold; width: 30%;">
+                                                    จำนวนเงิน
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="payslip.get('incomes') or []" t-as="inc">
+                                                <tr>
+                                                    <td style="padding: 3px 6px;">
+                                                        <span t-esc="inc.get('label') or ''"/>
+                                                    </td>
+                                                    <td style="padding: 3px 6px; text-align: right;">
+                                                        <span t-esc="o._fmt_money(inc.get('amount'))"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                            <tr style="font-weight: bold;">
+                                                <td style="border-top: 1px solid #000; padding: 4px 6px;">รวมรายได้</td>
+                                                <td style="border-top: 1px solid #000; padding: 4px 6px; text-align: right;">
+                                                    <span t-esc="o._fmt_money(payslip.get('total_gross') or o.total_gross)"/>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+
+                                <!-- Right: Deduction -->
+                                <td style="width: 50%; vertical-align: top; padding-left: 4px;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr>
+                                                <th style="border-bottom: 1px solid #000; padding: 4px 6px; text-align: left; font-weight: bold;">
+                                                    รายการหัก / Deduction
+                                                </th>
+                                                <th style="border-bottom: 1px solid #000; padding: 4px 6px; text-align: right; font-weight: bold; width: 30%;">
+                                                    จำนวนเงิน
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="payslip.get('deductions') or []" t-as="ded">
+                                                <tr>
+                                                    <td style="padding: 3px 6px;">
+                                                        <span t-esc="ded.get('label') or ''"/>
+                                                        <t t-if="not ded.get('label')">&amp;nbsp;</t>
+                                                    </td>
+                                                    <td style="padding: 3px 6px; text-align: right;">
+                                                        <t t-if="ded.get('amount') != '' and ded.get('amount') is not None">
+                                                            <span t-esc="o._fmt_money(ded.get('amount'))"/>
+                                                        </t>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                            <tr style="font-weight: bold;">
+                                                <td style="border-top: 1px solid #000; padding: 4px 6px;">รวมรายการหัก</td>
+                                                <td style="border-top: 1px solid #000; padding: 4px 6px; text-align: right;">
+                                                    <span t-esc="o._fmt_money(payslip.get('total_deduction') or o.total_deduction)"/>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- ===== Summary Row ===== -->
+                        <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; margin-top: 10px; font-size: 12pt;">
+                            <thead>
+                                <tr>
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: bold;">รายรับสะสม</th>
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: bold;">ภาษีสะสม</th>
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: bold;">ประกันสังคมสะสม</th>
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: bold;">เงินได้สุทธิ</th>
+                                    <th style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: bold;">เลขที่บัญชี</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="font-weight: bold;">
+                                    <td style="border: 1px solid #000; padding: 5px; text-align: center;">
+                                        <span t-esc="o._fmt_money(payslip.get('accumulated_income') or o.accumulated_income)"/>
+                                    </td>
+                                    <td style="border: 1px solid #000; padding: 5px; text-align: center;">
+                                        <span t-esc="o._fmt_money(payslip.get('accumulated_vat') or o.accumulated_vat)"/>
+                                    </td>
+                                    <td style="border: 1px solid #000; padding: 5px; text-align: center;">
+                                        <span t-esc="o._fmt_money(payslip.get('accumulated_social_security') or o.accumulated_social_security)"/>
+                                    </td>
+                                    <td style="border: 1px solid #000; padding: 5px; text-align: center;">
+                                        <span t-esc="o._fmt_money(payslip.get('net_salary') or o.net_salary)"/>
+                                    </td>
+                                    <td style="border: 1px solid #000; padding: 5px; text-align: center;">
+                                        <span t-esc="payslip.get('bank_account_number') or (o.employee_id.bank_account_number or '-')"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- ===== Notes + Signature ===== -->
+                        <table style="width: 100%; margin-top: 10px; font-size: 12pt;">
+                            <tr>
+                                <td style="width: 65%; vertical-align: top;">
+                                    <div><strong>หมายเหตุ:</strong> สลิปเงินเดือนถือเป็นความลับไม่ควรเผยแพร่ เพื่อการใช้ได้เฉพาะพนักงานเท่านั้น</div>
+                                    <div>หรือข้อมูลและภาระภาษีกำลังดังกล่าวอาจกระทบต่อบริษัท มีบทลงโทษโดยให้ออกจากการเป็นพนักงานของบริษัทฯ ทันที</div>
+                                </td>
+                                <td style="width: 35%; vertical-align: top; text-align: right;">
+                                    <span>Recipient's Signature .............................................</span>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- ===== Footer ===== -->
+                        <table style="width: 100%; margin-top: 18px; font-size: 12pt;">
+                            <tr>
+                                <td style="width: 50%;">
+                                    <strong>พิมพ์โดย:</strong>
+                                    <span t-esc="user.name"/>
+                                </td>
+                                <td style="width: 50%; text-align: right;">
+                                    <strong>ออกเอกสาร:</strong>
+                                    <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%d/%m/%Y %H:%M')"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

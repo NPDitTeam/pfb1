@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_withholding_tax_cert_form_inherit_fix" model="ir.ui.view">
+        <field name="name">view.withholding.tax.cert.form.inherit.fix</field>
+        <field name="model">withholding.tax.cert</field>
+        <field name="inherit_id" ref="l10n_th_withholding_tax_cert.view_withholding_tax_cert_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='supplier_partner_id']" position="attributes">
+                    <attribute name="domain">[('supplier','=',True),('parent_id','=',False)]</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

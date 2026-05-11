@@ -1,0 +1,79 @@
+<odoo>
+    <data>
+        <record id="action_stock_daily_report" model="ir.actions.act_window">
+            <field name="name">รายงานสต๊อกประจำวัน</field>
+            <field name="res_model">baankheaw.stock_daily_report</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p>📦 รายงานนี้แสดงข้อมูลสินค้าคงเหลือ ถูกเช่า และสต๊อกจริงรายวัน</p>
+            </field>
+        </record>
+
+        <menuitem id="menu_stock_daily_report"
+                  name="รายงานสต๊อกประจำวัน"
+                  parent="baankheaw_menu_root"
+                  action="action_stock_daily_report"
+                  sequence="25"
+                  groups="base.group_user"/>
+
+        <record id="view_stock_daily_report_tree" model="ir.ui.view">
+            <field name="name">baankheaw.stock_daily_report.tree</field>
+            <field name="model">baankheaw.stock_daily_report</field>
+            <field name="arch" type="xml">
+                <tree string="รายงานสต๊อกประจำวัน">
+                    <field name="pdn_id"/>
+                    <field name="branch_name"/>
+                    <field name="product_name"/>
+                    <field name="stock_begin"/>
+                    <field name="stock_remain"/>
+                    <field name="stock_rented"/>
+                    <field name="stock_lost"/>
+                    <field name="damaged_npd_s_group"/>
+                    <field name="damaged_npd_intertrading"/>
+                    <field name="damaged_npd_bangkok"/>
+                    <field name="total_damaged"/>
+                    <field name="price_per_day"/>
+                    <field name="price_per_month"/>
+                    <field name="guarantee"/>
+                    <field name="lost_price"/>
+                    <field name="weight"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_stock_daily_report_form" model="ir.ui.view">
+            <field name="name">baankheaw.stock_daily_report.form</field>
+            <field name="model">baankheaw.stock_daily_report</field>
+            <field name="arch" type="xml">
+                <form string="รายงานสต๊อกประจำวัน">
+                    <header>
+                        <button name="action_update_stock_report"
+                                type="object"
+                                string="อัปเดตข้อมูล"
+                                class="oe_highlight"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <field name="pdn_id"/>
+                            <field name="branch_name"/>
+                            <field name="product_name"/>
+                            <field name="stock_begin"/>
+                            <field name="stock_remain"/>
+                            <field name="stock_rented"/>
+                            <field name="stock_lost"/>
+                            <field name="damaged_npd_s_group"/>
+                            <field name="damaged_npd_intertrading"/>
+                            <field name="damaged_npd_bangkok"/>
+                            <field name="total_damaged"/>
+                            <field name="price_per_day"/>
+                            <field name="price_per_month"/>
+                            <field name="guarantee"/>
+                            <field name="lost_price"/>
+                            <field name="weight"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- View petty.cash.balance View Tree -->
+    <record id="view_petty_cash_balance_tree" model="ir.ui.view">
+        <field name="name">view.petty.cash.balance.tree</field>
+        <field name="model">petty.cash.balance</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                 <field name="date"/>
+                  <field name="petty_cash_id"/>
+                   <field name="balance"/>
+                   <field name="total"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- View petty.cash.balance form -->
+    <record id="view_petty_cash_balance_form" model="ir.ui.view">
+        <field name="name">view.petty.cash.balance.form</field>
+        <field name="model">petty.cash.balance</field>
+        <field name="arch" type="xml">
+            <form string="Petty Cash Balance">
+              <header>
+                    <button name="action_confirm" string="Confirm" type="object" attrs="{'invisible': [('state', 'not in', ['draft'])]}"/>
+                    <button name="action_reset" string="Reset To Draft" type="object" attrs="{'invisible': [('state','not in', ['cancel'])]}"/>
+                    <button name="action_cancel" string="Cancel" type="object" attrs="{'invisible': [('state','not in', ['done'])]}"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,done,cancel"/>
+                </header>
+                <sheet>
+                     <group>
+                        <group>
+                            <field name="name"  />
+                            <field name="date" attrs="{'readonly': [('state','in',['done','cancel'])]}"/>
+                            <field name="petty_cash_id" attrs="{'readonly': [('state','in',['done','cancel'])]}"/>
+                            <field name="balance" />
+                        </group>
+                        <group>
+                            <field name="note" attrs="{'readonly': [('state','in',['done','cancel'])]}"/>
+                        </group>
+                       
+                    </group>
+                    <notebook>
+                    
+                        <page name="petty_balance_line_ids" string="Petty Cash Balance">
+                             <field name="petty_balance_line_ids" attrs="{'readonly': [('state','in',['done','cancel'])]}">
+                                <tree editable="bottom"  string="Petty Cash Balance" create="1" delete="1">
+                                    <field name="cash_type_id" />
+                                    <field name="qty" />
+                                    <field name='value'/>
+                                    <field name="total" />
+                                </tree>
+                             </field>
+                        </page>
+                    </notebook>
+                      <group name="note_group" col="4" class="mt-2 mt-md-0">
+
+                        <group class="oe_subtotal_footer" colspan="2" name="balance_total">
+                            <div class="oe_subtotal_footer_separator oe_inline o_td_label">
+                                <label for="total" />
+                            </div>
+                            <field name="total" nolabel="1" class="oe_subtotal_footer_separator" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+                            </group>
+                            </group>
+                </sheet>
+                   <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- View petty.cash.balance search -->
+    <record id="view_petty_cash_balance_search" model="ir.ui.view">
+        <field name="name">view.petty.cash.balance.search</field>
+        <field name="model">petty.cash.balance</field>
+        <field name="arch" type="xml">
+            <search>
+            
+                <group expand="1" string="Group By">
+                    <filter string="Petty Cash" name="Petty Cash" domain="[]" context="{'group_by':'petty_cash_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action petty.cash.balance -->
+    <record id="action_petty_cash_balance" model="ir.actions.act_window">
+        <field name="name">Petty Cash Balance</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">petty.cash.balance</field>
+        <field name="view_mode">tree,form,pivot,graph</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                There is no examples click here to add new Petty Cash Balance.
+            </p>
+        </field>
+    </record>
+    <menuitem
+                id="menu_view_action_petty_cash_balance"
+                action="action_petty_cash_balance"
+               parent="petty_cash.account_petty_cash_main_menu"
+                sequence="50"/>
+</odoo>

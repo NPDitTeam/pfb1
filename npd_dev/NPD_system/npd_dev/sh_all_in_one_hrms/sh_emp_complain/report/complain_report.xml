@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--Employee Complain Report	 -->
+    <template id="report_complain_view">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <div class="oe_structure" />
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                        <h2>
+                            <center>
+                                <b>Employee Complain Report-<span t-field="o.name" /></b>
+                            </center>
+                        </h2>
+                        <br />
+                        <br />
+                        <table style="width: 100%;">
+                            <tbody>
+                                <tr style="border: 1px solid black;">
+                                    <td style="border: 1px solid black; padding: 5px; width: 200px;"><b>Complaint Raised By</b></td>
+                                    <td style="border: 1px solid black; padding: 5px;"><span t-field="o.created_by" /></td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid black; padding: 5px;"><b>Date Of Complain</b></td>
+                                    <td style="border: 1px solid black; padding: 5px;"><span t-field="o.create_date" /></td>
+                                </tr>
+                                <tr style="border: 1px solid black;">
+                                    <td style="border: 1px solid black; padding: 5px;"><b>Subject</b></td>
+                                    <td style="border: 1px solid black; padding: 5px;"><span t-field="o.subject" /></td>
+                                </tr>
+                                <tr style="border: 1px solid black;">
+                                    <td style="border: 1px solid black; padding: 5px;"><b>Complaint Category</b></td>
+                                    <td style="border: 1px solid black; padding: 5px;"><span t-field="o.complain_category" /></td>
+                                </tr>
+                                <tr style="border: 1px solid black;">
+                                    <td style="border: 1px solid black; padding: 5px;"><b>Complain Description</b></td>
+                                    <td style="border: 1px solid black; padding: 5px;"><span t-field="o.description" /></td>
+                                </tr>
+                                <tr style="border: 1px solid black;">
+                                    <td style="border: 1px solid black; padding: 5px;"><b>Responsible Person</b></td>
+                                    <td style="border: 1px solid black; padding: 5px;"><span t-field="o.resp_persons" /></td>
+                                </tr>
+                                <tr style="border: 1px solid black;">
+                                    <td style="border: 1px solid black; padding: 5px;"><b>Has Effect On</b></td>
+                                    <td style="border: 1px solid black; padding: 5px;"><span t-field="o.has_effect_on" /></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <br />
+
+                        <t t-if="o.resolved_by">
+                            <table style="width: 100%;">
+                                <theader>
+                                    <center><b>About Resolved</b></center>
+                                </theader>
+                                <br />
+                                <tbody style="border: 1px solid black;">
+                                    <tr style="border: 1px solid black; padding: 5px;">
+                                        <td style="border: 1px solid black; padding: 5px; width: 200px;"><b>Comment</b></td>
+                                        <td style="border: 1px solid black; padding: 5px;"><span t-field="o.resolved_comment" /></td>
+                                    </tr>
+                                    <tr style="border: 1px solid black;">
+                                        <td style="border: 1px solid black; padding: 5px;"><b>Resolved By</b></td>
+                                        <td style="border: 1px solid black; padding: 5px;"><span t-field="o.resolved_by" /></td>
+                                    </tr>
+                                    <tr style="border: 1px solid black;">
+                                        <td style="border: 1px solid black; padding: 5px;"><b>Rating</b></td>
+                                        <td style="border: 1px solid black; padding: 5px;"><span t-field="o.rating" /></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+                        <t t-if="o.refused_by">
+                            <table style="width: 100%;">
+                                <theader>
+                                    <center><b>About Refused</b></center>
+                                </theader>
+                                <br />
+                                <tbody>
+                                    <tr style="border: 1px solid black; padding-top: 5px; padding-bottom: 5px; padding-left: 5px; padding-right: 4px;">
+                                        <td style="border: 1px solid black; padding: 5px; width: 200px;"><b>Comment</b></td>
+                                        <td style="border: 1px solid black; padding: 5px;"><span t-field="o.refused_comment" /></td>
+                                    </tr>
+                                    <tr style="border: 1px solid black;">
+                                        <td style="border: 1px solid black; padding: 5px;"><b>Refused By</b></td>
+                                        <td style="border: 1px solid black; padding: 5px;"><span t-field="o.refused_by" /></td>
+                                    </tr>
+                                    <tr style="border: 1px solid black;">
+                                        <td style="border: 1px solid black; padding: 5px;"><b>Rating</b></td>
+                                        <td style="border: 1px solid black; padding: 5px;"><span t-field="o.rating" /></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+                        <div class="oe_structure" />
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="report_compain" model="ir.actions.report">
+        <field name="name">Complaint Report</field>
+        <field name="model">sh.complain</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">sh_all_in_one_hrms.report_complain_view</field>
+        <field name="report_file">sh_all_in_one_hrms.report_complain_view</field>
+        <field name="binding_model_id" ref="model_sh_complain" />
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

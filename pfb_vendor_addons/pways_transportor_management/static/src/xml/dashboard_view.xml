@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates id="template" xml:space="preserve">
+    <t t-name="ShipmentDashboard">
+        <div class="o_dashboards" style="height: 100%;">
+            <div class="o_Shipment_dashboard" style="height: 100%;"/> 
+        </div>
+    </t>
+    <t t-name="ShipmentData">
+            <div class="row u-sheet">
+                <h4></h4>
+                <div class="u-grey-10 u-group-1"><div class="pways-col-1">All Shipments</div>
+                <div style="border-bottom: 1px solid black;"/><div class="pways-row-1-col-2 align-middle"><strong><span><t t-esc="total_shipment"/></span></strong><br/> Shipments</div></div>
+                
+                <div class="u-grey-10 u-group-1"><div class="pways-col-1">Transporter</div>
+                <div style="border-bottom: 1px solid black;"/><div class="pways-row-1-col-2 align-middle"><strong><span><t t-esc="transporter"/></span></strong><br/> Transporters</div></div>
+            </div>
+            <div class="row u-sheet">           
+                <div class="u-grey-10 u-group-3"><div class="pways-col-1">Preparation</div>
+                <div style="border-bottom: 1px solid black;"/><div class="pways-row-2-col-2 align-middle"><strong><span><t t-esc="total_draft"/></span></strong><br/> Prepare </div></div>
+        
+                <div class="u-grey-10 u-group-3"><div class="pways-col-1"> Ready To Move</div>
+                <div style="border-bottom: 1px solid black;"/><div class="pways-row-2-col-2 align-middle"><strong><span><t t-esc="total_ready"/></span></strong><br/>  Ready </div></div>
+
+                <div class="u-grey-10 u-group-3"><div class="pways-col-1"> Waiting</div>
+                <div style="border-bottom: 1px solid black;"/><div class="pways-row-2-col-2 align-middle"><strong><span><t t-esc="total_halt"/></span></strong><br/>  Halt </div></div>
+
+                <div class="u-grey-10 u-group-3"><div class="pways-col-1"> Delivered</div>
+                <div style="border-bottom: 1px solid black;"/><div class="pways-row-2-col-2 align-middle"><strong><span><t t-esc="total_done"/></span></strong><br/>  Done </div></div>
+            </div>
+            <div class="row">
+                <div class="u-data">
+                    <h4>Transporter Details</h4>
+                </div>
+                <div>
+                    <table class="o_list_table table table-sm table-hover position-relative mb-0 o_list_table_ungrouped table-striped u-data" style="table-layout: fixed; width:95%;">
+                        <thead>
+                            <tr style="background-color: green; color: white;">
+                                <th>Transporter</th>
+                                <th>Total Weight</th>
+                                <th style="text-align:center;">Total Distance</th>
+                                <th style="text-align:center;" >Total Charges</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="transport_route_data" t-as="rec">
+                                <tr class="o_data_row show_form_view" t-att-data-id="rec['id']">
+                                    <td class="o_data_cell cursor-pointer o_field_cell show_form_view" t-att-data-id="rec['id']" tabindex="-1"><t t-esc="rec['name']"/></td>
+                                    <td class="o_data_cell cursor-pointer o_field_cell show_form_view" t-att-data-id="rec['id']" tabindex="-1"><t t-esc="rec['weight']"/></td>
+                                    <td class="o_data_cell cursor-pointer o_field_cell show_form_view" style="text-align:center;" t-att-data-id="rec['id']" tabindex="-1"><t t-esc="rec['distance']"/></td>
+                                    <td class="o_data_cell cursor-pointer o_field_cell show_form_view" t-att-data-id="rec['id']" tabindex="-1" style="text-align:center;"><t t-esc="rec['total']"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+        </div>
+        <br/>
+        <br/>
+    </t>
+</templates>

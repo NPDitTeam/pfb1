@@ -1,0 +1,148 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* viin_meeting_room
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-11-10 08:32+0000\n"
+"PO-Revision-Date: 2021-11-10 08:32+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: viin_meeting_room
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_meeting_room__active
+msgid "Active"
+msgstr "Có hiệu lực"
+
+#. module: viin_meeting_room
+#: model_terms:ir.ui.view,arch_db:viin_meeting_room.calendar_meeting_room_view_form
+#: model_terms:ir.ui.view,arch_db:viin_meeting_room.calendar_meeting_room_view_search
+msgid "Archived"
+msgstr ""
+
+#. module: viin_meeting_room
+#: model:ir.model,name:viin_meeting_room.model_calendar_event
+msgid "Calendar Event"
+msgstr "Lịch sự kiện"
+
+#. module: viin_meeting_room
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_meeting_room__capacity
+msgid "Capacity"
+msgstr "Sức chứa"
+
+#. module: viin_meeting_room
+#: model:ir.ui.menu,name:viin_meeting_room.calendar_event_menu_config
+msgid "Configuration"
+msgstr "Cấu hình"
+
+#. module: viin_meeting_room
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_meeting_room__create_uid
+msgid "Created by"
+msgstr "Được tạo bởi"
+
+#. module: viin_meeting_room
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_meeting_room__create_date
+msgid "Created on"
+msgstr "Thời điểm tạo"
+
+#. module: viin_meeting_room
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_event__display_name
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_meeting_room__display_name
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_recurrence__display_name
+msgid "Display Name"
+msgstr "Tên hiển thị"
+
+#. module: viin_meeting_room
+#: model:ir.model,name:viin_meeting_room.model_calendar_recurrence
+msgid "Event Recurrence Rule"
+msgstr "Quy tắc lặp lại sự kiện"
+
+#. module: viin_meeting_room
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_event__id
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_meeting_room__id
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_recurrence__id
+msgid "ID"
+msgstr ""
+
+#. module: viin_meeting_room
+#: model:ir.model.fields,help:viin_meeting_room.field_calendar_meeting_room__active
+msgid ""
+"If unchecked, it will allow you to hide the meeting room without removing "
+"it."
+msgstr "Nếu không đánh dấu, cho phép ẩn phòng họp mà không cần xóa nó."
+
+#. module: viin_meeting_room
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_event____last_update
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_meeting_room____last_update
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_recurrence____last_update
+msgid "Last Modified on"
+msgstr "Sửa đổi lần cuối vào"
+
+#. module: viin_meeting_room
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_meeting_room__write_uid
+msgid "Last Updated by"
+msgstr "Cập nhật lần cuối bởi"
+
+#. module: viin_meeting_room
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_meeting_room__write_date
+msgid "Last Updated on"
+msgstr "Cập nhật lần cuối"
+
+#. module: viin_meeting_room
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_meeting_room__location
+msgid "Location"
+msgstr "Địa điểm"
+
+#. module: viin_meeting_room
+#: model:ir.actions.act_window,name:viin_meeting_room.calendar_meeting_room_action
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_event__room_id
+#: model:ir.model.fields,field_description:viin_meeting_room.field_calendar_meeting_room__name
+#: model_terms:ir.ui.view,arch_db:viin_meeting_room.calendar_meeting_room_view_form
+#: model_terms:ir.ui.view,arch_db:viin_meeting_room.calendar_meeting_room_view_tree
+#: model_terms:ir.ui.view,arch_db:viin_meeting_room.invitation_page_anonymous
+#: model_terms:ir.ui.view,arch_db:viin_meeting_room.view_calendar_event_search
+msgid "Meeting Room"
+msgstr "Phòng họp"
+
+#. module: viin_meeting_room
+#: model_terms:ir.ui.view,arch_db:viin_meeting_room.calendar_meeting_room_view_form
+msgid "Meeting Room Details"
+msgstr "Chi tiết phòng họp"
+
+#. module: viin_meeting_room
+#: model:ir.model,name:viin_meeting_room.model_calendar_meeting_room
+msgid "Meeting Room Management"
+msgstr "Quản lý phòng họp"
+
+#. module: viin_meeting_room
+#: model:ir.ui.menu,name:viin_meeting_room.calendar_event_menu_meeting_rooms
+#: model:ir.ui.menu,name:viin_meeting_room.calendar_meeting_room_menu
+msgid "Meeting Rooms"
+msgstr "Phòng họp"
+
+#. module: viin_meeting_room
+#: model:ir.model.constraint,message:viin_meeting_room.constraint_calendar_meeting_room_name_unique
+msgid "The name of the meeting room must be unique!"
+msgstr "Tên của phòng họp phải là duy nhất!"
+
+#. module: viin_meeting_room
+#: code:addons/viin_meeting_room/models/calendar_event.py:0
+#, python-format
+msgid ""
+"You may not be able to book the meeting room %(room)s for the event "
+"`%(current_event)s` while it is currently booked for the event `%(event)s`. "
+"You may shift your event to another time or contact %(owner)s who is the "
+"owner of the event `%(event)s` if you want to convince her or him to give "
+"you this slot."
+msgstr ""
+"Bạn không thể đặt được phòng họp %(room)s cho sự kiện `%(current_event)s` vì"
+" hiện tại nó đã được đặt cho sự kiện `%(event)s`. Bạn có thể chuyển sự kiện "
+"của mình sang thời gian khác hoặc liên hệ với %(owner)s là người phụ trách "
+"cho sự kiện `%(event)s` nếu bạn muốn thuyết phục cô ấy hoặc anh ấy cho vị "
+"trí này của bạn."

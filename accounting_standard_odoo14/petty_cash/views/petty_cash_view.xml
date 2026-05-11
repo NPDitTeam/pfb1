@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="petty_cash_view_form" model="ir.ui.view">
+        <field name="name">petty.cash.view.form</field>
+        <field name="model">petty.cash</field>
+        <field name="arch" type="xml">
+            <form string="Petty Cash">
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object" attrs="{'invisible': [('state', 'not in', ['draft'])]}"/>
+                    <button name="action_cancel" string="Cancel" type="object" attrs="{'invisible': [('state', 'not in', ['process'])]}"/>
+                    <button name="action_redraft" string="Reset Draft" type="object" attrs="{'invisible': [('state', 'not in', ['cancel'])]}"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,process,cancel"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="petty_name" />
+                            <field name="journal_id" options="{'no_create': True}"  domain="[('type', 'in', ('bank','cash'))]"/>
+                            <field name="account_id" options="{'no_create': True}"/>
+                            <field name="remark" />
+                        </group>
+                        <group>
+                            <field name="user_id" options="{'no_create': True}" attrs="{'readonly': [('state','in',['process'])]}"  />
+                            <field name="date" options="{'no_create': True}"/>
+                            <field name="max_balance" attrs="{'readonly': [('state','in',['process'])]}"/>
+                            <field name="balance"  />
+                            <field name="company_id" />
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="withdraw" string="Withdraw">
+                            <field name="withdraw_ids">
+                                <tree editable="bottom" string="Withdraw" create="1" delete="1">
+                                  <field name="company_id" invisible="1" />
+                                    <field name="payment_method_id" attrs="{'readonly': [('move_id','!=',False)]}"/>
+                                    <field name="date" attrs="{'readonly': [('move_id','!=',False)]}" />
+                                    <field name="desc" attrs="{'readonly': [('move_id','!=',False)]}"/>
+                                    <field name="withdraw_total" attrs="{'readonly': [('move_id','!=',False)]}"/>
+                                    <field name="move_id" readonly="True"/>
+                                    <button name="action_approve" string="Approve" type="object" icon="fa-check-square-o" attrs="{'invisible': [('move_id','!=',False)]}" />
+                                </tree>
+
+                            </field>
+                        </page>
+                        <page name="Expense" string="Expense">
+                            <field name="expense_ids">
+                                <tree editable="bottom" string="Withdraw" create="0" delete="0">
+                                    <field name="user_id" />
+                                    <field name="expense_name" />
+                                    <field name="date" />
+                                    <field name="amount_untaxed" />
+                                    <field name="amount_tax" />
+                                    <field name="amount_total"/>
+                                    <field name="amount_wht"/>
+                                    <field name="amount_payment"/>
+                                    <field name="move_id" />
+                                    <field name="state" widget="badge" decoration-success="state == 'billed'" decoration-info="state == 'draft'" decoration-danger="state == 'cancel'" />
+                                </tree>
+
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+    <record id="petty_cash_view_tree" model="ir.ui.view">
+        <field name="name">petty.cash.view.tree</field>
+        <field name="model">petty.cash</field>
+        <field name="arch" type="xml">
+            <tree string="Petty Cash">
+                <field name="petty_name" />
+                <field name="journal_id" />
+                <field name="account_id" />
+                <field name="remark" />
+                <field name="date" />
+                <field name="max_balance" />
+                <field name="balance" />
+            </tree>
+        </field>
+    </record>
+    <record id="action_petty_cash" model="ir.actions.act_window">
+        <field name="name">Petty Cash</field>
+        <field name="res_model">petty.cash</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="petty_cash_view_tree"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create Petty Cash
+            </p>
+            <p>
+                Create Petty Cash
+            </p>
+        </field>
+    </record>
+
+    <record id="petty_cash_expense_view_form" model="ir.ui.view">
+        <field name="name">petty.cash.expense.view.form</field>
+        <field name="model">petty.cash.expense</field>
+        <field name="arch" type="xml">
+            <form string="Petty Cash">
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object" attrs="{'invisible': [('state', 'not in', ['draft','reject','cancel'])]}"/>
+                    <button name="action_reject" groups="petty_cash.group_petty_cash_manager" string="Reject" type="object" attrs="{'invisible': [('state','not in', ['process','cancel'])]}"/>
+                    <button name="action_approve" groups="petty_cash.group_petty_cash_manager" string="Approve" type="object" attrs="{'invisible': [('state', '!=', 'process')]}"/>
+                    <button name="action_cancel" string="Cancel" type="object" attrs="{'invisible': [('state','in', ['reject','draft','cancel'])]}"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,process,approve,reject,cancel"/>
+                </header>
+                <sheet>
+
+                    <group>
+                        <group>
+                            <field name="petty_cash_id" options="{'no_create': True}"  attrs="{'readonly': [('state','in',['process','approve'])]}"/>
+                            <field name="company_id"  invisible="True"/>
+                            <field name="expense_name" readonly="True" />
+                            <field name="move_id" readonly="True"/>
+                            <field name="amount" attrs="{'readonly': [('state','in',['process','approve'])]}"/>
+                        </group>
+                        <group>
+                            <field name="user_id" readonly="True" />
+                            <field name="employee_id" attrs="{'readonly': [('state','in',['process','approve'])]}"/>
+                            <field name="date" attrs="{'readonly': [('state','in',['process','approve'])]}"/>
+                            <field name="company_id" attrs="{'readonly': [('state','in',['process','approve'])]}" />
+
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="expense" string="Expense">
+                            <field name="expense_line" attrs="{'readonly': [('state','in',['process','approve'])]}">
+                                <tree editable="bottom" string="Expense Line" create="1" delete="1" default_order="name DESC">
+                                    <field name="is_compute_tax" invisible="1" />
+                                    <field name="product_id" />
+                                    <field name="name" />
+                                    <field name="account_id" />
+                                    <field name="product_uom_qty" />
+                                    <field name="price_unit" />
+                                    <field name="tax_id" widget="many2many_tags" options="{'no_create': True}" context="{'search_view_ref': 'account.account_tax_view_search'}" domain="[('type_tax_use','=','purchase'), ('company_id','=',parent.company_id)]" />
+                                    <field name="analytic_account_id" options="{'no_quick_create':True,'no_create_edit':True}"/>
+                                    <field name="analytic_tag_ids" string="Tag Analytic" options="{'no_quick_create':True,'no_create_edit':True}" widget="many2many_tags"/>
+                                    <field name="price_tax" />
+                                    <field name="price_subtotal" />
+                                    <field name="price_total" />
+                                </tree>
+                            </field>
+                        </page>
+                        <page name="tax_line" string="Vat">
+                            <field name="tax_line" attrs="{'readonly': [('state','in',['process','approve'])]}">
+                                <tree editable="bottom" string="Vat Line" create="1" delete="1">
+                                     <field name="invoice_ref" />
+                                    <field name="date_invoice" />
+                                    <field name="partner_id" />
+                                    <field name="tax_id" />
+                                    <field name="account_id" />
+                                    <field name="tax_base_amount" />
+                                    <field name="balance" />
+                                    <field name="tax_repartition_line_id" invisible="1"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page name="wht_line" string="Withholding Tax">
+                             <field name="wht_line" attrs="{'readonly': [('state','in',['process','approve'])]}">
+                             <tree string="WHT Line" create="1" delete="1">
+                                    <field name="income_tax_form" />
+                                    <field name="name" />
+                                    <field name="date" />
+                                    <field name="supplier_partner_id" />
+                                      <field name="state" />
+                                      <field name="base_amount" />
+                                      <field name="tax_amount" />
+                                </tree>
+                             </field>
+                        </page>
+
+                    </notebook>
+                    <group name="note_group" col="6" class="mt-2 mt-md-0">
+                        <group colspan="4">
+                            <field name="note" nolabel="1" placeholder="Note..."/>
+                        </group>
+                        <group class="oe_subtotal_footer oe_right" colspan="2" name="sale_total">
+                            <field name="amount_untaxed" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+                            <field name="amount_tax" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+                            <field name="amount_wht" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+                            <field name="amount_total" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+                            <div class="oe_subtotal_footer_separator oe_inline o_td_label">
+                                <label for="amount_payment" />
+                            </div>
+                            <field name="amount_payment" nolabel="1" class="oe_subtotal_footer_separator" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+                        </group>
+                        <div class="oe_clear"/>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="petty_cash_expense_view_tree" model="ir.ui.view">
+        <field name="name">petty.cash.expense.view.tree</field>
+        <field name="model">petty.cash.expense</field>
+        <field name="arch" type="xml">
+            <tree string="Petty Cash">
+                <field name="petty_cash_id" />
+                <field name="expense_name" />
+                <field name="user_id" />
+                <field name="date" />
+                <field name="amount_total"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_petty_expense_cash" model="ir.actions.act_window">
+        <field name="name">Petty Cash Expense</field>
+        <field name="res_model">petty.cash.expense</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="petty_cash_expense_view_tree"/>
+        <field name="domain">[('user_id','=',uid)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create Petty Cash expense
+            </p>
+            <p>
+                Create Petty Cash expense
+            </p>
+        </field>
+    </record>
+    <record id="action_petty_expense_to_approve_cash" model="ir.actions.act_window">
+        <field name="name">Expense To Approve</field>
+        <field name="res_model">petty.cash.expense</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="petty_cash_expense_view_tree"/>
+         <field name="domain">[('state','=','process')]</field>
+        
+    </record>
+       <record id="action_petty_expense_all_cash" model="ir.actions.act_window">
+        <field name="name">All Petty Cash Expense</field>
+        <field name="res_model">petty.cash.expense</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="petty_cash_expense_view_tree"/>
+         <field name="domain"></field>
+        
+    </record>
+    <menuitem id="account_petty_cash_main_menu" name="Petty Cash" sequence="10" parent="account.menu_finance" />
+
+    <menuitem id="account_petty_cash_menu" name="Petty Cash" action="action_petty_cash" parent="account_petty_cash_main_menu" sequence="10"/>
+
+    <menuitem id="account_petty_cash_expense_menu" name="Petty Cash Expense" action="action_petty_expense_cash" parent="account_petty_cash_main_menu" sequence="20"/>
+    <menuitem id="account_petty_cash_expense_to_approve_menu" name="Expense to Approve" action="action_petty_expense_to_approve_cash" parent="account_petty_cash_main_menu" groups="petty_cash.group_petty_cash_manager" sequence="30"/>
+         <menuitem id="account_petty_cash_expense_manager_menu" name="All Petty Cash Expense" action="action_petty_expense_all_cash" parent="account_petty_cash_main_menu" groups="petty_cash.group_petty_cash_manager" sequence="40"/>
+
+       <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.petty.cash</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="40"/>
+        <field name="inherit_id" ref="account_config.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='default_account_setting_container']" position="after">
+
+
+                <div class="row mt16 o_settings_container" name="default_petty_cash_container">
+                    <div class="col-12 col-lg-6 o_setting_box" id="petty_cash_setting">
+                        <div class="o_setting_left_pane"/>
+                        <div class="o_setting_right_pane">
+                            <span class="o_form_label">Petty Cash setting</span>
+                            <span class="fa fa-lg fa-building-o" title="Values set here are company-specific." aria-label="Values set here are company-specific." groups="base.group_multi_company" role="img"/>
+                            <div class="text-muted">
+                                        setting petty cash
+                            </div>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="petty_journal_id" class="col-lg-3 o_light_label" />
+                                    <field name="petty_journal_id" options="{'no_create_edit': True, 'no_open': True}" context="{'active_test': False}"/>
+                                </div>
+                            </div>
+                             <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="petty_account_id" class="col-lg-3 o_light_label" />
+                                    <field name="petty_account_id" options="{'no_create_edit': True, 'no_open': True}" context="{'active_test': False}"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </xpath>
+    </field>
+</record>
+</odoo>

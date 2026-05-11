@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit Sale Order Form View -->
+    <record id="view_order_form_inherit_reservation" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.reservation</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/group" position="after">
+                <group string="ข้อมูลการจอง">
+                    <field name="is_reservation_quotation" string="ใบเสนอราคาแบบจอง"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

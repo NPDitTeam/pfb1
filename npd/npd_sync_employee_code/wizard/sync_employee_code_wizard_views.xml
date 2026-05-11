@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Wizard Form View -->
+    <record id="view_sync_employee_code_wizard_form" model="ir.ui.view">
+        <field name="name">sync.employee.code.wizard.form</field>
+        <field name="model">sync.employee.code.wizard</field>
+        <field name="arch" type="xml">
+            <form string="อัพเดทรหัสพนักงาน">
+                <group attrs="{'invisible': [('state', '=', 'done')]}">
+                    <group>
+                        <field name="state" invisible="1"/>
+                        <field name="sync_type" widget="radio"/>
+                        <field name="branch_id"
+                               attrs="{'invisible': [('sync_type', '!=', 'branch')], 'required': [('sync_type', '=', 'branch')]}"
+                               options="{'no_create': True}"/>
+                    </group>
+                </group>
+                <group attrs="{'invisible': [('state', '!=', 'done')]}">
+                    <field name="result_text" nolabel="1" colspan="2"/>
+                </group>
+                <footer>
+                    <button name="action_sync" string="อัพเดทรหัสพนักงาน"
+                            type="object" class="btn-primary"
+                            attrs="{'invisible': [('state', '=', 'done')]}"/>
+                    <button string="ปิด" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open wizard -->
+    <record id="action_sync_employee_code_wizard" model="ir.actions.act_window">
+        <field name="name">อัพเดทรหัสพนักงาน</field>
+        <field name="res_model">sync.employee.code.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<odoo>
+    <data>
+    
+        
+        
+       <record id="view_budget_post_form_inherit_bi_branch_budget_com" model="ir.ui.view">
+            <field name="name">view.budget.post.form.inherit.bi.branch.budget.com</field>
+            <field name="model">account.budget.post</field>
+            <field name="inherit_id" ref="bi_account_budget.view_budget_post_form"/>
+            <field name="arch" type="xml">
+                 <xpath expr="//field[@name='name']" position="after">
+                     <field name="branch_id"/>
+                 </xpath>
+            </field>
+        </record>
+        
+        
+        
+        
+        <record id="view_budget_post_tree_inherit_bi_branch_budget_com" model="ir.ui.view">
+            <field name="name">view.budget.post.tree.inherit.bi.branch.budget.com</field>
+            <field name="model">account.budget.post</field>
+            <field name="inherit_id" ref="bi_account_budget.view_budget_post_tree"/>
+            <field name="arch" type="xml">
+                 <xpath expr="//field[@name='name']" position="after">
+                     <field name="branch_id"/>
+                 </xpath>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

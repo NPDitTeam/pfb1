@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_res_company_form_view_medical" model="ir.ui.view">
+        <field name="name">sh.res.company.form.view</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//page[1]" position="after">
+                <page string="Medical Examination" invisible="1">
+                    <field name="sh_expired_medical_type_ids">
+                        <form string="Expired Employee Medical Examination">
+                            <group>
+                                <group>
+                                    <field name="employee_id" />
+                                    <field name="sh_description" />
+                                    <field name="sh_medical_type_id" />
+                                    <field name="sh_issue_date" />
+                                </group>
+                                <group>
+                                    <field name="sh_expiry_month" />
+                                    <field name="sh_expiry_date" />
+                                </group>
+                            </group>
+                        </form>
+                        <tree editable="bottom">
+                            <field name="employee_id" />
+                            <field name="sh_description" />
+                            <field name="sh_medical_type_id" />
+                            <field name="sh_issue_date" />
+                            <field name="sh_expiry_month" />
+                            <field name="sh_expiry_date" />
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

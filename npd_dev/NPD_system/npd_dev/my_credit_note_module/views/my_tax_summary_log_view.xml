@@ -1,0 +1,58 @@
+<odoo>
+<!--  &lt;!&ndash; Tree View &ndash;&gt;-->
+<!--  <record id="view_my_tax_summary_log_tree" model="ir.ui.view">-->
+<!--    <field name="name">my.tax.summary.log.tree</field>-->
+<!--    <field name="model">my.tax.summary.log</field>-->
+<!--    <field name="arch" type="xml">-->
+<!--      <tree string="Tax Summary Logs">-->
+<!--        <field name="move_id"/>-->
+<!--        <field name="move_line_id"/>-->
+<!--        <field name="tax_id"/>-->
+<!--        <field name="partner_id"/>-->
+<!--        <field name="tax_base"/>-->
+<!--        <field name="tax_amount"/>-->
+<!--        <field name="currency_id"/>-->
+<!--        <field name="create_date"/>-->
+<!--        <field name="write_date"/>-->
+<!--      </tree>-->
+<!--    </field>-->
+<!--  </record>-->
+
+<!--  &lt;!&ndash; Form View &ndash;&gt;-->
+<!--  <record id="view_my_tax_summary_log_form" model="ir.ui.view">-->
+<!--    <field name="name">my.tax.summary.log.form</field>-->
+<!--    <field name="model">my.tax.summary.log</field>-->
+<!--    <field name="arch" type="xml">-->
+<!--      <form string="Tax Summary Log">-->
+<!--        <sheet>-->
+<!--          <group>-->
+<!--            <field name="move_id"/>-->
+<!--            <field name="move_line_id"/>-->
+<!--            <field name="tax_id"/>-->
+<!--            <field name="partner_id"/>-->
+<!--            <field name="tax_base"/>-->
+<!--            <field name="tax_amount"/>-->
+<!--            <field name="currency_id"/>-->
+<!--          </group>-->
+<!--          <group string="Metadata">-->
+<!--            <field name="create_date" readonly="1"/>-->
+<!--            <field name="write_date" readonly="1"/>-->
+<!--          </group>-->
+<!--        </sheet>-->
+<!--      </form>-->
+<!--    </field>-->
+<!--  </record>-->
+
+<!--  &lt;!&ndash; Action &ndash;&gt;-->
+<!--  <record id="action_my_tax_summary_log" model="ir.actions.act_window">-->
+<!--    <field name="name">Tax Summary Log</field>-->
+<!--    <field name="res_model">my.tax.summary.log</field>-->
+<!--    <field name="view_mode">tree,form</field>-->
+<!--  </record>-->
+
+<!--  &lt;!&ndash; Menu &ndash;&gt;-->
+<!--  <menuitem id="menu_tax_summary_log_root"-->
+<!--            name="Tax Summary Log"-->
+<!--            parent="base.menu_administration"-->
+<!--            action="action_my_tax_summary_log"/>-->
+</odoo>

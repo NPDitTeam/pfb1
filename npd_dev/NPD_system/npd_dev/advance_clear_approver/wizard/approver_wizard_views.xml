@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Approver Wizard Form View -->
+    <record id="view_advance_clear_approver_wizard_form" model="ir.ui.view">
+        <field name="name">advance.clear.approver.wizard.form</field>
+        <field name="model">advance.clear.approver.wizard</field>
+        <field name="arch" type="xml">
+            <form string="ยืนยันผู้ตรวจสอบ">
+                <group>
+                    <field name="advance_clear_id" invisible="1"/>
+                    <field name="approver_note" placeholder="กรอกหมายเหตุ (ถ้ามี)..."/>
+                </group>
+                <footer>
+                    <button name="action_confirm_approver" 
+                            string="ยืนยัน" 
+                            type="object" 
+                            class="btn-primary"/>
+                    <button string="ยกเลิก" 
+                            class="btn-secondary" 
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

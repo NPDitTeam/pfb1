@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- View withholding.tax.cert form -->
+    <record id="view_withholding_tax_cert_form_source_document" model="ir.ui.view">
+        <field name="name">view.withholding.tax.cert.form</field>
+        <field name="model">withholding.tax.cert</field>
+        <field name="inherit_id" ref="l10n_th_withholding_tax_cert.view_withholding_tax_cert_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='date']" position="after">
+                <field name="source_document" />
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

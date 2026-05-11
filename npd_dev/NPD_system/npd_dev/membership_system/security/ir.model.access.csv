@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_membership_member,user_access_membership_member,model_membership_member,base.group_user,1,1,1,1
+access_promotion_promotion_user,access.promotion.promotion.user,model_promotion_promotion,base.group_user,1,1,1,1
+access_payment_confirmation_user,access.payment.confirmation.user,model_payment_confirmation,base.group_user,1,1,1,1
+access_score_dashboard_user,access.score.dashboard.user,model_score_dashboard,base.group_user,1,1,1,1
+access_activity_report_user,access.activity.report.user,model_activity_report,base.group_user,1,1,1,1
+access_reward_redemption_user,access.reward.redemption.user,model_reward_redemption,base.group_user,1,1,1,1

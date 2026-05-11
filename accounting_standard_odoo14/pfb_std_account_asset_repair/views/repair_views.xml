@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="inherit_view_asset_repair_view_form" model="ir.ui.view">
+            <field name="name">account.asset.form</field>
+            <field name="model">account.asset</field>
+            <field name="inherit_id" ref="account_asset_management.account_asset_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                    <button
+                            name="open_asset_repair"
+                            string="Repair"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-bars"
+                    />
+                </xpath>
+            </field>
+        </record>
+
+
+        <record id="view_repair_order_tree" model="ir.ui.view">
+            <field name="name">asset.repair.tree</field>
+            <field name="model">asset.repair.order</field>
+            <field name="arch" type="xml">
+                <tree string="Repairs order" multi_edit="1" sample="1">
+                    <field name="name"/>
+                    <field name="account_asset_id" readonly="1" optional="show"/>
+                    <field name="user_id" optional="hide" widget='many2one_avatar_user'/>
+                    <field name="guarantee_limit" optional="show"/>
+                    <field name="company_id" groups="base.group_multi_company" readonly="1" optional="show"/>
+                    <field name="state" optional="show" widget='badge' decoration-success="state == 'done'"
+                           decoration-info="state not in ('done', 'cancel')"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_repair_order_form" model="ir.ui.view">
+            <field name="name">asset.repair.form</field>
+            <field name="model">asset.repair.order</field>
+            <field name="arch" type="xml">
+                <form string="Repair Order">
+                    <header>
+                        <button name="action_validate"
+                                states="draft"
+                                type="object"
+                                string="Confirm Repair"
+                                class="oe_highlight"/>
+
+                        <button name="action_repair_start"
+                                states="confirmed"
+                                type="object"
+                                string="Request approval"
+                                class="oe_highlight"/>
+
+                        <button name="action_repair_end"
+                                groups="pfb_std_asset_menu.group_asset_manager"
+                                states="under_repair"
+                                type="object" string="Done"
+                                class="oe_highlight"/>
+
+                        <button name="action_repair_cancel_draft" states="cancel" string="Set to Draft" type="object"/>
+                        <button name="action_repair_cancel" string="Cancel Repair" type="object"
+                                attrs="{'invisible': [('state','=', 'cancel',)]}"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done"/>
+                    </header>
+                    <sheet string="Repairs order">
+                        <div class="oe_button_box" name="button_box">
+                            <!-- <field name="invoice_id" invisible="1"/>-->
+                        </div>
+                        <label for="name"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                        <group>
+                            <group>
+                                <field name="account_asset_id"/>
+                                <field name="code"/>
+                                <field name="user_id" domain="[('share', '=', False)]"/>
+                                <field name="user_id_repair" domain="[('share', '=', False)]"/>
+                                <field name="user_id_approve" readonly="1"/>
+                                <field name="approved_date"/>
+                            </group>
+                            <group>
+                                <field name="company_id" groups="base.group_multi_company"
+                                       options="{'no_create': True}"/>
+                                <field name="guarantee_limit"/>
+                                <field name="remark"/>
+                                <field name="date_of_completion"/>
+                                <field name="currency_id" invisible="1"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Parts" name="parts">
+                                <field name="operations">
+                                    <form string="Operations">
+                                        <group>
+                                            <group>
+                                                <field name="company_id" invisible="1" force_save="1"/>
+                                                <field name="product_id"/>
+                                                <field name="name"/>
+                                                <field name="product_uom_category_id" invisible="1"/>
+                                                <label for="product_uom_qty"/>
+                                                <div class="o_row">
+                                                    <field name="product_uom_qty"/>
+                                                    <field name="product_uom" groups="uom.group_uom"/>
+                                                </div>
+                                                <field name="price_unit"/>
+                                                <field name="tax_id" widget="many2many_tags"/>
+<!--                                                <field name="invoiced" invisible="1"/>-->
+                                                <field name="price_subtotal" widget="monetary" invisible="1"/>
+                                                <field name="currency_id" invisible="1"/>
+                                            </group>
+                                            <group>
+                                                <field name="lot_id"
+                                                       context="{'default_product_id': product_id, 'default_company_id': company_id}"
+                                                       groups="stock.group_production_lot"/>
+                                            </group>
+                                        </group>
+                                    </form>
+                                    <tree string="Operations" editable="bottom">
+                                        <field name="company_id" invisible="1" force_save="1"/>
+                                        <field name="product_id"/>
+                                        <field name='name' optional="show"/>
+                                        <field name="product_uom_category_id" invisible="1"/>
+                                        <field name="lot_id"
+                                               context="{'default_product_id': product_id, 'default_company_id': company_id}"
+                                               groups="stock.group_production_lot"/>
+                                        <field name="product_uom_qty" string="Quantity"/>
+                                        <field name="product_uom" string="UoM" groups="uom.group_uom" optional="show"/>
+                                        <field name="price_unit"/>
+                                        <field name="tax_id" widget="many2many_tags" optional="show"/>
+                                        <field name="price_subtotal" widget="monetary"/>
+                                        <field name="currency_id" invisible="1"/>
+                                    </tree>
+                                </field>
+                                <group class="oe_subtotal_footer oe_right">
+                                    <field name="amount_untaxed" sum="Untaxed amount"/>
+                                    <field name="amount_tax"/>
+                                    <div class="oe_subtotal_footer_separator oe_inline">
+                                        <label for="amount_total"/>
+                                        <button name="button_dummy"
+                                                states="draft" string="(update)" type="object"
+                                                class="oe_edit_only oe_link"/>
+                                    </div>
+                                    <field name="amount_total" nolabel="1" sum="Total amount"
+                                           class="oe_subtotal_footer_separator"/>
+                                </group>
+                                <div class="oe_clear"/>
+                            </page>
+                            <page string="Notes" name="notes">
+                                <field name="internal_notes" placeholder="Add internal notes."/>
+                                
+                                <field name="reference"/>
+                                <field name="api_channel"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_repair_kanban" model="ir.ui.view">
+            <field name="name">asset.repair.kanban</field>
+            <field name="model">asset.repair.order</field>
+            <field name="arch" type="xml">
+                <kanban class="o_kanban_mobile" sample="1">
+                    <field name="company_id" invisible="1"/>
+                    <field name="name"/>
+                    <field name="account_asset_id"/>
+                    <field name="guarantee_limit"/>
+                    <field name="date_of_completion"/>
+                    <field name="state"/>
+                    <field name="activity_state"/>
+                    <progressbar field="activity_state"
+                                 colors='{"planned": "success", "today": "warning", "overdue": "danger"}'/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div t-attf-class="oe_kanban_card oe_kanban_global_click">
+                                <div class="row mb4">
+                                    <div class="col-6">
+                                        <strong>
+                                            <span>
+                                                <t t-esc="record.name.value"/>
+                                            </span>
+                                        </strong>
+                                    </div>
+                                    <div class="col-6 text-right">
+                                        <field name="state" widget="label_selection"
+                                               options="{'classes': {'draft': 'info', 'cancel': 'danger', 'done': 'success', 'under_repair': 'secondary'}}"/>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6 text-muted">
+                                        <span>
+                                            <t t-esc="record.account_asset_id.value"/>
+                                        </span>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="float-right">
+                                            <field name="user_id"/>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <!--        <record id="view_repair_order_form_filter" model="ir.ui.view">-->
+        <!--            <field name="name">asset.repair.select</field>-->
+        <!--            <field name="model">asset.repair.order</field>-->
+        <!--            <field name="arch" type="xml">-->
+        <!--                <search string="Search Repair Orders">-->
+        <!--                    <field name="name" string="Repair Order"-->
+        <!--                           filter_domain="['|', ('name', 'ilike', self), ('account_asset_id', 'ilike', self)]"/>-->
+        <!--                    <field name="account_asset_id"/>-->
+        <!--&lt;!&ndash;                    <field name="partner_id" filter_domain="[('partner_id', 'child_of', self)]"/>&ndash;&gt;-->
+        <!--                    <filter string="Quotations" name="quotations" domain="[('state', '=', 'draft')]"/>-->
+        <!--                    <filter string="Confirmed" domain="[('state', '=', 'confirmed')]" name="current"/>-->
+        <!--                    <filter string="Ready To Repair" name="ready_to_repair" domain="[('state', '=', 'ready')]"/>-->
+        <!--                    <separator/>-->
+        <!--                    <filter string="Invoiced" name="invoiced" domain="[('invoiced', '=', True)]"/>-->
+        <!--                    <separator/>-->
+        <!--                    <filter name="filter_create_date" date="create_date"/>-->
+        <!--                    <separator/>-->
+        <!--                    <filter invisible="1" string="Late Activities" name="activities_overdue"-->
+        <!--                            domain="[('activity_ids.date_deadline', '&lt;', context_today().strftime('%Y-%m-%d'))]"-->
+        <!--                            help="Show all records which has next action date is before today"/>-->
+        <!--                    <filter invisible="1" string="Today Activities" name="activities_today"-->
+        <!--                            domain="[('activity_ids.date_deadline', '=', context_today().strftime('%Y-%m-%d'))]"/>-->
+        <!--                    <filter invisible="1" string="Future Activities" name="activities_upcoming_all"-->
+        <!--                            domain="[('activity_ids.date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))]"/>-->
+        <!--                    <group expand="0" string="Group By">-->
+        <!--&lt;!&ndash;                        <filter string="Customer" name="partner" domain="[]" context="{'group_by': 'partner_id'}"/>&ndash;&gt;-->
+        <!--&lt;!&ndash;                        <filter string="Product" name="product" domain="[]" context="{'group_by': 'account_asset_id'}"/>&ndash;&gt;-->
+        <!--                        <filter string="Status" name="status" domain="[]" context="{'group_by': 'state'}"/>-->
+        <!--                        <filter string="Warranty Expiration" name="guarantee_limit" domain="[]"-->
+        <!--                                context="{'group_by': 'guarantee_limit'}"/>-->
+        <!--                        <filter string="Company" name="company" domain="[]" context="{'group_by': 'company_id'}"-->
+        <!--                                groups="base.group_multi_company"/>-->
+        <!--                    </group>-->
+        <!--                </search>-->
+        <!--            </field>-->
+        <!--        </record>-->
+
+        <record id="view_repair_graph" model="ir.ui.view">
+            <field name="name">asset.repair.graph</field>
+            <field name="model">asset.repair.order</field>
+            <field name="arch" type="xml">
+                <graph string="Repair Orders" sample="1">
+                    <field name="create_date"/>
+                    <field name="account_asset_id"/>
+                </graph>
+            </field>
+        </record>
+
+        <record id="view_repair_pivot" model="ir.ui.view">
+            <field name="name">asset.repair.pivot</field>
+            <field name="model">asset.repair.order</field>
+            <field name="arch" type="xml">
+                <pivot string="Repair Orders" sample="1">
+                    <field name="create_date" type="row"/>
+                    <field name="account_asset_id" type="col"/>
+                </pivot>
+            </field>
+        </record>
+
+        <record id="action_repair_order_tree" model="ir.actions.act_window">
+            <field name="name">Repair Orders</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">asset.repair.order</field>
+            <field name="view_mode">tree,kanban,graph,pivot,form</field>
+            <!--            <field name="search_view_id" ref="view_repair_order_form_filter"/>-->
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No repair order found. Let's create one!
+                </p>
+                <p>
+                    In a repair order, you can detail the components you remove,
+                    add or replace and record the time you spent on the different
+                    operations.
+                </p>
+            </field>
+        </record>
+
+        <record id="action_repair_order_graph" model="ir.actions.act_window">
+            <field name="name">Repair Orders</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">asset.repair.order.report</field>
+            <field name="view_mode">pivot</field>
+<!--             <field name="view_id" ref="view_repair_line_pivot"/>-->
+        </record>
+
+        <menuitem id="repair_menu_reporting"
+                  parent="pfb_std_asset_menu.account_asset_report_menu"
+                  groups="pfb_std_asset_menu.group_asset_manager"/>
+
+        <menuitem id="repair_menu"
+                  name="Asset Repair"
+                  parent="pfb_std_asset_menu.account_asset_request_menu"
+                  action="action_repair_order_tree"
+                  sequence="20"
+        />
+
+        <menuitem id="repair_report_menu"
+                  name="Asset Repairs"
+                  parent="pfb_std_asset_menu.account_asset_report_menu"
+                  action="action_repair_order_graph"
+                  sequence="35"
+        />
+
+
+    </data>
+</odoo>

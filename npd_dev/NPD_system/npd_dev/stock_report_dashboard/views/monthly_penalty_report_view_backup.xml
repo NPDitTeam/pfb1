@@ -1,0 +1,81 @@
+<odoo>
+    <data>
+
+        <!-- ✅ Tree View -->
+        <record id="view_tree_monthly_penalty_report" model="ir.ui.view">
+    <field name="name">monthly.penalty.report.tree</field>
+    <field name="model">monthly.penalty.report</field>
+    <field name="arch" type="xml">
+        <tree string="สรุปรายงานประจำเดือน">
+            <field name="report_date"/>
+            <field name="rental_amount" sum="Total ค่าเช่าสินค้า"/>
+            <field name="vat" sum="Total VAT"/>
+            <field name="insurance" sum="Total ค่าประกัน"/>
+            <field name="lost_penalty" sum="Total ค่าปรับหาย"/>
+            <field name="damage_penalty" sum="Total ค่าปรับชำรุด"/>
+            <field name="rental_payment_amount" sum="Total รับชำระหนี้ค่าเช่า"/>
+            <field name="vat_rental_payment_amount" sum="Total VAT"/>
+            <field name="lost_payment_amount" sum="Total รับชำระหนี้ค่าปรับหาย"/>
+            <field name="damaged_payment_amount" sum="Total รับชำระหนี้ค่าปรับชำรุด"/>
+            <field name="difference" sum="Total ส่วนต่าง"/>
+            <field name="damage_penalty" sum="Total ค่าปรับชำรุด"/>
+            <field name="rental_discount" sum="Total ส่วนลดค่าเช่า"/>
+            <field name="line_discount" sum="Total ส่วนลดปรับหาย"/>
+
+            <field name="rental_unpaid_amount" sum="Total ค้างชำระค่าเช่า"/>
+            <field name="vat_rental_unpaid_amount" sum="Total ค้าง VAT"/>
+            <field name="lost_unpaid_amount" sum="Total ค้างชำระค่าปรับหาย"/>
+            <field name="damaged_unpaid_amount" sum="Total ค้างชำระค่าปรับชำรุด"/>
+
+             <field name="net_rental_fee" sum="Total ค่าเช่าสุทธิ"/>
+        </tree>
+    </field>
+</record>
+
+
+        <!-- ✅ Form View พร้อมปุ่ม -->
+        <record id="view_form_monthly_penalty_report" model="ir.ui.view">
+            <field name="name">monthly.penalty.report.form</field>
+            <field name="model">monthly.penalty.report</field>
+            <field name="arch" type="xml">
+                <form string="สรุปรายงานปรับจำเดือน">
+                    <header>
+                        <button name="generate_report"
+                                type="object"
+                                string="📊 ดึงข้อมูลใหม่"
+                                class="btn-primary"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <div class="o_form_label">กดปุ่มด้านบนเพื่อดึงข้อมูลใหม่จากใบสั่งขาย</div>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ✅ Action Window -->
+        <record id="action_monthly_penalty_report" model="ir.actions.act_window">
+            <field name="name">สรุปรายงานประจำเดือน</field>
+            <field name="res_model">monthly.penalty.report</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- ✅ Menu (ใช้ parent เดียวกับรายงานสินค้าเช่า) -->
+        <menuitem id="menu_monthly_penalty_report"
+          name="สรุปรายงานประจำเดือน"
+          parent="menu_stock_dashboard_root"
+          action="action_monthly_penalty_report"
+          sequence="13"/>
+
+
+        <!-- ✅ Server Action (ถ้าต้องการให้เรียก generate_report จากที่อื่น) -->
+        <record id="server_action_generate_monthly_penalty_report" model="ir.actions.server">
+            <field name="name">ดึงข้อมูลประจำเดือน</field>
+            <field name="model_id" ref="model_monthly_penalty_report"/>
+            <field name="state">code</field>
+            <field name="code">model.generate_report()</field>
+        </record>
+
+    </data>
+</odoo>

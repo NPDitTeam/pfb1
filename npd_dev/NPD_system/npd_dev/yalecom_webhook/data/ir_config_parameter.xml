@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Default Config -->
+        <record id="default_yalecom_config" model="yalecom.config">
+            <field name="name">Default Configuration</field>
+            <field name="is_active">True</field>
+            <field name="log_all_webhooks">True</field>
+            <field name="auto_download_recording">False</field>
+        </record>
+        
+    </data>
+</odoo>

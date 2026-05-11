@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Search View -->
+        <record id="view_search_all_receivable_report" model="ir.ui.view">
+            <field name="name">all.receivable.report.search</field>
+            <field name="model">all.receivable.report</field>
+            <field name="arch" type="xml">
+                <search string="ค้นหารายงานลูกหนี้">
+                    <field name="partner_code"/>
+                    <field name="partner_name"/>
+                    <field name="branch_name"/>
+                    <field name="partner_phone"/>
+
+                    <filter string="มียอดค้างชำระ"
+                            name="has_due"
+                            domain="[('amount_residual', '>', 0)]"/>
+
+                    <separator/>
+
+                    <group expand="0" string="จัดกลุ่มตาม">
+                        <filter string="สาขา" name="group_by_branch" context="{'group_by': 'branch_name'}"/>
+                        <filter string="ลูกค้า" name="group_by_partner" context="{'group_by': 'partner_name'}"/>
+                        <filter string="วันที่เริ่มเป็นหนี้" name="group_by_first_debt" context="{'group_by': 'first_debt_date'}"/>
+                        <filter string="วันครบกำหนดชำระ" name="group_by_last_due" context="{'group_by': 'last_due_date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Tree View -->
+        <record id="view_tree_all_receivable_report" model="ir.ui.view">
+            <field name="name">all.receivable.report.tree</field>
+            <field name="model">all.receivable.report</field>
+            <field name="arch" type="xml">
+                <tree string="รายงานลูกหนี้ทั้งหมด"
+                      decoration-danger="amount_residual > 0"
+                      default_order="partner_name">
+                    <field name="partner_code" string="รหัสลูกค้า"/>
+                    <field name="partner_name" string="ชื่อลูกค้า"/>
+                    <field name="partner_phone" string="เบอร์โทร" optional="show"/>
+                    <field name="partner_address" string="ที่อยู่" optional="hide"/>
+                    <field name="branch_name" string="สาขา"/>
+                    <field name="first_debt_date" string="วันที่เริ่มเป็นหนี้"/>
+                    <field name="last_due_date" string="วันครบกำหนดชำระ"/>
+                    <field name="rent_amount" string="ค่าเช่า" sum="รวมค่าเช่า"/>
+                    <field name="insurance_amount" string="ค่าประกัน" sum="รวมค่าประกัน"/>
+                    <field name="lost_penalty_amount" string="ค่าปรับหาย" sum="รวมค่าปรับหาย"/>
+                    <field name="damage_penalty_amount" string="ค่าปรับชำรุด" sum="รวมค่าปรับชำรุด"/>
+                    <field name="shipping_cost_amount" string="ค่าขนส่ง" sum="รวมค่าขนส่ง"/>
+                    <field name="vat_amount" string="VAT 7%" sum="รวม VAT"/>
+                    <field name="amount_total" string="ยอดรวม" sum="รวมยอดทั้งหมด"/>
+                    <field name="amount_residual" string="ยอดค้างชำระ" sum="รวมยอดค้างชำระ"/>
+                    <field name="amount_remaining" string="คงเหลือ" sum="รวมคงเหลือ"/>
+                    <field name="invoice_count" string="จำนวนใบแจ้งหนี้" sum="รวมใบแจ้งหนี้"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Pivot View -->
+        <record id="view_pivot_all_receivable_report" model="ir.ui.view">
+            <field name="name">all.receivable.report.pivot</field>
+            <field name="model">all.receivable.report</field>
+            <field name="arch" type="xml">
+                <pivot string="วิเคราะห์ลูกหนี้">
+                    <field name="branch_name" type="row"/>
+                    <field name="partner_name" type="row"/>
+                    <field name="first_debt_date" type="col" interval="month"/>
+                    <field name="rent_amount" type="measure"/>
+                    <field name="insurance_amount" type="measure"/>
+                    <field name="lost_penalty_amount" type="measure"/>
+                    <field name="damage_penalty_amount" type="measure"/>
+                    <field name="shipping_cost_amount" type="measure"/>
+                    <field name="vat_amount" type="measure"/>
+                    <field name="amount_residual" type="measure"/>
+                    <field name="amount_remaining" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+        <!-- Graph View -->
+        <record id="view_graph_all_receivable_report" model="ir.ui.view">
+            <field name="name">all.receivable.report.graph</field>
+            <field name="model">all.receivable.report</field>
+            <field name="arch" type="xml">
+                <graph string="กราฟลูกหนี้" type="bar">
+                    <field name="partner_name"/>
+                    <field name="amount_residual" type="measure"/>
+                </graph>
+            </field>
+        </record>
+
+        <!-- Action Window สำหรับดูรายงาน -->
+        <record id="action_view_all_receivable_report" model="ir.actions.act_window">
+            <field name="name">ดูรายงานลูกหนี้ทั้งหมด</field>
+            <field name="res_model">all.receivable.report</field>
+            <field name="view_mode">tree,pivot,graph</field>
+            <field name="search_view_id" ref="view_search_all_receivable_report"/>
+            <field name="context">{'search_default_has_due': 1}</field>
+        </record>
+    </data>
+</odoo>

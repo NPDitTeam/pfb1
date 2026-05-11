@@ -1,0 +1,538 @@
+<odoo>
+    <!-- Header -->
+    <template id="external_layout_standard">
+        <div t-attf-class="header">
+            <style>
+                .table {
+                margin-bottom: 0rem;
+
+                }
+                table, td, th {
+                border: 1px solid white;
+                border-top: 2px solid white;
+                table-layout: fixed; width: 100%;
+                }
+                .border_column260{
+                color: #090909;
+                width:260px;
+
+                padding-left: 20px;
+                }
+                .border_column410{
+                color: #090909;
+                width:410px;
+                }
+                .border_column130{
+                color: #090909;
+                width:130px;
+                }
+                .border_column130{
+                color: #090909;
+                width:130px;
+                font-size:16px;
+                }
+                .border_column100 {
+                color: #090909;
+                width:100px;
+                }
+                .border_column80 {
+                color: #090909;
+                width:75px;
+                }
+                .border_header {
+                border: 2px solid #000000;
+                padding: 5px;
+                border-radius: 15px;
+                background-color: gainsboro;
+
+                }
+                .red{
+                color: red;
+                padding-left 10px;
+                }
+                .margin_left{
+                margin-right: 10px;
+                margin-left: 10px;
+                }
+            </style>
+            <!--              table-bordered -->
+            <table class="table table-sm o_main_table">
+                <tr>
+                    <td class="text-center border_column80">
+                        <img t-if="company.logo" t-att-src="image_data_uri(company.logo)"
+                             style="max-height: 120px; padding-bottom:10px;"
+                             alt="Logo"/>
+                    </td>
+                    <td class="border_column410">
+                        <h4>
+                            <b>
+                                <span t-field="company.partner_id.name" style="font-size: 20px;"/>
+                            </b>
+                        </h4>
+                        <span style="font-size: 14px;">Tax Branch: Head Office Tax ID :
+                            <span t-field="company.partner_id.vat"/>
+                        </span>
+                        <br/>
+                        <span style="font-size: 14px;">Address:</span>
+                        <span t-esc="company.partner_id.street"/>
+                        <span t-esc="company.partner_id.street2"/>
+                        <span t-esc="company.partner_id.city"/>
+                        <span t-esc="company.partner_id.state_id.name"/>
+                        <span t-esc="company.partner_id.zip"/>
+                        <br/>
+                        <span style="font-size: 14px;">Phone:<span style="color: white;">__</span><span t-esc="company.partner_id.phone"/><span style="color: white;">
+                            __</span>Fax:<span style="color: white;">__</span>
+                        </span>
+                        <br/>
+                        <span style="font-size: 14px;">Email:<span style="color: white;">__</span><span t-esc="company.partner_id.email"/><span style="color: white;">
+                            __</span>Webstie:
+                            <span style="color: white;">__</span>
+                            <span t-esc="company.partner_id.website"/>
+                        </span>
+                    </td>
+                    <td class="text-left border_column130">
+                        <p class="border_header text-center">
+                            <span style="color: gainsboro;">_</span>
+                            <br/>
+                            DELIVERY PRODUCT
+                            <br/>
+                            ใบส่งสินค้า
+                            <br/>
+                            <span style="color: gainsboro;">__</span>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+            <table style="font-size: 14px;">
+                <tr>
+                    <td class="border_column80">
+                        <span class="text-left">Document No:</span>
+                    </td>
+                    <td colspan="2" class="border_column410">
+                        <span class="text-left" t-field="o.name"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="text-left">Document Date:</span>
+                    </td>
+                    <td colspan="2">
+                        <span t-field="o.date" t-options='{"widget": "date"}'/>
+                    </td>
+
+                </tr>
+                <tr>
+                    <td>
+                        <span class="text-left">Partner Name:</span>
+                    </td>
+                    <td colspan="2">
+                        <span class="text-left" t-field="o.partner_id.name"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="text-left">Contact Name:</span>
+                    </td>
+                    <td colspan="2">
+                        <t t-if="o.partner_id">
+                            <t t-if="o.partner_id.child_ids">
+                                <t t-foreach="o.partner_id.child_ids[0]" t-as="contact">
+                                    <span class="text-left" t-field="contact.name"/>
+                                </t>
+                            </t>
+                        </t>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="text-left">Partner Address:</span>
+                    </td>
+                    <td colspan="2">
+                        <span t-field="o.partner_id.street"/>
+                        <span t-field="o.partner_id.street2"/>
+                        <span t-field="o.partner_id.city"/>
+                        <span t-field="o.partner_id.state_id.name"/>
+                        <span t-field="o.partner_id.zip"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="text-left">Source Document:</span>
+                    </td>
+                    <td colspan="2">
+                        <span class="text-left" t-field="o.origin"/>
+                        <span style="color: white;">__</span>
+                        <span class="text-left">Sale Person:</span>
+                        <span style="color: white;">__</span>
+                        <t t-if="o.origin">
+                            <span t-esc="o.get_sale_person(o.origin)"/>
+                        </t>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="text-left">Document Ref:</span>
+                    </td>
+                    <td>
+                        <span class="text-left" t-field="o.delivery_note"/>
+                    </td>
+                    <td class="text-right">
+                        <div t-if="report_type == 'pdf'" class="text-right">
+                            Print Date :
+                            <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%d-%m-%Y %H:%M:%S')"/>
+                            Page:
+                            <span class="page"/>
+                            of
+                            <span class="topage"/>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div t-attf-class="article o_report_layout_standard o_company_#{company.id}_layout"
+             t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <t t-raw="0"/>
+        </div>
+        <div t-attf-class="footer  o_company_#{company.id}_layout">
+            <style>
+                .table {
+                margin-bottom: 0rem;
+                }
+                table, td, th {
+                border: 1px solid white;
+                border-top: 2px solid white;
+                table-layout: fixed; width: 100%;
+                }
+                .table_asset {
+                border-collapse: separate;
+                }
+                .border_column120 {
+                color: #090909;
+                width:120px;
+                }
+                .border_column100 {
+                color: #090909;
+                width:100px;
+                }
+                .border_column150 {
+                color: #090909;
+                width:80px;
+                }
+                .border_column70 {
+                color: #090909;
+                width:70px;
+                }
+                .border_column230 {
+                color: #090909;
+                border-bottom: 1px solid #090909;
+                width:230px;
+                }
+                .border_column50 {
+                color: #090909;
+                border-bottom: 1px solid #090909;
+                width:50px;
+                }
+                .border_column600 {
+                color: #090909;
+                width:600px;
+                }
+                .border_column380 {
+                color: #090909;
+                width:380px;
+                }
+
+                .rotate {
+                text-align: center;
+                white-space: nowrap;
+                vertical-align: middle;
+                width: 1em;
+                background-color: gainsboro;
+                }
+                .rotate div {
+                -moz-transform: rotate(-90.0deg); /* FF3.5+ */
+                -o-transform: rotate(-90.0deg); /* Opera 10.5 */
+                -webkit-transform: rotate(-90.0deg); /* Saf3.1+, Chrome */
+                filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=0.083); /* IE6,IE7 */
+                -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=0.083)"; /* IE8 */
+
+                table.table-bordered{
+                border: 1px solid #000000 !important;
+                }
+
+            </style>
+
+            <div class="last-page">
+                <table class="table">
+                    <tr>
+                        <td class="text-left border_column100">
+                            <b>Grand Total</b>
+                        </td>
+                        <td class="text-center border_column380" colspan="3">
+
+                        </td>
+                        <td class="text-right border_column120">
+                        </td>
+                        <td class="text-right border_column120">
+                            <span t-esc="'{:,.2f}'.format(sum_qty)"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <table class="table  text-left">
+                <tr>
+                    <td class="border_column600" colspan="3">
+                        Remark :
+                        <t t-esc="o.note"/>
+                    </td>
+                </tr>
+            </table>
+
+            <table class="table table-bordered text-center">
+                <tr>
+                    <td class="rotate border_column120" rowspan="3">
+                        <p style="color: gainsboro;">----</p>
+                        <br/>
+                        <br/>
+                        <div>
+                            <span>posted</span>
+                        </div>
+                        <p style="color: gainsboro;">----</p>
+                        <br/>
+                    </td>
+                    <td rowspan="3" class="border_column150">
+                        <br/>
+                        <br/>
+                        <br/>
+                        <b>ผู้จัดทำ</b>
+                        <br/>
+                        <b>_____________________________</b>
+                        <br/>
+                        <b>_____________________________</b>
+                    </td>
+                    <td rowspan="3" class="border_column150">
+                        <br/>
+                        <br/>
+                        <br/>
+                        <b>ผู้อนุมัติ</b>
+                        <br/>
+                        <b>_____________________________</b>
+                        <br/>
+                        <b>_____________________________</b>
+                    </td>
+                    <td rowspan="3" class="border_column150">
+                        <br/>
+                        <br/>
+                        <br/>
+                        <b>ผู้ส่งสินค้า</b>
+                        <br/>
+                        <b>_____________________________</b>
+                        <br/>
+                        <b>_____________________________</b>
+                    </td>
+                    <td class="rotate border_column120" rowspan="3">
+                        <p style="color: gainsboro;">----</p>
+                        <br/>
+                        <br/>
+                        <br/>
+                        <br/>
+                        <div>
+                            <span>no approval process</span>
+                        </div>
+                        <br/>
+                    </td>
+                    <td class="border_column150" style="text-overflow: ellipsis; overflow: hidden;">
+                        <span class="text-left" t-field="o.partner_id.name"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border_column150">
+                        <p style="color: #FFFFFF;">----</p>
+                        <br/>
+                        ผู้รับสินค้า
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border_column150" style="background-color: gainsboro;">
+                        For Partner Only
+                    </td>
+                </tr>
+            </table>
+            <!--            <table>-->
+            <!--                <tr>-->
+            <!--                    <td class="text-left">-->
+            <!--                        Rangsit University-->
+            <!--                    </td>-->
+            <!--                    <td class="text-right">-->
+            <!--                        ISO NUMBER-->
+            <!--                    </td>-->
+            <!--                </tr>-->
+            <!--            </table>-->
+        </div>
+    </template>
+
+    <template id="external_layout">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+
+        <t t-if="not company">
+            <!-- Multicompany -->
+            <t t-if="company_id">
+                <t t-set="company" t-value="company_id"/>
+            </t>
+            <t t-elif="o and 'company_id' in o">
+                <t t-set="company" t-value="o.company_id.sudo()"/>
+            </t>
+            <t t-else="else">
+                <t t-set="company" t-value="res_company"/>
+            </t>
+        </t>
+
+        <t t-call="pfb_std_delivery_product_print.external_layout_standard">
+            <t t-raw="0"/>
+        </t>
+    </template>
+
+    <template id="report_delivery_product_print">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="pfb_std_delivery_product_print.external_layout">
+                    <div class="page">
+                        <div class="oe_structure"/>
+                        <style>
+                            table, td, th {
+                            border: 1px solid gainsboro;
+                            border-top: 1px solid #000000;
+                            table-layout: fixed; width: 100%;
+                            }
+                            .border_column140{
+                            color: #090909;
+                            border-bottom: 1px solid #090909;
+                            width:140px;
+                            }
+                            .border_column100 {
+                            color: #090909;
+                            border-bottom: 1px solid #090909;
+                            width:100px;
+                            }
+                            .border_column120 {
+                            color: #090909;
+                            border-bottom: 1px solid #090909;
+                            width:120px;
+                            }
+                            .border_column230 {
+                            color: #090909;
+                            border-bottom: 1px solid #090909;
+                            width:230px;
+                            }
+                            .border_column130 {
+                            color: #090909;
+                            border-bottom: 1px solid #090909;
+                            width:130px;
+                            }
+                            .border_column50 {
+                            color: #090909;
+                            border-bottom: 1px solid #090909;
+                            width:50px;
+                            }
+                            .border_column60 {
+                            color: #090909;
+                            border-bottom: 1px solid #090909;
+                            width:60px;
+                            }
+                            .thead_table thead th{
+                            background: gainsboro;
+                            border: 1px solid #000000;
+                            display: table-cell;
+                            text-align: center;
+                            vertical-align: middle;
+                            }
+                            .table-condensed tr:first-child td{
+                            border-bottom: 2px dashed #000000;
+                            border-bottom: 2px dashed #000000;
+                            border-left: 1px solid #FFFFFF;
+                            border-right: 1px solid #FFFFFF;
+                            background: #FFFFFF;
+                            }
+                            .table-condensed2 {
+                            border-bottom: 2px dashed #000000;
+                            }
+                            .table-condensed2 td{
+                            border-left: 1px solid #FFFFFF;
+                            border-right: 1px solid #FFFFFF;
+                            }
+                        </style>
+                        <table class="table_asset table thead_table table-condensed">
+                            <thead class="text-center">
+                                <tr>
+                                    <th rowspan="2" class="border_column50">No</th>
+                                    <th rowspan="2" class="border_column100">Product</th>
+                                    <th rowspan="2" class="border_column100">Lot No</th>
+                                    <th rowspan="2" class="border_column100">Serial No</th>
+                                    <th rowspan="2" class="border_column100">From</th>
+                                    <th rowspan="2" class="border_column100">To</th>
+                                    <th rowspan="2" class="border_column60">UOM</th>
+                                    <th colspan="2" class="border_column120">Quantity</th>
+                                </tr>
+                                <tr>
+                                    <th class="border_column130">Initial</th>
+                                    <th class="border_column130">Done</th>
+                                </tr>
+                            </thead>
+                            <tbody name="line_body" class="work_acceptance_line_tbody">
+                                <t t-set="sum_qty" t-value="0"/>
+                                <!--                                <t t-foreach="o.move_line_ids_without_package" t-as="line">-->
+                                <t t-foreach="o.move_line_nosuggest_ids" t-as="line">
+                                    <!--                                        <t t-if="line.product_id.id == move.product_id.id">-->
+
+                                    <tr name="account_move_line" class="table-condensed2">
+                                        <t t-set="sum_qty" t-value="sum_qty+line.qty_done"/>
+                                        <td class="text-center">
+                                            <span t-esc="line_index+1"/>
+                                        </td>
+                                        <td>
+                                            <span t-field="line.product_id.name"/>
+                                        </td>
+                                        <td>
+                                            <t t-if="line.product_id.tracking == 'lot' ">
+                                                <span t-field="line.lot_name"/>
+                                            </t>
+                                        </td>
+                                        <td>
+                                            <t t-if="line.product_id.tracking == 'serial' ">
+                                                <span t-field="line.lot_name"/>
+                                            </t>
+                                        </td>
+                                        <td>
+                                            <span t-field="line.location_id.name"/>
+                                        </td>
+                                        <td>
+                                            <span t-field="line.location_dest_id.name"/>
+                                        </td>
+                                        <td>
+                                            <span t-field="line.product_uom_id.name"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <!--                                                    <span t-field="move.product_uom_qty"/>-->
+                                            <span t-field="line.qty_done"/>
+                                        </td>
+                                        <td class="text-right">
+                                            <span t-field="line.qty_done"/>
+                                        </td>
+                                    </tr>
+                                    <!--                                        </t>-->
+                                </t>
+                                <!--                                </t>-->
+                            </tbody>
+                        </table>
+                        <div class="oe_structure"/>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+</odoo>

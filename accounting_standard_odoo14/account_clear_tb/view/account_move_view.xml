@@ -1,0 +1,13 @@
+<odoo>
+         <record id="view_move_form_clear_tb" model="ir.ui.view">
+            <field name="name">account.move.form.clear.tb</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='to_check']" position="after">
+                   <field name="is_clear_tb" attrs="{'readonly': [('state','not in',['draft'])]}"/>
+                    <field name="clear_tb_move_id" />
+                </xpath>
+            </field>
+        </record>
+</odoo>

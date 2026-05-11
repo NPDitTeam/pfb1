@@ -1,0 +1,9 @@
+Version 14.0.0.1:
+	- Changed the view of branch in lead form.
+
+Version 14.0.0.2:
+	- Added branch field in tree view of lead and pipeline. 
+	- Added group by based on branch in lead and pipeline. 	
+
+version 14.0.0.3:-
+	- pipeline and leade show all the records if user has access as branch user

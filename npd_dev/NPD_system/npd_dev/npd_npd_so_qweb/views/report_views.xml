@@ -1,0 +1,16 @@
+<odoo>
+
+    <!-- PDF REPORTS -->
+    <!--    Sale Order-->
+    <record id="action_report_sale_order_print" model="ir.actions.report">
+        <field name="name">ใบเสนอราคา/ใบสั่งขาย</field>
+        <field name="model">sale.order</field>
+        <field name="report_name">npd_npd_so_qweb.report_so</field>
+        <field name="report_file">npd_npd_so_qweb.report_so</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="paperformat_id" ref="npd_npd_so_qweb.paperformat_sale_order"/>
+        <field name="print_report_name">'%s%s' % (object.name, object.state == 'draft' and '-draft' or '')
+        </field>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

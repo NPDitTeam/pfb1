@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+       <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="40"/>
+        <field name="inherit_id" ref="account_advance.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='withholding_setting']" position="inside">
+               <div class="o_setting_left_pane"/>
+                        <div class="o_setting_right_pane">
+                                <div class="row mt16">
+                                    <label for="due_date_clear" class="col-lg-3 o_light_label" />
+                                    <field name="due_date_clear" />
+                                    Days
+                                </div>
+                                </div>
+        
+                           
+        </xpath>
+    </field>
+</record>
+<record id="advance_account_inherit" model="ir.ui.view">
+    <field name="name">account.advance.view.form.inherit</field>
+    <field name="model">account.advance</field>
+    <field name="inherit_id" ref="account_advance.account_advance_form_view"/>
+    <field name="arch" type="xml">
+            <xpath expr="//field[@name='due_date_clear']" position="after">
+                     <field name="end_date" />
+            </xpath>
+    </field>
+</record>
+
+    </data>
+</odoo>

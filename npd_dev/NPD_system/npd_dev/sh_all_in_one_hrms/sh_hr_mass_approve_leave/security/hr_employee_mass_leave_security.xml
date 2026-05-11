@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="group_enable_mass_approve_leave" model="res.groups">
+            <field name="name">Manage Employee Mass Approve Leave</field>
+            <field name="category_id" ref="base.module_category_hidden" />
+        </record>
+    </data>
+</odoo>

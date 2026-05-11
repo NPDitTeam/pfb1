@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <menuitem id="baankheaw_menu_root"
+              name="🏠 บ้านเขียว"
+              sequence="10"
+              groups="base.group_user"/>
+
+    <record id="action_bill_arrears_summary" model="ir.actions.act_window">
+        <field name="name">บิลค้างชำระทั้งหมด</field>
+        <field name="res_model">baankheaw.bill_arrears_summary</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p>📌 รายงานนี้แสดงข้อมูลบิลค้างชำระจากระบบภายนอก โดยสรุปตามเลขที่เอกสาร</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_bill_arrears_summary"
+              name="บิลค้างชำระทั้งหมด"
+              parent="baankheaw.baankheaw_menu_root"  action="action_bill_arrears_summary"
+              sequence="30" groups="base.group_user"/>
+
+    <record id="view_bill_arrears_summary_tree" model="ir.ui.view">
+        <field name="name">baankheaw.bill_arrears_summary.tree</field>
+        <field name="model">baankheaw.bill_arrears_summary</field>
+        <field name="arch" type="xml">
+            <tree string="บิลค้างชำระทั้งหมด"
+                  decoration-danger="remaining_balance > 0 and date_end and date_end &lt; context_today()">
+                <field name="doc_id"/>
+                <field name="cus_fullname"/>
+                <field name="cus_cpnname"/>
+                <field name="branch_name"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="bill_status" string="สถานะบิล"/>
+                <field name="total_bill_debt" sum="Total Bill Debt"/>
+                <field name="total_paid" sum="Total Paid"/>
+                <field name="remaining_balance" sum="Remaining Balance"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_bill_arrears_summary_form" model="ir.ui.view">
+        <field name="name">baankheaw.bill_arrears_summary.form</field>
+        <field name="model">baankheaw.bill_arrears_summary</field>
+        <field name="arch" type="xml">
+            <form string="บิลค้างชำระ" create="false" edit="false" delete="false">
+                <header>
+                    <button name="action_update_realtime_data_bill"
+        type="object"
+        string="🔄 อัปเดตข้อมูลบิล"
+        class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group string="ข้อมูลบิล">
+                        <field name="doc_id" readonly="1"/>
+                        <field name="customer_id" readonly="1"/>
+                        <field name="cus_fullname" readonly="1"/>
+                        <field name="cus_cpnname" readonly="1"/>
+                        <field name="branch_name" readonly="1"/>
+                    </group>
+                    <group string="รายละเอียดวันที่">
+                        <field name="date_start" readonly="1"/>
+                        <field name="date_end" readonly="1"/>
+                        <field name="bill_status" readonly="1"/>
+                    </group>
+                    <group string="รายละเอียดหนี้">
+                        <field name="amount" readonly="1"/>
+                        <field name="vat" readonly="1"/>
+                        <field name="tax" readonly="1"/>
+                        <field name="insure" readonly="1"/>
+                        <field name="lost" readonly="1"/>
+                        <field name="broken" readonly="1"/>
+                        <field name="transport" readonly="1"/>
+                    </group>
+                    <group string="สรุปยอด" class="oe_subtotal_footer oe_right">
+                        <field name="total_bill_debt" readonly="1" string="ยอดหนี้ทั้งหมด"/>
+                        <field name="total_paid" readonly="1"/>
+                        <field name="remaining_balance" widget="monetary" options="{'currency_field': 'company_currency_id'}" class="oe_subtotal_footer_separator"/>
+                        <field name="company_currency_id" invisible="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

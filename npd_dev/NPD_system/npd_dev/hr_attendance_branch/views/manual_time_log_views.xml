@@ -1,0 +1,86 @@
+<odoo>
+  <!-- Root Menu -->
+  <menuitem id="menu_hr_attendance_root" name="ลงเวลาพนักงาน" sequence="10"/>
+
+  <!-- Action -->
+  <record id="action_manual_time_log" model="ir.actions.act_window">
+    <field name="name">เพิ่มเวลา</field>
+    <field name="res_model">hr.manual.time.log</field>
+    <field name="view_mode">tree,form</field>
+    <field name="context">{'create': True, 'edit': True, 'delete': True}</field>
+    <field name="help" type="html">
+      <p>ใช้สำหรับเพิ่มเวลาการทำงานแบบ Manual เช่น ข้อมูลที่ต้องการแก้ไขย้อนหลัง</p>
+    </field>
+  </record>
+
+  <!-- Sub Menu -->
+  <menuitem id="menu_manual_time_log"
+            name="เพิ่มเวลาเข้างาน/ออกงาน"
+            parent="menu_hr_attendance_root"
+            action="action_manual_time_log"
+            sequence="40"/>
+
+  <!-- Tree View -->
+  <record id="view_manual_time_log_tree" model="ir.ui.view">
+    <field name="name">manual.time.log.tree</field>
+    <field name="model">hr.manual.time.log</field>
+    <field name="arch" type="xml">
+      <tree string="บันทึกเวลา (ล่าสุดก่อน)">
+        <field name="hr_id_manual_time_log" invisible="1"/>
+        <field name="employee_id"/>
+        <field name="username"/>
+        <field name="branch" invisible="1"/>
+        <field name="branch_id"/>
+        <field name="department" invisible="1"/>
+        <field name="position" invisible="1"/>
+        <field name="department_id"/>
+        <field name="position_id"/>
+        <field name="work_date"/>
+        <field name="checkin_time"/>
+        <field name="checkout_time"/>
+        <field name="user_note"/>
+        <field name="reason"/>
+        <field name="approved_by"/>
+        <field name="state"/>
+        <field name="company"/>
+        <field name="reason_type"/>
+        <field name="allowance_type"/>
+        <field name="file_url" invisible="1"/>
+        <field name="file_link" widget="html"/>
+        <field name="date_requested"/>
+      </tree>
+    </field>
+  </record>
+
+  <!-- Form View -->
+  <record id="view_manual_time_log_form" model="ir.ui.view">
+    <field name="name">manual.time.log.form</field>
+    <field name="model">hr.manual.time.log</field>
+    <field name="arch" type="xml">
+      <form string="ฟอร์มบันทึกเวลา">
+        <group>
+          <field name="hr_id_manual_time_log" invisible="1"/>
+          <field name="username"/>
+          <field name="branch" invisible="1"/>
+          <field name="branch_id"/>
+          <field name="department" invisible="1"/>
+          <field name="position" invisible="1"/>
+          <field name="department_id"/>
+          <field name="position_id"/>
+          <field name="work_date"/>
+          <field name="checkin_time"/>
+          <field name="checkout_time"/>
+          <field name="user_note"/>
+          <field name="reason"/>
+          <field name="approved_by"/>
+          <field name="state"/>
+          <field name="company"/>
+          <field name="reason_type"/>
+          <field name="allowance_type"/>
+          <field name="file_url"/>
+          <field name="date_requested"/>
+        </group>
+      </form>
+    </field>
+  </record>
+</odoo>

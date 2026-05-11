@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="withholding_tax_cert_line_tree_view">
+            <field name="name">ภงด</field>
+            <field name="model">withholding.tax.cert.line</field>
+            <field name="arch" type="xml">
+                <tree string="ภงด">
+                    <field name="cert_id"/>
+                    <field name="wt_cert_income_type"/>
+                    <field name="wt_cert_income_desc"/>
+                    <field name="amount"/>
+                    <field name="wt_percent" required="1"/>
+                    <field name="base" required="1"/>
+                </tree>
+            </field>
+        </record>
+
+    </data>
+</odoo>

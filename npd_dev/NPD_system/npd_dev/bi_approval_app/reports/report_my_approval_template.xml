@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="external_layout_standard_pv">
+        <div t-attf-class="header o_company_#{company.id}_layout" t-att-style="report_header_style" style="margin-bottom: 0px !important; padding-top: 20px;">
+            <style>
+                table, td, th {
+                    border: none !important;
+                    font-size: 22px;
+                }
+                .table-border {
+                    border: 1px solid #000000 !important;
+                    border-collapse: collapse;
+                }
+                .column140 {
+                    color: #090909;
+                    width: 140px;
+                }
+                .column100 {
+                    color: #090909;
+                    width: 100px;
+                }
+                .column260 {
+                    color: #090909;
+                    width: 260px;
+                    padding-left: 20px;
+                }
+                .column550 {
+                    width: 550px;
+                }
+                .column410 {
+                    color: #090909;
+                    width: 475px;
+                }
+                .column130 {
+                    color: #090909;
+                    width: 130px;
+                    font-size: 16px;
+                }
+                .column120 {
+                    color: #090909;
+                    width: 120px;
+                }
+                .column320 {
+                    width: 320px;
+                }
+                .column290 {
+                    color: #090909;
+                    width: 290px;
+                }
+                .column50 {
+                    color: #090909;
+                    width: 50px;
+                }
+                .column60 {
+                    color: #090909;
+                    width: 60px;
+                }
+                .column70 {
+                    color: #090909;
+                    width: 70px;
+                }
+                .column80 {
+                    color: #090909;
+                    width: 80px;
+                }
+                .column420 {
+                    width: 420px;
+                }
+                .column330 {
+                    width: 330px;
+                }
+                .column350 {
+                    width: 350px;
+                }
+                .column170 {
+                    color: #090909;
+                    width: 170px;
+                }
+                .column190 {
+                    color: #090909;
+                    width: 190px;
+                }
+                .column180 {
+                    width: 180px;
+                }
+            </style>
+            <table class="table table-sm" style="margin-bottom: 0px !important;">
+                <br/><br/><br/><br/><br/><br/>
+                <tr>
+                    <td class="text-left column50">
+                        <br/><br/>
+                        <img t-if="company.logo" t-att-src="image_data_uri(company.logo)" style="max-height: 90px;" alt="Logo"/>
+                    </td>
+                    <td class="header2 text-left">
+                        <h4>
+                            <br/><br/>
+                            <b>
+                                <br/>
+                                <span style="font-size: 30px;" t-field="company.name"/><br/>
+                                <span t-field="company.street"/>
+                                <span t-field="company.street2"/>
+                                <span t-field="company.city"/>
+                                <br/>
+                                <span t-field="company.state_id.name"/>
+                                <span t-field="company.zip"/>
+                            </b>
+                        </h4>
+                    </td>
+                    <td class="text-left column50">
+                        <br/><br/>
+                        <span style="font-size: 40px;"><b>ใบขออนุมัติ</b></span>
+                    </td>
+                </tr>
+                <tr class="text-center" style="font-size: 40px;">
+                    <td colspan="2">
+                        <strong>
+<!--                            <span t-field="o.name"/>-->
+                        </strong>
+                    </td>
+                </tr>
+            </table>
+
+            <div class="row" style="margin-bottom: 10px !important;">
+                <div class="col-8">
+                    <table class="table table-sm o_main_table" >
+                        <tr>
+                            <td class="text-left" style="font-size: 25px;">
+                                <span>เรื่อง :</span>
+                                <span t-field="o.name" ></span>
+                                <br/>
+                                <span>ประเภทการอนุมัติ :</span>
+                                <span t-field="o.approval_name_type_id.name" ></span>
+                                <br/>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-4">
+                    <table class="table table-sm o_main_table" style="margin-bottom: 0px !important;">
+                        <tr>
+                            <td class="text-left" style="font-size: 25px;">
+                                <span>จำนวนเงิน :</span>
+                                <span t-field="o.payment" ></span>
+                                <br/>
+                                <span>วันที่ร้องขอ :</span>
+                                <span t-field="o.request_date" ></span>
+                                <br/>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div t-attf-class="article o_report_layout_standard o_company_#{company.id}_layout" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id" t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <t t-raw="0"/>
+        </div>
+    </template>
+
+    <template id="external_layout_pv">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+        <t t-if="not company">
+            <t t-if="company_id">
+                <t t-set="company" t-value="company_id"/>
+            </t>
+            <t t-elif="o and 'company_id' in o">
+                <t t-set="company" t-value="o.company_id.sudo()"/>
+            </t>
+            <t t-else="else">
+                <t t-set="company" t-value="res_company"/>
+            </t>
+        </t>
+
+        <t t-call="bi_approval_app.external_layout_standard_pv">
+            <t t-raw="0"/>
+        </t>
+    </template>
+
+    <template id="report_my_approval_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="bi_approval_app.external_layout_pv">
+
+                    <br/><br/><br/>
+                    <div class="container">
+                        <br/>
+                        <strong style="font-size:25px;">รายละเอียด</strong><br/>
+                          &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;<span style="font-size:25px;" t-esc="o.plain_description"/>
+                    </div>
+                    <div class="footer" style="font-family: AngsanaNew; color: black;">
+                        <div style="width:100%;">
+                            <br/>
+                            <table class="table text-center table-borderless" style="font-size: 25px;">
+                                <tr style="line-height:1;">
+                                    <td style="width:33%; padding-left: 5%;">
+                                        <div style="width:80%; border-bottom: 1px dotted black;">
+                                            ผู้ขออนุมัติ<br/><br/>
+                                            <span t-field="o.request_by.name"/>
+                                        </div>
+                                    </td>
+                                    <td style="width:34%; padding-left: 5%;">
+                                        <div style="width:80%; border-bottom: 1px dotted black;">
+                                            รายชื่อผู้อนุมัติ<br/><br/>
+                                            <t t-foreach="o.approver_ids" t-as="user">
+                                                <span t-esc="user.name"/><br/>
+                                            </t>
+                                        </div>
+                                    </td>
+                                    <td style="width:33%; padding-left: 5%;">
+                                        <div style="width:80%; border-bottom: 1px dotted black;">
+                                            ผู้อนุมัติ<br/><br/>
+                                            <span t-field="o.last_approver_id.name"/><br/>
+                                            <t t-if="o.next_approver_signature">
+                                                <img t-att-src="'data:image/png;base64,' + o.next_approver_signature.decode('utf-8')" style="max-height: 50px; margin-top: 5px;"/>
+                                            </t>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

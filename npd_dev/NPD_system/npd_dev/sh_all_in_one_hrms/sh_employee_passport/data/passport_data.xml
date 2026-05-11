@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_visa_seq" model="ir.sequence">
+        <field name="name">Visa Sequence</field>
+        <field name="code">sh.employee.passport</field>
+        <field name="prefix">VISA/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False" />
+    </record>
+</odoo>

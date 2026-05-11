@@ -1,0 +1,27 @@
+table tr td {
+    pending: 5px;
+    color: black;
+}
+
+.border_report {
+    border-bottom: 1px solid black !important;
+    border-top: 1px solid black !important
+}
+
+.font_weight {
+    font-weight: 800;
+}
+
+.phone-info {
+    margin-top: -5px;
+    font-size: 13px;
+}
+
+.number-info {
+    margin-top: -5px;
+    font-size: 13px;
+}
+
+.line-distance {
+    line-height: 1.3;
+}

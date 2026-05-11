@@ -1,0 +1,507 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="azk_theme_view_tree" model="ir.ui.view">
+        <field name="name">azk_theme_view_tree</field>
+        <field name="model">azk.theme.customization</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+            </tree>
+        </field>
+    </record>
+    
+    <record id="azk_theme_view_form" model="ir.ui.view">
+        <field name="name">azk_theme_view_form</field>
+        <field name="model">azk.theme.customization</field>
+        <field name="arch" type="xml">
+            <form string="Color scheme">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only" />
+                        <h1>
+                            <field name="name" />
+                        </h1>
+                    </div>
+                  	<group string="Apps Menu Font">
+                 		  <div>
+                 		 	 <label for="apps_font_color_active" />
+                  		 	  <field
+                                    name="apps_font_color_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="apps_font_color"
+                                    widget="color"
+                                    attrs="{'readonly':[('apps_font_color_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                               </div>
+                 		</group>
+                        <group string="Top panel">
+                            <!-- <field name="top_panel_id" /> -->
+                            <div>
+                                <label for="top_panel_bg" />
+                                <field
+                                    name="top_panel_bg_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="top_panel_bg"
+                                    widget="color"
+                                    attrs="{'readonly':[('top_panel_bg_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="top_panel_border" />
+                                <field
+                                    name="top_panel_border_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="top_panel_border"
+                                    class="oe_inline"
+                                    attrs="{'readonly':[('top_panel_border_active','=',False)]}"
+                                    widget="color"
+                                />
+                            </div>
+                            <div>
+                                <label for="top_panel_font" />
+                                <field
+                                    name="top_panel_font_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="top_panel_font"
+                                    widget="color"
+                                    attrs="{'readonly':[('top_panel_font_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="top_panel_active_item_font" />
+                                <field
+                                    name="top_panel_active_item_font_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="top_panel_active_item_font"
+                                    widget="color"
+                                    attrs="{'readonly':[('top_panel_active_item_font_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="top_panel_active_item_bg" />
+                                <field
+                                    name="top_panel_active_item_bg_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="top_panel_active_item_bg"
+                                    widget="color"
+                                    attrs="{'readonly':[('top_panel_active_item_bg_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="top_panel_hover_item_font" />
+                                <field
+                                    name="top_panel_hover_item_font_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="top_panel_hover_item_font"
+                                    widget="color"
+                                    attrs="{'readonly':[('top_panel_hover_item_font_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="top_panel_hover_item_bg" />
+                                <field
+                                    name="top_panel_hover_item_bg_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="top_panel_hover_item_bg"
+                                    widget="color"
+                                    attrs="{'readonly':[('top_panel_hover_item_bg_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                        </group>
+                        <group string="Left panel">
+                           <!--  <field name="left_panel_id" /> -->
+                           <div>
+                                <label for="left_panel_bg" />
+                                <field
+                                    name="left_panel_bg_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="left_panel_bg"
+                                    class="oe_inline"
+                                    attrs="{'readonly':[('left_panel_bg_active','=',False)]}"
+                                    widget="color"
+                                />
+                            </div>
+                            <div>
+                                <label for="left_panel_font_color" />
+                                <field
+                                    name="left_panel_font_color_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="left_panel_font_color"
+                                    class="oe_inline"
+                                    attrs="{'readonly':[('left_panel_font_color_active','=',False)]}"
+                                    widget="color"
+                                />
+                            </div>
+                            <div>
+                                <label for="left_panel_menu" />
+                                <field
+                                    name="left_panel_menu_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="left_panel_menu"
+                                    class="oe_inline"
+                                    attrs="{'readonly':[('left_panel_menu_active','=',False)]}"
+                                    widget="color"
+                                />
+                            </div>
+                            <div>
+                                <label for="left_panel_active_item_font" />
+                                <field
+                                    name="left_panel_active_item_font_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="left_panel_active_item_font"
+                                    widget="color"
+                                    attrs="{'readonly':[('left_panel_active_item_font_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="left_panel_active_item_bg" />
+                                <field
+                                    name="left_panel_active_item_bg_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="left_panel_active_item_bg"
+                                    widget="color"
+                                    attrs="{'readonly':[('left_panel_active_item_bg_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="left_panel_hover_item_font" />
+                                <field
+                                    name="left_panel_hover_item_font_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="left_panel_hover_item_font"
+                                    widget="color"
+                                    attrs="{'readonly':[('left_panel_hover_item_font_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="left_panel_hover_item_bg" />
+                                <field
+                                    name="left_panel_hover_item_bg_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="left_panel_hover_item_bg"
+                                    widget="color"
+                                    attrs="{'readonly':[('left_panel_hover_item_bg_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                        </group>
+                        <group string="Content">
+                           <!--  <field name="content_id" /> -->
+                           <div>
+                                <label for="content_bg" />
+                                <field
+                                    name="content_bg_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="content_bg"
+                                    widget="color"
+                                    attrs="{'readonly':[('content_bg_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="content_button" />
+                                <field
+                                    name="content_button_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="content_button"
+                                    widget="color"
+                                    attrs="{'readonly':[('content_button_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="content_form" />
+                                <field
+                                    name="content_form_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="content_form"
+                                    widget="color"
+                                    attrs="{'readonly':[('content_form_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="content_form_text" />
+                                <field
+                                    name="content_form_text_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="content_form_text"
+                                    widget="color"
+                                    attrs="{'readonly':[('content_form_text_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="content_form_title" />
+                                <field
+                                    name="content_form_title_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="content_form_title"
+                                    widget="color"
+                                    attrs="{'readonly':[('content_form_title_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="content_text" />
+                                <field
+                                    name="content_text_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="content_text"
+                                    widget="color"
+                                    attrs="{'readonly':[('content_text_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="content_form_link" />
+                                <field
+                                    name="content_form_link_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="content_form_link"
+                                    widget="color"
+                                    attrs="{'readonly':[('content_form_link_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="content_loader" />
+                                <field
+                                    name="content_loader_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="content_loader"
+                                    widget="color"
+                                    attrs="{'readonly':[('content_loader_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="content_loader_text" />
+                                <field
+                                    name="content_loader_text_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="content_loader_text"
+                                    widget="color"
+                                    attrs="{'readonly':[('content_loader_text_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="content_statusbar_bg" />
+                                <field
+                                    name="content_statusbar_bg_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="content_statusbar_bg"
+                                    widget="color"
+                                    attrs="{'readonly':[('content_statusbar_bg_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="content_statusbar_element" />
+                                <field
+                                    name="content_statusbar_element_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="content_statusbar_element"
+                                    widget="color"
+                                    attrs="{'readonly':[('content_statusbar_element_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="content_statusbar_font_color" />
+                                <field
+                                    name="content_statusbar_font_color_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="content_statusbar_font_color"
+                                    widget="color"
+                                    attrs="{'readonly':[('content_statusbar_font_color_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="content_main_menu_font_color" />
+                                <field
+                                    name="content_main_menu_font_color_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="content_main_menu_font_color"
+                                    widget="color"
+                                    attrs="{'readonly':[('content_main_menu_font_color_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                            <div>
+                                <label for="content_footer_color" />
+                                <field
+                                    name="content_footer_color_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="content_footer_color"
+                                    widget="color"
+                                    attrs="{'readonly':[('content_footer_color_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+							 <div>
+                                <label for="datepicker_color" />
+                                <field
+                                    name="datepicker_color_active"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                />
+                                <field
+                                    name="datepicker_color"
+                                    widget="color"
+                                    attrs="{'readonly':[('datepicker_color_active','=',False)]}"
+                                    class="oe_inline"
+                                />
+                            </div>
+                        </group>
+                        <group string="Background Image">
+                            <field name="background_image" domain="[('public', '=', True), ('mimetype', 'ilike', 'image/%')]"/>
+                        </group>
+                    <group string="Custom setting">
+                        <field name="custom_css" />
+                        <field name="custom_js" />
+                    </group>
+                    <group string="Ribbon">
+                        <field name="is_add_ribbon" string="Add Ribbon"/>
+                        <group>
+                            <field
+                            name="ribbon_color"
+                            widget="color"
+                            attrs="{'invisible':[('is_add_ribbon','=',False)], 'required': [('is_add_ribbon','=',True)]}"
+                            class="oe_inline"
+                            />
+                            <field 
+                                name="ribbon_text"
+                                attrs="{'invisible':[('is_add_ribbon','=',False)], 'required': [('is_add_ribbon','=',True)]}"
+                            />
+                            <field name="ribbon_align" attrs="{'invisible':[('is_add_ribbon','=',False)], 'required': [('is_add_ribbon','=',True)]}" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+	<record id="azk_theme_color_action" model="ir.actions.act_window">
+        <field name="name">Color Scheme</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">azk.theme.customization</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+ 
+    <menuitem
+        id="azk_theme_menu"
+        name="AZKA Theme Customization"
+        parent="base.menu_custom"
+        sequence="1"
+    />
+    
+    <menuitem
+        id="azk_color_scheme"
+        name="Color Schemes"
+        parent="azk_theme_menu"
+        sequence="1"
+        action="azk_theme_color_action"
+    />
+    
+ 
+</odoo>

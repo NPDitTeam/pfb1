@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <record id="view_expiry_report_wizard" model="ir.ui.view">
+            <field name="name">view.expiry.report.wizard</field>
+            <field name="model">stock.expiry.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Genrating Stock Expiry Report">
+                    <group>
+                        <field name ="stock_expiry_days"/>
+                        <field name="include_expiry" />
+                        <field name="report_type" required="1" widget="radio"/>
+                    </group>
+                    <group>
+                        <field name="location_ids" widget="many2many_tags" attrs="{'invisible': [('report_type', 'in', ['all','warehouse'])]}"/>
+                        <field name="warehouse_ids" widget="many2many_tags" attrs="{'invisible': [('report_type', 'in', ['all','location'])]}"/>
+                    </group>
+                    <footer>
+                         <button string="Print Excel" type="object" name="print_expiry_excel_report"/> Or
+                        <button string="Print PDF" type="object" name="print_expiry_report_pdf" />
+                        Or
+                        <button string="Cancel" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+		<record id="action_view_expiry_wizard" model="ir.actions.act_window">
+            <field name="name">Stock Expiry Report</field>
+            <field name="res_model">stock.expiry.report.wizard</field>
+            
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        
+	    <menuitem
+	        id="menu_stock_expiry"
+	        name="Stock Expiry Report"
+	        parent="stock.menu_warehouse_report"
+	        action="action_view_expiry_wizard"
+	       />
+
+	<record id="view_stock_expiry_excel" model="ir.ui.view">
+            <field name="name">stock.expiry.excel</field>
+            <field name="model">expiry.report.excel</field>
+            <field name="arch" type="xml">
+                <form string="Genrated xls File">
+                    <group>
+                        <field name="file_name" invisible="1"/>
+                        <field name="excel_file" readonly="1" filename="file_name"/>
+                        
+                    </group>
+                    <footer>
+                     <button string="Close" type="object" special="cancel" class="btn-primary"/>
+                 </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_expiry_report_excel" model="ir.actions.act_window">
+            <field name="name">Stock Expiry Report</field>
+            
+            
+            <field name="view_mode">form</field>
+            <field name="res_model">expiry.report.excel</field>
+            <field name="target">new</field>
+        </record>
+
+    </data>
+</odoo>
+

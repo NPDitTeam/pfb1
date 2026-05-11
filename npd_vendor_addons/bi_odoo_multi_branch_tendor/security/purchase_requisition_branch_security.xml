@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+ 
+    <record id="purchase_requisition_branch_manager_rule" model="ir.rule">
+        <field name="name">PurchaseRequisition Branch Manager</field>
+        <field name="model_id" ref="model_purchase_requisition"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">['|',('branch_id','=',False),('branch_id','in',[branch.id for branch in user.branch_ids])]</field>
+        <field name="groups" eval="[(4, ref('branch.group_branch_user_manager'))]"/>
+    </record>
+
+    <record id="purchase_requisition_branch_rule" model="ir.rule">
+        <field name="name">PurchaseRequisition Branch User</field>
+        <field name="model_id" ref="model_purchase_requisition"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">['|',('branch_id','=',False),('branch_id','=',user.branch_id.id)]</field>
+        <field name="groups" eval="[(4, ref('branch.group_branch_user'))]"/>
+    </record>
+
+   
+    
+</data>
+
+</odoo>

@@ -1,0 +1,62 @@
+<odoo>
+    <data>
+        <!-- Tree View -->
+        <record id="view_activity_report_tree" model="ir.ui.view">
+            <field name="name">activity.report.tree</field>
+            <field name="model">activity.report</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="activity_id"/>
+                    <field name="line_user_id"/>
+                    <field name="member_id"/>
+                    <field name="join_date"/>
+                    <field name="record_status"/>
+                    <field name="shop_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form View -->
+        <record id="view_activity_report_form" model="ir.ui.view">
+            <field name="name">activity.report.form</field>
+            <field name="model">activity.report</field>
+            <field name="arch" type="xml">
+                <form string="Activity Report">
+                    <header>
+                        <button name="action_fetch_activity_data" type="object" string="Fetch from API" class="btn-primary"/>
+                        <field name="record_status" widget="statusbar" statusbar_visible="Y,N"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="activity_id" readonly="1"/>
+                                <field name="line_user_id"/>
+                                <field name="member_id"/>
+                                <field name="shop_id"/>
+                            </group>
+                            <group>
+                                <field name="join_date"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="field1_value"/>
+                            <field name="field2_value"/>
+                            <field name="field3_value"/>
+                            <field name="field4_value"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record id="action_activity_report" model="ir.actions.act_window">
+            <field name="name">Activity Reports</field>
+            <field name="res_model">activity.report</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- Menu Items -->
+        <menuitem id="menu_activity_report_root" name="Activity Reports" parent="menu_membership_root" action="action_activity_report" sequence="3"/>
+    </data>
+</odoo>

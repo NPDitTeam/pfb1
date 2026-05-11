@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="report_picking_inherit" inherit_id="stock.report_picking">
+            <xpath expr="//table[1]/thead/tr/th[2]" position="after">
+                <th><span>Secondary Qty</span></th>
+            </xpath>
+            <xpath expr="//table[1]/tbody[1]//tr//td[2]" position="after">
+                <td>
+                    <span t-field="move.secondary_quantity" groups="secondary_uom_inventory_app.group_secondary_uom"/>
+                    <span t-field="move.secondary_uom_id"  groups="secondary_uom_inventory_app.group_secondary_uom"/>
+                </td>
+            </xpath>
+        </template>
+
+        <!-- Delivery slip report -->
+        <template id="report_delivery_document_inherit" inherit_id="stock.report_delivery_document">
+            <xpath expr="//table[1]/thead[1]/tr/th[2]" position="after">
+                <th><span>Secondary Qty</span></th>
+            </xpath>
+
+            <xpath expr="//table[1]/tbody[1]/tr/td[2]" position="after">
+                <td>
+                    <span t-field="move.secondary_quantity" groups="secondary_uom_inventory_app.group_secondary_uom"/>
+                    <span t-field="move.secondary_uom_id" groups="secondary_uom_inventory_app.group_secondary_uom"/>
+                </td>
+            </xpath>
+        </template>
+    </data>
+</odoo>
+

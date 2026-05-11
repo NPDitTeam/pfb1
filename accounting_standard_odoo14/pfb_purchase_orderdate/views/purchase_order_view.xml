@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<record id="purchase_order_inherit" model="ir.ui.view">
+    <field name="name">purchase.order.form.inherit</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase.purchase_order_form"/>
+    <field name="arch" type="xml">
+        <field name="date_order" position="before">
+             <field name="order_date"  attrs="{'readonly': [('state','!=', 'draft')]}"></field>
+              
+        </field>
+        <field name="date_order" position="replace">
+             <field name="date_order"></field>
+        </field>
+          <field name="currency_id" position="before">
+            <field name="payment_term_id"  attrs="{'readonly': [('state','!=', 'draft')]}"></field>
+               <field name="lead_time"></field>
+        </field>
+     
+    </field>
+</record>
+<record id="purchase_order_tree_inherit" model="ir.ui.view">
+    <field name="name">purchase.order.tree.inherit</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase.purchase_order_view_tree"/>
+    <field name="arch" type="xml">
+          <field name="name" position="after">
+             <field name="order_date"/>
+         </field>
+         <field name="date_planned" position="after">
+             <field name="lead_time"/>
+         </field>
+    </field>
+</record>
+<record id="purchase_order_kpis_tree_inherit" model="ir.ui.view">
+    <field name="name">purchase.order..kpis.tree.inherit</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+    <field name="arch" type="xml">
+          <field name="name" position="after">
+             <field name="order_date"/>
+         </field>
+        
+    </field>
+</record>
+   <record id="purchase_order_line_search_inherit" model="ir.ui.view">
+        <field name="name">purchase.order.line.search</field>
+        <field name="model">purchase.order.line</field>
+        <field name="inherit_id" ref="purchase.purchase_order_line_search" />
+        <field name="arch" type="xml">
+            <filter name="hide_cancelled" position="after">
+                <filter string="Confirm Date Last Week" invisible="0" name="week" domain="[('order_id.date_approve','&gt;', (context_today() - datetime.timedelta(days=7)).strftime('%%Y-%%m-%%d'))]"/>
+                <filter string="Confirm Date Last Month" invisible="0" name="month" domain="[('order_id.date_approve','&gt;', (context_today() - datetime.timedelta(days=30)).strftime('%%Y-%%m-%%d'))]"/>
+                <filter string="Confirm Date Last Year" invisible="0"  name="year" domain="[('order_id.date_approve','&gt;', (context_today() - datetime.timedelta(days=365)).strftime('%%Y-%%m-%%d'))]"/>
+              
+            </filter>
+            <filter name="status" position="after">
+                <filter name="order_date" string="Order Date" domain="[]" context="{'group_by' : 'order_date'}" />
+                <filter name="date_approve" string="Confirm Date" domain="[]" context="{'group_by' : 'date_approve'}" />
+                <filter name="product_cate" string="Product Cate" domain="[]" context="{'group_by' : 'product_category_id'}" />
+            </filter>
+        </field>
+    </record>
+      <record model="ir.ui.view" id="view_purchase_order_line_pivot_inherit">
+        <field name="name">purchase.order.line.pivot</field>
+        <field name="model">purchase.order.line</field>
+           <field name="inherit_id" ref="purchase_order_line_menu.view_purchase_order_line_pivot" />
+        <field name="arch" type="xml">
+            <field name="price_subtotal" position="after">
+                    <field name="lead_time" type="measure" />
+                    <field name="payment_term_id" type="row" />
+                        <field name="order_date" type="row" />
+                        <field name="date_approve" type="row" />
+                        <field name="product_category_id" type="row" />
+            </field>
+          
+        </field>
+    </record>
+</odoo>
+

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Group for Task Documents -->
+    <record id="group_sh_task_document" model="res.groups">
+        <field name="name">Access Task Document</field>
+    </record>
+</odoo>

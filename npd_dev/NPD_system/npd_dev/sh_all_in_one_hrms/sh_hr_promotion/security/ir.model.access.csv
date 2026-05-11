@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sh_hr_promotion_manager,access_sh_hr_promotion_manager,model_sh_hr_promotion,hr.group_hr_manager,1,1,1,1 
+access_sh_hr_promotion_user,access_sh_hr_promotion_user,model_sh_hr_promotion,hr.group_hr_user,1,0,0,0
+access_sh_promotion_types,access_sh_promotion_types,model_sh_promotion_types,base.group_user,1,1,1,1

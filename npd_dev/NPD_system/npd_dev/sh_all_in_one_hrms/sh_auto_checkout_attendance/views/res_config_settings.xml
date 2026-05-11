@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_attendance_auto_checkout_config_settings" model="ir.ui.view">
+        <field name="name">Attendance Auto Checkout Settings</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="hr_attendance.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@data-key='hr_attendance']" position="inside">
+                <h2>Auto Checkout</h2>
+                <div class="row mt16 o_settings_container">
+                    <div id="autocomplete_address" class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="auto_checkout" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="auto_checkout" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="checkout_after" attrs="{'invisible':[('auto_checkout','=',False)]}" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <field name="checkout_after" attrs="{'invisible':[('auto_checkout','=',False)],'required':[('auto_checkout','=',True)]}" />
+                        </div>
+                    </div>
+                    <div id="checkout_time" class="col-xs-12 col-md-6 o_setting_box">
+                        <div class="o_setting_left_pane">
+                            <field name="checkout_time" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="checkout_time" />
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

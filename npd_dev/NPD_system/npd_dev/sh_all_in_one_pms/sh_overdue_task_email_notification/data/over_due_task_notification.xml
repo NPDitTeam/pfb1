@@ -1,0 +1,37 @@
+<?xml version ="1.0" encoding="utf-8" ?>
+
+<odoo>
+    <data noupdate="1">
+        <record id="project_task_overdue_notify" model="ir.cron">
+            <field name="name">Project Task Overdue Notify</field>
+            <field eval="True" name="active" />
+            <field name="user_id" ref="base.user_root" />
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="model_id" ref="model_project_task_overdue_email" />
+            <field name="state">code</field>
+            <field name="code">model.notify_employee_overdue_fun()</field>
+            <field name="priority" eval="5" />
+        </record>
+
+        <record id="project_task_start_date_notify" model="ir.cron">
+            <field name="name">Project Task Start Date Alert</field>
+            <field eval="True" name="active" />
+            <field name="user_id" ref="base.user_root" />
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="nextcall" eval="(DateTime.now()).strftime('%Y-%m-%d 18:30:00')" />
+            <field name="model_id" ref="sh_all_in_one_pms.model_project_task_overdue_email" />
+            <field name="state">code</field>
+            <field name="code">model.start_date_task_notification()</field>
+            <field name="priority" eval="5" />
+        </record>
+
+        <record id="project_task_overdue_email" model="project.task.overdue.email">
+            <field name="name">Email</field>
+            <field name="company_id">1</field>
+        </record>
+    </data>
+</odoo>

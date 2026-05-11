@@ -1,0 +1,1084 @@
+<odoo>
+    <!--    ใบรับวางบิล-->
+    <template id="external_all_billing_layout_standard">
+        <div t-attf-class="header o_company_#{company.id}_layout" t-att-style="report_header_style"
+             style="margin-bottom: 0px !important;">
+            <style>
+                table, td, th {
+                border: none !important;
+                }
+                .table-border{
+                border: 1px solid #000000 !important;
+                border-collapse: collapse;
+                }
+
+                .column140{
+                color: #090909;
+                width:140px;
+                }
+                .column100 {
+                color: #090909;
+                width:100px;
+                }
+                .column260{
+                color: #090909;
+                width:260px;
+                padding-left: 20px;
+                }
+                .column550{
+                width:550px;
+                }
+                .column410{
+                color: #090909;
+                width:475px;
+                }
+                .column130{
+                color: #090909;
+                width:130px;
+                font-size:16px;
+                }
+                .column120 {
+                color: #090909;
+                width:120px;
+                }
+                .column320{
+                width:320px;
+                }
+                .column290 {
+                color: #090909;
+                width:290px;
+                }
+                .column50 {
+                color: #090909;
+                width:50px;
+                }
+                .column60 {
+                color: #090909;
+                width:60px;
+                }
+                .column59 {
+                color: #090909;
+                width:59px;
+                }
+                .column70 {
+                color: #090909;
+                width:70px;
+                }
+                .column80 {
+                color: #090909;
+                width:80px;
+                }
+                .column370{
+                width:370px;
+                }
+                .column330{
+                width:330px;
+                }
+                .column350{
+                width:350px;
+                }
+                .watermark1 {
+                position: fixed;
+                top:493px;
+                left: 15px;
+                }
+                .column170{
+                color: #090909;
+                width:170px;
+                }
+                .column190{
+                color: #090909;
+                width:190px;
+                }
+                .column180{
+                width:180px;
+                }
+                .column50{
+                width:50px;
+                }
+                .header_text {
+                font-size:24px;
+                }
+
+                .header2 {
+                border-left:2px solid white;
+                }
+
+                .header3 {
+                display: block;
+                width: 80px;
+                border:2px solid black;
+                font-size:24px;
+                }
+            </style>
+            <table class="table table-sm" style="margin-bottom: 0px !important;">
+                <tr>
+                    <!--                    <td class="text-center column100">-->
+                    <!--                        <br/>-->
+                    <!--                        <br/>-->
+                    <!--                        <img t-if="company.logo" t-att-src="image_data_uri(company.logo)"-->
+                    <!--                             style="max-height: 130px;"-->
+                    <!--                             alt="Logo"/>-->
+                    <!--                    </td>-->
+                    <td class="column310 header2 text-left" style="font-size:20px;">
+                        <br/>
+                        <br/>
+                        <strong t-field="company.partner_id.name" style="font-size:26px;"/>
+                        <br/>
+                        <strong t-field="company.partner_id.street"/>
+                        <strong t-field="company.partner_id.street2"/>
+                        <strong t-field="company.partner_id.city"/>
+                        <strong t-field="company.partner_id.state_id.name"/>
+                        <strong t-field="company.partner_id.zip"/>
+                        <br/>
+                        <strong>โทร</strong>
+                        :
+                        <span t-field="company.partner_id.phone"/>
+                        <br/>
+                        <!--                        <strong>เลขประจำตัวผู้เสียภาษีอากร :</strong>-->
+                        <!--                        <strong t-field="company.partner_id.vat"/>-->
+                        <!--                        <strong>สำนักงานใหญ่</strong>-->
+                    </td>
+                    <td class="text-center" style="font-size:30px;">
+                        <br/>
+                        <span style="display: block;width: 150px;font-size:30px;
+                        border: 2px solid black;padding: 10px;border-radius: 25px;">
+                            ใบรับวางบิล
+                        </span>
+
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div t-attf-class="article o_report_layout_standard o_company_#{company.id}_layout"
+             t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <t t-raw="0"/>
+        </div>
+        <div t-attf-class="footer  o_company_#{company.id}_layout">
+            <style>
+                table, td, th {
+                border: none !important;
+                }
+                .table-border tr td{
+                border: 1px solid #000000 !important;
+                border-collapse: collapse;
+                }
+                .column70 {
+                width:70px;
+                }
+                .column370 {
+                width:370px;
+                }
+                .column320 {
+                width:320px;
+                }
+                .column120 {
+                width:120px;
+                }
+                .no_border{
+                border-bottom: 2px solid white;
+                }
+                .no_border tr{
+                border-top: 2px solid white;
+                border-bottom: 2px solid white;
+                }
+                .no_border td{
+                border-left: 2px solid white;
+                border-right: 2px solid white;
+                }
+            </style>
+            <table class="table table-sm table-condensed "
+                   style="table-layout: fixed; width: 100%;">
+                <tr>
+                    <td class="text-center">
+                        <!--                        <img src="/npd_purchase_qweb/static/img/header_footer/footer.jpg" width="100%" height="85%"-->
+                        <!--                             alt="header"/>-->
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </template>
+    <template id="external_all_billing_layout">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+
+        <t t-if="not company">
+            <!-- Multicompany -->
+            <t t-if="company_id">
+                <t t-set="company" t-value="company_id"/>
+            </t>
+            <t t-elif="o and 'company_id' in o">
+                <t t-set="company" t-value="o.company_id.sudo()"/>
+            </t>
+            <t t-else="else">
+                <t t-set="company" t-value="res_company"/>
+            </t>
+        </t>
+
+        <t t-call="npd_npd_accounting_qweb.external_all_billing_layout_standard">
+            <t t-raw="0"/>
+        </t>
+    </template>
+    <template id="report_bill_acceptance_sup">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="npd_npd_accounting_qweb.external_all_billing_layout">
+                    <style>
+                        table, td, th {
+                        border-left: 1px solid black;
+                        border-right: 1px solid black;
+                        table-layout: fixed;
+                        width: 100%;
+                        }
+
+                        .table thead tr {
+                        border: 1px solid black;
+                        }
+                        .table tbody td {
+                        border: none;
+                        }
+                        .table-bordered {
+                        border-bottom: none;
+                        }
+
+
+                        .column30{
+                        width:30px;
+                        }
+                        .column35{
+                        width:35px;
+                        }
+
+                        .column140{
+                        color: #090909;
+                        width:140px;
+                        }
+                        .column100 {
+                        color: #090909;
+                        width:100px;
+                        }
+                        .column200{
+                        color: #090909;
+                        width:200px;
+                        }
+                        .column260{
+                        color: #090909;
+                        width:260px;
+                        padding-left: 20px;
+                        }
+                        .column340{
+                        color: #090909;
+                        width:340px;
+                        }
+
+                        .column130{
+                        color: #090909;
+                        width:130px;
+                        font-size:16px;
+                        }
+                        .column120 {
+                        color: #090909;
+                        width:120px;
+                        }
+
+                        .column50 {
+                        color: #090909;
+                        width:50px;
+                        }
+                        .column60 {
+                        color: #090909;
+                        width:60px;
+                        }
+                        .column65 {
+                        color: #090909;
+                        width:65px;
+                        }
+                        .column70 {
+                        color: #090909;
+                        width:70px;
+                        }
+                        .column80 {
+                        color: #090909;
+                        width:80px;
+                        }
+
+                        .watermark1 {
+                        position: fixed;
+                        top: 298px;
+                        }
+                        .column170{
+                        color: #090909;
+                        width:170px;
+                        }
+                        .column190{
+                        color: #090909;
+                        width:190px;
+                        }
+                        .column180{
+                        width:180px;
+                        }
+                        .column50{
+                        width:50px;
+                        }
+                        .header_text {
+                        font-size:16px;
+                        }
+                        .header {
+                        border: 1px solid #000000;
+                        padding: 2px;
+                        border-radius: 15px;
+                        }
+                        .header2 {
+                        border-left:2px solid white;
+                        }
+                        .header3 {
+                        text-align: center;
+                        border: 1px solid black !important;
+                        height: 25px;
+                        }
+                        .line_ids {
+                        border-right: 1px solid black !important;
+                        font-size: 20px !important;
+                        }
+                        .line_ids_right {
+                        border-right: 1px solid black !important;}
+
+                        .none_left {
+                        border-left: 1px solid white !important;}
+                        .none_right {
+                        border-left: 1px solid white !important;}
+                        .none_top {
+                        border-top: 1px solid white !important;}
+                        .none_bottom {
+                        border-bottom: 1px solid white !important;}
+
+                    </style>
+                    <div class="page">
+                        <table class="table_asset table table-sm table-condensed"
+                               style="border: 1px solid white !important;font-size:20px">
+                            <tr>
+                                <td style="border: 1px solid white !important;">
+                                    <div class="row">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;
+                                        <div style="display: block;width: 570px;border: 2px solid black;padding: 10px;border-radius: 10px;">
+                                            <strong>ชื่อผู้จำหน่าย
+                                                <t t-esc="o.partner_id.name"/>
+                                            </strong>
+                                            <br/>
+                                            <strong>
+                                                <t t-esc="o.partner_id.street"/>
+                                                <t t-esc="o.partner_id.street2"/>
+                                                <t t-esc="o.partner_id.city"/>
+                                                <t t-esc="o.partner_id.state_id.name"/>
+                                                <t t-esc="o.partner_id.zip"/>
+                                            </strong>
+                                            <br/>
+                                        </div>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;
+                                        <div style="display: block;width: 270px;border: 2px solid black;padding: 10px;border-radius: 10px;">
+                                            <strong>เลขที่
+                                                <t t-esc="o.name"/>
+                                            </strong>
+                                            <br/>
+                                            <strong>วันที่
+                                                <t t-esc="o.date" t-options="{&quot;widget&quot;: &quot;date&quot;}"/>
+                                            </strong>
+                                            <br/>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <table align="center"
+                               style="width:99%;margin-left:auto!important;margin-right:auto!important;font-size:20px"
+                               class="table_asset table table-sm table-condensed">
+                            <thead>
+                                <tr style="border: 1px solid black !important;">
+                                    <td class="column35 header3" style="vertical-align: middle;">
+                                        <strong>ลำดับ</strong>
+                                    </td>
+                                    <td class="column60 header3" style="vertical-align: middle;">
+                                        <strong>เลขที่ใบกำกับภาษี</strong>
+                                    </td>
+                                    <td class="column60 text-center header3" style="vertical-align: middle;">
+                                        <strong>วันที่</strong>
+                                    </td>
+                                    <td class="column60 text-center header3" style="vertical-align: middle;">
+                                        <strong>จำนวนเงิน</strong>
+                                    </td>
+                                    <td class="column60 text-center header3" style="vertical-align: middle;">
+                                        <strong>ค้างชำระ</strong>
+                                    </td>
+                                    <td class="column60 text-center header3" style="vertical-align: middle;">
+                                        <strong>หมายเหตุ</strong>
+                                    </td>
+                                </tr>
+                            </thead>
+                            <tbody name="line_body" class="line_body">
+                                <t t-set="count_line" t-value="0"/>
+                                <t t-set="sum_total" t-value="0"/>
+                                <t t-set="line_number" t-value="0"/>
+                                <!--<t t-esc="len(o.billing_line_ids)"/>-->
+                                <t t-foreach="o.billing_line_ids" t-as="line">
+                                    <t t-set="line_number" t-value="line_number + 1"/>
+                                    <tr>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="line_index+1"/>
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="line.name"/>
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="line.invoice_date"
+                                                  t-options="{&quot;widget&quot;: &quot;date&quot;}"/>
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="'{0:,.2f}'.format(line.total)"/>
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="'{0:,.2f}'.format(line.invoice_id.amount_total)"/>
+                                            <t t-set="sum_total" t-value="sum_total + line.invoice_id.amount_total"/>
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="line.invoice_id.ref"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <tr style="border: 1px solid black !important;">
+                                    <td colspan="4" class="text-center">
+                                        <strong>
+                                            (
+                                            <t t-esc="o.currency_id.with_context({'lang': 'th_TH'}).amount_to_text(sum_total)"/>
+                                            )
+                                        </strong>
+                                    </td>
+                                    <td colspan="2" class="text-center">
+                                        <strong>
+                                            <t t-esc="'{0:,.2f}'.format(sum_total)"/>
+                                        </strong>
+                                    </td>
+                                </tr>
+                                <t t-foreach="range(19 - (line_number))" t-as="item">
+                                    <tr>
+                                        <td colspan="4" style="border:none;border-left: 1px solid black !important;"
+                                            class="text-center">
+                                            &amp;nbsp;
+                                        </td>
+                                        <td colspan="2" style="border:none;border-right: 1px solid black !important;"
+                                            class="text-center">
+                                            &amp;nbsp;
+                                        </td>
+                                    </tr>
+                                </t>
+                                <tr>
+                                    <td colspan="4" class="text-left"
+                                        style="border:none;border-left: 1px solid black !important;border-bottom: 1px solid black !important">
+                                        <strong>&amp;nbsp;&amp;nbsp;ผู้รับวางบิล
+                                            <br/>
+                                            <br/>
+                                            &amp;nbsp;&amp;nbsp;..........................................................
+                                            <br/>
+                                            &amp;nbsp;&amp;nbsp;วันที่......../........./...............
+                                            <br/>
+                                            <br/>
+                                            &amp;nbsp;&amp;nbsp;กำหนดชำระ......../........./...............
+                                        </strong>
+                                    </td>
+                                    <td colspan="2" class="text-left"
+                                        style="border:none;border-right: 1px solid black !important;border-bottom: 1px solid black !important;">
+                                        <strong>ผู้วางบิล
+                                            <br/>
+                                            <br/>
+                                            ..........................................................
+                                            <br/>
+                                            วันที่......../........./...............
+                                            <br/>
+                                        </strong>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <!--<table class="table" style="border: 1px solid white !important;">
+                            <tr>
+                                <td style="border: 1px solid white !important;">
+                                        <strong>ผู้รับวางบิล
+                                            <br/>
+                                            <br/>
+                                            <br/>
+                                            _______________________________________
+                                            <br/>
+                                            วันที่
+                                            <br/>
+                                            _______________________________________
+                                            <br/>
+                                            กำหนดชำระ
+                                        </strong>
+                                </td>
+                                <td style="border: 1px solid white !important;"/>
+                                <td style="border: 1px solid white !important;">
+                                        <strong>ผู้วางบิล
+                                            <br/>
+                                            <br/>
+                                            <br/>
+                                            _______________________________________
+                                            <br/>
+                                            วันที่
+                                            <br/>
+                                        </strong>
+                                </td>
+                            </tr>
+                        </table>-->
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+    <!--    ใบวางบิล-->
+    <template id="external_cus_billing_layout_standard">
+        <div t-attf-class="header o_company_#{company.id}_layout" t-att-style="report_header_style"
+             style="margin-bottom: 0px !important;">
+            <style>
+                table, td, th {
+                border: none !important;
+                }
+                .table-border{
+                border: 1px solid #000000 !important;
+                border-collapse: collapse;
+                }
+
+                .column140{
+                color: #090909;
+                width:140px;
+                }
+                .column100 {
+                color: #090909;
+                width:100px;
+                }
+                .column260{
+                color: #090909;
+                width:260px;
+                padding-left: 20px;
+                }
+                .column550{
+                width:550px;
+                }
+                .column410{
+                color: #090909;
+                width:475px;
+                }
+                .column130{
+                color: #090909;
+                width:130px;
+                font-size:16px;
+                }
+                .column120 {
+                color: #090909;
+                width:120px;
+                }
+                .column320{
+                width:320px;
+                }
+                .column290 {
+                color: #090909;
+                width:290px;
+                }
+                .column50 {
+                color: #090909;
+                width:50px;
+                }
+                .column60 {
+                color: #090909;
+                width:60px;
+                }
+                .column59 {
+                color: #090909;
+                width:59px;
+                }
+                .column70 {
+                color: #090909;
+                width:70px;
+                }
+                .column80 {
+                color: #090909;
+                width:80px;
+                }
+                .column370{
+                width:370px;
+                }
+                .column330{
+                width:330px;
+                }
+                .column350{
+                width:350px;
+                }
+                .watermark1 {
+                position: fixed;
+                top:493px;
+                left: 15px;
+                }
+                .column170{
+                color: #090909;
+                width:170px;
+                }
+                .column190{
+                color: #090909;
+                width:190px;
+                }
+                .column180{
+                width:180px;
+                }
+                .column50{
+                width:50px;
+                }
+                .header_text {
+                font-size:24px;
+                }
+
+                .header2 {
+                border-left:2px solid white;
+                }
+
+                .header3 {
+                display: block;
+                width: 80px;
+                border:2px solid black;
+                font-size:24px;
+                }
+            </style>
+            <table class="table table-sm" style="margin-bottom: 0px !important;">
+                <tr>
+                    <!--                    <td class="text-center column100">-->
+                    <!--                        <br/>-->
+                    <!--                        <br/>-->
+                    <!--                        <img t-if="company.logo" t-att-src="image_data_uri(company.logo)"-->
+                    <!--                             style="max-height: 130px;"-->
+                    <!--                             alt="Logo"/>-->
+                    <!--                    </td>-->
+                    <td class="column310 header2 text-left" style="font-size:20px;">
+                        <br/>
+                        <br/>
+                        <strong t-field="company.partner_id.name" style="font-size:26px;"/>
+                        <br/>
+                        <strong t-field="company.partner_id.street"/>
+                        <strong t-field="company.partner_id.street2"/>
+                        <strong t-field="company.partner_id.city"/>
+                        <strong t-field="company.partner_id.state_id.name"/>
+                        <strong t-field="company.partner_id.zip"/>
+                        <br/>
+                        <strong>โทร</strong>
+                        :
+                        <span t-field="company.partner_id.phone"/>
+                        <br/>
+                        <!--                        <strong>เลขประจำตัวผู้เสียภาษีอากร :</strong>-->
+                        <!--                        <strong t-field="company.partner_id.vat"/>-->
+                        <!--                        <strong>สำนักงานใหญ่</strong>-->
+                    </td>
+                    <td class="text-center" style="font-size:30px;">
+                        <br/>
+                        <span style="display: block;width: 150px;font-size:30px;
+                        border: 2px solid black;padding: 10px;border-radius: 25px;">
+                            ใบวางบิล
+                        </span>
+
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div t-attf-class="article o_report_layout_standard o_company_#{company.id}_layout"
+             t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <t t-raw="0"/>
+        </div>
+        <div t-attf-class="footer  o_company_#{company.id}_layout">
+            <style>
+                table, td, th {
+                border: none !important;
+                }
+                .table-border tr td{
+                border: 1px solid #000000 !important;
+                border-collapse: collapse;
+                }
+                .column70 {
+                width:70px;
+                }
+                .column370 {
+                width:370px;
+                }
+                .column320 {
+                width:320px;
+                }
+                .column120 {
+                width:120px;
+                }
+                .no_border{
+                border-bottom: 2px solid white;
+                }
+                .no_border tr{
+                border-top: 2px solid white;
+                border-bottom: 2px solid white;
+                }
+                .no_border td{
+                border-left: 2px solid white;
+                border-right: 2px solid white;
+                }
+            </style>
+            <!--
+            <table class="table" style="border: 1px solid white !important;font-size:20px;">
+                <tr>
+                    <td style="border: 1px solid white !important;">
+                        <span style="display: block;width: 320px;border: 2px solid black;padding: 10px;">
+                            <strong>ผู้รับวางบิล
+                                <br/>
+                                <br/>
+                                <br/>
+                                .............................................................................................
+                                <br/>
+                                วันที่ ..............................................................................
+                                <br/>
+                                กำหนดชำระ ..................................................................
+                            </strong>
+                        </span>
+                    </td>
+                    <td style="border: 1px solid white !important;"/>
+                    <td style="border: 1px solid white !important;">
+                        <span style="display: block;width: 290px;border: 2px solid black;padding: 10px;">
+                            <strong>ผู้วางบิล
+                                <br/>
+                                <br/>
+                                <br/>
+                                .................................................................................
+                                <br/>
+                                วันที่ ........................................................................
+                                <br/>
+                                ในนาม บริษัท กุลทรัพย์999 จำกัด
+                            </strong>
+                        </span>
+                    </td>
+                </tr>
+            </table>-->
+        </div>
+    </template>
+    <template id="external_cus_billing_layout">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+
+        <t t-if="not company">
+            <!-- Multicompany -->
+            <t t-if="company_id">
+                <t t-set="company" t-value="company_id"/>
+            </t>
+            <t t-elif="o and 'company_id' in o">
+                <t t-set="company" t-value="o.company_id.sudo()"/>
+            </t>
+            <t t-else="else">
+                <t t-set="company" t-value="res_company"/>
+            </t>
+        </t>
+
+        <t t-call="npd_npd_accounting_qweb.external_cus_billing_layout_standard">
+            <t t-raw="0"/>
+        </t>
+    </template>
+    <template id="report_bill_acceptance_cus">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="npd_npd_accounting_qweb.external_cus_billing_layout">
+                    <style>
+                        table, td, th {
+                        border-left: 1px solid black;
+                        border-right: 1px solid black;
+                        table-layout: fixed;
+                        width: 100%;
+                        }
+
+                        .table thead tr {
+                        border: 1px solid black;
+
+                        }
+                        .table tbody td {
+                        border: none;
+                        }
+                        .table-bordered {
+                        border-bottom: none;
+                        }
+
+
+                        .column30{
+                        width:30px;
+                        }
+                        .column35{
+                        width:35px;
+                        }
+
+                        .column140{
+                        color: #090909;
+                        width:140px;
+                        }
+                        .column100 {
+                        color: #090909;
+                        width:100px;
+                        }
+                        .column200{
+                        color: #090909;
+                        width:200px;
+                        }
+                        .column260{
+                        color: #090909;
+                        width:260px;
+                        padding-left: 20px;
+                        }
+                        .column340{
+                        color: #090909;
+                        width:340px;
+                        }
+
+                        .column130{
+                        color: #090909;
+                        width:130px;
+                        font-size:16px;
+                        }
+                        .column120 {
+                        color: #090909;
+                        width:120px;
+                        }
+
+                        .column50 {
+                        color: #090909;
+                        width:50px;
+                        }
+                        .column60 {
+                        color: #090909;
+                        width:60px;
+                        }
+                        .column65 {
+                        color: #090909;
+                        width:65px;
+                        }
+                        .column70 {
+                        color: #090909;
+                        width:70px;
+                        }
+                        .column80 {
+                        color: #090909;
+                        width:80px;
+                        }
+
+                        .watermark1 {
+                        position: fixed;
+                        top: 298px;
+                        }
+                        .column170{
+                        color: #090909;
+                        width:170px;
+                        }
+                        .column190{
+                        color: #090909;
+                        width:190px;
+                        }
+                        .column180{
+                        width:180px;
+                        }
+                        .column50{
+                        width:50px;
+                        }
+                        .header_text {
+                        font-size:16px;
+                        }
+                        .header {
+                        border: 1px solid #000000;
+                        padding: 2px;
+                        border-radius: 15px;
+                        }
+                        .header2 {
+                        border-left:2px solid white;
+                        }
+                        .header3 {
+                        text-align: center;
+                        border: 1px solid black !important;
+                        height: 25px;
+                        }
+                        .line_ids {
+                        border-right: 1px solid black !important;
+                        font-size: 20px !important;
+                        }
+                        .line_ids_right {
+                        border-right: 1px solid black !important;}
+
+                        .none_left {
+                        border-left: 1px solid white !important;}
+                        .none_right {
+                        border-left: 1px solid white !important;}
+                        .none_top {
+                        border-top: 1px solid white !important;}
+                        .none_bottom {
+                        border-bottom: 1px solid white !important;}
+
+                    </style>
+                    <div class="page">
+                        <table class="table_asset table table-sm table-condensed"
+                               style="border: 1px solid white !important;font-size:20px;">
+                            <tr>
+                                <td style="border: 1px solid white !important;">
+                                    <div class="row">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;
+                                        <div style="display: block;width: 570px;border: 2px solid black;padding: 10px;border-radius: 10px;">
+                                            <strong>ชื่อผู้จำหน่าย
+                                                <t t-esc="o.partner_id.name"/>
+                                            </strong>
+                                            <br/>
+                                            <strong>
+                                                <t t-esc="o.partner_id.street"/>
+                                                <t t-esc="o.partner_id.street2"/>
+                                                <t t-esc="o.partner_id.city"/>
+                                                <t t-esc="o.partner_id.state_id.name"/>
+                                                <t t-esc="o.partner_id.zip"/>
+                                            </strong>
+                                            <br/>
+                                        </div>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;
+                                        <div style="display: block;width: 270px;border: 2px solid black;padding: 10px;border-radius: 10px;">
+                                            <strong>เลขที่
+                                                <t t-esc="o.name"/>
+                                            </strong>
+                                            <br/>
+                                            <strong>วันที่
+                                                <t t-esc="o.date" t-options="{&quot;widget&quot;: &quot;date&quot;}"/>
+                                            </strong>
+                                            <br/>
+                                            <strong>วันที่กำหนดจ่าย
+                                                <t t-esc="o.due_date"
+                                                   t-options="{&quot;widget&quot;: &quot;date&quot;}"/>
+                                            </strong>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <table align="center"
+                               style="width:99%;margin-left:auto!important;margin-right:auto!important;font-size:20px;"
+                               class="table_asset table table-sm table-condensed">
+                            <!--<table class="table_asset table table-sm table-condensed" style="font-size:20px;">-->
+                            <thead>
+                                <tr style="border: 1px solid black !important;">
+                                    <td class="column35 header3" style="vertical-align: middle;">
+                                        <strong>ลำดับ</strong>
+                                    </td>
+                                    <td class="column60 header3" style="vertical-align: middle;">
+                                        <strong>เลขที่ใบกำกับภาษี</strong>
+                                    </td>
+                                    <td class="column60 text-center header3" style="vertical-align: middle;">
+                                        <strong>วันที่</strong>
+                                    </td>
+                                    <td class="column60 text-center header3" style="vertical-align: middle;">
+                                        <strong>จำนวนเงิน</strong>
+                                    </td>
+                                    <td class="column60 text-center header3" style="vertical-align: middle;">
+                                        <strong>ค้างชำระ</strong>
+                                    </td>
+                                    <td class="column60 text-center header3" style="vertical-align: middle;">
+                                        <strong>หมายเหตุ</strong>
+                                    </td>
+                                </tr>
+                            </thead>
+                            <tbody name="line_body" class="line_body">
+                                <t t-set="count_line" t-value="0"/>
+                                <t t-set="sum_total" t-value="0"/>
+                                <t t-set="line_number" t-value="0"/>
+                                <t t-foreach="o.billing_line_ids" t-as="line">
+                                    <t t-set="line_number" t-value="line_number + 1"/>
+                                    <tr>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="line_index+1"/>
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="line.name"/>
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="line.invoice_date"
+                                                  t-options="{&quot;widget&quot;: &quot;date&quot;}"/>
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="'{0:,.2f}'.format(line.total)"/>
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="'{0:,.2f}'.format(line.invoice_id.amount_total)"/>
+                                            <t t-set="sum_total" t-value="sum_total + line.invoice_id.amount_total"/>
+                                        </td>
+                                        <td class="text-center line_ids" style="vertical-align: middle;">
+                                            <span t-esc="line.invoice_id.ref"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <tr style="border: 1px solid black !important;">
+                                    <td colspan="4" class="text-center">
+                                        <strong>
+                                            (
+                                            <t t-esc="o.currency_id.with_context({'lang': 'th_TH'}).amount_to_text(sum_total)"/>
+                                            )
+                                        </strong>
+                                    </td>
+                                    <td colspan="2" class="text-center">
+                                        <strong>
+                                            <t t-esc="'{0:,.2f}'.format(sum_total)"/>
+                                        </strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:black !important;border-top: 1px solid black !important;">
+                                        หมายเหตุ
+                                    </td>
+                                    <td colspan="5"
+                                        style="border:hidden !important;border-top: 1px solid black !important;">
+                                        โอนธนาคารไทยพาณิชย์
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:hidden !important;"/>
+                                    <td colspan="5" style="border:hidden !important;">
+                                        ชื่อบัญชี บริษัท กุลทรัพย์999 จํากัด
+                                        <br/>
+                                        เลขที่บัญชี 439-074718-8
+                                    </td>
+                                </tr>
+                                <t t-foreach="range(15 - (line_number))" t-as="item">
+                                    <tr>
+                                        <td colspan="4" style="border:hidden !important;" class="text-center">
+                                            &amp;nbsp;
+                                        </td>
+                                        <td colspan="2" style="border:hidden !important;" class="text-center">
+                                            &amp;nbsp;
+                                        </td>
+                                    </tr>
+                                </t>
+
+                            </tbody>
+                        </table>
+                        <table class="table" style="border: 1px solid white !important;font-size:20px;">
+                            <tr>
+                                <td style="border: 1px solid white !important;">
+                                    <strong>ผู้รับวางบิล
+                                        <br/>
+                                        <br/>
+                                        .................................................................................
+                                        <br/>
+                                        วันที่ ........................................................................
+                                        <br/>
+                                        กำหนดชำระ.............................................................
+                                    </strong>
+                                </td>
+                                <td style="border: 1px solid white !important;"/>
+                                <td style="border: 1px solid white !important;">
+                                    <strong>ผู้วางบิล
+                                        <br/>
+                                        <br/>
+                                        .................................................................................
+                                        <br/>
+                                        วันที่ ........................................................................
+                                        <br/>
+                                        ในนาม บริษัท กุลทรัพย์999 จำกัด
+                                    </strong>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_task_checklist,access_task_checklist,model_task_checklist,base.group_user,1,0,0,0
+access_task_checklist_man,access_task_checklist_man,model_task_checklist,project.group_project_manager,1,1,1,1
+sh_all_in_one_pms.access_import_task_cl_wizard,access_import_task_cl_wizard,sh_all_in_one_pms.model_import_task_cl_wizard,base.group_user,1,1,1,1

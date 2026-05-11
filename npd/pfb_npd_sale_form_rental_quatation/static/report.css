@@ -1,0 +1,33 @@
+table tr td {
+    pending: 5px;
+    color: black;
+}
+
+.border_report {
+    border-bottom: 1px solid black !important;
+    border-top: 1px solid black !important
+}
+
+.font_weight {
+    font-weight: 800;
+}
+
+.table tbody tr td,
+.table tbody tr,
+.table tbody td {
+    border-top: none !important;
+    border-bottom: none !important;
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
+    line-height: 1.2 !important;
+}
+
+.table tbody tr {
+    height: auto !important;
+}
+
+.line-distance {
+    line-height: 1.2 !important;
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
+}

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <record id="transport_management_stock_picking_form" model="ir.ui.view">
+            <field name="name">stock.picking.form</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='origin']" position="after">
+                    <field name='no_of_parcel' attrs="{'readonly': [['state', 'in', ['done']]]}"/>
+                </xpath>
+                <xpath expr="//field[@name='no_of_parcel']" position="after">
+                    <field name="lr_number" attrs="{'readonly': [['state', 'in', ['done']]]}"/>
+                </xpath>
+                <xpath expr="//field[@name='partner_id']" position="after">
+                      <label for="transporter_id" attrs="{'readonly': [['state', 'in', ['done']]]}"/>
+                        <div>
+                            <field name='transporter_id' domain="[('transporter','=',True)]"/><br/>
+                            <button name="show_shipment_wizard" type='object' class="btn btn-link">
+                            <span>Add Shipment Infomation</span>
+                            </button>
+                        </div>
+                </xpath>
+                <xpath expr="//page[last()]" position="after">
+                    <page string="Transport Details">
+                        <group>
+                            <group>
+                                <field name="vehicle_id" domain="[('transporter_id','=', transporter_id)]" attrs="{'readonly': [['state', 'in', ['done']]]}"/>
+                                <field name='vehicle_driver' attrs="{'readonly': [['state', 'in', ['done']]]}"/>
+                                <field name="picking_type" readonly='1'/>
+                            </group>
+                            <group>
+                                <field name="pick_date" readonly='1'/>
+                                <field name="arrive_date" readonly='1'/>
+                                <!-- <label for="transporter_route_id" attrs="{'readonly': [['state', 'in', ['done']]]}"/>
+                                <div> -->
+                                <field name='transporter_route_id' domain="[('transporter_id','=',transporter_id)]" attrs="{'readonly': [['state', 'in', ['done']]]}"/>
+                                <!-- <button class="oe_stat_button" type="object" string='Compute'  name="compute_transporter_route"  icon="fa-tasks" attrs="{'invisible': [['state', 'in', ['done']]]}"/>
+                                </div> -->
+                            </group>
+                        </group>
+                    </page>
+                </xpath>
+                <xpath expr = "//div[@name = 'button_box']" position="inside">
+                    <button class="oe_stat_button" type="object"  name="show_picking_transport"  icon="fa-tasks">
+                        <field name='picking_transport_count' widget="statinfo" string="Shipments"/>
+                    </button>
+                </xpath>
+                <xpath expr = "//div[@name = 'button_box']" position="inside">
+                    <button class="oe_stat_button" type="object"  name="show_route_transport"  icon="fa-tasks" string='Shipment Routes'>
+                        <!-- <field name='picking_transport_route' widget="statinfo"/> -->
+                    </button>
+                </xpath>
+                <xpath expr="//field[@name='location_id']" position="after">
+                    <field name="transport_date" attrs="{'readonly': [['state', 'in', ['done']]]}"/>
+                </xpath>
+                <xpath expr="//field[@name='shipping_weight']" position="after">
+                    <field name="number_of_packages" attrs="{'readonly': [('state', '=', 'done')]}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="transport_management_stock_picking_search_form" model="ir.ui.view">
+            <field name="name">stock.picking.form</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_internal_search"/>
+            <field name="arch" type="xml">
+                <xpath expr="//search" position="inside">
+                    <field name="transporter_id" />
+                    <field name="vehicle_id"/>
+                    <field name="lr_number"/>
+                    <filter name="transporter_id" string="Transporter" context="{'group_by':'transporter_id'}"/>
+                    <filter name="vehicle_id" string="Vehicle" context="{'group_by':'vehicle_id'}"/>
+                    <filter name="lr_number" string="LR Number" context="{'group_by':'lr_number'}"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

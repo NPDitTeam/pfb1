@@ -1,0 +1,26 @@
+<odoo>
+    <record id="account_asset_view_inherit_id_fix" model="ir.ui.view">
+        <field name="name">account.asset.inherit</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset_management.account_asset_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[2]"  position="after">
+                <page name="set_durable_articles" string="Set Durable Articles">
+                    <field name="std_asset_line_ids">
+                        <tree string="Sequences" editable="bottom" delete="true">
+                            <field name="std_asset_id" context="{'show_asset_name': True}"/>
+<!--                            <field name="std_employee_id"/>-->
+                            <field name="depreciation_base"/>
+                            <field name="value_depreciated"/>
+                            <field name="value_residual"/>
+                            <field name="date_start"/>
+                            <field name="profile_id"/>
+                            <field name="state"/>
+<!--                            <field name="group_ids" widget="many2many_tags"/>-->
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

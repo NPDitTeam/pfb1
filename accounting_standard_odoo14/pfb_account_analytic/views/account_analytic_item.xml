@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_account_analytic_line_form_inherit_account_type" model="ir.ui.view">
+        <field name="name">account.analytic.line.form.inherit.account.type</field>
+        <field name="model">account.analytic.line</field>
+        <field name="inherit_id" ref="account.view_account_analytic_line_form_inherit_account"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='general_account_id']" position="after">
+                <field name="account_type_id" />
+            </xpath>
+        </field>
+    </record>
+    <record id="view_account_analytic_line_tree_tree" model="ir.ui.view">
+        <field name="name">account.analytic.line.inherit</field>
+        <field name="model">account.analytic.line</field>
+        <field name="inherit_id" ref="analytic.view_account_analytic_line_tree"/>
+        <field name="arch" type="xml">
+            <field name="account_id" position="after">
+                <field name="account_type_id" />
+            </field>
+        </field>
+    </record>
+   <record id="view_account_analytic_line_filter_inherit" model="ir.ui.view">
+        <field name="name">account.analytic.line.inherit</field>
+        <field name="model">account.analytic.line</field>
+        <field name="inherit_id" ref="analytic.view_account_analytic_line_filter"/>
+        <field name="arch" type="xml">
+               <field name="account_id" position="after">
+                <field name="account_type_id" />
+                  <group string="Group By..." expand="0" name="groupby">
+                        <filter string="Account Type" name="account_type_id" context="{'group_by': 'account_type_id'}"/>
+                        
+                    </group>
+            </field>
+        </field>
+    </record>
+</odoo>

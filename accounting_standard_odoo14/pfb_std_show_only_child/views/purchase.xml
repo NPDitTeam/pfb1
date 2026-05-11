@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_purchase_order_form_inherit_fix" model="ir.ui.view">
+        <field name="name">view.purchase.order.form.inherit.fix</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="domain">[('supplier','=',True),('parent_id','=',False)]</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="account.res_partner_action_supplier" model="ir.actions.act_window">
+        <field name="domain">[('supplier','=',True),('parent_id','=',False)]</field>
+    </record>
+
+    <!-- purchase.requisition -->
+    <record id="view_purchase_requisition_form_inherit_vendor" model="ir.ui.view">
+        <field name="name">purchase.requisition.form.inherit</field>
+        <field name="model">purchase.requisition</field>
+        <field name="inherit_id" ref="purchase_requisition.view_purchase_requisition_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='vendor_id']" position="attributes">
+                <attribute name="domain">[('supplier','=',True),('parent_id','=',False)]</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- work.acceptance -->
+    <record id="view_work_acceptance_form_inherit_vendor" model="ir.ui.view">
+        <field name="name">work_acceptance.form.inherit</field>
+        <field name="model">work.acceptance</field>
+        <field name="inherit_id" ref="purchase_work_acceptance.view_work_acceptance_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="domain">[('supplier','=',True),('parent_id','=',False)]</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

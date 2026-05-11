@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="sale_order_search_view_with_thai_date" model="ir.ui.view">
+    <field name="name">sale.order.search.view.thai.date</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+    <field name="arch" type="xml">
+
+        <!-- 🔧 ลบ filter เดิมที่ error ออก -->
+        <xpath expr="//filter[@name='activities_overdue']" position="replace"/>
+        <xpath expr="//filter[@name='activities_today']" position="replace"/>
+        <xpath expr="//filter[@name='activities_upcoming_all']" position="replace"/>
+
+        <!-- ✅ เพิ่ม filter ใหม่ -->
+        <xpath expr="//search" position="inside">
+
+            <!-- 🗓 ให้ผู้ใช้เลือกช่วงวันที่สั่งซื้อแบบไทย -->
+            <field name="date_order_x" string="วันที่สั่งซื้อ (ไทย)"/>
+
+            <!-- 🔎 Filter เฉพาะวันนี้ -->
+            <filter name="filter_today"
+                    string="เฉพาะวันนี้"
+                    domain="[('date_order_x','=', (context_today().strftime('%Y-%m-%d')))]"/>
+
+            <!-- 🔄 Group By วันที่ -->
+            <separator/>
+            <group expand="0" string="จัดกลุ่มตาม">
+                <filter name="group_by_date"
+                        string="วันที่สั่งซื้อ"
+                        context="{'group_by':'date_order_x'}"/>
+            </group>
+
+        </xpath>
+
+    </field>
+</record>
+
+
+
+
+    </data>
+</odoo>

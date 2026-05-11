@@ -1,0 +1,65 @@
+<odoo>
+
+    <!-- PDF REPORTS -->
+    <record id="payable_journal_pdf_report" model="ir.actions.report">
+        <field name="name">รายงานสมุดรายวันจ่ายชำระ</field>
+        <field name="model">account.move.line</field>
+        <field name="report_name">pfb_std_payable_journal_report.line</field>
+        <field name="report_file">pfb_std_payable_journal_report.line</field>
+        <field name="report_type">qweb-pdf</field>
+        <field
+                name="paperformat_id" ref="pfb_std_payable_journal_report.paperformat_payable_journal_print"
+        />
+        <field name="print_report_name">'[%s]' % object.display_name</field>
+        <field name="binding_model_id" ref="account.model_account_move_line"/>
+        <field name="binding_type">report</field>
+
+    </record>
+
+
+    <!--////-->
+        <record id="view_move_line_tree_grouped_payable" model="ir.ui.view">
+            <field name="name">account.move.line.tree.grouped.payable</field>
+            <field name="model">account.move.line</field>
+            <field name="mode">primary</field>
+            <field name="inherit_id" ref="account.view_move_line_tree_grouped"/>
+            <field name="arch" type="xml">
+                <field name="date" position="attributes"><attribute name="optional">hide</attribute></field>
+                <field name="move_id" position="attributes"><attribute name="optional">hide</attribute></field>
+                <field name="ref" position="attributes"><attribute name="optional">show</attribute></field>
+                <field name="matching_number" position="attributes"><attribute name="optional">hide</attribute></field>
+            </field>
+        </record>    
+
+        <record id="action_account_moves_journal_payable" model="ir.actions.act_window">
+            <field name="context">{'journal_type':'payable2', 'search_default_group_by_move': 1, 'search_default_posted':1, 'search_default_payable2':1, 'name_groupby':1, 'expand': 1}</field>
+            <field name="name">Payable</field>
+            <field name="res_model">account.move.line</field>
+               <field name="domain">[('display_type', 'not in', ('line_section', 'line_note')),('journal_id.type', '=like', 'payable')]</field>
+            <field name="view_id" ref="view_move_line_tree_grouped_payable"/>
+            <field name="view_mode">tree,pivot,graph</field>
+        </record>
+        <menuitem
+            name="Payable"
+            id="menu_action_account_moves_journal_payable"
+            sequence="5"
+            action="pfb_std_payable_journal_report.action_account_moves_journal_payable"
+            parent="account.menu_finance_entries_accounting_journals"/>
+
+        <record id="view_account_move_line_filter_pfb_payable" model="ir.ui.view">
+            <field name="name">account.move.line.search</field>
+            <field name="model">account.move.line</field>
+            <field name="inherit_id" ref="account.view_account_move_line_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group" position="after">
+                    <!--<searchpanel class="account_root">
+                        <field name="account_root_id" icon="fa-filter" limit="0"/>
+                    </searchpanel>-->
+                    <filter string="Payable report" name="payable2" domain="[('journal_id.type', '=', 'payable')]" context="{'default_journal_type': 'payable2'}"/>
+                </xpath>
+                
+            </field>
+        </record>        
+
+
+</odoo>

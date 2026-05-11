@@ -1,0 +1,65 @@
+<odoo>
+    <!-- Header -->
+    <template id="external_layout_standard">
+        <div t-attf-class="header">
+            <center>
+                <img t-if="company.logo" t-att-src="image_data_uri(company.logo)"
+                     style="max-height: 30px; padding-bottom:2px;"
+                     alt="Logo"/>
+            </center>
+        </div>
+
+        <div t-attf-class="article o_report_layout_standard o_company_#{company.id}_layout"
+             t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <t t-raw="0"/>
+        </div>
+
+    </template>
+
+    <template id="external_layout">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+        <t t-if="not company">
+            <!-- Multicompany -->
+            <t t-if="company_id">
+                <t t-set="company" t-value="company_id"/>
+            </t>
+            <t t-elif="o and 'company_id' in o">
+                <t t-set="company" t-value="o.company_id.sudo()"/>
+            </t>
+            <t t-else="else">
+                <t t-set="company" t-value="res_company"/>
+            </t>
+        </t>
+        <t t-call="pfb_std_asset_barcode_print.external_layout_standard">
+            <t t-raw="0"/>
+        </t>
+    </template>
+
+    <template id="report_asset_barcode">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="pfb_std_asset_barcode_print.external_layout">
+                    <div class="page">
+                        <div class="oe_structure"/>
+
+                        <t t-if="o.std_barcode">
+                            <img alt="Barcode"
+                                 t-att-src="'/report/barcode/?type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', quote_plus(o.std_barcode or ''), 600, 200)"
+                                 style="width:100%;height::4rem;"/>
+                         <center>
+                             <span t-field="o.std_barcode" style="font-size: 8px;"/>
+                         </center>
+                        </t>
+                        <t t-else="">
+                            <span class="text-muted">No barcode available</span>
+                        </t>
+                        <div class="oe_structure"/>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+</odoo>

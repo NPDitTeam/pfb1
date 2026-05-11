@@ -1,0 +1,95 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* bi_branch_partner_reports
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 13.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-09-03 06:34+0000\n"
+"PO-Revision-Date: 2021-09-03 06:34+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: bi_branch_partner_reports
+#: model_terms:ir.ui.view,arch_db:bi_branch_partner_reports.bi_branch_partner_reports_ledger_inherit
+msgid "<strong>Branch:</strong><br/>"
+msgstr "<strong>فرع:</strong><br/>"
+
+#. module: bi_branch_partner_reports
+#: model_terms:ir.ui.view,arch_db:bi_branch_partner_reports.bi_branch_partner_reports_ledger_inherit
+msgid "<strong>Company:</strong>"
+msgstr "<strong>شركة:</strong>"
+
+#. module: bi_branch_partner_reports
+#: model_terms:ir.ui.view,arch_db:bi_branch_partner_reports.bi_branch_partner_reports_ledger_inherit
+msgid "<strong>Date from :</strong>"
+msgstr "<strong>التاريخ من :</strong>"
+
+#. module: bi_branch_partner_reports
+#: model_terms:ir.ui.view,arch_db:bi_branch_partner_reports.bi_branch_partner_reports_ledger_inherit
+msgid "<strong>Date to :</strong>"
+msgstr "<strong>التاريخ إلى:</strong>"
+
+#. module: bi_branch_partner_reports
+#: model_terms:ir.ui.view,arch_db:bi_branch_partner_reports.bi_branch_partner_reports_ledger_inherit
+msgid "<strong>Target Moves:</strong>"
+msgstr "<strong>الحركات المستهدفة:</strong>"
+
+#. module: bi_branch_partner_reports
+#: model_terms:ir.ui.view,arch_db:bi_branch_partner_reports.bi_branch_partner_reports_ledger_inherit
+msgid "All Entries"
+msgstr "كل المقالات"
+
+#. module: bi_branch_partner_reports
+#: model_terms:ir.ui.view,arch_db:bi_branch_partner_reports.bi_branch_partner_reports_ledger_inherit
+msgid "All Posted Entries"
+msgstr "جميع المشاركات المنشورة"
+
+#. module: bi_branch_partner_reports
+#: model:ir.model.fields,field_description:bi_branch_partner_reports.field_accounting_report_partner_ledger__branch_ids
+#: model:ir.model.fields,field_description:bi_branch_partner_reports.field_bi_account_aged_partner_balance__branch_ids
+msgid "Branch"
+msgstr "فرع"
+
+#. module: bi_branch_partner_reports
+#: model:ir.model,name:bi_branch_partner_reports.model_account_move_line
+msgid "Journal Item"
+msgstr "عنصر المجلة"
+
+#. module: bi_branch_partner_reports
+#: code:addons/bi_branch_partner_reports/reports/inherited_report_aged_partner.py:0
+#, python-format
+msgid "Unknown Partner"
+msgstr "شريك غير معروف"
+
+#. module: bi_branch_partner_reports
+#: code:addons/bi_branch_partner_reports/models/inherited_account_aged_partner_balance.py:0
+#, python-format
+msgid "You must set a period length greater than 0."
+msgstr "يجب عليك تعيين طول فترة أكبر من 0."
+
+#. module: bi_branch_partner_reports
+#: code:addons/bi_branch_partner_reports/models/inherited_account_aged_partner_balance.py:0
+#, python-format
+msgid "You must set a start date."
+msgstr "يجب عليك تحديد تاريخ البدء."
+
+#. module: bi_branch_partner_reports
+#: model:ir.model,name:bi_branch_partner_reports.model_accounting_report_partner_ledger
+msgid "accounting_report.partner_ledger"
+msgstr ""
+
+#. module: bi_branch_partner_reports
+#: model:ir.model,name:bi_branch_partner_reports.model_bi_account_aged_partner_balance
+msgid "bi.account.aged.partner.balance"
+msgstr ""
+
+#. module: bi_branch_partner_reports
+#: model:ir.model,name:bi_branch_partner_reports.model_report_bi_partner_ledger_report_bi_report_agedpartnerbalance
+msgid "report.bi_partner_ledger_report.bi_report_agedpartnerbalance"
+msgstr ""

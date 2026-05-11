@@ -1,0 +1,4 @@
+"id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
+access_bi_account_aged_partner_balance,bi.account.aged.partner.balance,bi_partner_ledger_report.model_bi_account_aged_partner_balance,,1,1,1,1
+access_excel_report,excel.report,bi_partner_ledger_report.model_excel_report,,1,1,1,1
+access_accounting_report.partner_ledger,accounting_report.partner_ledger,bi_partner_ledger_report.model_accounting_report_partner_ledger,,1,1,1,1

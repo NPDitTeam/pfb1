@@ -1,0 +1,64 @@
+<odoo>
+    <data>
+
+        <!-- ✅ Tree View -->
+        <record id="view_tree_sale_order_report_rent" model="ir.ui.view">
+            <field name="name">sale.order.report.rent.tree</field>
+            <field name="model">sale.order.report.rent</field>
+            <field name="arch" type="xml">
+                <tree string="รายงานปิดบิลเช่า">
+                    <field name="sale_id" widget="many2one"/>
+                    <field name="date_order_x"/>
+                    <field name="partner_id"/>
+                    <field name="branch_name"/>
+                    <field name="amount_total" sum="รวมทั้งหมด"/>
+                    <field name="rental_status"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- ✅ Form View พร้อมปุ่มกดดึงข้อมูล -->
+        <record id="view_form_sale_order_report_rent" model="ir.ui.view">
+            <field name="name">sale.order.report.rent.form</field>
+            <field name="model">sale.order.report.rent</field>
+            <field name="arch" type="xml">
+                <form string="รายงานปิดบิลเช่า">
+                    <header>
+                        <button name="generate_report"
+                                type="object"
+                                string="📊 ดึงข้อมูลใหม่"
+                                class="btn-primary"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <div class="o_form_label">กดปุ่มด้านบนเพื่อดึงข้อมูลรายงานปิดบิลเช่าตามเงื่อนไข</div>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ✅ Action Window -->
+        <record id="action_sale_order_report_rent" model="ir.actions.act_window">
+            <field name="name">รายงานปิดบิลเช่า</field>
+            <field name="res_model">sale.order.report.rent</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- ✅ เมนู -->
+        <menuitem id="menu_sale_order_report_rent"
+                  name="รายงานใบสั่งเช่า"
+                  parent="menu_stock_dashboard_root"
+                  action="action_sale_order_report_rent"
+                  sequence="14"/>
+
+        <!-- ✅ Server Action (เรียกใช้ generate_report จากจุดอื่นได้) -->
+        <record id="server_action_generate_sale_order_report_rent" model="ir.actions.server">
+            <field name="name">ดึงข้อมูลรายงานปิดบิลเช่า</field>
+            <field name="model_id" ref="model_sale_order_report_rent"/>
+            <field name="state">code</field>
+            <field name="code">model.generate_report()</field>
+        </record>
+
+    </data>
+</odoo>

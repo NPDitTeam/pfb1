@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <record id="sh_bundle_product_res_config_settings" model="ir.ui.view">
+        <field name="name">Enable Automatic leave Summary Configuration</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="hr.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@data-key='hr']//div[1]" position="after">
+                <h2 groups="sh_all_in_one_hrms.group_enable_emp_leave_notification">Automatic leave Summary</h2>
+                <div class="row mt16 o_settings_container" groups="sh_all_in_one_hrms.group_enable_emp_leave_notification">
+                    <div class="col-12 col-lg-6 o_setting_box" title="Enable Automatic leave Summary">
+                        <div class="o_setting_left_pane">
+                            <field name="sh_enable_automatic_leave" />
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="sh_enable_automatic_leave" />
+                            <div class="text-muted">
+                                Enable Automatic leave Summary
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-12 o_setting_box">
+                        <div class="mt16" attrs="{'invisible':[('sh_enable_automatic_leave','=',False)]}">
+                            <div class="o_setting_left_pane" />
+                            <div class="o_setting_right_pane">
+                                <label for="sh_automatic_leave" />
+                                <div class="text-muted">
+                                    Automatic leave Summary
+                                </div>
+                                <div class="content-group">
+                                    <div class="mt16">
+                                        <field name="sh_automatic_leave" widget="radio" options="{'horizontal':True}" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

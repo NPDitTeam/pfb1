@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+<odoo>
+    <!--Sh Resignation Object views and action -->
+    <record id="sh_resignation_form_view" model="ir.ui.view">
+        <field name="name">sh.hr.resignation.form</field>
+        <field name="model">sh.hr.resignation</field>
+        <field name="arch" type="xml">
+            <form string="Resignation">
+                <header>
+                    <field name="is_approve" invisible="1" />
+                    <button name="new_resignation_button" type="object" states="new"
+                        string="Post Resignation" class="oe_highlight" groups="hr.group_hr_user" />
+                    <button name="approve_button" string="Approve" type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible':['|',('is_approve','=',True),('state','!=', 'waiting')]}" />
+                    <button name="refuse_button" string="Refuse" type="object" class="oe_highlight"
+                        attrs="{'invisible':['|',('is_approve','=',True),('state','!=', 'waiting')]}" />
+                    <button name="close_button" string="Close" type="object" states="approve"
+                        class="oe_highlight" groups="hr.group_hr_user" />
+                    <button name="reset_to_draft_button" string="Reset To Draft" type="object"
+                        states="refused,closed" class="oe_highlight" groups="hr.group_hr_user" />
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="new,waiting,approve,refused,closed" readonly="1" />
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1" />
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+
+                            <field name="sh_employee_id" required="True" />
+                            <field name="sh_department_id"
+                                attrs="{'readonly':[('state','!=','new')]}" required="True"
+                                options="{'no_create': True, 'no_create_edit':True}" />
+                            <field name="sh_contract_id" attrs="{'readonly':[('state','!=','new')]}"
+                            />
+                        </group>
+                        <group>
+                            <field name="created_by" readonly="1" required="True" />
+                            <field name="sh_responsible_person"
+                                attrs="{'readonly':[('state','!=','new')]}" readonly="1"
+                                force_save="1" store="True" />
+                            <field name="is_approve" invisible="1" />
+                            <field name="company_id" options="{'no_create': True}"
+                                groups="base.group_multi_company"
+                                attrs="{'readonly':[('state','!=','new')]}" />
+
+                            <field name="first_contract_start_date" readonly="1"
+                            />
+                            <field name="first_contract_end_date" readonly="1"
+                            />
+                        </group>
+                    </group>
+                    <group>
+                        <field name="sh_resignation_type"
+                            attrs="{'readonly':[('state','!=','new')]}" required="True" />
+                        <field name="description" string="Description"
+                            attrs="{'readonly':[('state','!=','new')]}" />
+                    </group>
+                    <notebook>
+                        <page string="Approve Comment" name="approved_page"
+                            attrs="{'invisible':[('state','not in',['approve','closed'])]}">
+                            <group>
+                                <group>
+                                    <field name="approved_by" readonly="1" />
+                                    <field name="approved_comment" readonly="1" />
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Refused Comment" name="refused_page"
+                            attrs="{'invisible':[('state','not in',['refused'])]}">
+                            <group>
+                                <group>
+                                    <field name="refused_by" readonly="1" />
+                                    <field name="refused_comment" readonly="1" />
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="o_attachment_preview" />
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers" />
+                    <field name="activity_ids" widget="mail_activity" />
+                    <field name="message_ids" widget="mail_thread" />
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_resignation_tree_view" model="ir.ui.view">
+        <field name="name">sh.hr.resignation.tree</field>
+        <field name="model">sh.hr.resignation</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" string="Sequence" />
+                <field name="sh_employee_id" />
+                <field name="sh_department_id" />
+                <field name="sh_contract_id" />
+                <field name="created_by" />
+                <field name="sh_responsible_person" />
+                <field name="state" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="sh_resignation_search_views" model="ir.ui.view">
+        <field name="name">sh.hr.resignation.search</field>
+        <field name="model">sh.hr.resignation</field>
+        <field name="arch" type="xml">
+            <search string="Resignation">
+                <field name="name" />
+                <filter string="To Approve Resignation" name="to_app_resignation"
+                    domain="[('state', '=', 'waiting')]" />
+                <filter string="Approved Resignation" name="app_resignation"
+                    domain="[('state','=','approve')]" />
+                <filter string="Refused Resignation" name="refused"
+                    domain="[('state','=','refused')]" />
+                <separator />
+                <group expand="0" string="Group by...">
+                    <filter string="Department" name="sh_department_id"
+                        context="{'group_by': 'sh_department_id'}" />
+
+                    <filter string="Resignation Type" name="resignation_type"
+                        context="{'group_by': 'sh_resignation_type'}" />
+                    <filter string="Created By" name="created_by"
+                        context="{'group_by': 'created_by'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="sh_resignation_view_actions" model="ir.actions.act_window">
+        <field name="name">Resignation</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.hr.resignation</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

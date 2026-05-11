@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="account_billing_inherit_view_account_billing_form" model="ir.ui.view">
+        <field name="name">account.billing.form</field>
+        <field name="model">account.billing</field>
+        <field name="inherit_id" ref="account_billing.view_account_billing_form"/>
+        <field name="arch" type="xml">
+        <xpath expr="//header" position="inside">
+
+                 <button
+                        name="action_create_payment"
+                        states="billed"
+                        string="Create Payment"
+                        type="object"
+                    />
+            </xpath>
+            <xpath expr="//field[@name='date']" position="after">
+                <field name="payment_id" readonly="True" force_save="1" />
+                <field name="due_date"/>
+            </xpath>
+            <xpath expr="//page/field[@name='billing_line_ids']/tree/field[@name='total']" position="after">
+                <field name="wht_amt" />
+                <field name="wht_base" />
+                <field name="billing_total" sum="Bill Total" />
+
+            </xpath>
+            <xpath expr="//page/field[@name='billing_line_ids']" position="after">
+                <group class="oe_subtotal_footer oe_right">
+                    <field name="billing_amount" string="Billing Amount"/>
+                    <field name="wht_amount" string="WHT Amount" />
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

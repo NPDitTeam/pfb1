@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<odoo>
+    <!-- Overtime Types views and action -->
+    <record id="sh_ot_type_form_view" model="ir.ui.view">
+        <field name="name">sh.ot.types.form</field>
+        <field name="model">sh.ot.types</field>
+        <field name="arch" type="xml">
+            <form string="Overtime Types">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                            <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_ot_type_tree_view" model="ir.ui.view">
+        <field name="name">sh.ot.types.tree</field>
+        <field name="model">sh.ot.types</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" string="Overtime Types" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="sh_ot_type_search_view" model="ir.ui.view">
+        <field name="name">sh.ot.types.search</field>
+        <field name="model">sh.ot.types</field>
+        <field name="arch" type="xml">
+            <search string="Overtime Types">
+                <field name="name" />
+                <group expand="0" string="Group by...">
+                    <filter string="Overtime Types" name="name" context="{'group_by': 'name'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="sh_ot_type_view_actions" model="ir.actions.act_window">
+        <field name="name">Overtime Types</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.ot.types</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="sh_hr_overtime_menu" name=" Overtime" parent="hr_attendance.menu_hr_attendance_root" sequence="100" />
+
+    <menuitem id="sh_hr_overtime_request_menu" name=" Overtime Request" action="sh_hr_overtime_request_view_actions" parent="sh_all_in_one_hrms.sh_hr_overtime_menu" sequence="1" />
+
+    <menuitem id="sh_hr_overtime_approve_menu" name=" Overtime Approve" action="sh_hr_overtime_approve_view_actions" parent="sh_all_in_one_hrms.sh_hr_overtime_menu" sequence="2" groups="sh_all_in_one_hrms.group_overtime_manager" />
+
+    <menuitem id="sh_ot_type_menu" name="Overtime Types" parent="sh_all_in_one_hrms.sh_hr_overtime_menu" action="sh_ot_type_view_actions" sequence="3" groups="sh_all_in_one_hrms.group_overtime_manager" />
+</odoo>

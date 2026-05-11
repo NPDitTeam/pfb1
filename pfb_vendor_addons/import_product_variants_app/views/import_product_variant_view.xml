@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="menuitem_import_product" model="ir.ui.view">
+        <field name="name">Import Product Varient</field>
+        <field name="model">import.product</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    
+                    <field name="file_type" widget="radio"/>
+                    <field name="method" widget="radio"/>
+                    <field name="file_name" invisible="1"/>
+                    <field name="importing_file" filename="file_name"/>
+                </group>
+
+                    
+                 <footer>       
+                        <button name="apply_button" string="Import Product" type="object" class="btn-primary"/>
+    
+                        <button name="sample_xls" string="Download Sample Excel" type="object" widget="pdf_viewer" class="btn-default"/>
+    
+                        <button name="sample_csv" string="Download Sample CSV" type="object" widget="pdf_viewer" class="btn-default"/>
+
+                        <button string="Cancel" class="btn-default" special="cancel" />
+                </footer>
+
+            </form>          
+        </field>
+    </record>
+
+    <record id="action_import_product" model="ir.actions.act_window">
+        <field name="name">Import Product Varient</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">import.product</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+
+    <record id="sample_download_view" model="ir.ui.view">
+        <field name="name">Download Excel or CSV</field>
+        <field name="model">sample.download</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="file_name" invisible="1"/>
+                    <field name="file"  filename="file_name" readonly="1" attrs="{'invisible':[('file','=',False)]}"/>
+                </group>
+
+                <footer>
+                    <button string="OK" class="btn-primary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="success" model="ir.ui.view">
+        <field name="name">Success</field>
+        <field name="model">success</field>
+        <field name="arch" type="xml">
+            <form>
+                <lable>Records Imported Successfully</lable>
+                <footer>
+                    <button string="OK" class="btn-primary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="add_custom_field_action" model="ir.ui.view">
+            <field name="name">product_template</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_only_form_view"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//field[@name='barcode']" position="after">
+                    <field name="boolean_field" groups="import_product_variants_app.group_import_fields"/>
+                </xpath>
+
+                <xpath expr="//field[@name='boolean_field']" position="after">
+                    <field name="many2many_field" widget="many2many_tags" groups="import_product_variants_app.group_import_fields"/>
+                </xpath>
+
+                <xpath expr="//field[@name='many2many_field']" position="after">
+                    <field name="char_field" groups="import_product_variants_app.group_import_fields"/>
+                </xpath>
+
+                <xpath expr="//field[@name='char_field']" position="after">
+                    <field name="integer_field" groups="import_product_variants_app.group_import_fields"/>
+                </xpath>
+
+                <xpath expr="//field[@name='integer_field']" position="after">
+                    <field name="float_field" groups="import_product_variants_app.group_import_fields"/>
+                </xpath>
+
+                <xpath expr="//field[@name='float_field']" position="after">
+                    <field name="text_field" groups="import_product_variants_app.group_import_fields"/>
+                </xpath>
+
+                <xpath expr="//field[@name='text_field']" position="after">
+                    <field name="many2one_field" groups="import_product_variants_app.group_import_fields"/>
+                </xpath>
+
+
+            </field>
+    </record>
+
+
+
+<menuitem id="import_product" name="Import Product Variants" action="action_import_product" parent="sale.product_menu_catalog" sequence="3" groups="group_import_variant"/>
+
+
+</odoo>

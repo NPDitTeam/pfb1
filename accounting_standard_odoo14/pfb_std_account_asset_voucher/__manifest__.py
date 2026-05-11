@@ -1,0 +1,22 @@
+{
+    'name': 'PFB Standard : Account Asset Voucher',
+    'version': '14.0.2',
+    'sequence': 230,
+    'summary': '',
+    'description': """""",
+    'depends': ["account_asset_management"],
+    "author": "Perfect Blending",
+    "website": "https://www.perfectblending.com",
+    'category': 'Accounting & Finance',
+    'data': [
+        'data/account_asset_sequence.xml',
+        'security/ir.model.access.csv',
+        'views/account_asset_item_voucher.xml',
+        'views/account_config_view.xml',
+    ],
+    'demo': [],
+    'test': [],
+    'installable': True,
+    'auto_install': False,
+    'application': True,
+}

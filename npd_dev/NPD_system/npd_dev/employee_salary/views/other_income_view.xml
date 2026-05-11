@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Tree View -->
+    <record id="view_other_income_tree" model="ir.ui.view">
+        <field name="name">other.income.tree</field>
+        <field name="model">other.income</field>
+        <field name="arch" type="xml">
+            <tree string="เงินได้อื่นๆ">
+                <field name="employee_code"/>
+                <field name="firstname"/>
+                <field name="lastname"/>
+                <field name="position_id"/>
+                <field name="department_id"/>
+                <field name="branch_id"/>
+                <field name="total_amount" widget="monetary" sum="ยอดรวม"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-success="state == 'confirmed'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_other_income_form" model="ir.ui.view">
+        <field name="name">other.income.form</field>
+        <field name="model">other.income</field>
+        <field name="arch" type="xml">
+            <form string="เงินได้อื่นๆ">
+                <header>
+                    <button name="action_confirm"
+                            type="object"
+                            string="ยืนยัน"
+                            class="oe_highlight"
+                            states="draft"/>
+                    <button name="action_reset_draft"
+                            type="object"
+                            string="กลับเป็นร่าง"
+                            states="confirmed"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="employee_id" string="ชื่อพนักงาน"/>
+                        <h1>
+                            <field name="employee_id"
+                                   options="{'no_create': True, 'no_create_edit': True}"
+                                   attrs="{'readonly': [('state', '=', 'confirmed')]}"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="ข้อมูลพนักงาน">
+                            <field name="employee_code" readonly="1"/>
+                            <field name="firstname" readonly="1"/>
+                            <field name="lastname" readonly="1"/>
+                        </group>
+                        <group string="ตำแหน่งงาน">
+                            <field name="position_id" readonly="1"/>
+                            <field name="department_id" readonly="1"/>
+                            <field name="branch_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="รายการเงินได้อื่นๆ">
+                            <field name="line_ids"
+                                   attrs="{'readonly': [('state', '=', 'confirmed')]}">
+                                <tree editable="bottom">
+                                    <field name="note"/>
+                                    <field name="amount" widget="monetary" sum="ยอดรวม"/>
+                                    <field name="payment_date"/>
+                                    <field name="attachment"
+                                           filename="attachment_filename"
+                                           widget="binary"/>
+                                    <field name="attachment_filename" invisible="1"/>
+                                </tree>
+                            </field>
+                            <group class="oe_subtotal_footer oe_right">
+                                <field name="total_amount"
+                                       widget="monetary"
+                                       string="ยอดรวม"/>
+                            </group>
+                        </page>
+                        <page string="หมายเหตุเพิ่มเติม">
+                            <field name="note"
+                                   attrs="{'readonly': [('state', '=', 'confirmed')]}"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_other_income_search" model="ir.ui.view">
+        <field name="name">other.income.search</field>
+        <field name="model">other.income</field>
+        <field name="arch" type="xml">
+            <search string="ค้นหาเงินได้อื่นๆ">
+                <field name="employee_id"/>
+                <field name="employee_code"/>
+                <field name="firstname"/>
+                <field name="lastname"/>
+                <field name="position_id"/>
+                <field name="department_id"/>
+                <field name="branch_id"/>
+                <filter name="filter_draft" string="ร่าง"
+                        domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_confirmed" string="ยืนยันแล้ว"
+                        domain="[('state', '=', 'confirmed')]"/>
+                <group expand="0" string="จัดกลุ่ม">
+                    <filter name="group_state" string="สถานะ"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_branch" string="สาขา"
+                            context="{'group_by': 'branch_id'}"/>
+                    <filter name="group_department" string="แผนก"
+                            context="{'group_by': 'department_id'}"/>
+                    <filter name="group_position" string="ตำแหน่ง"
+                            context="{'group_by': 'position_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_other_income" model="ir.actions.act_window">
+        <field name="name">เงินได้อื่นๆ</field>
+        <field name="res_model">other.income</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_other_income_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                เพิ่มเงินได้อื่นๆ ของพนักงาน
+            </p>
+            <p>
+                บันทึกรายการเงินได้อื่นๆ ของพนักงาน โดยระบุหมายเหตุ จำนวนเงิน
+                และวันที่จ่ายเงิน เมื่อยืนยันแล้วระบบจะนำยอดรวมไปคำนวณ
+                ในรายการเงินเดือนของเดือนที่ตรงกับวันที่จ่ายเงิน
+            </p>
+        </field>
+    </record>
+
+</odoo>

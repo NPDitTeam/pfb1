@@ -1,0 +1,72 @@
+@charset "UTF-8";
+@font-face {
+    font-family: 'THSarabunNew';
+    src: url('/pfb_npd_journal_voucher_qweb/static/fonts/THSarabunNew.ttf') format('truetype');
+}
+template {
+    font-family: 'THSarabunNew', sans-serif;
+}
+
+    .o_journal_voucher_from{
+    font-family: 'THSarabunNew';
+    font-size: 18px;
+    }
+
+    .o_journal_voucher_from .date_receipt_h4 {
+        position: fixed;
+        top: 46px;
+        right: 110px;
+    }
+    .o_journal_voucher_from .company_re_vo {
+        width: 100%;
+        position: fixed;
+        top: 128px;
+        left: 110px;
+    }
+
+    .o_journal_voucher_from .company_re_vo2 {
+        width: 58%;
+        position: fixed;
+        top: 122px;
+        left: 110px;
+    }
+
+    .o_journal_voucher_from .note_re_vo {
+        width: 58%;
+        position: fixed;
+        top: 161px;
+        left: 110px;
+    }
+
+    .o_journal_voucher_from .receipt_number {
+        position: fixed;
+        top: 128px;
+        left: 670px;
+    }
+
+    .o_journal_voucher_from .receipt_date_header {
+        position: fixed;
+        top: 153px;
+        left: 670px;
+    }
+
+    .o_journal_voucher_from .receipt_number_herder {
+        position: fixed;
+        top: 183px;
+        left: 670px;
+    }
+
+    .o_journal_voucher_from .receipt_number_note {
+        position: fixed;
+        top: 213px;
+        left: 670px;
+    }
+
+    .o_journal_voucher_from .text_total {
+        font-size: 30px;
+        font-weight: bold;
+        position: fixed;
+        top: 1330px;
+        right: 200px;
+    }
+

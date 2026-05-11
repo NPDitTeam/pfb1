@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dev_rental_product_report_user,dev.rental.product.report.user,model_dev_rental_product_report,base.group_user,1,1,1,1
+access_sale_order_rent_cash_report_user,sale.order.rent.cash.report.user,model_sale_order_rent_cash_report,base.group_user,1,0,0,0

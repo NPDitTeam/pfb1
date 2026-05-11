@@ -1,0 +1,64 @@
+<odoo>
+    <data>
+        <!-- Tree View -->
+        <record id="view_promotion_tree" model="ir.ui.view">
+            <field name="name">promotion.promotion.tree</field>
+            <field name="model">promotion.promotion</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="promotion_id"/>
+                    <field name="promotion_name"/>
+                    <field name="promotion_sub_name"/>
+                    <field name="promotion_expiry_date"/>
+                    <field name="record_status"/>
+                    <field name="shop_id"/>
+<!--                    <field name="end_date" invisible="1"/>-->
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form View -->
+        <record id="view_promotion_form" model="ir.ui.view">
+            <field name="name">promotion.promotion.form</field>
+            <field name="model">promotion.promotion</field>
+            <field name="arch" type="xml">
+                <form string="Promotion">
+                    <header>
+                        <!-- ปุ่มสำหรับดึงข้อมูลจาก API -->
+                        <button name="action_fetch_promotion_data" type="object" string="Fetch from API" class="btn-primary"/>
+                        <field name="record_status" widget="statusbar" statusbar_visible="Y,N"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="promotion_id" readonly="1"/>
+                                <field name="promotion_name"/>
+                                <field name="promotion_sub_name"/>
+                                <field name="shop_id"/>
+                            </group>
+                            <group>
+                                <field name="promotion_picture"/>
+                                <field name="promotion_expiry_date"/>
+                                <field name="limit_expiry"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="promotion_details" colspan="2" widget="html"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record id="action_promotion" model="ir.actions.act_window">
+            <field name="name">Promotions</field>
+            <field name="res_model">promotion.promotion</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- Menu Items -->
+        <!-- แสดงเมนูใหม่ต่อจากเมนู Members -->
+        <menuitem id="menu_promotion_root" name="Promotions" parent="menu_membership_root" action="action_promotion" sequence="2"/>
+    </data>
+</odoo>

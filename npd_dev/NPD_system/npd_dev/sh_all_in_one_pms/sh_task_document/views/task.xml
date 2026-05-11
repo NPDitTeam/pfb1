@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="task_form_view_inherit" model="ir.ui.view">
+        <field name="name">task.form.view.inherit</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2" />
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button name="open_document" context="{'default_task_id': active_id}" class="oe_stat_button" icon="fa-files-o" type="object" groups="sh_all_in_one_pms.group_sh_task_document">
+                    <field name="document_count" widget="statinfo" string="Documents" />
+                </button>
+            </div>
+        </field>
+    </record>
+    
+    <record id="task_kanban_view_inherit" model="ir.ui.view">
+        <field name="name">task.move.order.kanban.view.inherit</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_kanban" />
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="document_count" />
+            </field>
+            <xpath expr="//div[hasclass('o_kanban_record_body')]" position="after">
+                <div class="o_row">
+                    <span class="oe_kanban_partner_links">
+                        <span t-if="record.document_count.value&gt;0" class="badge badge-pill" groups="sh_all_in_one_pms.group_sh_task_document">
+                            <i class="fa fa-fw fa-files-o" role="img" aria-label="Files" title="Files" /><t t-esc="record.document_count.value" />
+                        </span>
+                    </span>
+                </div>
+            </xpath>
+        </field>
+    </record>
+    
+</odoo>

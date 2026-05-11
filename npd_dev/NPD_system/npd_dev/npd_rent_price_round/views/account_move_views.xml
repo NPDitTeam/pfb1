@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_move_form_npd_use_new_calc" model="ir.ui.view">
+        <field name="name">account.move.form.npd.use_new_calc</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="can_edit_use_new_calc" invisible="1"/>
+                <field name="debit_origin_id" invisible="1"/>
+                <field name="use_new_calc"
+                       attrs="{'readonly': [('can_edit_use_new_calc', '=', False)]}"/>
+                <field name="use_baan_kheaw"
+                       attrs="{'readonly': [('debit_origin_id', '!=', False)]}"/>
+                <field name="vat_from_total"/>
+            </xpath>
+            <!-- ปุ่ม "แก้ไขยอดทศนิยม" บนส่วน header
+                 แสดงบน: ใบแจ้งหนี้, ใบลดหนี้, Debit Note (ซึ่งเป็น
+                 out_invoice/in_invoice ที่มี debit_origin_id)
+                 ใช้เปิด wizard ปรับยอดทศนิยม -->
+            <xpath expr="//button[@name='action_register_payment']" position="after">
+                <button name="action_open_decimal_adjust_wizard"
+                        type="object"
+                        string="แก้ไขยอดทศนิยม"
+                        class="btn-secondary"
+                        attrs="{'invisible': [('move_type', 'not in',
+                                ['out_invoice', 'in_invoice',
+                                 'out_refund', 'in_refund'])]}"/>
+            </xpath>
+            <!-- target_amount_total: เก็บไว้ใน DB แต่ซ่อนในฟอร์ม
+                 (อ่าน/เขียนผ่าน wizard เท่านั้น) -->
+            <xpath expr="//field[@name='amount_total']" position="after">
+                <field name="target_amount_total" invisible="1"/>
+            </xpath>
+            <!-- ซ่อน price_unit เดิม แล้วใส่ price_unit_no_vat ที่หัว column ชื่อ "ราคา" -->
+            <xpath expr="//field[@name='invoice_line_ids']/tree//field[@name='price_unit']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='invoice_line_ids']/tree//field[@name='price_unit']" position="after">
+                <field name="price_unit_no_vat" string="ราคา"/>
+                <field name="use_new_calc" invisible="1"/>
+                <field name="use_baan_kheaw" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

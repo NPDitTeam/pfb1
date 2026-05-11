@@ -1,0 +1,166 @@
+<odoo>
+    <data>
+        <record id="employee_salary_form_view" model="ir.ui.view">
+            <field name="name">employee.salary.form</field>
+            <field name="model">employee.salary</field>
+            <field name="arch" type="xml">
+                <form string="Employee Salary">
+                    <header>
+                        <button name="import_from_php" string="Import Data from HRMS" type="object" class="oe_highlight" attrs="{'invisible': True}"/>
+                        <button name="reset_device_id" string="รีเซ็ตอุปกรณ์" type="object" class="oe_highlight"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="employee_code"/>
+                                <field name="fingerprint_id"/>
+                                <field name="pin"/>
+                                <field name="allow_offsite_time"/>
+                                <field name="status"/>
+                                <field name="auto_payroll"/>
+                            </group>
+                            <group>
+                                <field name="gender"/>
+                                <field name="prefix_th"/>
+                                <field name="nationality"/>
+                                <field name="device_id"/>
+                                <field name="allow_multi_login"/>
+                                <field name="check_date_up_device_id" invisible="1"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="ข้อมูลส่วนตัว">
+                                <group>
+                                    <group>
+                                        <field name="employee_image" widget="image" class="oe_avatar" options="{'size': [200, 200]}"/>
+                                    </group>
+                                </group>
+                                <group>
+                                    <group>
+                                        <field name="firstname"/>
+                                        <field name="lastname"/>
+                                        <field name="nickname"/>
+                                        <field name="firstname_eng"/>
+                                        <field name="lastname_eng"/>
+                                        <field name="branch_id" options="{'no_create': False, 'no_create_edit': False}"/>
+                                        <field name="marital_status"/>
+                                        <field name="personal_equipment"/>
+                                        <field name="line_id"/>
+                                    </group>
+                                    <group>
+                                        <field name="birthdate"/>
+                                        <field name="age"/>
+                                        <field name="phone_number"/>
+                                        <field name="email"/>
+                                        <field name="id_card_number"/>
+                                        <field name="passport_number"/>
+                                        <field name="social_security_number"/>
+                                    </group>
+                                </group>
+                                <group>
+                                    <field name="address"/>
+                                </group>
+                                <separator string="พฤติกรรมการทำงาน"/>
+                                <field name="behavior_ids">
+                                    <tree editable="bottom">
+                                        <field name="name"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="ข้อมูลบริษัท">
+                                <group>
+                                    <group>
+                                        <field name="department_id" options="{'no_create': False, 'no_create_edit': False}"/>
+                                        <field name="company"/>
+                                        <field name="employee_type"/>
+                                        <field name="salary"/>
+                                    </group>
+                                    <group>
+                                        <field name="position_id" options="{'no_create': False, 'no_create_edit': False}"/>
+                                        <field name="advance_payment_type"/>
+                                        <field name="advance_payment_limit"/>
+                                    </group>
+                                </group>
+                            </page>
+                            <page string="ข้อมูลเงินเดือนและภาษี">
+                                <group>
+                                    <group>
+                                        <field name="enable_social_security"/>
+                                        <field name="social_security_condition"/>
+                                        <field name="social_security_fixed_amount"/>
+                                        <field name="social_security_start_date"/>
+                                        <field name="enable_tax"/>
+                                        <field name="tax_condition"/>
+                                        <field name="tax_exception"/>
+                                        <field name="tax_start_date_condition"/>
+                                    </group>
+                                </group>
+                            </page>
+                            <page string="ประวัติการทำงาน">
+                                <group>
+                                    <group>
+                                        <field name="start_date"/>
+                                        <field name="appointment_date"/>
+                                        <field name="contract_end_date"/>
+                                        <field name="end_trial_date"/>
+                                    </group>
+                                    <group>
+                                        <field name="retirement_year"/>
+                                        <field name="probation_period"/>
+                                    </group>
+                                </group>
+                                <separator string="แนบไฟล์รูปภาพ"/>
+                                <field name="work_history_image_ids">
+                                    <tree editable="bottom">
+                                        <field name="name" invisible="1"/>
+                                        <field name="image" widget="binary" filename="name"/>
+                                        <field name="image_preview" widget="image" options="{'size': [100, 100]}"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="ข้อมูลบัญชีธนาคาร">
+                                <group>
+                                    <group>
+                                        <field name="payment_channel"/>
+                                        <field name="payment_account_type"/>
+                                        <field name="bank_name"/>
+                                        <field name="bank_branch_code"/>
+                                        <field name="bank_account_number"/>
+                                        <field name="details"/>
+                                    </group>
+                                </group>
+                            </page>
+                            <page string="รายได้อื่นๆ">
+                                <group>
+                                    <group>
+                                        <field name="cost_of_living"/>
+                                        <field name="position_allowance"/>
+                                    </group>
+                                    <group>
+                                        <field name="experience_allowance"/>
+                                        <field name="professional_allowance"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="employee_salary_tree_view" model="ir.ui.view">
+            <field name="name">employee.salary.tree</field>
+            <field name="model">employee.salary</field>
+            <field name="arch" type="xml">
+                <tree string="Employee Salary">
+                    <field name="employee_code"/>
+                    <field name="firstname"/>
+                    <field name="lastname"/>
+                    <field name="position_id"/>
+                    <field name="department_id"/>
+                </tree>
+            </field>
+        </record>
+    </data>
+</odoo>

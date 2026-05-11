@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<odoo>
+    <!-- Idea Categories views and action -->
+    <record id="sh_idea_categories_form_view" model="ir.ui.view">
+        <field name="name">sh.idea.categories.form</field>
+        <field name="model">sh.idea.categories</field>
+        <field name="arch" type="xml">
+            <form string="Idea Categories">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                            <field name="department" widget="many2many_tags" />
+                            <field name="responsible_persons" widget="many2many_tags" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_idea_categories_tree_view" model="ir.ui.view">
+        <field name="name">sh.idea.categories.tree</field>
+        <field name="model">sh.idea.categories</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" string="Idea Categories" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="sh_idea_categorie_search_view" model="ir.ui.view">
+        <field name="name">sh.idea.categories.search</field>
+        <field name="model">sh.idea.categories</field>
+        <field name="arch" type="xml">
+            <search string="Idea Categories">
+                <field name="name" />
+                <group expand="0" string="Group by...">
+                    <filter string="Idea Categories" name="name" context="{'group_by': 'name'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="sh_idea_categories_view_actions" model="ir.actions.act_window">
+        <field name="name">Idea Categories</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.idea.categories</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="sh_idea_management_menu" name="Idea Management" web_icon="sh_all_in_one_hrms,static/description/icons/ideamanagement.png" groups="sh_all_in_one_hrms.group_enable_sh_idea" />
+
+    <menuitem id="sh_ideas_menu" name=" Idea" action="sh_idea_view_actions" parent="sh_idea_management_menu" sequence="2" />
+
+    <menuitem id="sh_ideas_category_menu" name=" Idea Category" parent="sh_idea_management_menu" action="sh_idea_categories_view_actions" sequence="3" groups="hr.group_hr_user" />
+</odoo>

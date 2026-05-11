@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <record id="sh_project_task_overdue_email_notification_inherit_form_view" model="ir.ui.view">
+        <field name="name">project.task.overdue.form</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2" />
+        <field name="arch" type="xml">
+            <field name="user_id" position="after">
+                <field name="completed" invisible="1" />
+            </field>
+            <field name="date_deadline" position="after">
+                <field name="start_date" />
+            </field>
+            <xpath expr="//header" position="inside">
+                <button name="action_task_completed" string="Task Completed" attrs="{'invisible': [('completed','!=',False)]}" type="object" class="oe_highlight" />
+            </xpath>
+        </field>
+    </record>
+    
+    <record id="sh_project_task_overdue_email_notification_search_view_inherit" model="ir.ui.view">
+        <field name="name">project.task.overdue.search</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_search_form" />
+        <field name="arch" type="xml">
+            <field name="user_id" position="after">
+                <field name="completed" />
+                <field name="company_id" />
+            </field>
+
+            <xpath expr="//filter[@name='starred']" position="after">
+                <filter name="group_completed" string="Completed" domain="[('completed','=',True)]" />
+                <filter name="group_not_completed" string="Not Completed" domain="[('completed','!=',True)]" />
+            </xpath>
+        </field>
+    </record>
+</odoo>

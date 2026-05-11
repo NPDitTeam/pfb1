@@ -1,0 +1,100 @@
+.container {
+            display: flex; /* ใช้ Flexbox สำหรับจัดการคอลัมน์ */
+            width: 100%; /* ขยายความกว้างของ container */
+            }
+            .table-report{
+            height: 11.5 cm;
+            width: 19.5 cm;
+            box-sizing: border-box;
+            padding: 5px;
+            font-size: 10px;
+            }
+            .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            }
+            .invoice-table, .invoice-table th, .invoice-table td {
+            border: 1px solid black;
+            font-size: 10px;
+
+            }
+            .invoice-table th, .invoice-table td {
+            padding: 5px;
+            <!--               text-align: right;-->
+            vertical-align: top;
+            font-size: 10px;
+            }.rounded-square {
+            border: 1px solid #000;
+            border-radius: 0;
+            padding: 5px 5px;
+            width: 97%;
+            font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+            }.ml-2 {
+            margin-left: 60px;
+            }.flex-item {
+            margin-right: 20px; /* ระยะห่างที่ต้องการ */
+            }.flex-item2 {
+            margin-right: 5px; /* ระยะห่างที่ต้องการ */
+            }.flex-item3 {
+            margin-left: 50px; /* ระยะห่างที่ต้องการ */
+            }
+            /* Hide the default checkbox */
+            .custom-checkbox input[type="checkbox"] {
+            display: none;
+            }
+
+            /* Style the custom checkbox */
+            .custom-checkbox {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 16px;
+            }
+
+            /* Create the checkbox appearance */
+            .checkbox-checkmark {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            background-color: #f0f0f0;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+            }
+
+            /* Style the checkmark/indicator (hidden by default) */
+            .checkbox-checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            }
+
+            /* Display checkmark when checked */
+            .custom-checkbox input[type="checkbox"]:checked + .checkbox-checkmark:after {
+            display: block;
+            width: 10px;
+            height: 10px;
+            background-color: #4caf50;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            clip-path: polygon(0 0, 100% 100%, 100% 0, 0 100%);
+            }.text-left {
+            text-align: left;
+            }
+            .text-right {
+            text-align: right;
+            }.example-box {
+            border: 2px solid black; /* กำหนดขอบทั้งหมดให้มองเห็นได้ */
+            border-left: hidden; /* ซ่อนขอบด้านซ้าย */
+            border-bottom: hidden; /* ซ่อนขอบด้านล่าง */
+            padding: 10px;
+            margin: 20px;
+            }.ml-99 {
+            margin-left: 0.2rem; /* หรือค่าที่ต้องการ */
+            }.space1{
+            top: 2cm;
+            right: 1.1cm;
+            }

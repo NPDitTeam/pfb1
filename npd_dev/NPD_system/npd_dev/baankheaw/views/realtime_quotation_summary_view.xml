@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="action_realtime_quotations" model="ir.actions.act_window">
+        <field name="name">ใบเสนอราคาเช่า</field>
+        <field name="res_model">baankheaw.quotation_summary</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p>📌 รายงานนี้แสดงข้อมูลใบเสนอราคาเช่าจากระบบภายนอก</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_realtime_quotations"
+              name="ใบเสนอราคาเช่า"
+              parent="baankheaw_menu_root"
+              action="action_realtime_quotations"
+              sequence="27"
+              groups="base.group_user"/>
+
+    <record id="view_realtime_quotation_tree" model="ir.ui.view">
+        <field name="name">baankheaw.quotation_summary.tree</field>
+        <field name="model">baankheaw.quotation_summary</field>
+        <field name="arch" type="xml">
+            <tree string="สรุปใบเสนอราคาเช่า">
+<!--                <field name="quotation_docno"/>-->
+                <field name="quotation_date"/>
+                <field name="branch_name"/>
+<!--                <field name="quotation_cusname"/>-->
+                <field name="fullname"/>
+                <field name="nickname"/>
+<!--                <field name="quotation_total_amount"/>-->
+<!--                <field name="quotation_net_amount"/>-->
+<!--                <field name="quotation_valid_date"/>-->
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_realtime_quotation_form" model="ir.ui.view">
+        <field name="name">baankheaw.quotation_summary.form</field>
+        <field name="model">baankheaw.quotation_summary</field>
+        <field name="arch" type="xml">
+            <form string="รายละเอียดใบเสนอราคาเช่า">
+                <header>
+                    <button name="action_update_realtime_quotation_data"
+                            type="object"
+                            string="🔄 อัปเดตข้อมูลใบเสนอราคา"
+                            class="oe_highlight"/>
+                </header>
+                <sheet>
+<!--                    <group string="ข้อมูลเอกสาร">-->
+<!--                        <field name="quotation_docno"/>-->
+<!--                        <field name="quotation_date"/>-->
+<!--                        <field name="branch_name"/>-->
+<!--                        <field name="quotation_valid_date"/>-->
+<!--                    </group>-->
+                    <group string="ข้อมูล">
+<!--                        <field name="quotation_cusid"/>-->
+<!--                        <field name="quotation_cusname"/>-->
+<!--                        <field name="quotation_project"/>-->
+                        <field name="quotation_date"/>
+                        <field name="branch_name"/>
+                        <field name="fullname"/>
+                        <field name="nickname"/>
+                    </group>
+<!--                    <group string="รายละเอียดค่าใช้จ่าย">-->
+<!--                        <field name="quotation_total_amount"/>-->
+<!--                        <field name="quotation_vat"/>-->
+<!--                        <field name="quotation_net_amount"/>-->
+<!--                    </group>-->
+<!--                    <group string="ข้อมูลเพิ่มเติม">-->
+<!--                        <field name="quotation_remark"/>-->
+<!--                    </group>-->
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

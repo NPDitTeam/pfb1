@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_payslip_cheque_format_form_view" model="ir.ui.view">
+        <field name="name">sh.payslip.cheque.format.form.view</field>
+        <field name="model">sh.payslip.dynamic.cheque</field>
+        <field name="arch" type="xml">
+            <form string="Cheque Format">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only" />
+                        <h1>
+                            <field name="name" />
+                        </h1>
+                    </div>
+                    <group string="Print Cheque Border">
+                        <group>
+                            <field name="sh_border_width" />
+                            <field name="sh_border_color" widget="color" />
+                        </group>
+                    </group>
+                    <group string="Print Partner">
+                        <group>
+                            <field name="sh_print_partner" />
+                            <field name="sh_partner_font_bold" />
+                            <field name="sh_partner_title" />
+                        </group>
+                        <group>
+                            <field name="sh_partner_from_top" attrs="{'required':[('sh_print_partner','=',True)]}" placeholder="e.g. 10px 20px 5px 7px" />
+                            <field name="sh_font_size" required="1" />
+                            <field name="sh_color" required="1" widget="color" />
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Print Date">
+                            <field name="sh_print_date" />
+                            <field name="sh_date_separator" attrs="{'required':[('sh_print_date','=',True)]}" />
+                            <field name="sh_date_format" attrs="{'required':[('sh_print_date','=',True)]}" />
+                            <field name="sh_year_format" attrs="{'required':[('sh_print_date','=',True)]}" />
+                            <field name="sh_date_from_top" attrs="{'required':[('sh_print_date','=',True)]}" placeholder="e.g. 10px 20px 5px 7px" />
+                        </group>
+                        <group string="Date Digit From Left">
+                            <field name="sh_date_letter_spacing" attrs="{'required':[('sh_print_date','=',True)]}" />
+                            <field name="sh_date_font_size" attrs="{'required':[('sh_print_date','=',True)]}" />
+                            <field name="sh_date_font_color" attrs="{'required':[('sh_print_date','=',True)]}" widget="color" />
+                        </group>
+                    </group>
+                    <group string="Amount In Digit">
+                        <group>
+                            <field name="sh_print_amount" />
+                            <field name="sh_print_currency" />
+                            <field name="sh_print_star" />
+                        </group>
+                        <group>
+                            <field name="sh_amount_from_top" attrs="{'required':[('sh_print_amount','=',True)]}" placeholder="e.g. 10px 20px 5px 7px" />
+                            <field name="sh_amount_digit_font_size" attrs="{'required':[('sh_print_amount','=',True)]}" />
+                            <field name="sh_amount_digit_color" attrs="{'required':[('sh_print_amount','=',True)]}" widget="color" />
+                        </group>
+                    </group>
+                    <group string="Amount In Words">
+                        <group>
+                            <field name="sh_print_amount_words" />
+                            <field name="sh_amount_words_print_star" />
+                            <field name="sh_amount_words_font_bold" />
+                        </group>
+                        <group>
+                            <field name="sh_amount_words_from_first_top" attrs="{'required':[('sh_print_amount_words','=',True)]}" placeholder="e.g. 10px 20px 5px 7px" />
+                            <field name="sh_amount_word_font_size" attrs="{'required':[('sh_print_amount_words','=',True)]}" />
+                            <field name="sh_amount_word_color" attrs="{'required':[('sh_print_amount_words','=',True)]}" widget="color" />
+                        </group>
+                    </group>
+                    <group string="Print Company">
+                        <group>
+                            <field name="sh_print_company" />
+                        </group>
+                        <group>
+                            <field name="sh_print_company_from_top" attrs="{'required':[('sh_print_company','=',True)]}" placeholder="e.g. 10px 20px 5px 7px" />
+                            <field name="sh_company_font_size" attrs="{'required':[('sh_print_company','=',True)]}" />
+                            <field name="sh_company_color" attrs="{'required':[('sh_print_company','=',True)]}" widget="color" />
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Print Cheque No">
+                            <field name="sh_print_cheque_no" />
+                            <field name="sh_cheque_no_font_size" attrs="{'required':[('sh_print_cheque_no','=',True)]}" />
+                            <field name="sh_cheque_no_color" attrs="{'required':[('sh_print_cheque_no','=',True)]}" widget="color" />
+                        </group>
+                        <group string="Print Short Code">
+                            <field name="sh_print_short_code" />
+                            <field name="sh_short_code_font_size" attrs="{'required':[('sh_print_short_code','=',True)]}" />
+                            <field name="sh_short_code_color" attrs="{'required':[('sh_print_short_code','=',True)]}" widget="color" />
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Print Bank Address">
+                            <field name="sh_print_address" />
+                            <field name="sh_address_font_size" attrs="{'required':[('sh_print_address','=',True)]}" />
+                            <field name="sh_address_font_color" attrs="{'required':[('sh_print_address','=',True)]}" widget="color" />
+                        </group>
+                        <group string="Print Account Number">
+                            <field name="sh_print_acc_no" />
+                            <field name="sh_acc_no_font_size" attrs="{'required':[('sh_print_acc_no','=',True)]}" />
+                            <field name="sh_acc_no_font_color" attrs="{'required':[('sh_print_acc_no','=',True)]}" widget="color" />
+                        </group>
+                    </group>
+                    <group string="Print A/C PAY">
+                        <group>
+                            <field name="sh_print_acc_pay" />
+                        </group>
+                        <group>
+                            <field name="sh_print_acc_pay_from_top" attrs="{'required':[('sh_print_acc_pay','=',True)]}" placeholder="e.g. 10px 20px 5px 7px" />
+                            <field name="sh_acc_pay_font_size" attrs="{'required':[('sh_print_acc_pay','=',True)]}" />
+                            <field name="sh_acc_pay_font_color" attrs="{'required':[('sh_print_acc_pay','=',True)]}" widget="color" />
+                        </group>
+                    </group>
+                    <group string="Print First Signature">
+                        <group>
+                            <field name="sh_print_first_signature" />
+                        </group>
+                    </group>
+                    <group string="Print Free Text One">
+                        <group>
+                            <field name="sh_print_free_text_one" />
+                        </group>
+                        <group>
+                            <field name="sh_print_free_text_one_from_top" attrs="{'required':[('sh_print_free_text_one','=',True)]}" placeholder="e.g. 10px 20px 5px 7px" />
+                            <field name="sh_free_text_one_font_size" attrs="{'required':[('sh_print_free_text_one','=',True)]}" />
+                            <field name="sh_free_text_one_font_color" attrs="{'required':[('sh_print_free_text_one','=',True)]}" widget="color" />
+                        </group>
+                    </group>
+                    <group string="Print Free Text Two">
+                        <group>
+                            <field name="sh_print_free_text_two" />
+                        </group>
+                        <group>
+                            <field name="sh_print_free_text_two_from_top" attrs="{'required':[('sh_print_free_text_two','=',True)]}" placeholder="e.g. 10px 20px 5px 7px" />
+                            <field name="sh_free_text_two_font_size" attrs="{'required':[('sh_print_free_text_two','=',True)]}" />
+                            <field name="sh_free_text_two_font_color" attrs="{'required':[('sh_print_free_text_two','=',True)]}" widget="color" />
+                        </group>
+                    </group>
+                    <group string="Print Free Text Three">
+                        <group>
+                            <field name="sh_print_free_text_three" />
+                        </group>
+                        <group>
+                            <field name="sh_print_free_text_three_from_top" attrs="{'required':[('sh_print_free_text_three','=',True)]}" placeholder="e.g. 10px 20px 5px 7px" />
+                            <field name="sh_free_text_three_font_size" attrs="{'required':[('sh_print_free_text_three','=',True)]}" />
+                            <field name="sh_free_text_three_font_color" attrs="{'required':[('sh_print_free_text_three','=',True)]}" widget="color" />
+                        </group>
+                    </group>
+                    <group string="Extra Information">
+                        <group>
+                            <field name="sh_print_stub" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="payslip_cheque_format_tree_view" model="ir.ui.view">
+        <field name="name">payslip.cheque.format.tree.view</field>
+        <field name="model">sh.payslip.dynamic.cheque</field>
+        <field name="arch" type="xml">
+            <tree string="Cheque Format">
+                <field name="name" />
+            </tree>
+        </field>
+    </record>
+    <record id="sh_action_cheque_fromat_payslip" model="ir.actions.act_window">
+        <field name="name">Cheque Format</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.payslip.dynamic.cheque</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <menuitem name="Cheque Format" id="menu_cheque_format_payslip" groups="sh_all_in_one_hrms.group_enable_sh_payslip_dynamic_cheque" parent="sh_hr_payroll.menu_hr_payroll_configuration" action="sh_action_cheque_fromat_payslip" />
+</odoo>

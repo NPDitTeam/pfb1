@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<odoo>
+    <!--Sh Hr Promotion Object views and action -->
+    <record id="sh_hr_promotion_form_view" model="ir.ui.view">
+        <field name="name">sh.hr.promotion.form</field>
+        <field name="model">sh.hr.promotion</field>
+        <field name="arch" type="xml">
+            <form string="Employee Promotion">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" required="True" />
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id" />
+                            <field name="sh_contracts" domain="[('employee_id','=',employee_id)]" context="{'default_employee_id': employee_id}" />
+                            <field name="sh_previous_designation" required="True" />
+                            <field name="sh_previous_salary" required="True" />
+                            <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company" />
+                        </group>
+                        <group>
+                            <field name="sh_promotion_date" required="True" />
+                            <field name="sh_promotion_type_id" required="True" />
+                            <field name="sh_new_designation" required="True" />
+                            <field name="sh_new_salary" required="True" />
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Descritpion" name="description_page">
+                            <field name="sh_description" />
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="o_attachment_preview" />
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers" />
+                    <field name="activity_ids" widget="mail_activity" />
+                    <field name="message_ids" widget="mail_thread" />
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_hr_promotion_tree_view" model="ir.ui.view">
+        <field name="name">sh.hr.promotion.tree</field>
+        <field name="model">sh.hr.promotion</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+                <field name="employee_id" />
+                <field name="sh_previous_designation" />
+                <field name="sh_previous_salary" />
+                <field name="sh_new_designation" />
+                <field name="sh_new_salary" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="sh_hr_promotion_search_views" model="ir.ui.view">
+        <field name="name">sh.hr.promotion.search</field>
+        <field name="model">sh.hr.promotion</field>
+        <field name="arch" type="xml">
+            <search string="Promotion">
+                <field name="name" />
+                <separator />
+                <group expand="0" string="Group by...">
+                    <filter string="Employee" name="employee_id" context="{'group_by': 'employee_id'}" />
+                    <filter string="Previous Designation" name="sh_previous_designation" context="{'group_by': 'sh_previous_designation'}" />
+                    <filter string="New Designation" name="sh_new_designation" context="{'group_by': 'sh_new_designation'}" />
+                    <filter string="Promotion Type" name="sh_promotion_type_id" context="{'group_by': 'sh_promotion_type_id'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="sh_hr_promotion_request_view_actions" model="ir.actions.act_window">
+        <field name="name">Employee Promotion</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.hr.promotion</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="sh_hr_promotion_request_view_actions_2" model="ir.actions.act_window">
+        <field name="name">Employee Promotion</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.hr.promotion</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('employee_id', '=', active_id)]</field>
+        <field name="context">{'default_employee_id': active_id, }</field>
+    </record>
+
+    <record id="sh_employee_promotions_form_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.promotions.form</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']//button[@id='hr_presence_button']" position="after">
+                <button name="%(sh_hr_promotion_request_view_actions_2)d" groups="sh_all_in_one_hrms.group_enable_emp_hr_promotion" class="oe_stat_button" icon="fa-trophy" type="action">
+                    <field string="Employee Promotion" name="pr_count" widget="statinfo" />
+                </button>
+            </xpath>
+
+            <page name="hr_settings" position="after">
+                <page string="Employee Promotions" name="employee_promotion_ids" attrs="{'invisible':[('pr_count','=',0)]}">
+                    <field name="employee_promotion_ids" widget="section_and_note_one2many" mode="tree" readonly="1"/>
+                </page>
+            </page>
+        </field>
+    </record>
+</odoo>

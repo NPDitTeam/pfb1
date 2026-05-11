@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+
+    <record id="purchase_order_form" model="ir.ui.view">
+        <field name="name">purchase.order.form</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='order_line']/tree//field[@name='discount']" position="attributes">
+                <attribute name="attrs">{'invisible': [('discount_unit', '>', 0)]}</attribute>
+            </xpath>
+            <xpath
+                    expr="//field[@name='order_line']/form//field[@name='discount']"
+                    position="attributes"
+            >
+                <attribute name="attrs">{'invisible': [('discount_unit', '>', 0)]}</attribute>
+            </xpath>
+
+
+            <xpath expr="//field[@name='order_line']/tree//field[@name='discount']" position="after">
+                <field name="discount_unit" attrs="{'invisible': [('discount', '>', 0)]}"/>
+            </xpath>
+            <xpath
+                    expr="//field[@name='order_line']/form//field[@name='discount']"
+                    position="after"
+            >
+                <field name="discount_unit" attrs="{'invisible': [('discount', '>', 0)]}"/>
+            </xpath>
+
+            <xpath expr="//group[hasclass('oe_subtotal_footer')]" position="replace"  attrs="{'invisible': [('amount_discount', '=', 0)]}">
+                <group>
+                    <group class="oe_subtotal_footer oe_right">
+                        <field name="amount_untaxed" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        <field name="amount_discount" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+                        <field name="amount_tax" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        <div class="oe_subtotal_footer_separator oe_inline">
+                            <label for="amount_total"/>
+                        </div>
+                        <field name="amount_total" nolabel="1" class="oe_subtotal_footer_separator" widget="monetary"
+                               options="{'currency_field': 'currency_id'}"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+
+</odoo>

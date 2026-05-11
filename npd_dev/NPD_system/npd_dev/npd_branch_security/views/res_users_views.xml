@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit res.users form view to add Branch Security tab -->
+    <record id="view_users_form_branch_security" model="ir.ui.view">
+        <field name="name">res.users.form.branch.security</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='access_rights']" position="after">
+                <page string="สิทธิ์สาขา" name="branch_security">
+                    <group string="สิทธิ์การจัดการข้อมูลสาขา">
+                        <group>
+                            <field name="branch_can_create" widget="boolean_toggle"/>
+                            <field name="branch_can_write" widget="boolean_toggle"/>
+                            <field name="branch_can_delete" widget="boolean_toggle"/>
+                        </group>
+                        <group>
+                            <div class="alert alert-info" role="alert">
+                                <strong>คำอธิบาย:</strong>
+                                <ul>
+                                    <li><strong>สร้างสาขา:</strong> อนุญาตให้ผู้ใช้สร้างข้อมูลสาขาใหม่</li>
+                                    <li><strong>แก้ไขสาขา:</strong> อนุญาตให้ผู้ใช้แก้ไขข้อมูลสาขา</li>
+                                    <li><strong>ลบสาขา:</strong> อนุญาตให้ผู้ใช้ลบข้อมูลสาขา</li>
+                                </ul>
+                                <p class="mb-0">หมายเหตุ: ผู้ดูแลระบบ (Administrator) มีสิทธิ์ทั้งหมดโดยอัตโนมัติ</p>
+                            </div>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

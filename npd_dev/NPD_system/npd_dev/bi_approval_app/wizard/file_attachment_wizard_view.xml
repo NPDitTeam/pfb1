@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="file_attachment_wizard" model="ir.ui.view">
+        <field name="name">file.attachment.wizard</field>
+        <field name="model">file.attachment.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Attachment File">
+                <group>
+                    <field name="choose_file" filename="file_name"/>
+                    <field name="file_name" invisible="1"/>
+                </group>
+                <footer>
+                    <button name="action_attachment" string="Attach File" type="object"
+                            class="btn-primary"/>
+                    <button string="Cancel" class="btn-default" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_file_attachment_wizard" model="ir.actions.act_window">
+        <field name="name">Attachment File</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">file.attachment.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

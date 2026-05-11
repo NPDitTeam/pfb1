@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ============================================================ -->
+        <!-- Tree View (header) -->
+        <!-- ============================================================ -->
+        <record id="view_work_security_deposit_tree" model="ir.ui.view">
+            <field name="name">work.security.deposit.tree</field>
+            <field name="model">work.security.deposit</field>
+            <field name="arch" type="xml">
+                <tree string="เงินประกันการทำงาน"
+                      decoration-info="state == 'draft'"
+                      decoration-success="state == 'confirmed'">
+                    <field name="name"/>
+                    <field name="branch_id"/>
+                    <field name="department_ids" widget="many2many_tags"/>
+                    <field name="default_amount"/>
+                    <field name="default_months"/>
+                    <field name="default_monthly_amount"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Form View (header) -->
+        <!-- ============================================================ -->
+        <record id="view_work_security_deposit_form" model="ir.ui.view">
+            <field name="name">work.security.deposit.form</field>
+            <field name="model">work.security.deposit</field>
+            <field name="arch" type="xml">
+                <form string="เงินประกันการทำงาน">
+                    <header>
+                        <button name="action_confirm"
+                                string="ยืนยัน"
+                                type="object"
+                                class="btn-primary"
+                                attrs="{'invisible': [('state', '!=', 'draft')]}"
+                                confirm="ยืนยันการสร้างรายการเงินประกันการทำงาน?"/>
+                        <button name="action_refresh_employees"
+                                string="ดึงพนักงานใหม่"
+                                type="object"
+                                class="btn-secondary"
+                                help="เพิ่มพนักงานในสาขา/แผนกเดียวกัน ที่ยังไม่อยู่ในตาราง พร้อมตารางการหักเริ่มต้น"/>
+                        <button name="action_mark_historical_old_employees"
+                                string="ตั้งเป็นหักครบแล้ว (พนักงานเก่า)"
+                                type="object"
+                                class="btn-secondary"
+                                confirm="ตั้งเป็น 'หักแล้ว' สำหรับพนักงานที่ payment_date ทุกเดือนอยู่ในอดีต (ใช้กับเศษย้อนหลัง — พนักงานเก่าที่หักครบไปก่อนใช้ระบบนี้)"
+                                help="วนพนักงานที่เริ่มงานนานแล้ว (payment_dates ทั้งหมดอยู่ในอดีต) → mark ทุก payment เป็น 'หักแล้ว'"/>
+                        <button name="action_regenerate_all_schedules"
+                                string="ปรับตารางทั้งหมดตามค่าเริ่มต้นใหม่"
+                                type="object"
+                                class="btn-secondary"
+                                confirm="ตารางการหักรายเดือนของพนักงาน 'ทำงานอยู่' ทุกคน จะถูกสร้างใหม่ตาม 'หักรายเดือน (ค่าเริ่มต้น)' ปัจจุบัน — สถานะ is_synced เดิมจะหายไป ยืนยันหรือไม่?"
+                                help="ใช้เมื่อแก้ค่า default แล้วต้องการให้ lines ที่สร้างไว้แล้ว update ตาม"/>
+                        <button name="action_sync_to_payroll"
+                                string="ซิงค์ไป Payroll"
+                                type="object"
+                                class="btn-secondary"
+                                attrs="{'invisible': [('state', '!=', 'confirmed')]}"
+                                help="ผลักจำนวนหักต่อเดือนเข้าฟิลด์เงินประกันการทำงานใน payroll.salary"/>
+                        <button name="action_reset_draft"
+                                string="กลับเป็นร่าง"
+                                type="object"
+                                class="btn-warning"
+                                attrs="{'invisible': [('state', '=', 'draft')]}"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group col="1">
+                                <group string="ขอบเขต">
+                                    <field name="branch_id"
+                                           attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                    <field name="available_department_ids" invisible="1"/>
+                                    <field name="department_ids"
+                                           widget="many2many_tags"
+                                           domain="[('id', 'in', available_department_ids)]"
+                                           attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                </group>
+                                <group string="รอบตัดเงินเดือน">
+                                    <field name="cutoff_start_day"
+                                           attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                    <field name="cutoff_end_day"
+                                           attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                    <field name="cutoff_summary"/>
+                                </group>
+                            </group>
+                            <group col="1">
+                                <group string="ค่าเริ่มต้น">
+                                    <field name="default_amount"
+                                           attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                    <field name="default_months"
+                                           attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                    <field name="default_total_scheduled"/>
+                                </group>
+                                <group string="หักรายเดือน (ค่าเริ่มต้น)">
+                                    <field name="default_payment_ids"
+                                           nolabel="1" colspan="2">
+                                        <tree editable="bottom">
+                                            <field name="month_index" string="เดือนที่"
+                                                   attrs="{'readonly': [('parent.state', '=', 'confirmed')]}"/>
+                                            <field name="amount" sum="รวม"
+                                                   attrs="{'readonly': [('parent.state', '=', 'confirmed')]}"/>
+                                        </tree>
+                                    </field>
+                                </group>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="รายชื่อพนักงาน">
+                                <field name="line_ids"
+                                       attrs="{'readonly': [('state', '!=', 'draft')]}">
+                                    <tree string="พนักงาน"
+                                          decoration-muted="employee_status == 'inactive'"
+                                          decoration-danger="work_status == 'resigned' and refund_status != 'refunded'"
+                                          decoration-info="refund_status == 'refunded'">
+                                        <field name="employee_code"/>
+                                        <field name="employee_id"/>
+                                        <field name="employee_department_id"/>
+                                        <field name="employee_status"/>
+                                        <field name="employee_nationality" optional="show"/>
+                                        <field name="start_work_date"/>
+                                        <field name="total_amount"/>
+                                        <field name="schedule_summary"/>
+                                        <field name="is_work_permit" widget="boolean_toggle"/>
+                                        <field name="work_permit_total" optional="show"/>
+                                        <field name="last_deduction_date"/>
+                                        <field name="work_status"/>
+                                        <field name="resign_date"/>
+                                        <field name="months_deducted"/>
+                                        <field name="refund_amount"/>
+                                        <field name="refund_status"/>
+                                        <field name="refund_payroll_id" optional="hide"/>
+                                        <button name="action_view_schedule"
+                                                string="ตั้งตาราง/แก้รายเดือน"
+                                                type="object"
+                                                icon="fa-edit"
+                                                title="เปิดเพื่อแก้ไขตารางการหักรายเดือน"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="หมายเหตุ">
+                                <field name="note" nolabel="1" placeholder="กรอกหมายเหตุ..."/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Form View ของ payment (popup สั้น เวลาคลิกแถว) -->
+        <!-- ============================================================ -->
+        <record id="view_work_security_deposit_line_payment_form" model="ir.ui.view">
+            <field name="name">work.security.deposit.line.payment.form</field>
+            <field name="model">work.security.deposit.line.payment</field>
+            <field name="arch" type="xml">
+                <form string="รายการหัก">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="payment_type"/>
+                                <field name="payment_date"/>
+                                <field name="amount"/>
+                            </group>
+                            <group>
+                                <field name="display_status"/>
+                                <field name="is_synced" readonly="1"/>
+                                <field name="payroll_id" readonly="1"
+                                       attrs="{'invisible': [('is_synced', '=', False)]}"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Form View (line — ใช้เปิด popup ตารางการหัก) -->
+        <!-- ============================================================ -->
+        <record id="view_work_security_deposit_line_form" model="ir.ui.view">
+            <field name="name">work.security.deposit.line.form</field>
+            <field name="model">work.security.deposit.line</field>
+            <field name="arch" type="xml">
+                <form string="ตารางการหักเงินประกัน">
+                    <header>
+                        <button name="action_regenerate_schedule"
+                                string="สร้างตารางใหม่จากค่าเริ่มต้น"
+                                type="object"
+                                class="btn-secondary"
+                                attrs="{'invisible': [('state', '!=', 'draft')]}"
+                                confirm="ลบตารางเดิมแล้วสร้างใหม่ตาม default_amount/default_months ของรายการแม่?"/>
+                        <button name="action_transfer_to_new_deposit"
+                                string="ย้ายไป deposit ใหม่"
+                                type="object"
+                                class="btn-warning"
+                                attrs="{'invisible': [('work_status', '!=', 'working')]}"
+                                confirm="ย้ายพนักงานคนนี้ไป deposit ของสาขา/แผนกปัจจุบัน? รอบที่ยังไม่หักจะถูก carry-forward"/>
+                        <button name="action_mark_as_historical"
+                                string="ตั้งเป็นหักครบแล้ว (พนักงานเก่า)"
+                                type="object"
+                                class="btn-secondary"
+                                attrs="{'invisible': [('work_status', '!=', 'working')]}"
+                                confirm="ตั้งทุก payment ที่อยู่ในอดีตเป็น 'หักแล้ว' (สำหรับพนักงานเก่าที่หักครบไปก่อนใช้ระบบ)"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group string="พนักงาน">
+                                <field name="employee_id" readonly="1"/>
+                                <field name="employee_code"/>
+                                <field name="employee_status"/>
+                                <field name="start_work_date" readonly="1"/>
+                            </group>
+                            <group string="ขอบเขตการหัก">
+                                <field name="total_amount"
+                                       attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="total_scheduled"/>
+                                <field name="deduction_months"/>
+                                <field name="last_deduction_date"/>
+                            </group>
+                        </group>
+                        <group>
+                            <group string="สถานะการทำงาน">
+                                <field name="work_status"
+                                       attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="resign_date"
+                                       attrs="{'invisible': [('work_status', '!=', 'resigned')],
+                                               'required': [('work_status', '=', 'resigned')],
+                                               'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="transferred_date"
+                                       attrs="{'invisible': [('work_status', '!=', 'transferred')]}"/>
+                                <field name="transferred_to_line_id"
+                                       attrs="{'invisible': [('work_status', '!=', 'transferred')]}"/>
+                                <field name="transferred_from_line_id"
+                                       attrs="{'invisible': [('transferred_from_line_id', '=', False)]}"/>
+                                <field name="months_deducted"/>
+                                <field name="refund_amount"
+                                       attrs="{'invisible': [('work_status', '!=', 'resigned')]}"/>
+                                <field name="refund_status"
+                                       attrs="{'invisible': [('work_status', '!=', 'resigned')]}"/>
+                                <field name="refund_payroll_id"
+                                       attrs="{'invisible': [('refund_status', '!=', 'refunded')]}"/>
+                            </group>
+                        </group>
+                        <group>
+                            <group>
+                                <field name="is_work_permit"/>
+                            </group>
+                        </group>
+                        <separator string="ตารางการหักรายเดือน (เลือกเดือน + ระบุยอดที่หัก)"/>
+                        <field name="payment_ids"
+                               attrs="{'readonly': [('state', '!=', 'draft')]}">
+                            <tree editable="bottom"
+                                  decoration-success="display_status == 'deducted'"
+                                  decoration-info="display_status == 'refunded'"
+                                  decoration-muted="display_status == 'cancelled'">
+                                <field name="payment_date"/>
+                                <field name="amount" sum="รวม"/>
+                                <field name="display_status"/>
+                                <field name="is_synced" readonly="1"/>
+                                <field name="payroll_id" readonly="1"
+                                       attrs="{'invisible': [('is_synced', '=', False)]}"/>
+                                <field name="payment_type" invisible="1"/>
+                            </tree>
+                        </field>
+                        <separator string="ตารางหักค่า Work Permit"
+                                   attrs="{'invisible': [('is_work_permit', '=', False)]}"/>
+                        <field name="work_permit_payment_ids"
+                               attrs="{'invisible': [('is_work_permit', '=', False)],
+                                       'readonly': [('state', '!=', 'draft')]}"
+                               context="{'default_payment_type': 'work_permit_fee'}">
+                            <tree editable="bottom"
+                                  decoration-success="display_status == 'deducted'"
+                                  decoration-muted="display_status == 'cancelled'">
+                                <field name="payment_type"/>
+                                <field name="payment_date"/>
+                                <field name="amount" sum="รวม"/>
+                                <field name="display_status"/>
+                                <field name="is_synced" readonly="1"/>
+                                <field name="payroll_id" readonly="1"
+                                       attrs="{'invisible': [('is_synced', '=', False)]}"/>
+                            </tree>
+                        </field>
+                        <field name="state" invisible="1"/>
+                    </sheet>
+                    <footer>
+                        <button string="บันทึก" class="btn-primary" special="save"
+                                attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                        <button string="ปิด" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Search View -->
+        <!-- ============================================================ -->
+        <record id="view_work_security_deposit_search" model="ir.ui.view">
+            <field name="name">work.security.deposit.search</field>
+            <field name="model">work.security.deposit</field>
+            <field name="arch" type="xml">
+                <search string="ค้นหาเงินประกันการทำงาน">
+                    <field name="name"/>
+                    <field name="branch_id"/>
+                    <field name="department_ids"/>
+                    <separator/>
+                    <filter string="ร่าง" name="draft" domain="[('state', '=', 'draft')]"/>
+                    <filter string="ยืนยัน" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                    <separator/>
+                    <group expand="0" string="จัดกลุ่มตาม">
+                        <filter string="สาขา" name="group_branch" context="{'group_by': 'branch_id'}"/>
+                        <filter string="แผนก" name="group_department" context="{'group_by': 'department_ids'}"/>
+                        <filter string="สถานะ" name="group_state" context="{'group_by': 'state'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Inherit payroll.salary form: ล็อก expense_insurance ถ้ามี deposit -->
+        <!-- ============================================================ -->
+        <record id="view_payroll_salary_form_security_deposit_lock" model="ir.ui.view">
+            <field name="name">payroll.salary.form.security.deposit.lock</field>
+            <field name="model">payroll.salary</field>
+            <field name="inherit_id" ref="view_payroll_salary_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='expense_insurance']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('expense_insurance_locked', '=', True)]}</attribute>
+                    <attribute name="help">ยอดนี้ถูกล็อกจากเมนู "จัดการเงินประกันการทำงาน" เมื่อมีรายการที่ยืนยันแล้ว — แก้ที่นั่นแทน</attribute>
+                </xpath>
+                <xpath expr="//field[@name='expense_insurance']" position="after">
+                    <field name="expense_insurance_locked" invisible="1"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Inherit employee.salary form: เพิ่ม resign_date + แท็บประวัติ -->
+        <!-- ============================================================ -->
+        <record id="view_employee_salary_inherit_security_deposit" model="ir.ui.view">
+            <field name="name">employee.salary.form.security.deposit</field>
+            <field name="model">employee.salary</field>
+            <field name="inherit_id" ref="employee_salary_form_view"/>
+            <field name="arch" type="xml">
+                <!-- เพิ่มฟิลด์ resign_date ที่หน้าประวัติการทำงาน (ติดกับ probation_period) -->
+                <xpath expr="//field[@name='probation_period']" position="after">
+                    <field name="resign_date"/>
+                </xpath>
+
+                <!-- เพิ่มแท็บใหม่ "เงินประกันการทำงาน" -->
+                <xpath expr="//notebook" position="inside">
+                    <page string="เงินประกันการทำงาน">
+                        <group>
+                            <group string="สรุป">
+                                <field name="resign_date"
+                                       help="ระบุวันที่ออกจากงาน → ระบบจะอัพเดทรายการเงินประกันของพนักงานคนนี้ให้เป็น 'ออกจากงาน' โดยอัตโนมัติ"/>
+                                <field name="deposit_total_deducted"/>
+                                <field name="deposit_total_refund"/>
+                                <field name="deposit_refund_status"/>
+                            </group>
+                        </group>
+                        <separator string="ประวัติเงินประกันการทำงาน"/>
+                        <field name="deposit_line_ids" readonly="1">
+                            <tree decoration-success="state == 'confirmed' and work_status == 'working'"
+                                  decoration-danger="work_status == 'resigned' and refund_status != 'refunded'"
+                                  decoration-info="refund_status == 'refunded'"
+                                  decoration-muted="state == 'draft'">
+                                <field name="deposit_id"/>
+                                <field name="state"/>
+                                <field name="start_work_date"/>
+                                <field name="total_amount"/>
+                                <field name="total_scheduled"/>
+                                <field name="months_deducted"/>
+                                <field name="last_deduction_date"/>
+                                <field name="work_status"/>
+                                <field name="resign_date"/>
+                                <field name="refund_amount"/>
+                                <field name="refund_status"/>
+                                <field name="refund_payroll_id" optional="hide"/>
+                                <button name="action_view_schedule"
+                                        string="ดูตาราง"
+                                        type="object"
+                                        icon="fa-list"
+                                        title="ดูตารางการหักรายเดือน"/>
+                            </tree>
+                        </field>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Action -->
+        <!-- ============================================================ -->
+        <record id="action_work_security_deposit" model="ir.actions.act_window">
+            <field name="name">จัดการเงินประกันการทำงาน</field>
+            <field name="res_model">work.security.deposit</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_work_security_deposit_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    ยังไม่มีรายการเงินประกันการทำงาน
+                </p>
+                <p>
+                    กดปุ่ม "สร้าง" → เลือกสาขา → เลือกแผนก → ระบบจะดึงรายชื่อพนักงานในแผนกนั้นมาทั้งหมด
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

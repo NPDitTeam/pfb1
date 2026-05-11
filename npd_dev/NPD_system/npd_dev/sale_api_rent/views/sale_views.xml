@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_order_form" model="ir.ui.view">
+        <field name="name">view.order.form</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="/form/header" position="after">
+                <header>
+                    <button name="action_fetch_rental_data" type="object"
+                        class="oe_stat_button btn-primary"
+                        icon="fa-download"
+                        string="ดึงข้อมูลการเช่า"
+                        attrs="{'invisible': [ '|', ('so_number', '=', False), ('state', '=', 'sale')]}"/>
+
+                </header>
+            </xpath>
+            <!-- แทรกฟิลด์ database_selection และ so_number -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="is_renew_green_house"/>
+                <field name="database_selection" attrs="{'readonly': ['|', ('state', '=', 'sale'), ('is_renew_green_house', '=', True)]}"/>
+                <field name="so_number" attrs="{'readonly': ['|', ('state', '=', 'sale'), ('is_renew_green_house', '=', True)]}"/>
+            </xpath>
+
+
+            <xpath expr="//field[@name='order_line']/tree//field[@name='name']" position="after">
+                <field name="pfb_quantity"/>
+                <field name="is_renew_green_house_line" invisible="1"/>
+                <field name="total_weight" attrs="{'readonly': [('is_renew_green_house_line', '=', False)]}"/>
+            </xpath>
+
+
+
+        </field>
+    </record>
+</odoo>

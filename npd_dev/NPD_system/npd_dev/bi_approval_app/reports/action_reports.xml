@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+        <!-- Report Action -->
+<!--        <record id="action_report_my_approval" model="ir.actions.report">-->
+<!--            <field name="name">Approval Report</field>-->
+<!--            <field name="model">my.approval</field>-->
+<!--            <field name="report_name">bi_approval_app.report_my_approval_template</field>-->
+<!--            <field name="report_file">bi_approval_app.report_my_approval_template</field>-->
+<!--            <field name="report_type">qweb-pdf</field>-->
+<!--            <field name="paperformat_id" ref="bi_approval_app.paperformat_cr_dr_pdf"/>-->
+<!--            <field name="binding_type">report</field>-->
+<!--        </record>-->
+
+    <record id="report_payment_voucher" model="ir.actions.report">
+        <field name="name">Approval Report</field>
+        <field name="model">approval.request</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">bi_approval_app.report_my_approval_template</field>
+        <field name="report_file">bi_approval_app.report_my_approval_template</field>
+        <field name="print_report_name">'%s' % (object.name)</field>
+        <field name="paperformat_id" ref="bi_approval_app.paperformat_cr_dr_pdf" />
+<!--        <field name="binding_model_id" ref="account.model_account_move" />-->
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

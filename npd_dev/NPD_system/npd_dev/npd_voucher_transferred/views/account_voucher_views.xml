@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Inherit: Purchase Voucher Form (การรับ) - เพิ่มปุ่ม "โอนแล้ว" -->
+    <!-- ============================================================ -->
+    <record id="view_purchase_receipt_form_transfer" model="ir.ui.view">
+        <field name="name">account.voucher.purchase.form.transfer</field>
+        <field name="model">account.voucher</field>
+        <field name="inherit_id" ref="account_voucher.view_purchase_receipt_form"/>
+        <field name="priority">999</field>
+        <field name="arch" type="xml">
+
+            <!-- เพิ่มปุ่ม "โอนแล้ว" ข้างปุ่ม Cancel ใน header -->
+            <xpath expr="//header/button[@name='cancel_voucher'][1]" position="before">
+                <button name="action_mark_transferred"
+                        string="โอนแล้ว"
+                        type="object"
+                        class="btn-success"
+                        attrs="{'invisible': [('state', '!=', 'posted')]}"
+                        groups="npd_voucher_transferred.group_voucher_transfer"
+                        confirm="ยืนยันว่าโอนเงินแล้ว ใช่หรือไม่?"/>
+                <button name="action_unmark_transferred"
+                        string="ยกเลิกโอน"
+                        type="object"
+                        class="btn-warning"
+                        attrs="{'invisible': [('state', '!=', 'transferred')]}"
+                        groups="npd_voucher_transferred.group_voucher_transfer"
+                        confirm="ต้องการยกเลิกสถานะโอนแล้ว ใช่หรือไม่?"/>
+            </xpath>
+
+            <!-- อัพเดต statusbar ให้แสดง transferred ด้วย -->
+            <xpath expr="//header/field[@name='state'][@widget='statusbar']" position="attributes">
+                <attribute name="statusbar_visible">draft,posted,transferred</attribute>
+            </xpath>
+
+            <!-- 🎀 แถบคาดสีเขียว "โอนแล้ว" มุมขวาบน (ribbon) -->
+            <xpath expr="//sheet/*[1]" position="before">
+                <widget name="web_ribbon" title="โอนแล้ว" bg_color="bg-success"
+                        attrs="{'invisible': [('state', '!=', 'transferred')]}"/>
+            </xpath>
+
+            <!-- 📋 field สถานะการโอน (แสดงหลัง field date ใน group ขวา) -->
+            <xpath expr="//sheet//group/group/field[@name='date']" position="after">
+                <field name="transfer_status" readonly="1"
+                       decoration-success="transfer_status == 'transferred'"
+                       decoration-muted="transfer_status == 'not_transferred'"
+                       widget="badge"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Inherit: Sale Receipt Form (การขาย) - เพิ่มปุ่ม "โอนแล้ว" -->
+    <!-- ============================================================ -->
+    <record id="view_sale_receipt_form_transfer" model="ir.ui.view">
+        <field name="name">account.voucher.sale.form.transfer</field>
+        <field name="model">account.voucher</field>
+        <field name="inherit_id" ref="account_voucher.view_sale_receipt_form"/>
+        <field name="priority">999</field>
+        <field name="arch" type="xml">
+
+            <!-- เพิ่มปุ่ม "โอนแล้ว" ข้างปุ่ม Cancel ใน header -->
+            <xpath expr="//header/button[@name='cancel_voucher'][1]" position="before">
+                <button name="action_mark_transferred"
+                        string="โอนแล้ว"
+                        type="object"
+                        class="btn-success"
+                        attrs="{'invisible': [('state', '!=', 'posted')]}"
+                        groups="npd_voucher_transferred.group_voucher_transfer"
+                        confirm="ยืนยันว่าโอนเงินแล้ว ใช่หรือไม่?"/>
+                <button name="action_unmark_transferred"
+                        string="ยกเลิกโอน"
+                        type="object"
+                        class="btn-warning"
+                        attrs="{'invisible': [('state', '!=', 'transferred')]}"
+                        groups="npd_voucher_transferred.group_voucher_transfer"
+                        confirm="ต้องการยกเลิกสถานะโอนแล้ว ใช่หรือไม่?"/>
+            </xpath>
+
+            <!-- อัพเดต statusbar -->
+            <xpath expr="//header/field[@name='state'][@widget='statusbar']" position="attributes">
+                <attribute name="statusbar_visible">draft,posted,transferred</attribute>
+            </xpath>
+
+            <!-- 🎀 แถบคาดสีเขียว "โอนแล้ว" มุมขวาบน (ribbon) -->
+            <xpath expr="//sheet/*[1]" position="before">
+                <widget name="web_ribbon" title="โอนแล้ว" bg_color="bg-success"
+                        attrs="{'invisible': [('state', '!=', 'transferred')]}"/>
+            </xpath>
+
+            <!-- 📋 field สถานะการโอน -->
+            <xpath expr="//sheet//group/group/field[@name='date']" position="after">
+                <field name="transfer_status" readonly="1"
+                       decoration-success="transfer_status == 'transferred'"
+                       decoration-muted="transfer_status == 'not_transferred'"
+                       widget="badge"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Inherit: Purchase Voucher Tree View - เพิ่มคอลัมน์สถานะโอน -->
+    <!-- ============================================================ -->
+    <record id="view_purchase_receipt_tree_transfer" model="ir.ui.view">
+        <field name="name">account.voucher.purchase.tree.transfer</field>
+        <field name="model">account.voucher</field>
+        <field name="inherit_id" ref="account_voucher.view_voucher_tree_purchase"/>
+        <field name="priority">999</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="transfer_status" string="สถานะการโอน" optional="show"
+                       decoration-success="transfer_status == 'transferred'"
+                       decoration-muted="transfer_status == 'not_transferred'"
+                       widget="badge"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

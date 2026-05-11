@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_product_qty_alert,access_product_qty_alert,model_product_qty_alert,base.group_user,1,1,1,0
+access_alert_report_wizard,access_alert_report_wizard,model_alert_report_wizard,base.group_user,1,1,1,0
+access_alert_qty_wizard,access_alert_qty_wizard,model_alert_qty_wizard,base.group_user,1,1,1,0
+access_location_qty,access_location_qty,model_location_qty,base.group_user,1,1,1,0

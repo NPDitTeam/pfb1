@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="TaskTimerTemplate">
+        <li class="sh_timer_task"><span id="user_task"></span></li>
+        <li class="sh_timer"><span id="task_timer"></span></li>
+        <li class="sh_timer_menu">
+            <a href="#" id="timer_start" style="display: none;" title="Start Timer">
+                <i class="fa fa-play" />
+            </a>
+            <a href="#" id="timer_stop" style="display: none;" title="Stop Timer">
+                <i class="fa fa-stop" />
+            </a>
+        </li>
+    </t>
+</templates>

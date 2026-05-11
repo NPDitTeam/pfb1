@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+<t t-inherit="web.SearchPanel" t-inherit-mode="extension" owl="1">
+    <xpath expr="//div[hasclass('o_search_panel')]" position="attributes">
+        <attribute name="class" add="position-relative no-flex" separator=" "/>
+    </xpath>
+    <xpath expr="//div[hasclass('o_search_panel')]" position="inside">
+        <span class="o_resize position-absolute z-index-1" t-on-mousedown.stop.prevent="_onStartResize"/>
+    </xpath>
+</t>
+
+</templates>

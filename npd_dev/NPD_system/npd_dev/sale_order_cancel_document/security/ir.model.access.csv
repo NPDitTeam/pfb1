@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sale_order_cancel_document_wizard,sale.order.cancel.document.wizard,model_sale_order_cancel_document_wizard,,1,1,1,1
+access_cancelled_document_log,cancelled.document.log,model_cancelled_document_log,,1,1,1,0

@@ -1,0 +1,26 @@
+<odoo>
+    <record model="ir.ui.view" id="form_date_billing_add_field_inherit">
+        <field name="name">form.date.billing.add.field.inherit</field>
+        <field name="model">account.billing</field>
+        <field name="inherit_id" ref="account_billing.view_account_billing_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='date']" position="after">
+                <field name="date_string_shot" invisible="1"/>
+                <field name="date_string_full" invisible="1"/>
+                <field name="date_string_eng_shot" invisible="1"/>
+                <field name="date_string_eng_full" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+    <record model="ir.ui.view" id="form_amount_text_add_field_inherit">
+        <field name="name">form.amount.text.add.field.inherit</field>
+        <field name="model">account.billing</field>
+        <field name="inherit_id" ref="account_billing_advance.account_billing_inherit_view_account_billing_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='billing_amount']" position="after">
+                <field name="amount_text" invisible="1"/>
+                <field name="amount_in_text" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

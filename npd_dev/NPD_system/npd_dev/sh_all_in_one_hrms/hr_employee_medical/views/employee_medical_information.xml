@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="employee_medical_information_form_view" model="ir.ui.view">
+        <field name="name">employee.medical.information.form.view</field>
+        <field name="model">sh.hr.employee.line</field>
+        <field name="arch" type="xml">
+            <form string="Medical Examination">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="employee_id" />
+                            <field name="sh_description" />
+                            <field name="sh_medical_type_id" />
+                            <field name="sh_issue_date" />
+                            <field name="sh_expiry_month" />
+                            <field name="sh_expiry_date" />
+                            <field name="company_id" invisible="1" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="employee_medical_information_tree_view" model="ir.ui.view">
+        <field name="name">employee.medical.information.tree.view</field>
+        <field name="model">sh.hr.employee.line</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="employee_id" />
+                <field name="sh_description" />
+                <field name="sh_medical_type_id" />
+                <field name="sh_issue_date" />
+                <field name="sh_expiry_month" />
+                <field name="sh_expiry_date" />
+            </tree>
+        </field>
+    </record>
+    <record id="employee_medical_information_search_view" model="ir.ui.view">
+        <field name="name">employee.medical.information.search.view</field>
+        <field name="model">sh.hr.employee.line</field>
+        <field name="arch" type="xml">
+            <search string="Exployee Medical Examination">
+                <field name="employee_id" />
+                <field name="sh_medical_type_id" />
+                <field name="sh_expiry_date" />
+                <group expand="0" string="Group By">
+                    <filter string="Employee" name="employee" domain="[]" context="{'group_by':'employee_id'}" />
+                    <filter string="Medical Type" name="sh_medical_type_id" domain="[]" context="{'group_by':'sh_medical_type_id'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_employee_medical_information" model="ir.actions.act_window">
+        <field name="name">Medical Examination</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.hr.employee.line</field>
+        <field name="context">{'search_default_employee':1}</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <menuitem id="menu_employee_medical_information" groups="sh_all_in_one_hrms.group_hide_menu_emp_medical" name="Medical Examination" parent="hr.menu_hr_root" action="action_employee_medical_information" sequence="4"/>
+</odoo>

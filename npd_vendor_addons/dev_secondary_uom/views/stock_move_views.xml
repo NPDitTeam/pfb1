@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	 
+	 <record id="dev_stok_move_second_uom_tree" model="ir.ui.view">
+         <field name="name">dev.stock.move.second.uom.tree</field>
+         <field name="model">stock.move</field>
+         <field name="inherit_id" ref="stock.view_move_tree"/>
+         <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_uom']" position="after">
+	            <field name="uom_category_id" invisible="1"/>
+	            <field name="second_uom_qty" groups="dev_secondary_uom.group_inventory_second_uom" force_save="1"/>
+	            <field name="second_uom_done_qty" groups="dev_secondary_uom.group_inventory_second_uom" force_save="1"/>
+	            <field name="second_uom_id" options="{'no_open': True, 'no_create': True}" domain="[('category_id','=',uom_category_id)]"
+	                   groups="dev_secondary_uom.group_inventory_second_uom" />
+        	</xpath>
+        </field>
+    </record>
+    
+    <record id="dev_stok_move_main_second_uom_form" model="ir.ui.view">
+         <field name="name">dev.stock.move.main.second.uom.form</field>
+         <field name="model">stock.move</field>
+         <field name="inherit_id" ref="stock.view_move_form"/>
+         <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="before">
+	            <field name="uom_category_id" invisible="1"/>
+                <label for="second_uom_qty"/>
+                <div class="o_row">
+                    <field name="second_uom_qty"/>
+                    <field name="second_uom_id" options="{'no_open': True, 'no_create': True}" 
+                           groups="dev_secondary_uom.group_inventory_second_uom" 
+                           domain="[('category_id','=',uom_category_id)]"/>
+                </div>
+                <label for="second_uom_done_qty"/>
+                <div class="o_row">
+                    <field name="second_uom_done_qty"/>
+                    <field name="second_uom_id" options="{'no_open': True, 'no_create': True}"
+                           groups="dev_secondary_uom.group_inventory_second_uom"
+                           domain="[('category_id','=',uom_category_id)]"/>
+                </div>
+        	</xpath>
+        </field>
+    </record>
+	 
+	 <record id="dev_stok_picking_second_uom_form" model="ir.ui.view">
+         <field name="name">dev.stock.picking.second.uom.form</field>
+         <field name="model">stock.picking</field>
+         <field name="inherit_id" ref="stock.view_picking_form"/>
+         <field name="arch" type="xml">
+            <xpath expr="//field[@name='move_ids_without_package']//tree//field[@name='product_uom']" position="after">
+	            <field name="uom_category_id" invisible="1"/>
+	            <field name="second_uom_qty" groups="dev_secondary_uom.group_inventory_second_uom" force_save="1"
+	                    attrs="{'column_invisible': ['&amp;',('parent.immediate_transfer', '=', True), ('parent.is_locked', '=', True)], 'readonly': [('is_initial_demand_editable', '=', False)]}" />
+	            <field name="second_uom_done_qty" groups="dev_secondary_uom.group_inventory_second_uom" force_save="1"
+	                    attrs="{'readonly': [('is_quantity_done_editable', '=', False)]}"/>
+	            <field name="second_uom_id" attrs="{'readonly': [('state', '!=', 'draft'), ('additional', '=', False)]}" 
+	                   options="{'no_open': True, 'no_create': True}" domain="[('category_id','=',uom_category_id)]"
+	                   groups="dev_secondary_uom.group_inventory_second_uom" />
+        	</xpath>
+        </field>
+    </record>
+    
+    <record id="dev_stock_move_operation_second_uom_form" model="ir.ui.view">
+         <field name="name">dev.stock.move.operation.second.uom.form</field>
+         <field name="model">stock.move</field>
+         <field name="inherit_id" ref="stock.view_stock_move_operations"/>
+         <field name="arch" type="xml">
+            <xpath expr="//group" position="inside">
+                <group>
+                    <group>
+                        <field name="uom_category_id" invisible="1"/>
+                        <label for="second_uom_qty" groups="dev_secondary_uom.group_inventory_second_uom"/>
+                        <div class="o_row">
+                            <span><field name="second_uom_qty" force_save="1" readonly="1" nolabel="1"
+                                         groups="dev_secondary_uom.group_inventory_second_uom"/></span>
+                            <span><field name="second_uom_id" force_save="1" readonly="1" nolabel="1"
+                                         groups="dev_secondary_uom.group_inventory_second_uom"/></span>
+                        </div>
+                        <label for="second_uom_done_qty" groups="dev_secondary_uom.group_inventory_second_uom"/>
+                        <div class="o_row">
+                            <span><field name="second_uom_done_qty" force_save="1" readonly="1" nolabel="1"
+                                         groups="dev_secondary_uom.group_inventory_second_uom"/></span>
+                            <span><field name="second_uom_id" force_save="1" readonly="1" nolabel="1" 
+                                         groups="dev_secondary_uom.group_inventory_second_uom"/></span>
+                        </div>
+                    </group>
+                </group>
+        	</xpath>
+        	<xpath expr="//field[@name='move_line_ids']" position="attributes">
+        	    <attribute name="context">{'tree_view_ref': 'stock.view_stock_move_line_operation_tree', 'default_product_uom_id': product_uom, 'default_picking_id': picking_id, 'default_move_id': id, 'default_product_id': product_id, 'default_location_id': location_id, 'default_location_dest_id': location_dest_id, 'default_second_uom_id':second_uom_id}</attribute>
+        	</xpath>
+        </field>
+    </record>
+    
+    <record id="dev_stock_move_line_second_uom_form" model="ir.ui.view">
+         <field name="name">dev.stock.move.line.second.uom.form</field>
+         <field name="model">stock.move.line</field>
+         <field name="inherit_id" ref="stock.view_move_line_tree"/>
+         <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_uom_id']" position="after">
+                <field name="uom_category_id" invisible="1"/>
+                
+                <field name="second_uom_qty" readonly="1" force_save="1" 
+                       groups="dev_secondary_uom.group_inventory_second_uom"/>
+                
+
+        	</xpath>
+        </field>
+    </record>
+    
+    
+</odoo>

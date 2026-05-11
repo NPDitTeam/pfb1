@@ -1,0 +1,23 @@
+{
+    "name": "PFB ACC : Support App Docx",
+    "summary": """Support App Docx""",
+    "version": "14.0.1.0.0",
+    "license": "AGPL-3",
+    "development_status": "Beta",
+    "maintainers": ["rousseldenis"],
+    "author": "PFB",
+    'website': 'https://www.perfectblending.com/',
+    "depends": ["purchase", "account", "base","l10n_th_partner","sale","account_billing","account_billing_advance","account_voucher"],
+    'support': 'info@thaiodoo.com',
+    "data": [
+        'views/account_move.xml',
+        'views/res_company.xml',
+        'views/res_partner.xml',
+        'views/purchase_order.xml',
+        # 'views/sale_order.xml',
+        'views/account_billing.xml',
+        'views/account_voucher.xml',
+        # 'views/purchase_request.xml',
+    ],
+    "installable": True,
+}

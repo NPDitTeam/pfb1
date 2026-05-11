@@ -1,0 +1,82 @@
+<odoo>
+    <record id="asset_detail_tree_view" model="ir.ui.view">
+        <field name="name">asset.detail.tree.view</field>
+        <field name="model">asset.detail</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="category_id"/>
+                <field name="asset_model"/>
+                <field name="serial_no"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+    <record id="asset_detail_form_view" model="ir.ui.view">
+        <field name="name">asset.detail.form.view</field>
+        <field name="model">asset.detail</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="confirm_asset" string="ยืนยัน" class="btn-primary" type="object" attrs="{'invisible': [('state', 'not in', ['draft'])]}"/>
+                    <button name="scrap_asset" string="เลิกใช้งาน" class="btn-primary" type="object" attrs="{'invisible': [('state', 'not in', ['active'])]}"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,scrap"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label class="oe_edit_only" for="name" string="ชื่อทรัพย์สิน"/>
+                        <h1>
+                            <field name="name" placeholder="ชื่อ"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="category_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                            <field name="asset_code" readonly="1"/>
+                            <field name="asset_model"/>
+                            <field name="serial_no"/>
+                        </group>
+                        <group>
+                            <field name="purchase_date"/>
+                            <field name="purchase_value"/>
+                            <field name="location_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                            <field name="employee_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="การรับประกัน">
+                            <group>
+                                <group>
+                                    <field name="vendor_id" options="{'no_create_edit': True, 'no_create': True}"/>
+                                    <field name="warranty_start"/>
+                                    <field name="warranty_end"/>
+                                    <field name="asset_images">
+                        <tree>
+                            <field name="image" widget="image"/>
+                        </tree>
+                        <form>
+                            <field name="image" widget="image"/>
+                        </form>
+                    </field>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <!-- เพิ่ม Chatter -->
+            <!-- ✅ เพิ่ม Chatter -->
+            <div class="oe_chatter">
+                <field name="message_ids" widget="mail_thread"/>
+                <field name="activity_ids" widget="mail_activity"/>
+            </div>
+            </form>
+        </field>
+    </record>
+    <record id="action_asset_detail" model="ir.actions.act_window">
+        <field name="name">ทรัพย์สิน</field>
+        <field name="res_model">asset.detail</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <menuitem id="main_menu_asset" name="ทรัพย์สิน" parent="main_menu_assets"  sequence="1"/>
+    <menuitem id="menu_asset_detail" action="action_asset_detail" parent="main_menu_asset"/>
+</odoo>

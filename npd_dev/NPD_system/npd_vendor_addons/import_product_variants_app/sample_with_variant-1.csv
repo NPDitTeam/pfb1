@@ -1,0 +1,5 @@
+Name,Can be Sold,Can be Purchased,Product Type,Category,Unit of measurment,Purchase unit of Measure,Customer Taxes,Vendor Taxes,Description for customer,Invoicing Policy,Sales Price,Cost,Variant Attributes,Attribute Values,Internal reference,Barcode,Weight,Volume,Qty On Hand,boolean_field,char_field,integer_field,float_field,text_field,many2one_field,many2many_field
+apple,1,1,product,All / Saleable,Dozens,Dozens,"IGST 12%,GST 1%",GST 1%,Good quality Apples,delivery,40,20,quality,"good,nice",a1 b1 int_ref,,9,8,5,1,Char A,2,2.1,Text A,Lumber Inc,"Lumber Inc,Azure Interior"
+mango,1,,Storable Product,All / Saleable,Dozens,Dozens,,,Good quality Mango,delivery,88,99,colour,,MAN002,,10,9,10,,Char C,3,3.3,Text C,Lumber Inc,"Deco Addict,Lumber Inc"
+grapes,1,,Service,All / Saleable / fruit,Dozens,Dozens,"IGST 12%,GST 1%",,Good quality Grapes,,60,40,taste,"sweet,sour",[grapes_int_ref],,6,10,10,,,,,,Deco Addict,Lumber Inc
+banana,,,,,,,,,,,,,,,,,,,,,,,,,,

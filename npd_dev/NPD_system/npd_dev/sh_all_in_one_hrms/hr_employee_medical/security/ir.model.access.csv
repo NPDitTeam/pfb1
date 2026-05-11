@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_medical_type_user,access_medical_type_user,model_sh_medical_type,base.group_user,1,1,1,1
+access_employee_line_user,access_employee_line_user,model_sh_hr_employee_line,base.group_user,1,1,1,1
+access_expired_employee_line_user,access_expired_employee_line_user,model_sh_expired_hr_employee_line,base.group_user,1,1,1,1
+access_medical_type_officer,access_medical_type_officer,model_sh_medical_type,hr.group_hr_user,1,1,1,1
+access_employee_line_officer,access_employee_line_officer,model_sh_hr_employee_line,hr.group_hr_user,1,1,1,1
+access_expired_employee_line_officer,access_expired_employee_line_officer,model_sh_expired_hr_employee_line,hr.group_hr_user,1,1,1,1

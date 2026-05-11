@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sale_oder_view_form_add_other_info" model="ir.ui.view">
+        <field name="name">sale.order.view.form.add.other_info</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale_stock.view_order_form_inherit_sale_stock"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='picking_policy']" position="after">
+                <field name="driver"/>
+                <field name="vehicle_type"/>
+                <field name="vehicle_registration"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,104 @@
+<odoo>
+    <!-- เมนูหลัก -->
+    <menuitem id="main_employee_salary_menu"
+              name="เงินเดือนพนักงาน"
+              sequence="10"/>
+
+    <!-- Action แสดง Model employee.salary -->
+    <record id="employee_salary_action" model="ir.actions.act_window">
+        <field name="name">ข้อมูลพนักงาน</field>
+        <field name="res_model">employee.salary</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- เมนูรอบทำเงินเดือน -->
+    <menuitem id="sub_payroll_period_menu"
+              name="รอบทำเงินเดือน"
+              parent="main_employee_salary_menu"
+              action="payroll_period_action"
+              sequence="5"/>
+
+    <!-- เมนูย่อยผูก action -->
+    <menuitem id="sub_employee_salary_menu"
+              name="ข้อมูลพนักงาน"
+              parent="main_employee_salary_menu"
+              action="employee_salary_action"
+              sequence="10"/>
+
+    <!-- เมนูแผนก (ใช้ server action เพื่อ sync ก่อนเปิด) -->
+    <menuitem id="sub_department_menu"
+              name="แผนก"
+              parent="main_employee_salary_menu"
+              action="action_sync_and_open_department"
+              sequence="20"/>
+
+    <!-- เมนูตำแหน่ง (ใช้ server action เพื่อ sync ก่อนเปิด) -->
+    <menuitem id="sub_position_menu"
+              name="ตำแหน่ง"
+              parent="main_employee_salary_menu"
+              action="action_sync_and_open_position"
+              sequence="30"/>
+
+    <!-- เมนูสาขา (ใช้ server action เพื่อ sync ก่อนเปิด) -->
+    <menuitem id="sub_branch_menu"
+              name="สาขา"
+              parent="main_employee_salary_menu"
+              action="action_sync_and_open_branch"
+              sequence="40"/>
+
+    <!-- เมนูตั้งค่าคอมมิชชั่น Sales -->
+    <menuitem id="sub_commission_rate_config_menu"
+              name="ตั้งค่าคอมมิชชั่น Sales"
+              parent="main_employee_salary_menu"
+              action="action_commission_rate_config"
+              sequence="50"/>
+
+    <!-- เมนูตั้งค่าคอมมิชชั่นสาขา -->
+    <menuitem id="sub_commission_branch_config_menu"
+              name="ตั้งค่าคอมมิชชั่นสาขา"
+              parent="main_employee_salary_menu"
+              action="action_commission_branch_config"
+              sequence="55"/>
+
+    <!-- เมนูตั้งค่าอัตราค่าคอมสาขา/Sales -->
+    <menuitem id="sub_commission_rate_branch_sales_menu"
+              name="ค่าคอมสาขา/Sales"
+              parent="main_employee_salary_menu"
+              action="action_commission_rate_branch_sales"
+              sequence="57"/>
+
+    <!-- เมนูจัดการค่ารักษาพยาบาล (กรอกเอง โดยเลือกพนักงานจาก employee.salary) -->
+    <menuitem id="sub_medical_expense_menu"
+              name="จัดการค่ารักษาพยาบาล"
+              parent="main_employee_salary_menu"
+              action="action_medical_expense"
+              sequence="60"/>
+
+    <!-- เมนูจัดการค่าเบี้ยเลี้ยง -->
+    <menuitem id="sub_allowance_management_menu"
+              name="จัดการค่าเบี้ยเลี้ยง"
+              parent="main_employee_salary_menu"
+              action="action_allowance_management"
+              sequence="65"/>
+
+    <!-- เมนูใบเตือนพนักงาน -->
+    <menuitem id="sub_employee_warning_menu"
+              name="ใบเตือนพนักงาน"
+              parent="main_employee_salary_menu"
+              action="action_employee_warning"
+              sequence="70"/>
+
+    <!-- เมนูเงินได้อื่นๆ -->
+    <menuitem id="sub_other_income_menu"
+              name="เงินได้อื่นๆ"
+              parent="main_employee_salary_menu"
+              action="action_other_income"
+              sequence="75"/>
+
+    <!-- เมนูจัดการเงินประกันการทำงาน -->
+    <menuitem id="sub_work_security_deposit_menu"
+              name="จัดการเงินประกันการทำงาน"
+              parent="main_employee_salary_menu"
+              action="action_work_security_deposit"
+              sequence="80"/>
+</odoo>

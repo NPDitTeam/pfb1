@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_project_template_form_view" model="ir.ui.view">
+        <field name="name">Project Template Form</field>
+        <field name="model">project.template</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name" />
+                        <field name="templ_active" />
+                        <field name="company_id" invisible="1" />
+                    </group>
+                    <notebook>
+                        <page string="Template">
+                            <field name="project_template_task_ids">
+                                <tree>
+                                    <field name="company_id" invisible="1" />
+                                    <field name="name" />
+                                    <field name="assigned_to" />
+                                    <field name="description" />
+                                    <field name="sh_task_id" widget="many2many_tags" invisible="1"/>
+                                    <button name="action_assign_sub_task" type="object"
+                                        icon="fa-plus-square" width="0.1" role="img"
+                                        title="Assign Serial Numbers"
+                                    />
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_project_template_tree_view" model="ir.ui.view">
+        <field name="name">Project Template Tree</field>
+        <field name="model">project.template</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" />
+                <field name="templ_active" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="sh_action_project_template" model="ir.actions.act_window">
+        <field name="name">Custom Project Template</field>
+        <field name="res_model">project.template</field>
+        <field name="view_mode">tree,form</field>
+        <field name="type">ir.actions.act_window</field>
+    </record>
+
+    <menuitem id="menu_custom_project_template" name="Custom Project Template"
+        action="sh_action_project_template" parent="project.menu_project_config"
+        groups="sh_all_in_one_pms.group_custom_project_template" />
+</odoo>

@@ -1,0 +1,34 @@
+<odoo>
+    <record id="view_sale_order_form_custom" model="ir.ui.view">
+        <field name="name">sale.order.form.custom.shipping</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+
+            <!-- เพิ่มปุ่มค่าขนส่ง -->
+            <xpath expr="//header" position="inside">
+                <field name="shipping_invoice_id" invisible="1"/>
+                <field name="start_rent_date" invisible="1"/>
+                <field name="end_rent_date" invisible="1"/>
+                <button name="action_open_shipping_popup"
+                        type="object"
+                        class="oe_stat_button btn-primary"
+                        icon="fa-truck"
+                        string="ค่าขนส่ง"/>
+            </xpath>
+
+            <!-- แทรกปุ่ม 'ดูใบ Invoice ค่าขนส่ง' ภายใน div ที่มีอยู่ -->
+            <xpath expr="//div[@class='oe_button_box']" position="inside">
+
+                    <button name="action_view_shipping_invoice"
+        type="object"
+        class="oe_stat_button btn-info"
+        icon="fa-file-text-o"
+        string="ค่าขนส่ง" attrs="{'invisible': [('shipping_invoice_id', '=', False)]}"/>
+
+
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

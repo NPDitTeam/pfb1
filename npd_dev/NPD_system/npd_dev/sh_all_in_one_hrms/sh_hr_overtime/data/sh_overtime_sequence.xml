@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Sequences for Overtime -->
+    <record id="seq_overtime" model="ir.sequence">
+        <field name="name">Overtime</field>
+        <field name="code">sh.hr.overtime</field>
+        <field name="prefix">OT</field>
+        <field name="padding">3</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+    </record>
+
+    <record id="opt_type_rec_1" model="sh.ot.types">
+        <field name="name">OVERTIME</field>
+    </record>
+
+    <record id="opt_type_rec_2" model="sh.ot.types">
+        <field name="name">RESTDAY OVERTIME</field>
+    </record>
+
+    <record id="opt_type_rec_3" model="sh.ot.types">
+        <field name="name">OVERTIME FALLING ON LEGAL HOLIDAY</field>
+    </record>
+
+    <record id="opt_type_rec_4" model="sh.ot.types">
+        <field name="name">OVERTIME FALLING ON SPECIAL HOLIDAY</field>
+    </record>
+
+    <record id="opt_type_rec_5" model="sh.ot.types">
+        <field name="name">RESTDAY FALLING ON LEGAL HOLIDAY</field>
+    </record>
+
+    <record id="opt_type_rec_6" model="sh.ot.types">
+        <field name="name">RESTDAY FALLING ON SPECIAL HOLIDAY</field>
+    </record>
+
+    <record id="opt_type_rec_7" model="sh.ot.types">
+        <field name="name">OVERTIME NIGHT DIFFERENTIAL</field>
+    </record>
+
+    <record id="opt_type_rec_8" model="sh.ot.types">
+        <field name="name">RESTDAY OVERTIME NIGHT DIFFERENTIAL</field>
+    </record>
+
+    <record id="opt_type_rec_9" model="sh.ot.types">
+        <field name="name">OVERTIME FALLING ON LEGAL HOLIDAY NIGHT DIFFERENTIAL</field>
+    </record>
+
+    <record id="opt_type_rec_10" model="sh.ot.types">
+        <field name="name">OVERTIME FALLING ON SPECIAL HOLIDAY NIGHT DIFFERENTIAL</field>
+    </record>
+
+    <record id="opt_type_rec_11" model="sh.ot.types">
+        <field name="name">RESTDAY FALLING ON LEGAL HOLIDAY NIGHT DIFFERENTIAL</field>
+    </record>
+
+    <record id="opt_type_rec_12" model="sh.ot.types">
+        <field name="name">RESTDAY FALLING ON SPECIAL HOLIDAY NIGHT DIFFERENTIAL</field>
+    </record>
+</odoo>

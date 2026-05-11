@@ -1,0 +1,15 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_asset_borrow_request,equipment.borrow.request,model_asset_borrow_request,base.group_user,1,1,1,1
+access_asset_borrow_stage_user,asset.borrow.stage.user,model_asset_borrow_stage,base.group_user,1,0,0,0
+access_asset_provide_stage_user,asset.provide.stage.user,model_asset_provide_stage,base.group_user,1,0,0,0
+access_asset_provide_request,equipment.provide.request,model_asset_provide_request,base.group_user,1,1,1,1
+access_asset_provide_component_user,asset.provide.component.user,model_asset_provide_component,base.group_user,1,1,1,1
+access_asset_request_user,asset.request.user,model_asset_request,base.group_user,1,1,1,1
+access_asset_request_stage_user,asset.request.stage.user,model_asset_request_stage,base.group_user,1,0,0,0
+access_asset_equipment_export_user,asset.equipment.export.user,model_asset_equipment_export,base.group_user,1,1,1,1
+access_asset_equipment_export_admin_user,asset.equipment.export.admin.user,model_asset_equipment_export,pfb_std_asset_menu.group_asset_manager,1,1,1,1
+access_asset_inventory_equipment_rel_user,asset.inventory.equipment.rel.user,model_asset_inventory_equipment_rel,base.group_user,1,0,0,0
+access_asset_inventory_equipment_rel_admin_user,asset.inventory.equipment.rel.admin.user,model_asset_inventory_equipment_rel,pfb_std_asset_menu.group_asset_manager,1,1,1,1
+access_asset_inventory_user,asset.inventory.user,model_asset_inventory,base.group_user,1,0,0,0
+access_asset_inventory_admin_user,asset.inventory.admin.user,model_asset_inventory,pfb_std_asset_menu.group_asset_manager,1,1,1,1
+

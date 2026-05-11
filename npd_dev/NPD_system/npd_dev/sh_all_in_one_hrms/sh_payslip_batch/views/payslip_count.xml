@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <record id="sh_hr_payslip_run_inherit_view_form" model="ir.ui.view">
+        <field name="name">sh.hr.payslip.run.inherit.view.form</field>
+        <field name="model">hr.payslip.run</field>
+        <field name="inherit_id" ref="sh_hr_payroll.hr_payslip_run_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//sheet//label" position="before">
+                <div class="oe_button_box" name="button_box">
+                    <button name="action_view_payslips" type="object" class="oe_stat_button" icon="fa-money">
+                        <div class="o_stat_info">
+                            <field name="sh_payslip_count" class="o_stat_value" />
+                            <span class="o_stat_text">Payslip</span>
+                        </div>
+                    </button>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

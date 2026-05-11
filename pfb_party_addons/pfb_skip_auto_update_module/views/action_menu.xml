@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <data noupdate="1">
+
+     <record id="ir_module_module_reset_skip_update" model="ir.actions.server">
+        <field name="name">Reset Skip Update</field>
+        <field name="model_id" ref="base.model_ir_module_module" />
+         <field name="binding_model_id" ref="base.model_ir_module_module"/>
+        <field name="state">code</field>
+        <field name="code">
+            action = model.skip_update_auto()
+        </field>
+    </record>
+    <menuitem
+        name="Reset Skip Modules"
+        action="ir_module_module_reset_skip_update"
+        id="menu_ir_module_module_reset_skip_update"
+        groups="base.group_no_one"
+        parent="base.menu_management"
+        sequence="45"
+    />
+      <record id="ir_module_module_save_changed_checksum" model="ir.actions.server">
+        <field name="name">Save Checksum Modules</field>
+        <field name="type">ir.actions.server</field>
+        <field name="model_id" ref="base.model_ir_module_module" />
+        <field name="state">code</field>
+        <field name="code">
+            action = model._save_installed_checksums()
+        </field>
+    </record>
+    <menuitem
+        name="Save CHecksum Modules"
+        action="ir_module_module_save_changed_checksum"
+        id="menu_ir_module_module_save_changed_checksum"
+        groups="base.group_no_one"
+        parent="base.menu_management"
+        sequence="46"
+    />
+    </data>
+
+</odoo>

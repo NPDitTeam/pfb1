@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <report
+            id="action_report_account_tax"
+            string="Account Tax Report"
+            model="bi.account.tax.report"
+            report_type="qweb-pdf"
+            file="bi_account_tax_report.bi_report_account_tax"
+            name="bi_account_tax_report.bi_report_account_tax"
+        />
+    </data>
+</odoo>

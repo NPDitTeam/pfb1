@@ -1,0 +1,88 @@
+<odoo>
+    <!-- Wizard Form View -->
+    <record id="view_commission_detail_wizard_form" model="ir.ui.view">
+        <field name="name">commission.detail.wizard.form</field>
+        <field name="model">commission.detail.wizard</field>
+        <field name="arch" type="xml">
+            <form string="รายละเอียดการดึงค่าคอมมิชชั่น">
+                <group>
+                    <group>
+                        <field name="commission_type"/>
+                        <field name="employee_name"/>
+                        <field name="branch_name"/>
+                    </group>
+                    <group>
+                        <field name="month"/>
+                        <field name="year"/>
+                    </group>
+                </group>
+                <separator string="รายละเอียดยอดสาขาแต่ละ Database"/>
+                <field name="detail_line_ids" readonly="1">
+                    <tree>
+                        <field name="db_name"/>
+                        <field name="status"/>
+                        <field name="match_count"/>
+                        <field name="net_rental" sum="Total"/>
+                    </tree>
+                </field>
+                <!-- ===== ยอด Sales กรองตามสาขา (แสดงเฉพาะค่าคอมสาขา) ===== -->
+                <separator string="รายละเอียดยอด Sales (กรองตามสาขา)"
+                           attrs="{'invisible': [('commission_type', '!=', 'branch')]}"/>
+                <field name="sales_line_ids" readonly="1"
+                       attrs="{'invisible': [('commission_type', '!=', 'branch')]}">
+                    <tree>
+                        <field name="db_name"/>
+                        <field name="sales_contact_name"/>
+                        <field name="branch_name"/>
+                        <field name="rental_amount" sum="รวมยอดเช่า"/>
+                        <field name="payment_received" sum="รวมรับชำระ"/>
+                        <field name="outstanding_debt" sum="รวมหนี้ค้าง"/>
+                        <field name="shipping_cost" sum="รวมค่าขนส่ง"/>
+                        <field name="net_rental" sum="รวมสุทธิ"/>
+                    </tree>
+                </field>
+                <!-- ===== สรุปผลคำนวณ (รวมทั้งหมดใน group เดียว) ===== -->
+                <separator string="สรุปผลคำนวณ"/>
+                <group class="oe_subtotal_footer oe_right">
+                    <field name="total_amount" widget="monetary" string="รวมยอดสุทธิสาขา"
+                           attrs="{'invisible': [('commission_type', '!=', 'branch')]}"/>
+                    <field name="branch_comm_rate" string="อัตราค่าคอมสาขา (%)"
+                           attrs="{'invisible': [('commission_type', '!=', 'branch')]}"/>
+                    <field name="branch_after_rate" widget="monetary" string="ยอดสุทธิสาขา × อัตรา"
+                           attrs="{'invisible': [('commission_type', '!=', 'branch')]}"/>
+                    <field name="sales_total_net_rental" widget="monetary" string="รวมยอดสุทธิ Sales"
+                           attrs="{'invisible': [('commission_type', '!=', 'branch')]}"/>
+                    <field name="sales_comm_rate" string="อัตราค่าคอม Sales (%)"
+                           attrs="{'invisible': [('commission_type', '!=', 'branch')]}"/>
+                    <field name="sales_after_rate" widget="monetary" string="ยอดสุทธิ Sales × อัตรา"
+                           attrs="{'invisible': [('commission_type', '!=', 'branch')]}"/>
+                    <field name="grand_total_net_rental" widget="monetary" string="รวมยอดสุทธิทั้งหมด (สาขา + Sales)"
+                           attrs="{'invisible': [('commission_type', '!=', 'branch')]}"/>
+                    <field name="active_emp_count"
+                           attrs="{'invisible': [('commission_type', '!=', 'branch')]}"/>
+                    <field name="my_ratio" string="สัดส่วนตัวเอง"
+                           attrs="{'invisible': [('commission_type', '!=', 'branch')]}"/>
+                    <field name="total_ratio" string="สัดส่วนรวมทั้งสาขา"
+                           attrs="{'invisible': [('commission_type', '!=', 'branch')]}"/>
+                    <field name="per_person_amount" widget="monetary"
+                           attrs="{'invisible': [('commission_type', '!=', 'branch')]}"/>
+                    <field name="commission_rate" string="อัตราคอมมิชชั่น (%)"
+                           attrs="{'invisible': [('commission_type', '!=', 'sale')]}"/>
+                    <field name="commission_result" widget="monetary" string="ค่าคอมมิชชั่นที่ได้"
+                           attrs="{'invisible': [('commission_type', '!=', 'sale')]}"/>
+                </group>
+                <footer>
+                    <button string="ปิด" class="btn-primary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open wizard as popup -->
+    <record id="action_commission_detail_wizard" model="ir.actions.act_window">
+        <field name="name">รายละเอียดค่าคอมมิชชั่น</field>
+        <field name="res_model">commission.detail.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

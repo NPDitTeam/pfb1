@@ -1,0 +1,566 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <template id="assets_common" name="l10n_ch_isr_report" inherit_id="web.report_assets_common">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/css"
+                  href="npd_shipping_document_form/static/report.css"/>
+        </xpath>
+    </template>
+
+    <record id="paperformat_stock_form_test" model="report.paperformat">
+        <field name="name">A4 Custom</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">75</field>
+        <field name="margin_bottom">70</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">75</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <report
+            id="action_pfb_npd_inventory_overview_rental_return_form"
+            string="ใบขนส่งสินค้า"
+            name="npd_shipping_document_form.form_stock_npd_npd"
+            model="stock.picking"
+            report_type="qweb-pdf"
+            print_report_name="'ใบขนส่งสินค้า - %s' % (object.name)"
+            paperformat="npd_shipping_document_form.paperformat_stock_form_test"
+
+    />
+
+    <template id="so_form_header">
+        <style>
+            .font_weight {
+            font-weight: 800;
+            }
+            .address-line {
+            font-size: 14px;
+            margin-top: 5px;
+            }
+            .tax-id {
+            font-size: 14px;
+            margin-top: -10px;
+            display: block;
+            }
+            .header-container {
+            display: flex;
+            align-items: flex-start;
+            }
+            .company-info {
+            margin-left: 40px;
+            margin-top: 30px;
+            }
+            .document-info {
+            margin-top: 15px;
+            <!--                margin-left: -20px;-->
+            }
+            .text-rent {
+            font-size: 11px;
+            margin-top: -10px
+            }
+            .date-info {
+            margin-top: -10px;
+            }
+            .doc-post {
+            font-size: 12px;
+            }
+        </style>
+        <div class="row">
+            <div class="col-1" style="margin-top: 30px;">
+                <img src="web/binary/company_logo" class="img-responsive"/>
+            </div>
+            <div class="col-1"/>
+            <div class="col-6 company-info line-distance">
+                <h2 class="font_weight">
+                    <strong>
+                        <span t-esc="user.branch_id.company_id.name if user.branch_id and user.branch_id.company_id else 'สำนักงานใหญ่'"/>
+                    </strong>
+                </h2>
+                <p t-if="user.branch_id and user.branch_id.address" style="white-space: pre-line;">
+                    <t t-raw="user.branch_id.address"/>
+                </p>
+                <p t-else="">
+                    ไม่มีที่อยู่
+                </p>
+
+
+            </div>
+            <div class="col-4" style="margin-top: 30px;">
+                <table width="100%">
+                    <tr style="">
+                        <td style="display:block;width: 260px;text-align: center;padding-top: 5px; padding-right: -70px;">
+                            <p class="text-center document-info">
+                                <h4>
+                                    <strong>ใบขนส่งสินค้า</strong>
+                                </h4>
+                            </p>
+                            <p class="text-center">
+                                <strong>เลขที่:
+                                    <span t-esc="doc.name"/>
+                                </strong>
+                            </p>
+                            <p class="text-center">
+                                <strong>วันที่ส่งคืนสินค้า:
+                                    <span t-esc="doc._get_formatted_commitment_date()"/>
+                                </strong>
+                            </p>
+                            <!--                            <p class="text-center text-rent"><strong>ใบกำกับการเช่า</strong></p>-->
+                            <!--                            <p class="text-center text-rent"><span t-esc="doc.sale_id.name"/></p>-->
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="row" style="margin-bottom: 10px;"/>
+    </template>
+
+
+    <template id="so_form_title">
+        <style>
+            .rounded-square {
+            border: 1px solid #000;
+            padding: 10px;
+            font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+            }
+            .box {
+            border: 1px solid black;
+            padding: 10px;
+            vertical-align: top;
+            }
+            .text-left {
+            text-align: left;
+            }
+            .text-right {
+            text-align: right;
+            }
+            .text-center {
+            text-align: center;
+            }
+            .bold {
+            font-weight: bold;
+            }
+            .table-container {
+            width: 100%;
+            border-collapse: collapse;
+            }
+            .inner-table {
+            width: 100%;
+            }
+
+        </style>
+
+        <div class="">
+            <table class="table-container">
+                <tr>
+                    <!-- ผู้ส่ง -->
+                    <td class="box" style="width: 50%;">
+                        <h4>
+                            <strong>ผู้ส่ง</strong>
+                        </h4>
+
+                        <t t-if="doc.sale_id.delivery_type == 'customer' ">
+                            ต้นทาง:
+                        <span>
+<!--                            <span t-esc="doc.sale_id.delivery_employee_id.address_id.name"/>-->
+                            <span t-esc="doc.sale_id.pickup_location"/>
+                        </span>
+                        <br/>
+
+                            ชื่อผู้ส่ง:
+
+                            <span>
+                                <span t-esc="doc.sale_id.delivery_employee_id.name"/>
+                            </span>
+
+                            <br/>
+                            ที่อยู่ผู้ส่ง:
+                            <span>
+                                <span t-esc="doc.sale_id.delivery_employee_id.work_location"/>
+                            </span>
+                        </t>
+                        <t t-else="">
+                            ต้นทาง:
+                        <span>
+<!--                            <span t-esc="doc.sale_id.delivery_employee_id.address_id.name"/>-->
+                            <span t-esc="doc.sale_id.pickup_location"/>
+                        </span>
+                        <br/>
+                            ชื่อผู้ส่ง:
+                            <span>
+                                <span t-esc="doc.sale_id.partner_id.name"/>
+                            </span>
+                            <br/>
+                            ที่อยู่ผู้ส่ง:
+                            <span>
+                                <span t-esc="doc.sale_id.partner_shipping_id.street"/>
+                            </span>
+                                    </t>
+
+                    </td>
+
+                    <!-- ค่าขนส่งสินค้า -->
+                    <td class="box text-center" style="width: 25%;">
+                        <h4>
+                            <strong>ค่าขนส่งสินค้า</strong>
+                        </h4>
+
+<!--                        <span class="bold" style="font-size: 20px;">-->
+<!--                            <span t-esc="doc.sale_id.shipping_cost"/>-->
+<!--                        </span>-->
+                        <span class="bold" style="font-size: 20px;">
+<!--    <span t-if="doc.sale_id.shipping_cost_m" t-esc="doc.sale_id.shipping_cost_m"/>-->
+<!--    <span t-else="" t-esc="doc.sale_id.shipping_cost"/>-->
+                            <!-- แสดงค่าขนส่งตามเงื่อนไข -->
+                        <t t-if="doc.sale_id.use_special_delivery_zero and doc.sale_id.shipping_cost_m == 0">
+                            <span t-esc="doc.sale_id.shipping_cost_m"/>
+                        </t>
+                        <t t-elif="not doc.sale_id.use_special_delivery_zero and doc.sale_id.shipping_cost_m > 0">
+                            <span t-esc="doc.sale_id.shipping_cost_m"/>
+                        </t>
+                        <t t-elif="not doc.sale_id.use_special_delivery_zero and doc.sale_id.shipping_cost_m == 0">
+                            <span t-esc="doc.sale_id.shipping_cost"/>
+                        </t>
+                        <t t-else="">
+                            <span t-esc="doc.sale_id.shipping_cost"/>
+                        </t>
+
+                        </span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <!-- ผู้รับ -->
+                    <td class="box">
+                        <h4>
+                            <strong>ผู้รับ</strong>
+                        </h4>
+
+
+
+                        <t t-if="doc.sale_id.delivery_type == 'customer' ">
+                            ปลายทาง:
+                        <span>
+                            <span t-esc="doc.sale_id.destination"/>
+                        </span>
+                        <br/>
+
+                            ชื่อผู้รับ:
+                            <span>
+                                <span t-esc="doc.sale_id.partner_id.name"/>
+                            </span>
+                            <br/>
+                            ที่อยู่ผู้รับ:
+                            <span>
+                                <span t-esc="doc.sale_id.partner_shipping_id.street"/>
+                            </span>
+
+                        </t>
+                        <t t-else="">
+                        ปลายทาง:
+                        <span>
+                            <span t-esc="doc.sale_id.destination"/>
+                        </span>
+                        <br/>
+                             ชื่อผู้รับ:
+
+                            <span>
+                                <span t-esc="doc.sale_id.delivery_employee_id.name"/>
+                            </span>
+
+                            <br/>
+                            ที่อยู่ผู้รับ:
+                            <span>
+                                <span t-esc="doc.sale_id.delivery_employee_id.work_location"/>
+                            </span>
+
+                        </t>
+                    </td>
+
+                    <!-- ระยะทาง -->
+                    <td class="box text-center">
+                        <h4>
+                            <strong>ระยะทาง (กิโลเมตร)</strong>
+                        </h4>
+
+                        <span class="bold" style="font-size: 20px;">
+                            <span t-esc="doc.sale_id.distance_km"/>
+                        </span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <br/>
+        <table width="100%">
+            <thead>
+                <tr style="border-bottom: 1px solid black !important;">
+                    <th width="5%" class="text-center line-distance small-font number-col border_report" style="padding: 10px;">ลำดับ</th>
+                    <th width="50%" class="text-left line-distance small-font list-col border_report">รายการสินค้า</th>
+                    <th width="9%" class="text-right line-distance small-font weight-col border_report">จำนวน</th>
+                    <th width="9%" class="text-right line-distance small-font adjusted-col border_report">
+                        น้ำหนัก/หน่วย
+                    </th>
+                    <th width="11%" class="text-right line-distance small-font repair-col border_report">น้ำหนักรวม</th>
+
+                </tr>
+            </thead>
+            <tbody>
+
+                <t t-set="total_weight"
+                   t-value="sum((l.total_weight or 0.0) for l in (doc.sale_id.order_line or []) if l.price_subtotal >= 0)"/>
+
+                <t t-foreach="doc.sale_id.order_line" t-as="l">
+                    <t t-if="l.price_subtotal &gt;= 0">
+
+                        <tr>
+                            <td class="text-center line-distance number-col" style="padding: 5px;">
+                                <span t-esc="l_index + 1"/>
+                            </td>
+                            <td class="text-left line-distance list-col">
+                                <span t-esc="l.name"/>
+                            </td>
+                            <td class="text-right line-distance weight-col">
+                                <span t-esc="'{0:,.2f}'.format(l.pfb_quantity)"/>
+                            </td>
+
+                            <!-- คอลัมน์ adjusted-col สำหรับ analytic_tag 'L' -->
+                            <td class="text-right line-distance weight-col">
+                                <span t-esc="'{0:,.2f}'.format(l.second_uom_qty)"/>
+                            </td>
+
+                            <!-- คอลัมน์ repair-col สำหรับ analytic_tag 'D' -->
+                            <td class="text-right line-distance weight-col">
+                                <span t-esc="'{0:,.2f}'.format(l.total_weight)"/>
+                            </td>
+
+
+                        </tr>
+                    </t>
+                </t>
+
+
+            </tbody>
+
+        </table>
+    </template>
+
+    <template id="so_form_detail_top">
+
+        <table>
+            <thead>
+                <tr>
+                    <th width="1%" class="text-center line-distance small-font number-col border_report">ลำดับ</th>
+
+                </tr>
+            </thead>
+
+
+        </table>
+    </template>
+
+    <template id="so_form_footer">
+        <style>
+            .footer {
+            margin-top: 190px; /* เพิ่มระยะห่างด้านบน */
+            <!--        padding-bottom: 90px; /* เพิ่มระยะห่างด้านล่าง */-->
+            }
+        </style>
+
+
+        <t t-set="total_weight"
+           t-value="sum((l.total_weight or 0.0) for l in (doc.sale_id.order_line or []) if l.price_subtotal >= 0)"/>
+        <div id="simple_footer" class="footer">
+            <div class="row">
+                <div class="col-6">
+                </div>
+                <div class="col-6 text-right" style="padding-right: 40px; font-size: 16px;">
+                    <div>
+                        น้ำหนักรวมสุทธิ์ (กิโลกรัม) :
+                        <strong>
+                            <b>
+                                <span t-if="total_weight" t-esc="'{0:,.2f}'.format(total_weight)"/>
+                                <span t-else="0.00">0.00</span>
+                            </b>
+                        </strong>
+
+
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="mt-1" style="border-bottom: 1px solid black"/>
+
+            <div class="row" style="margin-bottom: 5px;"/>
+            <div class="row">
+                <div class="col-11">
+                    <div>
+                        <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+
+                            <tr>
+                                <td style="font-size: 15px;">
+                                    <b>หมายเหตุ:</b>
+                                    <span t-if="doc.note" t-esc="doc.note"/>
+                                    <span t-else="ไม่มีหมายเหตุ">ไม่มีหมายเหตุ</span>
+                                </td>
+                            </tr>
+
+
+                        </table>
+                        <br/>
+                        <br/>
+                        <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+
+
+                            <tr>
+                                <td width="50%" style="font-size: 15px;">
+                                    <b>วิธีการชำระเงิน โอนเงินเข้าบัญชี</b>
+                                </td>
+
+                            </tr>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="row">
+                <div class="col-11">
+                    <div>
+
+                        <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+
+                            <tr>
+                                <td width="7%" style="font-size: 15px;">
+
+                                </td>
+                                <td width="50%" style="font-size: 15px;">
+                                    บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6
+                                </td>
+                            </tr>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+            <br/>
+            <style>
+                .signature-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+                font-size: 14px;
+                }
+
+                .signature-table td {
+                text-align: center;
+                vertical-align: bottom;
+                padding-top: 10px;
+                padding-bottom: 10px;
+                width: 25%;
+                min-height: 50px; /*
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-end;
+                }
+
+                .signature-line {
+                border-bottom: 2px solid black; /*
+                display: block;
+                width: 80%;
+                margin-top: auto; /*
+                }
+
+                .signature-title {
+                font-weight: bold;
+                display: block;
+                margin-bottom: 5px; /*
+                }
+
+                .signature-subtitle {
+                font-style: italic;
+                display: block;
+                margin-bottom: 5px;
+                }
+            </style>
+
+            <table class="signature-table">
+                <tr>
+                    <td>
+                        <span class="signature-title">
+                            <t t-esc="user.name"/>
+                        </span><br/>
+                        <span class="">________________________</span><br/>
+                        <span class="signature-subtitle" style="font-size: 15px;">(เจ้าหน้าที่ออกเอกสาร)</span>
+
+                    </td>
+                    <td>
+                        <span class="signature-title"></span><br/>
+                        <span class="">________________________</span><br/>
+                        <span class="signature-subtitle" style="font-size: 15px;">(เจ้าหน้าที่ใบสินค้า)</span>
+
+                    </td>
+                    <td>
+                        <span class="signature-title">
+                            <span t-esc="doc.sale_id.license_plate_id.name"/>
+                            :
+                            <span t-esc="doc.sale_id.delivery_employee_id.name"/>
+                        </span><br/>
+                        <span class="">________________________</span><br/>
+                        <span class="signature-subtitle" style="font-size: 15px;">(ทะเบียนรถ / ชื่อผู้ขับ)</span>
+
+                    </td>
+                    <td>
+                        <span class="signature-title"></span><br/>
+                       <span class="">________________________</span><br/>
+                        <span class="signature-subtitle" style="font-size: 15px;">ผู้รับสินค้า</span>
+
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+    </template>
+
+
+    <template id="form_stock_npd_npd">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <!--  เพิ่มการคำนวณค่า total_weight ก่อนเรียก so_form_footer -->
+                <t t-set="total_weight" t-value="sum((l.total_weight or 0.0) for l in (doc.sale_id.order_line or []))"/>
+
+                <t t-call="web.basic_layout">
+                    <div class="header">
+                        <table width="100%" border="1">
+                            <tr>
+                                <td>
+                                    <t t-call="npd_shipping_document_form.so_form_header"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <t t-call="npd_shipping_document_form.so_form_title"/>
+                                </td>
+                            </tr>
+
+                        </table>
+
+                    </div>
+                    <t t-call="npd_shipping_document_form.so_form_detail_top"/>
+                    <t t-call="npd_shipping_document_form.so_form_footer"/>
+
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+</odoo>

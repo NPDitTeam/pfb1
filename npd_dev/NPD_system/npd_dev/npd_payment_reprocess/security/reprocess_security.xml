@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================ -->
+    <!-- กลุ่มสิทธิ์แบบซ่อน (ไม่มี category_id)       -->
+    <!-- ไม่แสดงในรายการกลุ่มบน user form             -->
+    <!-- ใช้ควบคุมเมนูเท่านั้น sync ผ่าน Boolean field -->
+    <!-- ============================================ -->
+    <record id="group_payment_reprocess" model="res.groups">
+        <field name="name">ดำเนินการรับชำระใหม่</field>
+        <field name="category_id" eval="False"/>
+        <field name="comment">กลุ่มภายในสำหรับควบคุมเมนู (sync อัตโนมัติจาก checkbox allow_payment_reprocess)</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="report_expiry_pdf">
+            <t t-call="web.html_container">
+                <t t-call="web.internal_layout">
+                <br/><br/><br/>
+                    <div class="page">
+                        <!--<b><center><h3>Stock Expiry Report</h3></center></b>-->
+                        <center><font style="font-size:20px"><b>รายละเอียดของคงเหลือที่ขอขยายระยะเวลาการเก็บในเขตปลอดอากร/เขตประกอบการเสรี</b></font></center>
+                        <table width="100%">
+                        <tr>
+                        <td style="width:25%"></td>
+                        <td>ชื่อบริษัท&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<t t-esc="env.company.name"/></td>
+                        </tr>
+                        <tr>
+                        <td></td>
+                        <td>เลขทะเบียนสิทธิประโยชน์</td>
+                        <td></td>
+                        </tr>                  
+                        <tr>
+                        <td></td>
+                        <td>ประจำงวด&amp;nbsp;&amp;nbsp;&amp;nbsp;
+                        <t t-if="ranges">
+                            <span t-esc="ranges['name']"/>&amp;nbsp;&amp;nbsp;&amp;nbsp;
+                        </t>
+                        ตั้งแต่วันที่&amp;nbsp;&amp;nbsp;&amp;nbsp;
+                        <t t-if="ranges">
+                            <span t-esc="ranges['date_start'].strftime('%d-%m-%Y')"/>&amp;nbsp;&amp;nbsp;&amp;nbsp;
+                        </t>
+                        ถึงวันที่&amp;nbsp;&amp;nbsp;&amp;nbsp;
+                        <t t-if="ranges">
+                            <span t-esc="ranges['date_end'].strftime('%d-%m-%Y')"/>
+                        </t>
+                        </td>
+                        <td></td>
+                        </tr>                                                
+                        </table>
+                        <!--<table style="border: 1px solid black;" width="100%" class="text-center">
+                            <thead>
+                                <tr>
+                                   <th style="border: 1px solid black;" class="text-center">Duration : <span t-esc="data['stock_expiry_days']"/>Days</th>
+                                   <th style="border: 1px solid black;" class="text-center">Including Expired Stock</th>
+                                </tr>
+                            </thead>
+                        </table>
+                        -->
+                        <br/>
+                        <table style="font-size:12px" width="100%" class="text-center" >
+                            <thead>
+                                <tr>
+                                   <th style="border: 1px solid black;" class="text-center">ลำดับที่</th>
+                                   <th style="border: 1px solid black;" class="text-center">ชื่อวัตถุดิบ/สินค้า</th>
+                                   <th style="border: 1px solid black;" class="text-center">รหัสวัตถุดิบ/สินค้า</th>
+                                   <th style="border: 1px solid black;" class="text-center">เลขที่ใบขนสินค้า</th>
+                                   <th style="border: 1px solid black;" class="text-center">ปริมาณ</th>
+                                   <th style="border: 1px solid black;" class="text-center">หน่วยนับ</th>
+                                   <th style="border: 1px solid black;" class="text-center">วันที่นำเข้าเก็บ</th>
+                                   <th style="border: 1px solid black;" class="text-center">วันครบกำหนด</th>
+                                   <th style="border: 1px solid black;" class="text-center">หมายเหตุ</th>
+                                </tr>
+                            </thead>
+                            <tr t-foreach="get_stock_expiry_data(data)" t-as="line">
+                                <td style="border-bottom: 1px solid black; border-top:1px solid black; border-left:1px solid black; border-right:1px solid black;" class="text-center"><span t-esc="line.get('no')"/></td>
+                                <td style="border-bottom: 1px solid black; border-top:1px solid black; border-left:1px solid black; border-right:1px solid black;" class="text-center"><span t-esc="line.get('name')"/></td>
+                                <td style="border-bottom: 1px solid black; border-top:1px solid black; border-left:1px solid black; border-right:1px solid black;" class="text-center"><span t-esc="line.get('product_id').default_code"/></td>
+                                <td style="border-bottom: 1px solid black; border-top:1px solid black; border-left:1px solid black; border-right:1px solid black;" class="text-center"><span t-esc="line.get('lot_id')"/></td>
+                                <td style="border-bottom: 1px solid black; border-top:1px solid black; border-left:1px solid black; border-right:1px solid black;" class="text-center"><span t-esc="line.get('quantity')"/></td>
+                                <td style="border-bottom: 1px solid black; border-top:1px solid black; border-left:1px solid black; border-right:1px solid black;" class="text-center"><span t-esc="line.get('product_uom_id').name"/></td>
+                                <td style="border-bottom: 1px solid black; border-top:1px solid black; border-left:1px solid black; border-right:1px solid black;" class="text-center">
+                                    <t t-if="line.get('in_date')">
+                                        <span t-esc="line.get('in_date').strftime('%d-%m-%Y')"/>
+                                    </t>
+                                </td>
+                                <td style="border-bottom: 1px solid black; border-top:1px solid black; border-left:1px solid black; border-right:1px solid black;" class="text-center">
+                                    <t t-if="line.get('remove_date')">
+                                        <span t-esc="line.get('remove_date').strftime('%d-%m-%Y')"/>
+                                    </t>
+                                </td>
+                                <td style="border-bottom: 1px solid black; border-top:1px solid black; border-left:1px solid black; border-right:1px solid black;" class="text-center"><span t-esc="line.get('remark')"/></td>
+                            </tr>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </template>
+    </data>
+</odoo>

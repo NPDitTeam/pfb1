@@ -1,0 +1,71 @@
+<odoo>
+    <data>
+
+        <record id="ins_advance_ageing_wizard" model="ir.ui.view">
+            <field name="name">ins.advance.ageing.view</field>
+            <field name="model">ins.advance.ageing</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group col="4">
+                        <field name="as_on_date"/>
+                        <field name="company_id" invisible="1"/>
+                         <field name="employee_ids"  widget="many2many_tags"/>
+<!--                        <field name="type"/>-->
+<!--                        <field name="partner_type"/>-->
+                        <field name="include_details"/>
+                    </group>
+<!--                    <group col="2">-->
+<!--                        <field name="partner_ids" widget="many2many_tags"-->
+<!--                               domain="[('parent_id','=', False),-->
+<!--                                    '|',('company_id','=',company_id), ('company_id','=',False)]"-->
+<!--                                options="{'no_create_edit': True,'no_create': True, 'no_quick_create': True}"/>-->
+<!--                        <field name="partner_category_ids" widget="many2many_tags"-->
+<!--                                options="{'no_create_edit': True,'no_create': True, 'no_quick_create': True}"/>-->
+<!--                    </group>-->
+                    <group col="5">
+                        <field name="bucket_1" class="oe_inline" nolabel="1"/>
+                        <field name="bucket_2" class="oe_inline" nolabel="1"/>
+                        <field name="bucket_3" class="oe_inline" nolabel="1"/>
+                        <field name="bucket_4" class="oe_inline" nolabel="1"/>
+                        <field name="bucket_5" class="oe_inline" nolabel="1"/>
+                    </group>
+                    <footer>
+                        <button name="action_pdf" type="object" string="PDF" class="oe_highlight"/>
+                        <button name="action_xlsx" type="object" string="XLSX" class="oe_highlight"/>
+                        <button name="action_view" type="object" string="VIEW" class="oe_highlight"/>
+                        <button string="Cancel" class="btn-default" special="cancel" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_ins_advance_ageing_wizard" model="ir.actions.act_window">
+            <field name="name">Advance Ageing</field>
+            <field name="res_model">ins.advance.ageing</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="ins_advance_ageing_wizard"/>
+            <field name="target">new</field>
+            <field name="binding_model_id" ref="account_dynamic_reports.model_ins_advance_ageing" />
+            <field name="binding_type">report</field>
+        </record>
+
+
+        <record id="action_dynamic_ageing_report" model="ir.actions.client">
+            <field name="name">Advance Ageing Report</field>
+            <field name="tag">dynamic.av</field>
+        </record>
+
+          <menuitem id="account_report_av" sequence="40" action="action_ins_advance_ageing_wizard"
+                  name="Advance Ageing"  parent="account_advance.account_advance_root"
+                    groups="account.group_account_user"/>
+
+<!--        <menuitem id="account_report_av_wiz"-->
+<!--                  sequence="40"-->
+<!--                  action="action_dynamic_ageing_report"-->
+<!--                  name="Advance Ageing"-->
+<!--                  parent="account_advance.account_advance_root"-->
+<!--                  groups="account.group_account_user"/>-->
+
+    </data>
+</odoo>

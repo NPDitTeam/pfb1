@@ -1,0 +1,12 @@
+<odoo>
+    <record id="view_crm_lead_form_inherit_branch" model="ir.ui.view">
+        <field name="name">crm.lead.form.inherit.branch</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='team_id']" position="after">
+                <field name="branch_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

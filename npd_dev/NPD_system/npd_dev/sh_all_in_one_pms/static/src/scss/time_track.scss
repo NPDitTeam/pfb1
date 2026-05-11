@@ -1,0 +1,27 @@
+#task_timer{
+	background: white;
+    color: #5f5e97;
+    padding: 3px 5px;
+    border-radius: 5px;
+    font-weight: 600;
+}
+.sh_timer {
+	margin-top:13px;
+	margin-left:5px;
+}
+.sh_timer_task {
+	margin-top:13px;
+	overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 210px;
+}
+#timer_kanban_button{
+	font-size: 11px;
+    background: white;
+    color: #5f5e97;
+    padding: 7px 5px;
+    border-radius: 5px;
+    font-weight: 600;
+    margin-top: 0px;
+}

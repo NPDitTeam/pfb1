@@ -1,0 +1,13 @@
+<odoo>
+    <record model="ir.ui.view" id="form_so_compute_add_field_inherit">
+        <field name="name">form.so.compute.add.field.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='date_order']" position="after">
+                <field name="date_string_shot" invisible="1"/>
+                <field name="date_string_full" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

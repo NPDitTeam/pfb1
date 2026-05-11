@@ -1,0 +1,58 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* base
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-12-25 05:01+0000\n"
+"PO-Revision-Date: 2021-12-25 05:01+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: base
+#: model:ir.module.module,description:base.module_viin_l10n_vn_payment_print
+msgid ""
+"\n"
+"What it does\n"
+"==================\n"
+"Print Payment Receipts in PDF according to the following templates released under the Circular No. 200/2014/TT-BTC\n"
+"dated 22 December 2014 of the Ministry of Finance.\n"
+"\n"
+"* Template 01-TT: for receiving payments\n"
+"* Template 02-TT: for sending payments\n"
+"\n"
+"Editions Supported\n"
+"==================\n"
+"1. Community Edition\n"
+"2. Enterprise Edition\n"
+"\n"
+msgstr ""
+"\n"
+"Ứng dụng này làm gì\n"
+"===================\n"
+"Ứng dụng này cung cấp phiên bản Pdf Phiếu Thu/Chi, Giấy báo Nợ/Có tuân thủ Thông tư số 200/2014 / TT-BTC ngày 22 tháng 12 năm 2014 của Bộ Tài chính Việt Nam.\n"
+"\n"
+"* Mẫu số 01-TT: Các thanh toán nhận\n"
+"* Mẫu số  02-TT: Các thanh toán gửi\n"
+"\n"
+"Ấn bản được Hỗ trợ\n"
+"==================\n"
+"1. Ấn bản Community\n"
+"2. Ấn bản Enterprise\n"
+"\n"
+
+#. module: base
+#: model:ir.module.module,summary:base.module_viin_l10n_vn_payment_print
+msgid "Print Payment Receipts in PDF according to the Templates 01-TT/02-TT"
+msgstr "Mẫu PDF Phiếu Thu/Chi, Giấy báo Nợ/Có theo mẫu 01-TT/02-TT"
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_viin_l10n_vn_payment_print
+msgid "Vietnam - Print Payment Receipt"
+msgstr "Việt Nam - In Phiếu Thu/Chi"

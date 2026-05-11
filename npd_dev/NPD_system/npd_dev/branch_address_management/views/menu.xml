@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menu Item under Sales -->
+    <menuitem
+        id="menu_branch_address_management"
+        name="จัดการที่อยู่"
+        action="action_branch_address_wizard"
+        parent="sale.sale_menu_root"
+        sequence="99"/>
+</odoo>

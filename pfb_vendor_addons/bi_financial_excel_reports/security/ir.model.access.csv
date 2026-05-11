@@ -1,0 +1,3 @@
+"id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
+access_accounting_report_bi,accounting.report.bi,bi_financial_excel_reports.model_accounting_report_bi,,1,1,1,1
+access_excel_report,excel.report,bi_financial_excel_reports.model_excel_report,,1,1,1,1

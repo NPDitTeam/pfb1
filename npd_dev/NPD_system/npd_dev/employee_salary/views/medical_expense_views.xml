@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ============================================================ -->
+        <!-- Tree View -->
+        <!-- ============================================================ -->
+        <record id="view_medical_expense_tree" model="ir.ui.view">
+            <field name="name">medical.expense.tree</field>
+            <field name="model">medical.expense</field>
+            <field name="arch" type="xml">
+                <tree string="ค่ารักษาพยาบาล"
+                      decoration-warning="state == 'รออนุมัติ'"
+                      decoration-success="state == 'อนุมัติ'"
+                      decoration-danger="state == 'ไม่อนุมัติ'"
+                      decoration-muted="state == 'ยกเลิก'">
+                    <field name="employee_id"/>
+                    <field name="employee_code"/>
+                    <field name="username"/>
+                    <field name="branch_id"/>
+                    <field name="department"/>
+                    <field name="position"/>
+                    <field name="work_date"/>
+                    <field name="amount" sum="รวมจำนวนเงิน"/>
+                    <field name="user_note"/>
+                    <field name="state"/>
+                    <field name="created_at"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Form View -->
+        <!-- ============================================================ -->
+        <record id="view_medical_expense_form" model="ir.ui.view">
+            <field name="name">medical.expense.form</field>
+            <field name="model">medical.expense</field>
+            <field name="arch" type="xml">
+                <form string="ค่ารักษาพยาบาล">
+                    <header>
+                        <button name="action_approve"
+                                string="อนุมัติ"
+                                type="object"
+                                class="btn-primary"
+                                attrs="{'invisible': [('state', '!=', 'รออนุมัติ')]}"
+                                confirm="ยืนยันการอนุมัติค่ารักษาพยาบาลนี้?"/>
+                        <button name="action_reject"
+                                string="ไม่อนุมัติ"
+                                type="object"
+                                class="btn-danger"
+                                attrs="{'invisible': [('state', '!=', 'รออนุมัติ')]}"
+                                confirm="ยืนยันการไม่อนุมัติค่ารักษาพยาบาลนี้?"/>
+                        <button name="action_cancel"
+                                string="ยกเลิก"
+                                type="object"
+                                class="btn-warning"
+                                attrs="{'invisible': [('state', 'in', ['ยกเลิก'])]}"
+                                confirm="ยืนยันการยกเลิกค่ารักษาพยาบาลนี้?"/>
+                        <field name="state" widget="statusbar"
+                               statusbar_visible="รออนุมัติ,อนุมัติ,ไม่อนุมัติ"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title"
+                             attrs="{'invisible': [('username', 'in', [False, ''])]}">
+                            <h1>
+                                <field name="username" readonly="1"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group string="ข้อมูลพนักงาน">
+                                <field name="employee_id"
+                                       options="{'no_create': True, 'no_open': True}"
+                                       attrs="{'readonly': [('state', '!=', 'รออนุมัติ')]}"/>
+                                <field name="employee_code"/>
+                                <field name="branch_id" readonly="1"/>
+                                <field name="department" readonly="1"/>
+                                <field name="position" readonly="1"/>
+                            </group>
+                            <group string="รายละเอียดคำขอ">
+                                <field name="work_date"
+                                       attrs="{'readonly': [('state', '!=', 'รออนุมัติ')]}"/>
+                                <field name="amount"
+                                       attrs="{'readonly': [('state', '!=', 'รออนุมัติ')]}"/>
+                                <field name="created_at"/>
+                            </group>
+                        </group>
+                        <group>
+                            <group string="หมายเหตุ">
+                                <field name="user_note"
+                                       nolabel="1"
+                                       attrs="{'readonly': [('state', '!=', 'รออนุมัติ')]}"
+                                       placeholder="กรอกหมายเหตุ..."/>
+                            </group>
+                            <group string="ไฟล์แนบ">
+                                <field name="attachment_ids"
+                                       widget="many2many_binary"
+                                       nolabel="1"
+                                       attrs="{'readonly': [('state', '!=', 'รออนุมัติ')]}"/>
+                                <button name="action_open_attachment"
+                                        string="ดูไฟล์แนบ (จาก PHP)"
+                                        type="object"
+                                        class="btn-link"
+                                        icon="fa-paperclip"
+                                        attrs="{'invisible': [('file_path', 'in', [False, ''])]}"/>
+                            </group>
+                        </group>
+                        <group string="การอนุมัติ">
+                            <group>
+                                <field name="reason"
+                                       attrs="{'readonly': [('state', '!=', 'รออนุมัติ')]}"
+                                       placeholder="กรอกเหตุผล (จำเป็นสำหรับกรณีไม่อนุมัติ)"/>
+                            </group>
+                            <group>
+                                <field name="approved_at"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="php_id" invisible="1"/>
+                            <field name="file_path" invisible="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Search View -->
+        <!-- ============================================================ -->
+        <record id="view_medical_expense_search" model="ir.ui.view">
+            <field name="name">medical.expense.search</field>
+            <field name="model">medical.expense</field>
+            <field name="arch" type="xml">
+                <search string="ค้นหาค่ารักษาพยาบาล">
+                    <field name="employee_id"/>
+                    <field name="username"/>
+                    <field name="employee_code"/>
+                    <field name="branch_id"/>
+                    <field name="department"/>
+                    <separator/>
+                    <filter string="รออนุมัติ" name="pending" domain="[('state', '=', 'รออนุมัติ')]"/>
+                    <filter string="อนุมัติแล้ว" name="approved" domain="[('state', '=', 'อนุมัติ')]"/>
+                    <filter string="ไม่อนุมัติ" name="rejected" domain="[('state', '=', 'ไม่อนุมัติ')]"/>
+                    <filter string="ยกเลิก" name="cancelled" domain="[('state', '=', 'ยกเลิก')]"/>
+                    <separator/>
+                    <group expand="0" string="จัดกลุ่มตาม">
+                        <filter string="พนักงาน" name="group_employee" context="{'group_by': 'employee_id'}"/>
+                        <filter string="สถานะ" name="group_state" context="{'group_by': 'state'}"/>
+                        <filter string="สาขา" name="group_branch" context="{'group_by': 'branch_id'}"/>
+                        <filter string="แผนก" name="group_department" context="{'group_by': 'department'}"/>
+                        <filter string="วันที่ทำงาน" name="group_work_date" context="{'group_by': 'work_date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Action -->
+        <!-- ============================================================ -->
+        <record id="action_medical_expense" model="ir.actions.act_window">
+            <field name="name">ค่ารักษาพยาบาล</field>
+            <field name="res_model">medical.expense</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_medical_expense_search"/>
+            <field name="context">{}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    ยังไม่มีรายการค่ารักษาพยาบาล
+                </p>
+                <p>
+                    กดปุ่ม "สร้าง" เพื่อเพิ่มคำขอเบิกค่ารักษาพยาบาลใหม่ โดยเลือกพนักงานจากตารางข้อมูลพนักงาน
+                </p>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Wizard: ไม่อนุมัติ (popup ถามเหตุผล) -->
+        <!-- ============================================================ -->
+        <record id="view_medical_expense_reject_wizard_form" model="ir.ui.view">
+            <field name="name">medical.expense.reject.wizard.form</field>
+            <field name="model">medical.expense.reject.wizard</field>
+            <field name="arch" type="xml">
+                <form string="ไม่อนุมัติค่ารักษาพยาบาล">
+                    <group>
+                        <field name="expense_id" invisible="1"/>
+                        <field name="reason" placeholder="กรอกเหตุผลในการไม่อนุมัติ..."/>
+                    </group>
+                    <footer>
+                        <button name="action_confirm_reject"
+                                string="ยืนยันไม่อนุมัติ"
+                                type="object"
+                                class="btn-danger"/>
+                        <button string="ยกเลิก" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+    </data>
+</odoo>

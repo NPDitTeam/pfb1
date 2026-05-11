@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<!--    <template id="invoice_voucher_footer">-->
+<!--        <div class="footer"-->
+<!--            style="padding-bottom:20px;font-family: AngsanaNew;color: black;font-size: 18px;">-->
+<!--            <div style="width:100%;">-->
+<!--                <table class="table text-center table-borderless">-->
+<!--                    <tr style="line-height:5;">-->
+<!--                        <td style="width:33%;">ผู้จัดทํา</td>-->
+<!--                        <td style="width:34%;">ผู้ตรวจสอบ</td>-->
+<!--                        <td style="width:33%;">ผู้อนุมัติ</td>-->
+<!--                    </tr>-->
+<!--                    <tr style="line-height:1;">-->
+<!--                        <td style="padding-left: 5%;">-->
+<!--                            <div style="width:80%;border-bottom: 1px dotted black;">-->
+<!--                                <span t-if="doc.create_user_id.partner_id.name"-->
+<!--                                    t-esc="doc.create_user_id.partner_id.name" />-->
+<!--                                <span t-else="" style="color:white;" t-esc="'X'" />-->
+<!--                            </div>-->
+<!--                        </td>-->
+<!--                        <td style="padding-left: 5%;">-->
+<!--                            <div style="width:80%;border-bottom: 1px dotted black;">-->
+<!--                                <span t-if="doc.auditor_user_id.partner_id.name"-->
+<!--                                    t-esc="doc.auditor_user_id.partner_id.name" />-->
+<!--                                <span t-else="" style="color:white;" t-esc="'X'" />-->
+<!--                            </div>-->
+<!--                        </td>-->
+<!--                        <td style="padding-left: 5%;">-->
+<!--                            <div style="width:80%;border-bottom: 1px dotted black;">-->
+<!--                                <span t-if="doc.approver_user_id.partner_id.name"-->
+<!--                                    t-esc="doc.approver_user_id.partner_id.name" />-->
+<!--                                <span t-else="" style="color:white;" t-esc="'X'" />-->
+<!--                            </div>-->
+<!--                        </td>-->
+<!--                    </tr>-->
+<!--                    <tr style="line-height:1;">-->
+<!--                        <td style="padding-left: 5%;">-->
+<!--                            <div style="width:80%;border-bottom: 1px dotted black;">-->
+<!--                                <span-->
+<!--                                    t-esc="doc.invoice_date and doc.invoice_date.strftime('%d/%m/%Y') or '/&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;/'" />-->
+<!--                            </div>-->
+<!--                        </td>-->
+<!--                        <td style="padding-left: 5%;">-->
+<!--                            <div style="width:80%;border-bottom: 1px dotted black;">-->
+<!--                                <span-->
+<!--                                    t-esc="'/&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;/'" />-->
+<!--                            </div>-->
+<!--                        </td>-->
+<!--                        <td style="padding-left: 5%;">-->
+<!--                            <div style="width:80%;border-bottom: 1px dotted black;">-->
+<!--                                <span-->
+<!--                                    t-esc="'/&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;/'" />-->
+<!--                            </div>-->
+<!--                        </td>-->
+<!--                    </tr>-->
+<!--                </table>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </template>-->
+
+<!--    <template id="journal_voucher_footer">-->
+<!--        <div class="footer"-->
+<!--            style="padding-bottom:20px;font-family: AngsanaNew;color: black;font-size: 18px;">-->
+<!--            <div style="width:100%;">-->
+<!--                <table class="table text-center table-borderless">-->
+<!--                    <tr style="line-height:5;">-->
+<!--                        <td style="width:33%;">ผู้จัดทํา</td>-->
+<!--                        <td style="width:34%;">ผู้ตรวจสอบ</td>-->
+<!--                        <td style="width:33%;">ผู้อนุมัติ</td>-->
+<!--                    </tr>-->
+<!--                    <tr style="line-height:1;">-->
+<!--                        <td style="padding-left: 5%;">-->
+<!--                            <div style="width:80%;border-bottom: 1px dotted black;">-->
+<!--                                <span t-if="doc.create_user_id.partner_id.name"-->
+<!--                                    t-esc="doc.create_user_id.partner_id.name" />-->
+<!--                                <span t-else="" style="color:white;" t-esc="'X'" />-->
+<!--                            </div>-->
+<!--                        </td>-->
+<!--                        <td style="padding-left: 5%;">-->
+<!--                            <div style="width:80%;border-bottom: 1px dotted black;">-->
+<!--                                <span t-if="doc.auditor_user_id.partner_id.name"-->
+<!--                                    t-esc="doc.auditor_user_id.partner_id.name" />-->
+<!--                                <span t-else="" style="color:white;" t-esc="'X'" />-->
+<!--                            </div>-->
+<!--                        </td>-->
+<!--                        <td style="padding-left: 5%;">-->
+<!--                            <div style="width:80%;border-bottom: 1px dotted black;">-->
+<!--                                <span t-if="doc.approver_user_id.partner_id.name"-->
+<!--                                    t-esc="doc.approver_user_id.partner_id.name" />-->
+<!--                                <span t-else="" style="color:white;" t-esc="'X'" />-->
+<!--                            </div>-->
+<!--                        </td>-->
+<!--                    </tr>-->
+<!--                    <tr style="line-height:1;">-->
+<!--                        <td style="padding-left: 5%;">-->
+<!--                            <div style="width:80%;border-bottom: 1px dotted black;">-->
+<!--                                <span-->
+<!--                                    t-esc="doc.date and doc.date.strftime('%d/%m/%Y') or '/&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;/'" />-->
+<!--                            </div>-->
+<!--                        </td>-->
+<!--                        <td style="padding-left: 5%;">-->
+<!--                            <div style="width:80%;border-bottom: 1px dotted black;">-->
+<!--                                <span-->
+<!--                                    t-esc="'/&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;/'" />-->
+<!--                            </div>-->
+<!--                        </td>-->
+<!--                        <td style="padding-left: 5%;">-->
+<!--                            <div style="width:80%;border-bottom: 1px dotted black;">-->
+<!--                                <span-->
+<!--                                    t-esc="'/&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;/'" />-->
+<!--                            </div>-->
+<!--                        </td>-->
+<!--                    </tr>-->
+<!--                </table>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </template>-->
+
+    <template id="custom_footer">
+        <div class="footer"
+            style="padding-bottom:20px;font-family: AngsanaNew;color: black;font-size: 18px;">
+            <!-- <t t-set="doc" t-value="doc.with_context({'lang':doc.partner_id.lang})" /> -->
+            <div style="width:100%;">
+                <table class="table text-center table-borderless">
+                    <tr style="line-height:5;">
+                        <td style="width:33%;">ผู้จัดทํา</td>
+                        <td style="width:34%;">ผู้ตรวจสอบ</td>
+                        <td style="width:33%;">ผู้อนุมัติ</td>
+                    </tr>
+                    <tr style="line-height:1;">
+                        <td style="padding-left: 5%;">
+                            <div style="width:80%;border-bottom: 1px dotted black;">
+                                <span t-if="doc.create_user_id.partner_id.name"
+                                    t-esc="doc.create_user_id.partner_id.name" />
+                                <span t-else="" style="color:white;" t-esc="'X'" />
+                            </div>
+                        </td>
+                        <td style="padding-left: 5%;">
+                            <div style="width:80%;border-bottom: 1px dotted black;">
+                                <span t-if="doc.auditor_user_id.partner_id.name"
+                                    t-esc="doc.auditor_user_id.partner_id.name" />
+                                <span t-else="" style="color:white;" t-esc="'X'" />
+                            </div>
+                        </td>
+                        <td style="padding-left: 5%;">
+                            <div style="width:80%;border-bottom: 1px dotted black;">
+                                <span t-if="doc.approver_user_id.partner_id.name"
+                                    t-esc="doc.approver_user_id.partner_id.name" />
+                                <span t-else="" style="color:white;" t-esc="'X'" />
+                            </div>
+                        </td>
+                    </tr>
+                    <tr style="line-height:1;">
+                        <td style="padding-left: 5%;">
+                            <div style="width:80%;border-bottom: 1px dotted black;">
+                                <span
+                                    t-esc="'/&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;/'" />
+                            </div>
+                        </td>
+                        <td style="padding-left: 5%;">
+                            <div style="width:80%;border-bottom: 1px dotted black;">
+                                <span
+                                    t-esc="'/&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;/'" />
+                            </div>
+                        </td>
+                        <td style="padding-left: 5%;">
+                            <div style="width:80%;border-bottom: 1px dotted black;">
+                                <span
+                                    t-esc="'/&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;/'" />
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </template>
+</odoo>

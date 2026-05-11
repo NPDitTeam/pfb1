@@ -1,0 +1,8 @@
+<odoo>
+    <data noupdate="1">
+        <record id="freelance_salesperson_p_ong" model="freelance.salesperson">
+            <field name="name">พี่อ๋อง</field>
+            <field name="sequence">1</field>
+        </record>
+    </data>
+</odoo>

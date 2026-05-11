@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Add WHT Category to Product Template Form -->
+    <record id="product_template_form_view_wht" model="ir.ui.view">
+        <field name="name">product.template.form.wht</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="account.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='properties']" position="after">
+                <group string="ภาษีหัก ณ ที่จ่าย (WHT)" name="wht_grp">
+                    <group>
+                        <field name="wht_category_id" options="{'no_create': False}"/>
+                        <field name="wht_rate_display"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Add WHT Category to Advance Clear Line -->
+    <record id="account_advance_clear_form_view_wht" model="ir.ui.view">
+        <field name="name">account.advance.clear.form.wht</field>
+        <field name="model">account.advance.clear</field>
+        <field name="inherit_id" ref="account_advance.account_advance_clear_form_view"/>
+        <field name="arch" type="xml">
+            <!-- เพิ่มปุ่ม Auto WHT แสดงเฉพาะ state = confirm -->
+            <xpath expr="//button[@name='confirm']" position="before">
+                <button name="action_auto_create_wht_cert"
+                        string="สร้าง WHT อัตโนมัติ"
+                        type="object"
+                        class="btn-secondary"
+                        attrs="{'invisible': [('state', '!=', 'confirm')]}"/>
+            </xpath>
+            <!-- เพิ่มคอลัมน์ WHT ใน clear lines -->
+            <xpath expr="//field[@name='clear_ids']/tree/field[@name='account_id']" position="after">
+                <field name="wht_category_id" optional="show" options="{'no_create': True}"/>
+                <field name="wht_rate_display" optional="show"/>
+            </xpath>
+            <!-- เพิ่มคอลัมน์ "หัก VAT" หลัง price_unit
+                 (แสดง/ซ่อน จะทำใน fields_view_get ตาม db) -->
+            <xpath expr="//field[@name='clear_ids']/tree/field[@name='price_unit']" position="after">
+                <field name="is_deduct_vat"/>
+                <field name="wht_total"/>
+                <field name="wht_status" widget="badge"
+                       decoration-success="wht_status == 'eligible'"
+                       decoration-muted="wht_status == 'no_category'"
+                       optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

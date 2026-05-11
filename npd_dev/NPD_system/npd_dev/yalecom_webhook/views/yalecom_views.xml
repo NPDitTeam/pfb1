@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================== CALL LOG VIEWS ==================== -->
+    
+    <!-- Call Log Tree View (Read Only - No Create/Edit/Delete) -->
+    <record id="view_yalecom_call_log_tree" model="ir.ui.view">
+        <field name="name">yalecom.call.log.tree</field>
+        <field name="model">yalecom.call.log</field>
+        <field name="arch" type="xml">
+            <tree string="ประวัติการโทร" 
+                  decoration-danger="call_result=='missed' or call_result=='cancelled'" 
+                  decoration-success="call_result=='answered'" 
+                  decoration-muted="call_result=='failed'"
+                  create="false" edit="false" delete="false">
+                <field name="create_date" string="วันที่บันทึก"/>
+                <field name="start_stamp_thai" string="วันเวลาโทร"/>
+                <field name="direction" string="ทิศทาง"/>
+                <field name="caller_id_number" string="เบอร์ผู้โทร"/>
+                <field name="caller_destination" string="ปลายทาง"/>
+                <field name="last_destination" string="จุดหมายสุดท้าย"/>
+                <field name="department_name" string="แผนก"/>
+                <field name="caller_id_name" string="ชื่อ/Ext"/>
+                <field name="call_result" string="ผลการโทร"/>
+                <field name="call_duration_display" string="ระยะเวลา"/>
+                <field name="ring_time" string="รอสาย(วิ)"/>
+                <field name="sip_hangup_disposition" string="ผู้วางสาย"/>
+                <field name="partner_id" string="ลูกค้า"/>
+                <field name="ref_1" string="Ref.1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Call Log Form View (Read Only) -->
+    <record id="view_yalecom_call_log_form" model="ir.ui.view">
+        <field name="name">yalecom.call.log.form</field>
+        <field name="model">yalecom.call.log</field>
+        <field name="arch" type="xml">
+            <form string="รายละเอียดการโทร" create="false" delete="false">
+                <header>
+                    <field name="call_result" widget="statusbar" 
+                           statusbar_visible="answered,missed,cancelled,failed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    
+                    <group>
+                        <group string="ข้อมูลสาย">
+                            <field name="xml_cdr_uuid" readonly="1" string="UUID"/>
+                            <field name="direction" readonly="1"/>
+                            <field name="call_result" readonly="1"/>
+                            <field name="sip_hangup_disposition" readonly="1"/>
+                        </group>
+                        <group string="ผู้โทร">
+                            <field name="caller_id_name" readonly="1"/>
+                            <field name="caller_id_number" readonly="1"/>
+                            <field name="source_number" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="ปลายทาง">
+                            <field name="caller_destination" readonly="1"/>
+                            <field name="last_destination" readonly="1"/>
+                            <field name="department_code" readonly="1" string="รหัสแผนก"/>
+                            <field name="department_name" readonly="1" string="ชื่อแผนก"/>
+                        </group>
+                        <group string="ลูกค้า">
+                            <field name="partner_id" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="เวลา">
+                            <field name="start_stamp_thai" readonly="1" string="เริ่มสาย"/>
+                            <field name="end_stamp_thai" readonly="1" string="จบสาย"/>
+                            <field name="ring_time" readonly="1"/>
+                            <field name="call_duration" readonly="1"/>
+                            <field name="call_duration_display" readonly="1"/>
+                        </group>
+                        <group string="ข้อมูลเพิ่มเติม">
+                            <field name="create_date" string="วันที่บันทึก" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="ข้อมูลอ้างอิง">
+                            <group>
+                                <group>
+                                    <field name="data1" readonly="1"/>
+                                    <field name="data2" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="ref_1" readonly="1"/>
+                                    <field name="ref_2" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="หมายเหตุ">
+                            <field name="note"/>
+                        </page>
+                        <page string="ข้อมูลดิบ (Debug)">
+                            <field name="raw_data" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Call Log Search View -->
+    <record id="view_yalecom_call_log_search" model="ir.ui.view">
+        <field name="name">yalecom.call.log.search</field>
+        <field name="model">yalecom.call.log</field>
+        <field name="arch" type="xml">
+            <search string="ค้นหาประวัติการโทร">
+                <field name="caller_id_number" string="เบอร์ผู้โทร"/>
+                <field name="caller_destination" string="ปลายทาง"/>
+                <field name="last_destination" string="จุดหมายสุดท้าย"/>
+                <field name="caller_id_name" string="ชื่อ/Ext"/>
+                <field name="xml_cdr_uuid" string="UUID"/>
+                <field name="ref_1"/>
+                <field name="ref_2"/>
+                <field name="partner_id"/>
+                <separator/>
+                <filter name="inbound" string="สายเข้า" domain="[('direction','=','inbound')]"/>
+                <filter name="outbound" string="สายออก" domain="[('direction','=','outbound')]"/>
+                <filter name="local" string="ภายใน" domain="[('direction','=','local')]"/>
+                <separator/>
+                <filter name="answered" string="รับสาย" domain="[('call_result','=','answered')]"/>
+                <filter name="missed" string="ไม่รับสาย" domain="[('call_result','=','missed')]"/>
+                <filter name="cancelled" string="ยกเลิก" domain="[('call_result','=','cancelled')]"/>
+                <filter name="failed" string="ล้มเหลว" domain="[('call_result','=','failed')]"/>
+                <separator/>
+                <filter name="dept_101" string="แผนกเช่าขาย (101)" domain="[('department_code','=','101')]"/>
+                <filter name="dept_102" string="แผนก HR (102)" domain="[('department_code','=','102')]"/>
+                <filter name="dept_103" string="แผนกบัญชี (103)" domain="[('department_code','=','103')]"/>
+                <filter name="dept_other" string="แผนกอื่นๆ" domain="[('department_code','=','other')]"/>
+                <separator/>
+                <filter name="caller_hangup" string="ผู้โทรวางสาย" domain="[('sip_hangup_disposition','=','caller')]"/>
+                <filter name="callee_hangup" string="ผู้รับวางสาย" domain="[('sip_hangup_disposition','=','callee')]"/>
+                <separator/>
+                <filter name="today" string="วันนี้" domain="[('create_date','>=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)).strftime('%Y-%m-%d %H:%M:%S'))]"/>
+                <filter name="week" string="สัปดาห์นี้" domain="[('create_date','>=', (datetime.datetime.now() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="จัดกลุ่มตาม">
+                    <filter name="group_direction" string="ทิศทาง" context="{'group_by':'direction'}"/>
+                    <filter name="group_result" string="ผลการโทร" context="{'group_by':'call_result'}"/>
+                    <filter name="group_department" string="แผนก" context="{'group_by':'department_code'}"/>
+                    <filter name="group_hangup" string="ผู้วางสาย" context="{'group_by':'sip_hangup_disposition'}"/>
+                    <filter name="group_date" string="วันที่" context="{'group_by':'start_stamp:day'}"/>
+                    <filter name="group_partner" string="ลูกค้า" context="{'group_by':'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Call Log Action (Read Only) -->
+    <record id="action_yalecom_call_log" model="ir.actions.act_window">
+        <field name="name">ประวัติการโทร</field>
+        <field name="res_model">yalecom.call.log</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_today': 1, 'create': False, 'delete': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ยังไม่มีประวัติการโทร
+            </p>
+            <p>
+                ข้อมูลจะปรากฏเมื่อได้รับ Callback จาก Yalecom
+            </p>
+            <p>
+                <strong>หมายเหตุ:</strong> ข้อมูลนี้ไม่สามารถเพิ่ม/แก้ไข/ลบได้ เนื่องจากเป็นข้อมูลที่รับมาจาก Yalecom
+            </p>
+        </field>
+    </record>
+
+    <!-- ==================== WEBHOOK LOG VIEWS ==================== -->
+    
+    <!-- Webhook Log Tree View (Read Only) -->
+    <record id="view_yalecom_webhook_log_tree" model="ir.ui.view">
+        <field name="name">yalecom.webhook.log.tree</field>
+        <field name="model">yalecom.webhook.log</field>
+        <field name="arch" type="xml">
+            <tree string="Webhook Log" 
+                  decoration-danger="status=='error'" 
+                  decoration-success="status=='success'"
+                  create="false" edit="false" delete="false">
+                <field name="create_date"/>
+                <field name="endpoint"/>
+                <field name="method"/>
+                <field name="ip_address"/>
+                <field name="status"/>
+                <field name="processed"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Webhook Log Form View (Read Only) -->
+    <record id="view_yalecom_webhook_log_form" model="ir.ui.view">
+        <field name="name">yalecom.webhook.log.form</field>
+        <field name="model">yalecom.webhook.log</field>
+        <field name="arch" type="xml">
+            <form string="Webhook Log" create="false" edit="false" delete="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="endpoint" readonly="1"/>
+                            <field name="method" readonly="1"/>
+                            <field name="ip_address" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="status" readonly="1"/>
+                            <field name="processed" readonly="1"/>
+                            <field name="create_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Headers">
+                            <field name="headers" readonly="1"/>
+                        </page>
+                        <page string="Body">
+                            <field name="body" readonly="1"/>
+                        </page>
+                        <page string="Error" attrs="{'invisible': [('status','!=','error')]}">
+                            <field name="error_message" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Webhook Log Action (Read Only) -->
+    <record id="action_yalecom_webhook_log" model="ir.actions.act_window">
+        <field name="name">Webhook Log</field>
+        <field name="res_model">yalecom.webhook.log</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'create': False, 'edit': False, 'delete': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ยังไม่มี Webhook Log
+            </p>
+        </field>
+    </record>
+
+    <!-- ==================== CONFIG VIEWS ==================== -->
+    
+    <!-- Config Form View (Editable - Admin Only) -->
+    <record id="view_yalecom_config_form" model="ir.ui.view">
+        <field name="name">yalecom.config.form</field>
+        <field name="model">yalecom.config</field>
+        <field name="arch" type="xml">
+            <form string="ตั้งค่า Yalecom">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="การตั้งค่า API (จาก Yalecom)">
+                            <field name="company_id_yalecom"/>
+                            <field name="api_key" password="True"/>
+                            <field name="api_secret" password="True"/>
+                            <field name="is_active"/>
+                        </group>
+                        <group string="การตั้งค่า URL">
+                            <field name="database_name" readonly="1"/>
+                            <field name="base_url" placeholder="https://npderp.com"/>
+                        </group>
+                    </group>
+                    
+                    <group string="📋 Webhook URL สำหรับส่งให้ Yalecom">
+                        <group colspan="2">
+                            <field name="webhook_url_full" string="URL (คัดลอกส่งให้ Yalecom)" readonly="1"/>
+                            <button name="action_copy_webhook_url" string="📋 แสดง URL เต็ม" type="object" class="btn-primary"/>
+                        </group>
+                    </group>
+                    
+                    <group string="ตัวเลือกเพิ่มเติม">
+                        <field name="auto_download_recording"/>
+                        <field name="log_all_webhooks"/>
+                    </group>
+                    
+                    <div class="alert alert-success" role="alert">
+                        <h4 class="alert-heading">📌 วิธีใช้งาน</h4>
+                        <ol>
+                            <li><strong>กรอก Base URL:</strong> เช่น https://npderp.com</li>
+                            <li><strong>คัดลอก Webhook URL:</strong> URL ที่แสดงด้านบน (รวม ?db=... แล้ว)</li>
+                            <li><strong>ส่ง URL ให้ Yalecom:</strong> ให้ทาง Yalecom ตั้งค่า Callback ไปที่ URL นี้</li>
+                            <li><strong>รอรับข้อมูล:</strong> เมื่อมีสายโทร ข้อมูลจะเข้ามาอัตโนมัติ</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="alert alert-info" role="alert">
+                        <strong>💡 ชื่อ Database:</strong> ดึงอัตโนมัติจากที่คุณ login อยู่ (<field name="database_name" readonly="1" nolabel="1"/>)
+                    </div>
+                    
+                    <div class="alert alert-warning" role="alert">
+                        <strong>⚠️ หมายเหตุ:</strong> ข้อมูลประวัติการโทรที่ได้รับจาก Yalecom จะไม่สามารถเพิ่ม/แก้ไข/ลบได้
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Config Tree View -->
+    <record id="view_yalecom_config_tree" model="ir.ui.view">
+        <field name="name">yalecom.config.tree</field>
+        <field name="model">yalecom.config</field>
+        <field name="arch" type="xml">
+            <tree string="ตั้งค่า Yalecom">
+                <field name="name"/>
+                <field name="company_id_yalecom"/>
+                <field name="database_name"/>
+                <field name="webhook_url_full" string="Webhook URL"/>
+                <field name="is_active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Config Action -->
+    <record id="action_yalecom_config" model="ir.actions.act_window">
+        <field name="name">ตั้งค่า Yalecom</field>
+        <field name="res_model">yalecom.config</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+</odoo>

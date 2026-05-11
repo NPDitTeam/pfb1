@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="petty_cash_view_form_branch" model="ir.ui.view">
+        <field name="name">account.petty_cash.form</field>
+        <field name="model">petty.cash</field>
+        <field name="inherit_id" ref="petty_cash.petty_cash_view_form"/>
+        <field name="arch" type="xml">
+            <field name="balance" position="after">
+                <field name="branch_id" attrs="{'readonly': [('state','!=','draft')]}"/>
+            </field>            
+        </field>
+    </record>
+    <record id="petty_cash_expense_view_form_branch" model="ir.ui.view">
+        <field name="name">account.petty_cash_expense.form</field>
+        <field name="model">petty.cash.expense</field>
+        <field name="inherit_id" ref="petty_cash.petty_cash_expense_view_form"/>
+        <field name="arch" type="xml">
+            <field name="date" position="after">
+                <field name="branch_id" attrs="{'readonly': [('state','!=','draft')]}"/>
+            </field>            
+        </field>
+    </record>
+
+</odoo>

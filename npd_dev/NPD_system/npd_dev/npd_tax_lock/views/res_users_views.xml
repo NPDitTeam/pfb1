@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- เพิ่ม field ในหน้าตั้งค่าผู้ใช้ -->
+    <record id="view_users_form_rental_tax_lock" model="ir.ui.view">
+        <field name="name">res.users.form.rental.tax.lock</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='access_rights']" position="inside">
+                <group string="สิทธิ์การล็อกภาษี" name="rental_tax_lock_group">
+                    <field name="bypass_rental_tax_lock" 
+                           widget="boolean_toggle"
+                           string="ข้ามการล็อกภาษี"/>
+                    <div class="text-muted" colspan="2">
+                        <p><strong>ถ้าติ๊กถูก:</strong> ผู้ใช้สามารถเปลี่ยนภาษีได้ทั้งในใบสั่งขายและสมุดรายวัน</p>
+                        <p><strong>ถ้าไม่ติ๊ก:</strong> ระบบจะล็อกภาษีอัตโนมัติตามที่กำหนด</p>
+                        <hr/>
+                        <p><strong>ใบสั่งขาย (Sale Order):</strong></p>
+                        <ul>
+                            <li>ประเภท = ขาย (sale) ใช้ภาษี: ภาษีขายไม่รวม Vat 7%</li>
+                            <li>ประเภท = เช่า (rent) ใช้ภาษี: ภาษีขายยังไม่ถึงกำหนด Vat 7%</li>
+                        </ul>
+                        <p><strong>สมุดรายวัน (Account Move):</strong></p>
+                        <ul>
+                            <li>สมุดรายวันเช่า(สาขา) ใช้ภาษี: ภาษีขายยังไม่ถึงกำหนด Vat 7%</li>
+                            <li>สมุดรายวันค่าปรับหาย ใช้ภาษี: ภาษีขายยังไม่ถึงกำหนด Vat 7%</li>
+                            <li>สมุดรายวันค่าปรับชำรุด ใช้ภาษี: ภาษีขายยังไม่ถึงกำหนด Vat 7%</li>
+                            <li>สมุดรายวันลดหนี้ขาย ใช้ภาษี: ภาษีขายรวม VAT 7%</li>
+                            <li>สมุดรายวันค่าประกัน: ไม่อนุญาตให้ใส่ภาษี</li>
+                        </ul>
+                    </div>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

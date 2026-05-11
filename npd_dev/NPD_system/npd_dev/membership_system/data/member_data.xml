@@ -1,0 +1,19 @@
+<!-- data/member_data.xml -->
+<odoo>
+    <record id="model_membership_member" model="ir.model">
+        <field name="name">membership.member</field>
+        <field name="model">membership.member</field>
+    </record>
+
+    <record id="ir_cron_fetch_member_data" model="ir.cron">
+        <field name="name">Fetch Member Data</field>
+        <field name="model_id" ref="model_membership_member"/>
+        <field name="state">code</field>
+        <field name="code">model.fetch_member_data()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_account_billing_form_inherit_fix" model="ir.ui.view">
+        <field name="name">view.account.billing.form.inherit.fix</field>
+        <field name="model">account.billing</field>
+        <field name="inherit_id" ref="account_billing.view_account_billing_form"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="replace">
+                <field name="partner_id" readonly="False"/>
+            </field>
+        </field>
+    </record>
+</odoo>

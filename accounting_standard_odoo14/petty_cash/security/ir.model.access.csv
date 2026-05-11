@@ -1,0 +1,16 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_petty_cash,petty.cash,model_petty_cash,petty_cash.group_petty_cash_user,1,0,0,0
+acesss_petty_cash_withdraw,petty.cash.withdraw,model_petty_cash_withdraw,petty_cash.group_petty_cash_user,1,0,0,0
+access_petty_cash_expense,petty.cash.expense,model_petty_cash_expense,petty_cash.group_petty_cash_user,1,1,1,0
+access_expense_line,expense.line,model_expense_line,petty_cash.group_petty_cash_user,1,1,1,1
+access_petty_expense_line_tax,petty.expense.line.tax,model_petty_expense_line_tax,petty_cash.group_petty_cash_user,1,1,1,1
+access_petty_cash_account_invoice,petty.cash,model_petty_cash,account.group_account_invoice,1,1,1,1
+acesss_petty_cash_withdraw_account_invoice,petty.cash.withdraw,model_petty_cash_withdraw,account.group_account_invoice,1,1,1,1
+access_petty_cash_expense_account_invoice,petty.cash.expense,model_petty_cash_expense,account.group_account_invoice,1,1,1,1
+access_expense_line_account_invoice,expense.line,model_expense_line,account.group_account_invoice,1,1,1,1
+access_petty_expense_line_tax_account_invoice,petty.expense.line.tax,model_petty_expense_line_tax,account.group_account_invoice,1,1,1,1
+access_petty_cash_manager,petty.cash,model_petty_cash,petty_cash.group_petty_cash_manager,1,1,1,1
+acesss_petty_cash_withdraw_manager,petty.cash.withdraw,model_petty_cash_withdraw,petty_cash.group_petty_cash_manager,1,1,1,1
+access_petty_cash_expense_manager,petty.cash.expense,model_petty_cash_expense,petty_cash.group_petty_cash_manager,1,1,1,1
+access_expense_line_manager,expense.line,model_expense_line,petty_cash.group_petty_cash_manager,1,1,1,1
+access_petty_expense_line_tax_manager,petty.expense.line.tax,model_petty_expense_line_tax,petty_cash.group_petty_cash_manager,1,1,1,1

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="inherit_view_account_asset_free_field_view_form" model="ir.ui.view">
+        <field name="name">account.asset.form</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset_management.account_asset_view_form"/>
+        <field name="arch" type="xml">
+            <field name="code" position="after">
+                <label for="std_barcode"/>
+                <div>
+                    <field name="std_barcode" style="width:200px"/>
+                    <button
+                            name="account_asset_sequence"
+                            string="RUN"
+                            type="object"
+                            widget="statinfo"
+                            style="width:50px"
+                    />
+                    <newline/>
+                </div>
+            </field>
+
+            <field name="date_remove" position="after">
+                <field name="std_no_compute_asset"/>
+            </field>
+
+            <field name="analytic_tag_ids" position="after">
+                <separator string="Asset condition" colspan="4"/>
+                <field name="std_condition_type_id" options="{'no_create': True}"/>
+                <field name="std_employee_id"/>
+                <field name="std_condition_remark"/>
+                <field name="std_location_id"/>
+            </field>
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Purchase information">
+                    <group>
+                        <group>
+                            <field name="std_invoice"/>
+                            <field name="std_asset_purchase_id"/>
+                            <field name="std_purchase_date"/>
+                            <field name="std_purchase_price"/>
+                        </group>
+                        <group>
+                            <field name="std_model"/>
+                            <field name="std_serial_no"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+
+    <record id="inherit_view_account_asset_free_field_view_tree" model="ir.ui.view">
+        <field name="name">account.asset.tree</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset_management.account_asset_view_tree"/>
+        <field name="arch" type="xml">
+            <field name="code" position="after">
+                <field name="std_employee_id"/>
+            </field>
+            <field name="group_ids" position="before">
+                <field name="std_condition_type_id"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="inherit_account_asset_profile_view_form" model="ir.ui.view">
+        <field name="name">account.asset.profile.form</field>
+        <field name="model">account.asset.profile</field>
+        <field name="inherit_id" ref="account_asset_management.account_asset_profile_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group" position="inside">
+                <group string="Sequence">
+                    <field name="std_asset_sequence_id"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

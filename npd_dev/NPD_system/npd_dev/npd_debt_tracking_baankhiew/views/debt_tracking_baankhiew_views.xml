@@ -1,0 +1,695 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Debt Tracking Baankhiew Tree View -->
+    <record id="npd_debt_tracking_baankhiew_view_tree" model="ir.ui.view">
+        <field name="name">npd.debt.tracking.baankhiew.tree</field>
+        <field name="model">npd.debt.tracking.baankhiew</field>
+        <field name="arch" type="xml">
+            <tree string="ติดตามหนี้บ้านเขียว" decoration-danger="state=='draft'" 
+                  decoration-warning="state=='in_progress'" 
+                  decoration-success="state=='done'">
+                <field name="name"/>
+                <field name="tracking_date"/>
+                <field name="partner_name"/>
+                <field name="partner_phone" widget="phone"/>
+                <field name="partner_mobile" widget="phone"/>
+                <field name="partner_email"/>
+                <field name="amount_rental_residual" string="ค้างค่าเช่า" sum="รวมค่าเช่า"/>
+                <field name="amount_residual" string="ค้างรวมค่าเช่า" sum="รวมค้างชำระค่าเช่า"/>
+                <field name="amount_damage_residual" string="ค้างค่าปรับชำรุด" sum="รวมค่าปรับชำรุด"/>
+                <field name="amount_lost_residual" string="ค้างค่าปรับหาย" sum="รวมค่าปรับหาย"/>
+                <field name="amount_tax_residual" string="ค้างค่า Tax" sum="รวมค่า Tax"/>
+                <field name="amount_grand_total" string="ยอดรวม" sum="รวมยอดรวม"/>
+                <field name="call_count"/>
+                <field name="email_count"/>
+                <field name="state"/>
+                <field name="currency_id" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Debt Tracking Baankhiew Form View -->
+    <record id="npd_debt_tracking_baankhiew_view_form" model="ir.ui.view">
+        <field name="name">npd.debt.tracking.baankhiew.form</field>
+        <field name="model">npd.debt.tracking.baankhiew</field>
+        <field name="arch" type="xml">
+            <form string="ติดตามหนี้บ้านเขียว">
+                <header>
+                    <button name="action_call_mobile" type="object" 
+                            string="📞 โทรหาลูกค้า" class="btn-primary"
+                            attrs="{'invisible': [('state', '=', 'done')]}"/>
+                    <button name="action_send_email" type="object" 
+                            string="📧 ส่งเมล" class="btn-info"
+                            attrs="{'invisible': [('state', '=', 'done')]}"/>
+                    <button name="action_done" type="object" 
+                            string="✓ จบงานวันนี้" class="btn-success"
+                            attrs="{'invisible': [('state', 'in', ['done', 'cancel'])]}"/>
+                    <button name="action_cancel" type="object" 
+                            string="ยกเลิก" 
+                            attrs="{'invisible': [('state', 'in', ['done', 'cancel'])]}"/>
+                    <button name="action_reset_draft" type="object" 
+                            string="กลับไปรอดำเนินการ" 
+                            attrs="{'invisible': [('state', '=', 'draft')]}"/>
+                    <field name="state" widget="statusbar" 
+                           statusbar_visible="draft,in_progress,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_call_logs" type="object" 
+                                class="oe_stat_button" icon="fa-phone">
+                            <field name="call_count" widget="statinfo" string="ประวัติโทร"/>
+                        </button>
+                        <button name="action_view_email_logs" type="object" 
+                                class="oe_stat_button" icon="fa-envelope">
+                            <field name="email_count" widget="statinfo" string="ประวัติเมล"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="ข้อมูลลูกค้า">
+                            <field name="tracking_date"/>
+                            <label for="customer_id"/>
+                            <div class="o_row">
+                                <field name="customer_id"/>
+                                <button name="action_fetch_baankhiew_invoices" type="object"
+                                    string="ดึงข้อมูล" class="btn-primary" icon="fa-refresh"
+                                    attrs="{'invisible': ['|', ('customer_id', '=', False), ('state', '=', 'done')]}"/>
+                            </div>
+                            <field name="partner_id" invisible="1"/>
+                            <field name="partner_name" readonly="1"/>
+                            <field name="partner_email" widget="email"/>
+                            <field name="partner_phone" widget="phone"/>
+                            <field name="partner_mobile" widget="phone"/>
+                            <field name="partner_vat"/>
+                            <field name="rental_bill_status" readonly="1"/>
+                        </group>
+                        <group string="ยอดรวม (คำนวณจากรายการหนี้)">
+                            <field name="amount_rental_residual" string="ค้างชำระค่าเช่า" readonly="1"/>
+                            <field name="amount_residual" string="ยอดค้างชำระรวมค่าเช่า" readonly="1"/>
+                            <field name="amount_damage_residual" string="ค้างชำระค่าปรับชำรุด" readonly="1"/>
+                            <field name="amount_lost_residual" string="ค้างชำระค่าปรับหาย" readonly="1"/>
+                            <field name="amount_tax_residual" string="ค้างชำระค่า Tax" readonly="1"/>
+                            <field name="amount_grand_total" string="ยอดรวม" readonly="1"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="ที่อยู่ลูกค้า">
+                        <group>
+                            <field name="partner_street"/>
+                            <field name="partner_street2"/>
+                        </group>
+                        <group>
+                            <field name="partner_city"/>
+                            <field name="partner_state_id"/>
+                            <field name="partner_zip"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="หนี้ค้างชำระค่าเช่า" name="debt_lines">
+                            <field name="debt_line_ids" nolabel="1">
+                                <tree editable="bottom" decoration-danger="debt_duration > 90" decoration-warning="debt_duration > 45">
+                                    <field name="invoice_id" invisible="1"/>
+                                    <field name="invoice_number" readonly="1"/>
+                                    <field name="branch_name" readonly="1"/>
+                                    <field name="total_debt" sum="รวมยอดหนี้" readonly="1"/>
+                                    <field name="total_paid" sum="รวมรับชำระ" readonly="1"/>
+                                    <field name="remaining_balance" sum="รวมค้างชำระ" readonly="1" string="ค้างชำระสุทธิ"/>
+                                    <field name="arh_date" readonly="1"/>
+                                    <field name="due_date" readonly="1"/>
+                                    <field name="debt_duration" string="วัน" readonly="1"/>
+                                    <field name="responsible_party" readonly="1"/>
+                                    <field name="bill_status" readonly="1"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="ค่าปรับชำรุด" name="damage_lines">
+                            <field name="damage_line_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="damage_invoice_id" invisible="1"/>
+                                    <field name="inv_no" readonly="1" string="เลขเอกสาร"/>
+                                    <field name="branch_name" readonly="1"/>
+                                    <field name="inv_amount" sum="รวมค่าปรับ" readonly="1" string="ค่าปรับชำรุด"/>
+                                    <field name="total_paid" sum="รวมรับชำระ" readonly="1" string="รับชำระ"/>
+                                    <field name="remaining_balance" sum="รวมคงเหลือ" readonly="1" string="คงเหลือ"/>
+                                    <field name="dateissue" readonly="1" string="วันที่"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="ค่าปรับหาย" name="lost_lines">
+                            <field name="lost_line_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="lost_invoice_id" invisible="1"/>
+                                    <field name="doc_id" readonly="1" string="เลขเอกสาร"/>
+                                    <field name="branch_name" readonly="1" string="สาขา"/>
+                                    <field name="sale_name" readonly="1" string="เซลล์"/>
+                                    <field name="date_start" readonly="1" string="เริ่มเช่า"/>
+                                    <field name="date_return" readonly="1" string="วันคืน"/>
+                                    <field name="amt_lost_return" sum="รวมค่าปรับหาย" readonly="1" string="ค่าปรับหาย"/>
+                                    <field name="discount_lost_return" sum="รวมส่วนลด" readonly="1" string="ส่วนลด"/>
+                                    <field name="net_lost" sum="รวมปรับหายสุทธิ" readonly="1" string="ปรับหายสุทธิ"/>
+                                    <field name="total_paid" sum="รวมรับชำระ" readonly="1" string="รับชำระ"/>
+                                    <field name="remaining_balance" sum="รวมคงเหลือ" readonly="1" string="คงเหลือ"/>
+                                    <button name="action_view_details" type="object" string="ดูสินค้า" icon="fa-list" class="btn-link"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="ค่า Tax" name="tax_lines">
+                            <field name="tax_line_ids" nolabel="1">
+                                <tree editable="bottom" decoration-danger="debt_duration > 90" decoration-warning="debt_duration > 45">
+                                    <field name="tax_invoice_id" invisible="1"/>
+                                    <field name="invoice_number" readonly="1"/>
+                                    <field name="branch_name" readonly="1"/>
+                                    <field name="tax" sum="รวม Tax" readonly="1"/>
+                                    <field name="total_debt" sum="รวมยอดหนี้" readonly="1"/>
+                                    <field name="total_paid" sum="รวมรับชำระ" readonly="1"/>
+                                    <field name="remaining_balance" sum="รวมค้างชำระ" readonly="1" string="ค้างชำระสุทธิ"/>
+                                    <field name="arh_date" readonly="1"/>
+                                    <field name="due_date" readonly="1"/>
+                                    <field name="debt_duration" string="วัน" readonly="1"/>
+                                    <field name="responsible_party" readonly="1"/>
+                                    <field name="bill_status" readonly="1"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="ประวัติการโทร" name="call_logs">
+                            <field name="call_log_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="call_date"/>
+                                    <field name="phone_number"/>
+                                    <field name="user_id"/>
+                                    <field name="call_result"/>
+                                    <field name="duration"/>
+                                    <field name="note"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="ประวัติการส่งเมล" name="email_logs">
+                            <field name="email_log_ids" nolabel="1">
+                                <tree create="0" edit="0" delete="0">
+                                    <field name="send_date"/>
+                                    <field name="email_from"/>
+                                    <field name="email_to"/>
+                                    <field name="subject"/>
+                                    <field name="user_id"/>
+                                    <field name="state" decoration-success="state=='sent'" 
+                                           decoration-danger="state=='failed'" decoration-warning="state=='draft'" widget="badge"/>
+                                    <field name="attachment_count"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="หมายเหตุ" name="notes">
+                            <field name="note" placeholder="บันทึกหมายเหตุ..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="npd_debt_tracking_baankhiew_view_search" model="ir.ui.view">
+        <field name="name">npd.debt.tracking.baankhiew.search</field>
+        <field name="model">npd.debt.tracking.baankhiew</field>
+        <field name="arch" type="xml">
+            <search string="ค้นหา">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="partner_name"/>
+                <field name="partner_phone"/>
+                <field name="partner_mobile"/>
+                <filter name="filter_today" string="วันนี้" 
+                        domain="[('tracking_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter name="filter_draft" string="รอดำเนินการ" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_in_progress" string="กำลังติดตาม" domain="[('state', '=', 'in_progress')]"/>
+                <filter name="filter_done" string="เสร็จสิ้น" domain="[('state', '=', 'done')]"/>
+                <group expand="0" string="จัดกลุ่มตาม">
+                    <filter name="group_state" string="สถานะ" context="{'group_by': 'state'}"/>
+                    <filter name="group_partner" string="ลูกค้า" context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_date" string="วันที่" context="{'group_by': 'tracking_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action for Debt Tracking -->
+    <record id="action_npd_debt_tracking_baankhiew" model="ir.actions.act_window">
+        <field name="name">ติดตามหนี้</field>
+        <field name="res_model">npd.debt.tracking.baankhiew</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_filter_today': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">สร้างรายการติดตามหนี้บ้านเขียวใหม่</p>
+        </field>
+    </record>
+
+    <!-- ====== Debt Report Summary (รายงานติดตามหนี้ทั้งหมด) ====== -->
+    
+    <!-- Tree View for Debt Report Summary -->
+    <record id="npd_debt_report_summary_view_tree" model="ir.ui.view">
+        <field name="name">npd.debt.report.summary.tree</field>
+        <field name="model">npd.debt.report.summary</field>
+        <field name="arch" type="xml">
+            <tree string="รายงานติดตามหนี้ทั้งหมด" create="0" edit="0" delete="0"
+                  decoration-danger="debt_duration > 90"
+                  decoration-warning="debt_duration > 45 and debt_duration &lt;= 90">
+                <field name="row_no" string="ลำดับ"/>
+                <field name="cus_fullname" string="ลูกค้า"/>
+                <field name="cus_tel" string="เบอร์ลูกค้า"/>
+                <field name="branch_name" string="สาขา"/>
+                <field name="amount" string="ค่าเช่า" sum="รวมค่าเช่า"/>
+                <field name="vat" string="VAT 7%" sum="รวม VAT"/>
+                <field name="tax" string="หัก ณ ที่จ่าย" sum="รวมหัก"/>
+                <field name="insure" string="ค่าประกัน" sum="รวมประกัน"/>
+                <field name="lost" string="ค่าปรับหาย" sum="รวมปรับหาย"/>
+                <field name="broken" string="ค่าปรับชำรุด" sum="รวมปรับชำรุด"/>
+                <field name="transport" string="ค่าขนส่ง" sum="รวมขนส่ง"/>
+                <field name="total_debt" string="หนี้รวม" sum="รวมหนี้ทั้งหมด"/>
+                <field name="total_paid" string="รับชำระ" sum="รวมรับชำระ"/>
+                <field name="remaining_balance" string="คงเหลือ" sum="รวมคงเหลือ"/>
+                <field name="bill_status" string="สถานะบิล"/>
+                <field name="arh_date" string="วันที่เริ่มหนี้"/>
+                <field name="due_date" string="วันครบกำหนด"/>
+                <field name="debt_duration" string="จำนวนวัน"/>
+                <field name="responsible_party" string="ส่วนรับผิดชอบ"/>
+                <field name="customer_id" string="รหัสลูกค้า"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View for Debt Report Summary -->
+    <record id="npd_debt_report_summary_view_form" model="ir.ui.view">
+        <field name="name">npd.debt.report.summary.form</field>
+        <field name="model">npd.debt.report.summary</field>
+        <field name="arch" type="xml">
+            <form string="รายละเอียดหนี้" create="0" edit="0" delete="0">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="cus_fullname" readonly="1"/></h1>
+                        <h3><field name="customer_id" readonly="1"/></h3>
+                    </div>
+                    <group>
+                        <group string="ข้อมูลลูกค้า">
+                            <field name="cus_tel" readonly="1"/>
+                            <field name="cus_address" readonly="1"/>
+                            <field name="branch_name" readonly="1"/>
+                        </group>
+                        <group string="ข้อมูลบริษัท">
+                            <field name="cus_cpnname" readonly="1"/>
+                            <field name="cus_cpnadd" readonly="1"/>
+                            <field name="cus_cpntel" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="รายละเอียดหนี้">
+                            <field name="amount" readonly="1"/>
+                            <field name="vat" readonly="1"/>
+                            <field name="tax" readonly="1"/>
+                            <field name="insure" readonly="1"/>
+                            <field name="lost" readonly="1"/>
+                            <field name="broken" readonly="1"/>
+                            <field name="transport" readonly="1"/>
+                        </group>
+                        <group string="สรุปยอด">
+                            <field name="total_debt" readonly="1"/>
+                            <field name="total_paid" readonly="1"/>
+                            <field name="remaining_balance" readonly="1"/>
+                            <field name="bill_status" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="วันที่">
+                            <field name="arh_date" readonly="1"/>
+                            <field name="due_date" readonly="1"/>
+                            <field name="debt_duration" readonly="1"/>
+                        </group>
+                        <group string="อื่นๆ">
+                            <field name="responsible_party" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View for Debt Report Summary -->
+    <record id="npd_debt_report_summary_view_search" model="ir.ui.view">
+        <field name="name">npd.debt.report.summary.search</field>
+        <field name="model">npd.debt.report.summary</field>
+        <field name="arch" type="xml">
+            <search string="ค้นหารายงานหนี้">
+                <field name="cus_fullname" string="ลูกค้า"/>
+                <field name="customer_id" string="รหัสลูกค้า"/>
+                <field name="branch_name" string="สาขา"/>
+                <field name="bill_status" string="สถานะบิล"/>
+                <field name="responsible_party" string="ส่วนรับผิดชอบ"/>
+                <separator/>
+                <filter name="filter_overdue_90" string="ค้างเกิน 90 วัน" domain="[('debt_duration', '>', 90)]"/>
+                <filter name="filter_overdue_45" string="ค้างเกิน 45 วัน" domain="[('debt_duration', '>', 45)]"/>
+                <filter name="filter_has_balance" string="ยังมียอดค้าง" domain="[('remaining_balance', '>', 0)]"/>
+                <separator/>
+                <group expand="0" string="จัดกลุ่มตาม">
+                    <filter name="group_branch" string="สาขา" context="{'group_by': 'branch_name'}"/>
+                    <filter name="group_status" string="สถานะบิล" context="{'group_by': 'bill_status'}"/>
+                    <filter name="group_responsible" string="ส่วนรับผิดชอบ" context="{'group_by': 'responsible_party'}"/>
+                    <filter name="group_arh_date" string="วันที่เริ่มหนี้" context="{'group_by': 'arh_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action for Debt Report Summary -->
+    <record id="action_npd_debt_report_summary" model="ir.actions.act_window">
+        <field name="name">รายงานติดตามหนี้ทั้งหมด</field>
+        <field name="res_model">npd.debt.report.summary</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_filter_has_balance': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">ไม่มีข้อมูลรายงานหนี้</p>
+            <p>รายงานจะดึงข้อมูลจาก baankheaw_debtor_summary</p>
+        </field>
+    </record>
+
+    <!-- ====== MENU STRUCTURE ====== -->
+    <!-- Parent Menu -->
+    <menuitem id="menu_npd_debt_tracking_baankhiew_parent" 
+              name="ติดตามหนี้บ้านเขียว" 
+              parent="sale.sale_menu_root"
+              sequence="16"/>
+
+    <!-- Sub Menu 1: ติดตามหนี้ (ของเดิม) -->
+    <menuitem id="menu_npd_debt_tracking_baankhiew" 
+              name="ติดตามหนี้" 
+              parent="menu_npd_debt_tracking_baankhiew_parent"
+              action="action_npd_debt_tracking_baankhiew" 
+              sequence="1"/>
+
+    <!-- Sub Menu 2: รายงานติดตามหนี้ทั้งหมด -->
+    <menuitem id="menu_npd_debt_report_summary" 
+              name="รายงานติดตามหนี้ทั้งหมด" 
+              parent="menu_npd_debt_tracking_baankhiew_parent"
+              action="action_npd_debt_report_summary" 
+              sequence="2"/>
+
+    <!-- Call Log Tree View -->
+    <record id="npd_debt_tracking_baankhiew_call_log_view_tree" model="ir.ui.view">
+        <field name="name">npd.debt.tracking.baankhiew.call.log.tree</field>
+        <field name="model">npd.debt.tracking.baankhiew.call.log</field>
+        <field name="arch" type="xml">
+            <tree string="ประวัติการโทร">
+                <field name="call_date"/>
+                <field name="partner_name"/>
+                <field name="phone_number" widget="phone"/>
+                <field name="user_id"/>
+                <field name="call_result"/>
+                <field name="duration" string="ระยะเวลา (นาที)"/>
+                <field name="amount_rental_residual" string="ค้างค่าเช่า"/>
+                <field name="amount_residual" string="ค้างรวมค่าเช่า"/>
+                <field name="amount_damage_residual" string="ค้างค่าปรับชำรุด"/>
+                <field name="amount_lost_residual" string="ค้างค่าปรับหาย"/>
+                <field name="amount_tax_residual" string="ค้างค่า Tax"/>
+                <field name="amount_grand_total" string="ยอดรวม"/>
+                <field name="note"/>
+                <field name="currency_id" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Call Log Form View - ดูประวัติ -->
+    <record id="npd_debt_tracking_baankhiew_call_log_view_form" model="ir.ui.view">
+        <field name="name">npd.debt.tracking.baankhiew.call.log.form</field>
+        <field name="model">npd.debt.tracking.baankhiew.call.log</field>
+        <field name="priority">10</field>
+        <field name="arch" type="xml">
+            <form string="ประวัติการโทร" create="0" edit="0" delete="0">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="partner_name" readonly="1"/></h1>
+                        <h3><field name="phone_number" readonly="1"/></h3>
+                    </div>
+                    <group>
+                        <group string="ข้อมูลลูกค้า">
+                            <field name="tracking_id" readonly="1"/>
+                            <field name="amount_rental_residual" readonly="1" string="ค้างชำระค่าเช่า"/>
+                            <field name="amount_residual" readonly="1" string="ยอดค้างชำระรวมค่าเช่า"/>
+                            <field name="amount_damage_residual" readonly="1" string="ค้างชำระค่าปรับชำรุด"/>
+                            <field name="amount_lost_residual" readonly="1" string="ค้างชำระค่าปรับหาย"/>
+                            <field name="amount_tax_residual" readonly="1" string="ค้างชำระค่า Tax"/>
+                            <field name="amount_grand_total" readonly="1" string="ยอดรวม"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group string="ข้อมูลการโทร">
+                            <field name="call_date" readonly="1"/>
+                            <field name="user_id" readonly="1"/>
+                            <field name="duration" readonly="1" string="ระยะเวลา (นาที)"/>
+                        </group>
+                    </group>
+                    <group string="ผลการโทร">
+                        <field name="call_result" readonly="1"/>
+                    </group>
+                    <group string="หมายเหตุ">
+                        <field name="note" readonly="1" nolabel="1"/>
+                    </group>
+                    <field name="is_calling" invisible="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Call Log Form View - โทรหาลูกค้า (Popup) -->
+    <record id="npd_debt_tracking_baankhiew_call_log_calling_form" model="ir.ui.view">
+        <field name="name">npd.debt.tracking.baankhiew.call.log.calling.form</field>
+        <field name="model">npd.debt.tracking.baankhiew.call.log</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <form string="โทรหาลูกค้า">
+                <field name="is_calling" invisible="1"/>
+                <field name="clean_phone" invisible="1"/>
+                <field name="currency_id" invisible="1"/>
+                <sheet>
+                    <div class="alert alert-info text-center" role="alert" attrs="{'invisible': [('is_calling', '=', True)]}">
+                        <h2>📞 โทรหาลูกค้า</h2>
+                        <h3 class="mb-2"><field name="partner_name" readonly="1" nolabel="1"/></h3>
+                        <h2 class="mt-3 mb-3"><field name="phone_number" readonly="1" nolabel="1"/></h2>
+                    </div>
+                    <div class="alert alert-warning text-center" role="alert" attrs="{'invisible': [('is_calling', '=', False)]}">
+                        <h2><i class="fa fa-phone"></i> กำลังโทร...</h2>
+                        <h3 class="mb-2"><field name="partner_name" readonly="1" nolabel="1" force_save="1"/></h3>
+                        <h2 class="mt-3 mb-3"><field name="phone_number" readonly="1" nolabel="1" force_save="1"/></h2>
+                        <div class="mt-3 p-2 bg-light rounded">
+                            <span class="text-dark">
+                                <i class="fa fa-clock-o"></i> <strong>เวลาเริ่มโทร:</strong> 
+                                <field name="call_start_time" readonly="1" nolabel="1" force_save="1"/>
+                            </span>
+                        </div>
+                    </div>
+                    <group>
+                        <group string="ข้อมูลลูกค้า">
+                            <field name="tracking_id" invisible="1"/>
+                            <field name="partner_email" readonly="1" widget="email"/>
+                            <field name="partner_mobile" readonly="1" widget="phone"/>
+                            <field name="partner_street" readonly="1"/>
+                            <field name="partner_city" readonly="1"/>
+                            <field name="partner_state_id" readonly="1"/>
+                        </group>
+                        <group string="ยอดค้างชำระ">
+                            <field name="amount_rental_residual" readonly="1" string="ค้างชำระค่าเช่า"/>
+                            <field name="amount_residual" readonly="1" string="ยอดค้างชำระรวมค่าเช่า"/>
+                            <field name="amount_damage_residual" readonly="1" string="ค้างชำระค่าปรับชำรุด"/>
+                            <field name="amount_lost_residual" readonly="1" string="ค้างชำระค่าปรับหาย"/>
+                            <field name="amount_tax_residual" readonly="1" string="ค้างชำระค่า Tax"/>
+                            <field name="amount_grand_total" readonly="1" string="ยอดรวม"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="ข้อมูลการโทร">
+                            <field name="call_date" readonly="1"/>
+                            <field name="user_id" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_dial_now" type="object" string="📞 กดโทร" class="btn-success btn-lg"/>
+                    <button name="action_end_call" type="object" string="📴 จบการโทร" class="btn-danger btn-lg"/>
+                    <button name="action_cancel_call" type="object" string="ยกเลิก" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Call Log Result Form (หลังจบการโทร) -->
+    <record id="npd_debt_tracking_baankhiew_call_log_result_form" model="ir.ui.view">
+        <field name="name">npd.debt.tracking.baankhiew.call.log.result.form</field>
+        <field name="model">npd.debt.tracking.baankhiew.call.log</field>
+        <field name="priority">30</field>
+        <field name="arch" type="xml">
+            <form string="บันทึกผลการโทร">
+                <sheet>
+                    <div class="alert alert-warning text-center" role="alert">
+                        <h3>⚠️ กรุณาบันทึกผลการโทร</h3>
+                        <p class="mb-0">กรุณาเลือก "ผลการโทร" ก่อนบันทึก (บังคับ)</p>
+                    </div>
+                    <group>
+                        <group string="ข้อมูลการโทร">
+                            <field name="tracking_id" invisible="1"/>
+                            <field name="partner_name" readonly="1"/>
+                            <field name="phone_number" readonly="1"/>
+                            <field name="call_date" readonly="1"/>
+                            <field name="call_start_time" readonly="1"/>
+                            <field name="call_end_time" readonly="1"/>
+                            <field name="duration" readonly="1" string="ระยะเวลา (นาที)"/>
+                        </group>
+                        <group string="ยอดค้างชำระ">
+                            <field name="amount_rental_residual" readonly="1" string="ค้างชำระค่าเช่า"/>
+                            <field name="amount_residual" readonly="1" string="ยอดค้างชำระรวมค่าเช่า"/>
+                            <field name="amount_damage_residual" readonly="1" string="ค้างชำระค่าปรับชำรุด"/>
+                            <field name="amount_lost_residual" readonly="1" string="ค้างชำระค่าปรับหาย"/>
+                            <field name="amount_tax_residual" readonly="1" string="ค้างชำระค่า Tax"/>
+                            <field name="amount_grand_total" readonly="1" string="ยอดรวม"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="📝 ผลการโทร (บังคับ)">
+                        <field name="call_result" required="1" options="{'no_create': True, 'no_open': True}"/>
+                    </group>
+                    <group string="📋 หมายเหตุ (ไม่บังคับ)">
+                        <field name="note" placeholder="บันทึกรายละเอียดการโทร..." nolabel="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="💾 บันทึกผลการโทร" type="object" name="action_save_and_close" class="btn-primary"/>
+                    <button name="action_cancel_call" type="object" string="ยกเลิก" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Email Log Tree View -->
+    <record id="npd_debt_tracking_baankhiew_email_log_view_tree" model="ir.ui.view">
+        <field name="name">npd.debt.tracking.baankhiew.email.log.tree</field>
+        <field name="model">npd.debt.tracking.baankhiew.email.log</field>
+        <field name="arch" type="xml">
+            <tree string="ประวัติการส่งเมล" decoration-success="state=='sent'" 
+                  decoration-danger="state=='failed'" decoration-warning="state=='draft'">
+                <field name="send_date"/>
+                <field name="partner_name"/>
+                <field name="email_from"/>
+                <field name="email_to"/>
+                <field name="subject"/>
+                <field name="user_id"/>
+                <field name="state" widget="badge"/>
+                <field name="attachment_count"/>
+                <field name="amount_residual"/>
+                <field name="currency_id" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Email Log Form View -->
+    <record id="npd_debt_tracking_baankhiew_email_log_view_form" model="ir.ui.view">
+        <field name="name">npd.debt.tracking.baankhiew.email.log.form</field>
+        <field name="model">npd.debt.tracking.baankhiew.email.log</field>
+        <field name="arch" type="xml">
+            <form string="ประวัติการส่งเมล" create="0" edit="0" delete="0">
+                <header>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="subject" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="ข้อมูลอีเมล">
+                            <field name="email_from" readonly="1"/>
+                            <field name="email_to" readonly="1"/>
+                            <field name="send_date" readonly="1"/>
+                            <field name="user_id" readonly="1"/>
+                        </group>
+                        <group string="ข้อมูลติดตามหนี้">
+                            <field name="tracking_id" readonly="1"/>
+                            <field name="partner_name" readonly="1"/>
+                            <field name="amount_residual" readonly="1"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="เนื้อหา">
+                        <field name="body" readonly="1" nolabel="1"/>
+                    </group>
+                    <group string="ไฟล์แนบ">
+                        <field name="attachment_ids" readonly="1" nolabel="1"/>
+                    </group>
+                    <group string="ข้อผิดพลาด" attrs="{'invisible': [('state', '!=', 'failed')]}">
+                        <field name="error_message" readonly="1" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Send Email Wizard Form -->
+    <record id="npd_debt_tracking_baankhiew_send_email_wizard_form" model="ir.ui.view">
+        <field name="name">npd.debt.tracking.baankhiew.send.email.wizard.form</field>
+        <field name="model">npd.debt.tracking.baankhiew.send.email.wizard</field>
+        <field name="arch" type="xml">
+            <form string="ส่งเมลติดตามหนี้">
+                <sheet>
+                    <div class="alert alert-info text-center" role="alert">
+                        <h3>📧 ส่งเมลติดตามหนี้บ้านเขียว</h3>
+                        <p>ส่งเมลติดตามหนี้ไปยังลูกค้า</p>
+                    </div>
+                    <group>
+                        <group string="ข้อมูลลูกค้า">
+                            <field name="tracking_id" invisible="1"/>
+                            <field name="partner_id" invisible="1"/>
+                            <field name="partner_name" readonly="1"/>
+                            <field name="partner_email" readonly="1"/>
+                        </group>
+                        <group string="ข้อมูลอีเมล">
+                            <field name="email_from" required="1"/>
+                            <field name="email_to" required="1"/>
+                        </group>
+                    </group>
+                    <group string="หัวข้อ">
+                        <field name="subject" required="1" nolabel="1" placeholder="หัวข้อเมล..."/>
+                    </group>
+                    <group string="เนื้อหา">
+                        <field name="body" required="1" nolabel="1" placeholder="พิมพ์ข้อความติดตามหนี้..."/>
+                    </group>
+                    <group string="ไฟล์แนบ">
+                        <field name="attachment_ids" nolabel="1" widget="many2many_binary"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="📧 ส่งเมล" type="object" name="action_send_email" class="btn-primary"/>
+                    <button string="ยกเลิก" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Lost Detail Tree View -->
+    <record id="npd_debt_tracking_baankhiew_lost_detail_view_tree" model="ir.ui.view">
+        <field name="name">npd.debt.tracking.baankhiew.lost.detail.tree</field>
+        <field name="model">npd.debt.tracking.baankhiew.lost.detail</field>
+        <field name="arch" type="xml">
+            <tree string="รายการสินค้าปรับหาย" create="0" edit="0" delete="0">
+                <field name="product_id" string="รหัสสินค้า"/>
+                <field name="product_name" string="ชื่อสินค้า"/>
+                <field name="weight" string="น้ำหนัก"/>
+                <field name="lost_qty" string="จำนวนปรับหาย" sum="รวมจำนวน"/>
+                <field name="price_per_unit" string="ราคาต่อชิ้น"/>
+                <field name="lost_amount" string="ปรับหายรวม" sum="รวมค่าปรับหาย"/>
+            </tree>
+        </field>
+    </record>
+
+</odoo>

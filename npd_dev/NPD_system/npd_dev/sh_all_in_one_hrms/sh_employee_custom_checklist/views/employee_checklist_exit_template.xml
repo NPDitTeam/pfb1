@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_employee_exit_custom_checklist_template_form_view" model="ir.ui.view">
+        <field name="name">employee.exit.custom.checklist.form</field>
+        <field name="model">employee.exit.custom.checklist.template</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                        </group>
+                        <group>
+                            <field name="exit_checklist_template" widget="many2many_tags" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="sh_employee_exit_custom_checklist_template_tree_view" model="ir.ui.view">
+        <field name="name">employee.exit.custom.checklist.tree</field>
+        <field name="model">employee.exit.custom.checklist.template</field>
+        <field name="arch" type="xml">
+            <tree multi_edit="1">
+                <field name="sequence" widget="handle" />
+                <field name="name" />
+                <field name="exit_checklist_template" widget="many2many_tags" optional="show" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="sh_stock_custom_checklist_template_search_view" model="ir.ui.view">
+        <field name="name">employee.exit.custom.checklist.template.view.search</field>
+        <field name="model">employee.exit.custom.checklist.template</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" />
+                <field name="exit_checklist_template" />
+                <filter string="Exit Checklist Template" name="checklist_template" domain="[]" context="{'group_by': 'exit_checklist_template'}" />
+            </search>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="action_menu_employee_exit_custom_checklist_template">
+        <field name="name">Employee Exit Custom Checklist Template</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">employee.exit.custom.checklist.template</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <menuitem
+        id="menu_employee_exit_custom_checklist_template"
+        groups="sh_all_in_one_hrms.group_enable_custom_check_list"
+        name="Employee Exit Custom Checklist Template"
+        action="action_menu_employee_exit_custom_checklist_template"
+        parent="hr.menu_human_resources_configuration"
+        sequence="24"
+    />
+</odoo>

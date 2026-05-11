@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<odoo>
+    <!--sh effect views and action -->
+    <record id="sh_effect_model_form_view" model="ir.ui.view">
+        <field name="name">sh.effect.model.form</field>
+        <field name="model">sh.effect.model</field>
+        <field name="arch" type="xml">
+            <form string="Effect On">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_effect_model_tree_view" model="ir.ui.view">
+        <field name="name">sh.effect.model.tree</field>
+        <field name="model">sh.effect.model</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" string="Effect" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="sh_effect_model_search_view" model="ir.ui.view">
+        <field name="name">sh.effect.model.search</field>
+        <field name="model">sh.effect.model</field>
+        <field name="arch" type="xml">
+            <search string="Effect On">
+                <field name="name" />
+                <group expand="0" string="Group by...">
+                    <filter string="Effect" name="name" context="{'group_by': 'name'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="sh_effect_model_view_actions" model="ir.actions.act_window">
+        <field name="name">Effect On</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.effect.model</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

@@ -1,0 +1,115 @@
+<odoo>
+    <data>
+        <!-- Form View -->
+        <record id="view_form_monthly_penalty_report_may" model="ir.ui.view">
+            <field name="name">monthly.penalty.report.may.form</field>
+            <field name="model">monthly.penalty.report.may</field>
+            <field name="arch" type="xml">
+                <form string="สรุปรายงานหนี้ค้างชำระ">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="so_number" readonly="True"/>
+                            </h1>
+                            <h3><field name="report_date" readonly="True"/></h3>
+                        </div>
+                        
+                        <group>
+                            <field name="branch_id" readonly="True"/>
+                        </group>
+                        
+                        <group>
+                            <group string="📋 ใบสั่งซื้อเช่า">
+                                <field name="sale_order_ids" readonly="True" nolabel="1" widget="many2many">
+                                    <tree string="ใบสั่งซื้อเช่า">
+                                        <field name="name"/>
+                                        <field name="partner_id"/>
+                                        <field name="amount_total"/>
+                                        <field name="date_order"/>
+                                    </tree>
+                                </field>
+                            </group>
+                        </group>
+
+                        <group>
+                            <group string="💰 ค่าเช่า">
+                                <field name="rental_amount" readonly="True"/>
+<!--                                <field name="vat" readonly="True"/>-->
+                                <field name="insurance" readonly="True"/>
+                                <field name="rental_discount" readonly="True"/>
+                                <field name="net_rental_fee" readonly="True"/>
+                            </group>
+                            <group string="🔧 ค่าปรับ">
+                                <field name="lost_penalty" readonly="True"/>
+                                <field name="damage_penalty" readonly="True"/>
+                                <field name="line_discount" readonly="True"/>
+                                <field name="difference" readonly="True"/>
+                            </group>
+                        </group>
+
+                        <group>
+                            <group string="💵 รับชำระ">
+                                <field name="rental_payment_amount" readonly="True"/>
+                                <field name="vat_rental_payment_amount" readonly="True"/>
+                                <field name="lost_payment_amount" readonly="True"/>
+                                <field name="damaged_payment_amount" readonly="True"/>
+                            </group>
+                            <group string="⚠️ ค้างชำระ">
+                                <field name="rental_unpaid_amount" readonly="True"/>
+                                <field name="vat_rental_unpaid_amount" readonly="True"/>
+                                <field name="lost_unpaid_amount" readonly="True"/>
+                                <field name="damaged_unpaid_amount" readonly="True"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Tree View -->
+        <record id="view_tree_monthly_penalty_report_may" model="ir.ui.view">
+            <field name="name">monthly.penalty.report.may.tree</field>
+            <field name="model">monthly.penalty.report.may</field>
+            <field name="arch" type="xml">
+                <tree string="สรุปรายงานหนี้ค้างชำระ">
+                    <field name="report_date"/>
+                    <field name="so_number"/>
+                    <field name="branch_id"/>
+			<field name="customer_code"/>
+                    <field name="customer_name"/>
+                    <field name="rental_amount" sum="Total ค่าเช่าสินค้า"/>
+<!--                    <field name="vat" sum="Total VAT"/>-->
+                    <field name="insurance" sum="Total ค่าประกัน"/>
+                    <field name="lost_penalty" sum="Total ค่าปรับหาย"/>
+                    <field name="damage_penalty" sum="Total ค่าปรับชำรุด"/>
+                    <field name="rental_payment_amount" sum="Total รับชำระหนี้ค่าเช่า"/>
+                    <field name="vat_rental_payment_amount" sum="Total VAT"/>
+                    <field name="lost_payment_amount" sum="Total รับชำระหนี้ค่าปรับหาย"/>
+                    <field name="damaged_payment_amount" sum="Total รับชำระหนี้ค่าปรับชำรุด"/>
+                    <field name="difference" sum="Total ส่วนต่าง"/>
+                    <field name="rental_discount" sum="Total ส่วนลดค่าเช่า"/>
+                    <field name="line_discount" sum="Total ส่วนลดปรับหาย"/>
+                    <field name="rental_unpaid_amount" sum="Total ค้างชำระค่าเช่า"/>
+                    <field name="vat_rental_unpaid_amount" sum="Total ค้าง VAT"/>
+                    <field name="lost_unpaid_amount" sum="Total ค้างชำระค่าปรับหาย"/>
+                    <field name="damaged_unpaid_amount" sum="Total ค้างชำระค่าปรับชำรุด"/>
+                    <field name="net_rental_fee" sum="Total ค่าเช่าสุทธิ"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Action Window สำหรับดูรายงาน -->
+        <record id="action_view_monthly_penalty_report_may" model="ir.actions.act_window">
+            <field name="name">ดูสรุปรายงานหนี้ค้างชำระ</field>
+            <field name="res_model">monthly.penalty.report.may</field>
+            <field name="view_mode">tree,form,pivot,graph</field>
+        </record>
+
+        <!-- เมนูสำหรับดูรายงานหนี้ค้างชำระ -->
+<!--        <menuitem id="menu_monthly_penalty_report_may"-->
+<!--                  name="ดูสรุปรายงานหนี้ค้างชำระ"-->
+<!--                  parent="menu_stock_dashboard_root"-->
+<!--                  action="action_view_monthly_penalty_report_may"-->
+<!--                  sequence="20"/>-->
+    </data>
+</odoo>

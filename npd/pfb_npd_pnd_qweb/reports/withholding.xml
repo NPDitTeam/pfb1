@@ -1,0 +1,489 @@
+<odoo>
+
+    <template id="report_withholding">
+        <t t-call="web.html_container">
+            <t t-set="i" t-value="0"/>
+            <t t-set="record_per_page" t-value="7"/>
+            <t t-set="page_amount" t-value="1"/>
+            <t t-if="len(docs) &gt; record_per_page">
+                <t t-set="page_amount" t-value="len(docs) / record_per_page"/>
+                <t t-if="page_amount &gt; int(page_amount)">
+                    <t t-set="page_amount" t-value="page_amount + 1"/>
+                </t>
+            </t>
+            <t t-set="current_page" t-value="0"/>
+            <t t-set="count_number" t-value="0"/>
+            <t t-foreach="range(int(page_amount))" t-as="rpa">
+                <t t-set="current_page" t-value="current_page + 1"/>
+                <div class="article">
+                    <div class="row" style="font-family: 'THSarabunNew';">
+                        <t t-foreach="docs" t-as="o">
+                            <t t-set="j" t-value="i + record_per_page"/>
+                            <t t-set="item_count" t-value="0"/>
+                            <t t-set="line_record" t-value="307"/>
+                            <t t-set="line_count" t-value="0"/>
+                            <strong style="display: block;width: 600px;position: fixed;top: 14px;left: 30px;">
+                                ฉบับที่ 1 (สำหรับผู้ถูกหักภาษี ณ ที่จ่าย ที่ใช้แนบพร้อมกับแบบแสดงรายการภาษี)
+                            </strong>
+                            <strong style="display: block;width: 600px;position: fixed;top: 70px;left: 810px;">
+                                <t t-esc="o.name"/>
+                            </strong>
+
+                            <strong style="display: block;width: 1000px;position: fixed;top: 125px;left: 100px;">
+                                <t t-esc="o.company_id.name"/>
+                            </strong>
+                            <strong style="display: block;width: 450px;position: fixed;top: 122px;left: 500px;text-align: center;">
+                                <t t-esc="o.company_id.vat"/>
+                            </strong>
+                            <strong style="display: block;width: 1000px;position: fixed;top: 175px;left: 100px;">
+                                <!--                                <t t-esc="o.branch_id.address"/>-->
+                                <t t-esc="o.company_id.street2"/>
+                                <t t-esc="o.company_id.city"/>
+                                <span style="padding-left: 10px;">
+                                    <t t-esc="o.company_id.zip"/>
+                                </span>
+                            </strong>
+
+                            <strong style="position: fixed;width: 1000px;top: 255px;left: 100px;">
+                                <t t-esc="o.supplier_partner_id.name"/>
+                            </strong>
+                            <strong style="display: block;width: 450px;position: fixed;top: 255px;left: 500px;text-align: center;">
+                                <t t-esc="o.supplier_partner_id.vat"/>
+                            </strong>
+                            <strong style="display: block;width: 1000px;position: fixed;top: 305px;left: 100px;">
+                                <t t-esc="o.supplier_partner_id.street"/>
+                                <t t-esc="o.supplier_partner_id.street2"/>
+                                <t t-esc="o.supplier_partner_id.city"/>
+                                <span style="padding-left: 10px;">
+                                    <t t-esc="o.supplier_partner_id.zip"/>
+                                </span>
+                            </strong>
+
+                            <t t-if="o.income_tax_form == 'pnd1'">
+                                <strong style="position: fixed;top: 353px;left: 237px;">x</strong>
+                            </t>
+                            <t t-if="o.income_tax_form == 'pnd3'">
+                                <strong style="position: fixed;top: 350px;left: 612px;">x</strong>
+                            </t>
+                            <t t-if="o.income_tax_form == 'pnd3a'">
+                                <strong style="position: fixed;top: 377px;left: 343px;">x</strong>
+                            </t>
+                            <t t-if="o.income_tax_form == 'pnd53'">
+                                <strong style="position: fixed;top: 377px;left: 490px;">x</strong>
+                            </t>
+
+                            <strong style="position: fixed;top: 345px;left: 320px;"></strong>
+                            <strong style="position: fixed;top: 340px;left: 465px;"></strong>
+                            <strong style="position: fixed;top: 345px;left: 587px;"></strong>
+                            <strong style="position: fixed;top: 370px;left: 215px;"></strong>
+                            <strong style="position: fixed;top: 370px;left: 320px;"></strong>
+                            <strong style="position: fixed;top: 370px;left: 465px;"></strong>
+
+                            <t t-foreach="o.wt_line" t-as="line">
+                                <t t-if="line.wt_cert_income_type == '1'">
+                                    <strong style="position: fixed;top: 480px;left: 530px;">
+                                        <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 480px;right: 260px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 480px;right: 70px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                    </strong>
+                                </t>
+
+                                <t t-if="line.wt_cert_income_type == '2'">
+                                    <strong style="position: fixed;top: 500px;left: 530px;">
+                                        <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 500px;right: 260px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 500px;right:70px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                    </strong>
+                                </t>
+
+                                <t t-if="line.wt_cert_income_type == '3'">
+                                    <strong style="position: fixed;top: 525px;left: 530px;">
+                                        <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 525px;right: 260px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 525px;right:70px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                    </strong>
+                                </t>
+
+                                <t t-if="line.wt_cert_income_type == '4A'">
+                                    <strong style="position: fixed;top: 549px;left: 530px;">
+                                        <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 549px;right: 260px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 549px;right:70px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                    </strong>
+                                </t>
+
+                                <t t-if="line.wt_cert_income_type == '4B11'">
+                                    <strong style="position: fixed;top: 573px;left: 530px;">
+                                        <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 573px;right: 260px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 573px;right:70px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                    </strong>
+                                </t>
+                                <t t-if="line.wt_cert_income_type == '4B12'">
+                                    <strong style="position: fixed;top: 622px;left: 530px;">
+                                        <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 622px;right: 260px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 622px;right:70px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                    </strong>
+                                </t>
+                                <t t-if="line.wt_cert_income_type == '4B13'">
+                                    <strong style="position: fixed;top: 644px;left: 530px;">
+                                        <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 644px;right: 260px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 644px;right:70px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                    </strong>
+                                </t>
+                                <t t-if="line.wt_cert_income_type == '4B14'">
+                                    <strong style="position: fixed;top: 669px;left: 530px;">
+                                        <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 669px;right: 260px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 669px;right:70px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                    </strong>
+                                </t>
+                                <t t-if="line.wt_cert_income_type == '4B24'">
+                                    <strong style="position: fixed;top: 692px;left: 530px;">
+                                        <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 692px;right: 260px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 692px;right:70px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                    </strong>
+                                </t>
+                                <t t-if="line.wt_cert_income_type == '4B24'">
+                                    <strong style="position: fixed;top: 715px;left: 530px;">
+                                        <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 715px;right: 260px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 715px;right:70px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                    </strong>
+                                </t>
+                                <t t-if="line.wt_cert_income_type == '5'">
+                                    <strong style="position: fixed;top: 787px;left: 530px;">
+                                        <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 787px;right: 260px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 787px;right:70px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                    </strong>
+                                </t>
+                                <t t-if="line.wt_cert_income_type == '6'">
+                                    <strong style="position: fixed;top: 882px;left: 530px;">
+                                        <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 882px;right: 260px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                    </strong>
+                                    <strong style="position: fixed;top: 882px;right:70px;text-align: right;">
+                                        <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                    </strong>
+                                </t>
+                                <!-- <strong style="position: fixed;top: 732px;left: 530px;"><t t-esc="o.date" t-options="{'widget': 'date'}"/></strong>-->
+                                <!--<strong style="position: fixed;top: 732px;right: 260px;text-align: right;"><t t-esc="'{0:,.2f}'.format(line.base)"/></strong>-->
+                                <!--<strong style="position: fixed;top: 732px;right:70px;text-align: right;"><t t-esc="'{0:,.2f}'.format(line.amount)"/></strong>-->
+                            </t>
+                            <strong style="position: fixed;top: 958px;right: 260px;text-align: right;">
+                                <t t-esc="'{0:,.2f}'.format(o.base_amount)"/>
+                            </strong>
+                            <strong style="position: fixed;top: 958px;right:70px;text-align: right;">
+                                <t t-esc="'{0:,.2f}'.format(o.tax_amount)"/>
+                            </strong>
+
+                            <strong style="display: block;width: 500px; position: fixed;top: 980px;left: 200px;text-align: left;">
+                                (
+                                <t t-esc="o.currency_id.with_context({'lang': 'th_TH'}).amount_to_text(o.tax_amount)"/>
+                                )
+                            </strong>
+                        </t>
+                    </div>
+                    <img src="/pfb_npd_pnd_qweb/static/img/pnd2.jpg"
+                         style="position:absolute; z-index: -9999; width: 100%;"/>
+                </div>
+                <t t-set="i" t-value="i + record_per_page"/>
+            </t>
+        </t>
+        <t t-set="loop" t-value="1"/>
+        <t t-foreach="range(loop)" t-as="count">
+            <t t-call="web.html_container">
+                <t t-set="i" t-value="0"/>
+                <t t-set="record_per_page" t-value="7"/>
+                <t t-set="page_amount" t-value="1"/>
+                <t t-if="len(docs) &gt; record_per_page">
+                    <t t-set="page_amount" t-value="len(docs) / record_per_page"/>
+                    <t t-if="page_amount &gt; int(page_amount)">
+                        <t t-set="page_amount" t-value="page_amount + 1"/>
+                    </t>
+                </t>
+                <t t-set="current_page" t-value="0"/>
+                <t t-set="count_number" t-value="0"/>
+                <t t-foreach="range(int(page_amount))" t-as="rpa">
+                    <t t-set="current_page" t-value="current_page + 1"/>
+                    <div class="article">
+                        <div class="row" style="font-family: 'THSarabunNew';">
+                            <t t-foreach="docs" t-as="o">
+                                <t t-set="j" t-value="i + record_per_page"/>
+                                <t t-set="item_count" t-value="0"/>
+                                <t t-set="line_record" t-value="307"/>
+                                <t t-set="line_count" t-value="0"/>
+                                <strong style="display: block;width: 600px;position: fixed;top: 14px;left: 30px;">
+                                    ฉบับที่ 2 (สำหรับผู้ถูกหักภาษี ณ ที่จ่าย เก็บไว้เป็นหลักฐาน)
+                                </strong>
+                                <strong style="display: block;width: 600px;position: fixed;top: 70px;left: 810px;">
+                                    <t t-esc="o.name"/>
+                                </strong>
+
+                                <strong style="display: block;width: 1000px;position: fixed;top: 125px;left: 100px;">
+                                    <t t-esc="o.company_id.name"/>
+                                </strong>
+                                <strong style="display: block;width: 450px;position: fixed;top: 122px;left: 500px;text-align: center;">
+                                    <t t-esc="o.company_id.vat"/>
+                                </strong>
+                                <strong style="display: block;width: 1000px;position: fixed;top: 175px;left: 100px;">
+                                    <!--                                    <t t-esc="o.branch_id.address"/>-->
+                                    <t t-esc="o.company_id.street"/>
+                                    <t t-esc="o.company_id.street2"/>
+                                    <t t-esc="o.company_id.city"/>
+                                    <span style="padding-left: 10px;">
+                                        <t t-esc="o.company_id.zip"/>
+                                    </span>
+                                </strong>
+
+                                <strong style="position: fixed;width: 1000px;top: 255px;left: 100px;">
+                                    <t t-esc="o.supplier_partner_id.name"/>
+                                </strong>
+                                <strong style="display: block;width: 450px;position: fixed;top: 255px;left: 500px;text-align: center;">
+                                    <t t-esc="o.supplier_partner_id.vat"/>
+                                </strong>
+                                <strong style="display: block;width: 1000px;position: fixed;top: 305px;left: 100px;">
+                                    <t t-esc="o.supplier_partner_id.street"/>
+                                    <t t-esc="o.supplier_partner_id.street2"/>
+                                    <t t-esc="o.supplier_partner_id.city"/>
+                                    <span style="padding-left: 10px;">
+                                        <t t-esc="o.supplier_partner_id.zip"/>
+                                    </span>
+                                </strong>
+
+                                <t t-if="o.income_tax_form == 'pnd1'">
+                                    <strong style="position: fixed;top: 353px;left: 237px;">x</strong>
+                                </t>
+                                <t t-if="o.income_tax_form == 'pnd3'">
+                                    <strong style="position: fixed;top: 350px;left: 612px;">x</strong>
+                                </t>
+                                <t t-if="o.income_tax_form == 'pnd3a'">
+                                    <strong style="position: fixed;top: 377px;left: 343px;">x</strong>
+                                </t>
+                                <t t-if="o.income_tax_form == 'pnd53'">
+                                    <strong style="position: fixed;top: 377px;left: 490px;">x</strong>
+                                </t>
+
+                                <strong style="position: fixed;top: 345px;left: 320px;"></strong>
+                                <strong style="position: fixed;top: 340px;left: 465px;"></strong>
+                                <strong style="position: fixed;top: 345px;left: 587px;"></strong>
+                                <strong style="position: fixed;top: 370px;left: 215px;"></strong>
+                                <strong style="position: fixed;top: 370px;left: 320px;"></strong>
+                                <strong style="position: fixed;top: 370px;left: 465px;"></strong>
+
+                                <t t-foreach="o.wt_line" t-as="line">
+                                    <t t-if="line.wt_cert_income_type == '1'">
+                                        <strong style="position: fixed;top: 480px;left: 530px;">
+                                            <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 480px;right: 260px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 480px;right: 70px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                        </strong>
+                                    </t>
+
+                                    <t t-if="line.wt_cert_income_type == '2'">
+                                        <strong style="position: fixed;top: 500px;left: 530px;">
+                                            <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 500px;right: 260px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 500px;right:70px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                        </strong>
+                                    </t>
+
+                                    <t t-if="line.wt_cert_income_type == '3'">
+                                        <strong style="position: fixed;top: 525px;left: 530px;">
+                                            <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 525px;right: 260px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 525px;right:70px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                        </strong>
+                                    </t>
+
+                                    <t t-if="line.wt_cert_income_type == '4A'">
+                                        <strong style="position: fixed;top: 549px;left: 530px;">
+                                            <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 549px;right: 260px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 549px;right:70px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                        </strong>
+                                    </t>
+
+                                    <t t-if="line.wt_cert_income_type == '4B11'">
+                                        <strong style="position: fixed;top: 573px;left: 530px;">
+                                            <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 573px;right: 260px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 573px;right:70px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                        </strong>
+                                    </t>
+                                    <t t-if="line.wt_cert_income_type == '4B12'">
+                                        <strong style="position: fixed;top: 622px;left: 530px;">
+                                            <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 622px;right: 260px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 622px;right:70px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                        </strong>
+                                    </t>
+                                    <t t-if="line.wt_cert_income_type == '4B13'">
+                                        <strong style="position: fixed;top: 644px;left: 530px;">
+                                            <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 644px;right: 260px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 644px;right:70px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                        </strong>
+                                    </t>
+                                    <t t-if="line.wt_cert_income_type == '4B14'">
+                                        <strong style="position: fixed;top: 669px;left: 530px;">
+                                            <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 669px;right: 260px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 669px;right:70px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                        </strong>
+                                    </t>
+                                    <t t-if="line.wt_cert_income_type == '4B24'">
+                                        <strong style="position: fixed;top: 692px;left: 530px;">
+                                            <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 692px;right: 260px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 692px;right:70px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                        </strong>
+                                    </t>
+                                    <t t-if="line.wt_cert_income_type == '4B24'">
+                                        <strong style="position: fixed;top: 715px;left: 530px;">
+                                            <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 715px;right: 260px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 715px;right:70px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                        </strong>
+                                    </t>
+                                    <t t-if="line.wt_cert_income_type == '5'">
+                                        <strong style="position: fixed;top: 787px;left: 530px;">
+                                            <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 787px;right: 260px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 787px;right:70px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                        </strong>
+                                    </t>
+                                    <t t-if="line.wt_cert_income_type == '6'">
+                                        <strong style="position: fixed;top: 882px;left: 530px;">
+                                            <t t-esc="o.date" t-options="{'widget': 'date'}"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 882px;right: 260px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.base)"/>
+                                        </strong>
+                                        <strong style="position: fixed;top: 882px;right:70px;text-align: right;">
+                                            <t t-esc="'{0:,.2f}'.format(line.amount)"/>
+                                        </strong>
+                                    </t>
+                                    <!-- <strong style="position: fixed;top: 732px;left: 530px;"><t t-esc="o.date" t-options="{'widget': 'date'}"/></strong>-->
+                                    <!--<strong style="position: fixed;top: 732px;right: 260px;text-align: right;"><t t-esc="'{0:,.2f}'.format(line.base)"/></strong>-->
+                                    <!--<strong style="position: fixed;top: 732px;right:70px;text-align: right;"><t t-esc="'{0:,.2f}'.format(line.amount)"/></strong>-->
+                                </t>
+                                <strong style="position: fixed;top: 958px;right: 260px;text-align: right;">
+                                    <t t-esc="'{0:,.2f}'.format(o.base_amount)"/>
+                                </strong>
+                                <strong style="position: fixed;top: 958px;right:70px;text-align: right;">
+                                    <t t-esc="'{0:,.2f}'.format(o.tax_amount)"/>
+                                </strong>
+
+                                <strong style="display: block;width: 500px; position: fixed;top: 980px;left: 200px;text-align: left;">
+                                    (
+                                    <t t-esc="o.currency_id.with_context({'lang': 'th_TH'}).amount_to_text(o.tax_amount)"/>
+                                    )
+                                </strong>
+                            </t>
+                        </div>
+                        <img src="/pfb_npd_pnd_qweb/static/img/pnd2.jpg"
+                             style="position:absolute; z-index: -9999; width: 100%;"/>
+                    </div>
+                    <t t-set="i" t-value="i + record_per_page"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+</odoo>

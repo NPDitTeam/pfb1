@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="purchase_invoice_plan_tree_amount_inherit" model="ir.ui.view">
+        <field name="name">purchase.invoice.plan.tree.amount.inherit</field>
+        <field name="model">purchase.invoice.plan</field>
+        <field name="inherit_id" ref="purchase_invoice_plan.view_purchase_invoice_plan_tree"/>
+        <field name="arch" type="xml">
+            <field name="installment" position="after">
+                <field
+                        name="date_next"
+                        attrs="{'readonly': [('no_edit', '=', True)]}"
+                />
+            </field>
+        </field>
+    </record>
+</odoo>

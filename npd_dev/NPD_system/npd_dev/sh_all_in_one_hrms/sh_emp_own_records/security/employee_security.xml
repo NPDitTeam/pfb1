@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo noupdate="1">
+    <record id="group_enable_own_records" model="res.groups">
+        <field name="name">Enable Employee Own Records</field>
+        <field name="category_id" ref="base.module_category_hidden" />
+    </record>
+    
+    <record id="sh_user_emp_own_records_rule" model="ir.rule">
+        <field name="name">Employee Own Records</field>
+        <field name="model_id" ref="hr.model_hr_employee" />
+        <field name="perm_read">1</field>
+        <field name="perm_write">0</field>
+        <field name="perm_create">0</field>
+        <field name="perm_unlink">0</field>
+        <field name="domain_force">['|',('parent_id.user_id','=',user.id),('user_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('sh_all_in_one_hrms.group_enable_own_records'))]" />
+    </record>
+
+    <record id="sh_user_emp_all_records_rule" model="ir.rule">
+        <field name="name">Employee All Records</field>
+        <field name="model_id" ref="hr.model_hr_employee" />
+        <field name="perm_read">1</field>
+        <field name="perm_write">1</field>
+        <field name="perm_create">1</field>
+        <field name="perm_unlink">1</field>
+        <field name="domain_force">[]</field>
+        <field name="groups" eval="[(4, ref('hr.group_hr_manager'))]" />
+    </record>
+</odoo>

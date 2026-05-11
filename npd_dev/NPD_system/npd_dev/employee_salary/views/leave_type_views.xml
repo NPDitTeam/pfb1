@@ -1,0 +1,103 @@
+<odoo>
+  <record id="view_leave_type_tree" model="ir.ui.view">
+    <field name="name">leave.type.custom.tree</field>
+    <field name="model">hr.leave.type.custom</field>
+    <field name="arch" type="xml">
+      <tree string="ประเภทสิทธิ์การลา">
+        <field name="employee_id"/>
+        <field name="department_id"/>
+        <field name="position_id"/>
+        <field name="leave_personal_paid_total_remaining"/>
+        <field name="leave_personal_unpaid_total_remaining"/>
+        <field name="leave_sick_total_remaining"/>
+        <field name="leave_maternity_paid_total_remaining"/>
+        <field name="leave_maternity_unpaid_total_remaining"/>
+        <field name="leave_vacation_total_remaining"/>
+        <field name="leave_saturday_total_remaining"/>
+        <field name="leave_emergency_total_remaining"/>
+      </tree>
+    </field>
+  </record>
+
+  <record id="view_leave_type_form" model="ir.ui.view">
+    <field name="name">leave.type.custom.form</field>
+    <field name="model">hr.leave.type.custom</field>
+    <field name="arch" type="xml">
+      <form string="ประเภทสิทธิ์การลา">
+        <sheet>
+          <group>
+            <field name="employee_id" options="{'no_create_edit': True}"/>
+            <field name="employee_code"/>
+            <field name="department_id"/>
+            <field name="position_id"/>
+            <field name="start_date"/>
+            <field name="check_y"/>
+          </group>
+          <group string="สิทธิ์การลา (วัน/ปี)" col="6">
+
+            <field name="leave_personal_paid_used" readonly="1"/>
+            <field name="leave_personal_paid_total_remaining" nolabel="0"/>
+            <field name="leave_personal_paid_total" nolabel="0"/>
+
+            <field name="leave_personal_unpaid_used" readonly="1"/>
+            <field name="leave_personal_unpaid_total_remaining" nolabel="0"/>
+            <field name="leave_personal_unpaid_total" nolabel="0"/>
+
+            <field name="leave_sick_used" readonly="1"/>
+            <field name="leave_sick_total_remaining" nolabel="0"/>
+            <field name="leave_sick_total" nolabel="0"/>
+
+            <field name="leave_maternity_paid_used" readonly="1"/>
+            <field name="leave_maternity_paid_total_remaining" nolabel="0"/>
+            <field name="leave_maternity_paid_total" nolabel="0"/>
+
+            <field name="leave_maternity_unpaid_used" readonly="1"/>
+            <field name="leave_maternity_unpaid_total_remaining" nolabel="0"/>
+            <field name="leave_maternity_unpaid_total" nolabel="0"/>
+
+            <field name="leave_vacation_used" readonly="1"/>
+            <field name="leave_vacation_total_remaining" nolabel="0"/>
+            <field name="leave_vacation_total" nolabel="0"/>
+
+            <field name="leave_saturday_used" readonly="1"/>
+            <field name="leave_saturday_total_remaining" nolabel="0"/>
+            <field name="leave_saturday_total" nolabel="0"/>
+
+            <field name="leave_emergency_used" readonly="1"/>
+            <field name="leave_emergency_total_remaining" nolabel="0"/>
+            <field name="leave_emergency_total" nolabel="0"/>
+          </group>
+          <hr/>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_leave_type" model="ir.actions.act_window">
+    <field name="name">ประเภทสิทธิ์การลา</field>
+    <field name="res_model">hr.leave.type.custom</field>
+    <field name="view_mode">tree,form</field>
+  </record>
+
+  <record id="server_action_sync_and_open_view" model="ir.actions.server">
+    <field name="name">Sync and Open Leave Type</field>
+    <field name="model_id" ref="model_hr_leave_type_custom"/>
+    <field name="binding_model_id" ref="model_hr_leave_type_custom"/>
+    <field name="state">code</field>
+    <field name="code">action = model.sync_and_open_view()</field>
+  </record>
+
+  <record id="action_server_update_and_reset_leave" model="ir.actions.server">
+    <field name="name">อัปเดตและรีเซ็ตสิทธิ์การลา</field>
+    <field name="model_id" ref="model_hr_leave_type_custom"/>
+    <field name="binding_model_id" ref="model_hr_leave_type_custom"/>
+    <field name="state">code</field>
+    <field name="code">records.update_and_reset_to_default()</field>
+  </record>
+  <menuitem id="menu_hr_leave_type_root"
+            name="ประเภทสิทธิ์การลา"
+            parent="main_employee_salary_menu"
+            action="server_action_sync_and_open_view"
+            sequence="20"/>
+
+</odoo>

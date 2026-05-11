@@ -1,0 +1,62 @@
+<odoo>
+    <data>
+        <!-- Tree View -->
+        <record id="view_reward_redemption_tree" model="ir.ui.view">
+            <field name="name">reward.redemption.tree</field>
+            <field name="model">reward.redemption</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="reward_name"/>
+                    <field name="reward_points"/>
+                    <field name="reward_method"/>
+                    <field name="status"/>
+                    <field name="member_id"/>
+                    <field name="customer_name"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form View -->
+        <record id="view_reward_redemption_form" model="ir.ui.view">
+            <field name="name">reward.redemption.form</field>
+            <field name="model">reward.redemption</field>
+            <field name="arch" type="xml">
+                <form string="Reward Redemption">
+                    <header>
+                        <button name="action_fetch_reward_data" type="object" string="Fetch from API" class="btn-primary"/>
+                        <field name="status" widget="statusbar" statusbar_visible="open,closed"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="reward_name"/>
+                                <field name="reward_points"/>
+                                <field name="reward_method"/>
+                            </group>
+                            <group>
+                                <field name="description"/>
+                                <field name="status"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="member_id"/>
+                            <field name="customer_name"/>
+                            <field name="remark"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record id="action_reward_redemption" model="ir.actions.act_window">
+            <field name="name">Reward Redemptions</field>
+            <field name="res_model">reward.redemption</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- Menu Items -->
+        <!-- Display the new menu after the Members menu -->
+        <menuitem id="menu_reward_redemption" name="Rewards" parent="menu_membership_root" action="action_reward_redemption" sequence="3"/>
+    </data>
+</odoo>

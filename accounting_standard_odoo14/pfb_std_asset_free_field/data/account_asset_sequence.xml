@@ -1,0 +1,30 @@
+<odoo noupdate="1">
+    <record id="seq_account_asset" model="ir.sequence">
+        <field name="name">Asset sequence</field>
+        <field name="code">account.asset</field>
+        <field name="prefix">E01-T0</field>
+        <field eval="1" name="number_next"/>
+        <field eval="1" name="number_increment"/>
+        <field eval="True" name="use_date_range"/>
+        <field eval="False" name="company_id"/>
+        <field name="padding">2</field>
+    </record>
+
+
+    <record id="conditiontype1" model="account.condition.type">
+        <field name="name">It Works</field>
+    </record>
+    <record id="conditiontype2" model="account.condition.type">
+        <field name="name">Defective</field>
+    </record>
+    <record id="conditiontype3" model="account.condition.type">
+        <field name="name">Wear out</field>
+    </record>
+    <record id="conditiontype4" model="account.condition.type">
+        <field name="name">Lost</field>
+    </record>
+     <record id="conditiontype4" model="account.condition.type">
+        <field name="name">Don't Use</field>
+    </record>
+
+</odoo>

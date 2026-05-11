@@ -1,0 +1,43 @@
+<odoo>
+    <record id="view_picking_form_rent_discount" model="ir.ui.view">
+        <field name="name">stock.picking.form.rent.discount</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <header position="inside">
+                <!-- ปุ่ม ส่วนลด -->
+                <button name="%(rent_discount_wizard_action)d"
+                        string="ส่วนลดค่าเช่า"
+                        type="action"
+                        class="oe_highlight"/>
+
+                <!-- ปุ่มส่งอนุมัติ -->
+                <button name="%(request_picking_approval_wizard_action)d"
+                        string="ส่งอนุมัติ"
+                        type="action"
+                        attrs="{'invisible': ['|', ('rent_discount', '=', 0.0), ('approval_state', '=', 'waiting')]}"
+                        class="btn-primary"/>
+
+                <!-- ปุ่มพิจารณาอนุมัติ - แก้ไขให้ส่ง context -->
+                <button name="%(approval_picking_wizard_action)d"
+                        string="พิจารณาอนุมัติ"
+                        type="action"
+                        context="{'default_picking_id': active_id}"
+                        attrs="{'invisible': [('approval_state', '!=', 'waiting')]}"
+                        class="btn-secondary"/>
+            </header>
+
+            <xpath expr="//sheet/group" position="inside">
+                <group>
+                    <field name="rent_discount" string="ส่วนลดค่าเช่า"/>
+                    <field name="approval_state"/>
+                    <field name="approver_id"/>
+                    <field name="approval_note"
+                           attrs="{'readonly': [('approval_state', 'not in', ['approved', 'revise'])]}"
+                           placeholder="ระบุเหตุผลในการพิจารณา..."
+                           style="background-color:#fff8c6; color:#8a6d3b;"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

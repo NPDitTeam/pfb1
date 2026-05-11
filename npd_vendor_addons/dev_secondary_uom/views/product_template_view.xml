@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	 <record id="dev_product_template_second_uom_form" model="ir.ui.view">
+         <field name="name">dev.product.template.second.uom.form</field>
+         <field name="model">product.template</field>
+         <field name="inherit_id" ref="product.product_template_only_form_view"/>
+         <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_open_quants']" position="before">
+	               <button type="object" name="action_open_quants" attrs="{'invisible':['|',('type', '!=', 'product'),('is_second_uom', '!=', True)]}" class="oe_stat_button" icon="fa-building-o">
+                        <field name="secondary_qty_available" widget="statinfo" string="Second On Hand"/>
+                    </button>
+                    <button type="action" name="%(stock.report_stock_quantity_action_product)d"  attrs="{'invisible':['|',('type', '!=', 'product'),('is_second_uom', '!=', True)]}" class="oe_stat_button" icon="fa-building-o">
+                        <field name="secondary_forcast" widget="statinfo" string="Second Forecas"/>
+                    </button>
+        	</xpath>
+        	
+            <xpath expr="//field[@name='uom_id']" position="after">
+	            <field name="is_second_uom"/> 
+	            <field name="uom_category_id" invisible="1"/>
+	            <field name="second_uom_id" 
+	                domain="[('category_id','=',uom_category_id)]" 
+	                options="{'no_quick_create': True, 'no_create_edit' : True}"
+	                attrs="{'invisible':[('is_second_uom','=',False)],'required':[('is_second_uom','!=',False)]}"/> 
+        	</xpath>
+        </field>
+    </record>
+</odoo>

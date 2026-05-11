@@ -1,0 +1,38 @@
+.mt-1 {
+            margin-top: 1rem;
+            }
+            .mb-1 {
+            margin-bottom: 1rem;
+            }
+            .ml-45 {
+            margin-left: 40px;
+            }.ml-3 {
+            margin-left: 45px;
+            }.ml-45 {
+            margin-left: 40px;
+            }.ml-45 {
+            margin-left: 40px;
+            }.ml-45 {
+            margin-left: 40px;
+            }.text-left {
+            text-align: left;
+            }
+            .text-right {
+            text-align: right;
+            }.col-7_report, .col-2_report, .col-1_report{
+            padding-left: 0; /* Remove padding from the column */
+            }.text_bold{ font-weight: 600;}
+
+
+            a.{
+            font-size: 19px;
+            }
+            b.{
+            font-size: 14px;
+            }
+            c.{
+            font-size: 15px;
+            }
+            c.{
+            font-size: 16px;
+            }

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <record id="account_asset_action_pivot" model="ir.actions.act_window">
+        <field name="name">Assets</field>
+        <field name="res_model">account.asset</field>
+        <field name="view_mode">pivot,graph</field>
+    </record>
+
+    <!-- Menu  -->
+    <menuitem
+            id="menu_asset_operator"
+            name="Assets"
+            web_icon="pfb_std_asset_menu,static/description/icon.png"
+            sequence="110"/>
+
+    <menuitem
+            id="account_asset_request_menu"
+            name="Request"
+            parent="menu_asset_operator"
+            sequence="10"
+    />
+     <menuitem
+            id="std_account_asset_menu"
+            action="account_asset_management.account_asset_action"
+            parent="menu_asset_operator"
+            sequence="20"
+    />
+    <menuitem
+            id="account_asset_report_menu"
+            name="Report"
+            parent="menu_asset_operator"
+            sequence="30"
+    />
+
+    <menuitem
+            id="account_asset_pivot_report_menu"
+            action="account_asset_action_pivot"
+            parent="account_asset_report_menu"
+            sequence="31"
+    />
+
+
+    <menuitem
+            id="account_asset_setting_menu"
+            name="Configuration"
+            parent="menu_asset_operator"
+            sequence="40"
+    />
+
+        <menuitem
+            id="account_asset_profile_menu"
+            action="account_asset_management.account_asset_profile_action"
+            parent="account_asset_setting_menu"
+            sequence="41"
+    />
+    <menuitem
+            id="account_asset_group_menu"
+            action="account_asset_management.account_asset_group_action"
+            parent="account_asset_setting_menu"
+            sequence="42"
+    />
+</odoo>

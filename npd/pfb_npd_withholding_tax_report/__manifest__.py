@@ -1,0 +1,25 @@
+{
+    "name": "PFB Withholding Tax Report",
+    "version": "14.0.1.0.0",
+    "author": "Ecosoft, Odoo Community Association (OCA)",
+    "website": "https://github.com/OCA/l10n-thailand",
+    "license": "AGPL-3",
+    "category": "Accounting",
+    "depends": [
+        "account",
+        "report_xlsx_helper",
+        "date_range",
+        "l10n_th_partner",
+        "l10n_th_withholding_tax_cert",
+    ],
+    "data": [
+        "security/ir.model.access.csv",
+        'data/paper_format.xml',
+        'data/report_data.xml',
+        'reports/templates/report_withholding_tax_pdf.xml',
+        "wizard/withholding_tax_report_wizard_view.xml",
+        "views/menu.xml",
+        "views/tax_line.xml",
+    ],
+    "installable": True,
+}

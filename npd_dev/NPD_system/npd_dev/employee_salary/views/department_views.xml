@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View สำหรับ แผนก -->
+    <record id="view_department_tree" model="ir.ui.view">
+        <field name="name">hr.department.custom.tree</field>
+        <field name="model">hr.department.custom</field>
+        <field name="arch" type="xml">
+            <tree string="แผนก" editable="bottom">
+                <field name="id" string="รหัส"/>
+                <field name="name" string="ชื่อแผนก"/>
+                <field name="is_active" string="สถานะ" widget="boolean_toggle"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View สำหรับ แผนก -->
+    <record id="view_department_form" model="ir.ui.view">
+        <field name="name">hr.department.custom.form</field>
+        <field name="model">hr.department.custom</field>
+        <field name="arch" type="xml">
+            <form string="แผนก">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="id" string="รหัส" readonly="1"/>
+                            <field name="name" string="ชื่อแผนก"/>
+                        </group>
+                        <group>
+                            <field name="is_active" string="สถานะ" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action สำหรับ แผนก (ใช้แสดงผลหลัง sync) -->
+    <record id="action_department" model="ir.actions.act_window">
+        <field name="name">แผนก</field>
+        <field name="res_model">hr.department.custom</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                สร้างแผนกใหม่
+            </p>
+        </field>
+    </record>
+
+    <!-- Server Action สำหรับซิงค์และเปิดหน้าแผนก -->
+    <record id="action_sync_and_open_department" model="ir.actions.server">
+        <field name="name">แผนก</field>
+        <field name="model_id" ref="model_hr_department_custom"/>
+        <field name="state">code</field>
+        <field name="code">action = model.sync_and_open_view()</field>
+    </record>
+</odoo>

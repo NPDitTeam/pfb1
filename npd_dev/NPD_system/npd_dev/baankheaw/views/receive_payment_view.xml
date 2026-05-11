@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Action -->
+    <record id="action_receive_payment" model="ir.actions.act_window">
+        <field name="name">รับชำระ</field>
+        <field name="res_model">baankheaw.receive_payment</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p>💳 สรุปรายการรับชำระ แยกรายการและยอดรวมทั้งหมด</p>
+        </field>
+    </record>
+
+    <!-- Menu: วาง "ต่อจาก ลูกค้าเก่า" -->
+    <menuitem id="menu_receive_payment"
+              name="รับชำระ"
+              parent="baankheaw.baankheaw_menu_root"
+              action="action_receive_payment"
+              sequence="31"
+              groups="base.group_user"/>
+
+    <!-- Tree View -->
+    <record id="view_receive_payment_tree" model="ir.ui.view">
+        <field name="name">baankheaw.receive_payment.tree</field>
+        <field name="model">baankheaw.receive_payment</field>
+        <field name="arch" type="xml">
+            <tree string="รับชำระ" >
+                <field name="arp_docid"/>
+                <field name="arp_datereceive"/>
+                <field name="dateissue"/>
+                <field name="cus_fullname"/>
+                <field name="cus_cpnname"/>
+                <field name="cus_id"/>
+                <field name="cus_tel"/>
+                <field name="branch_name"/>
+                <field name="arp_amount" sum="Total"/>
+                <field name="arp_vat" sum="Total"/>
+                <field name="arp_tax" sum="Total"/>
+                <field name="arp_insure" sum="Total"/>
+                <field name="arp_lost" sum="Total"/>
+                <field name="arp_broken" sum="Total"/>
+                <field name="arp_transport" sum="Total"/>
+                <field name="arp_fee" sum="Total"/>
+                <field name="total_all" sum="Total"/>
+                <field name="arp_type"/>
+                <field name="arp_remark"/>
+                <field name="renth_customerincome"/>
+                <field name="renth_salename"/>
+                <!-- ฟิลด์ใหม่: ข้อมูลพนักงานออกบิล -->
+                <field name="userissue"/>
+                <field name="emp_nickname"/>
+                <field name="emp_fullname"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_receive_payment_form" model="ir.ui.view">
+        <field name="name">baankheaw.receive_payment.form</field>
+        <field name="model">baankheaw.receive_payment</field>
+        <field name="arch" type="xml">
+            <form string="รายละเอียดรับชำระ">
+                <header>
+                    <button name="action_update_receive_payment"
+                            type="object"
+                            string="🔄 อัปเดตข้อมูลรับชำระ"
+                            class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="เอกสาร/วันที่">
+                            <field name="arp_docid" readonly="1"/>
+                            <field name="arp_type" readonly="1"/>
+                            <field name="arp_datereceive" readonly="1"/>
+                            <field name="dateissue" readonly="1"/>
+                        </group>
+                        <group string="ลูกค้า/สาขา">
+                            <field name="cus_id" readonly="1"/>
+                            <field name="cus_fullname" readonly="1"/>
+                            <field name="cus_cpnname" readonly="1"/>
+                            <field name="cus_tel" readonly="1"/>
+                            <field name="branch_name" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="รายการยอดเงิน">
+                        <group>
+                            <field name="arp_amount" readonly="1"/>
+                            <field name="arp_vat" readonly="1"/>
+                            <field name="arp_tax" readonly="1"/>
+                            <field name="arp_insure" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="arp_lost" readonly="1"/>
+                            <field name="arp_broken" readonly="1"/>
+                            <field name="arp_transport" readonly="1"/>
+                            <field name="arp_fee" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="total_all" readonly="1"/>
+                            <field name="arp_remark" readonly="1"/>
+                            <field name="renth_customerincome" readonly="1"/>
+                            <field name="renth_salename" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- กลุ่มใหม่: ข้อมูลพนักงานออกบิล -->
+                    <group string="พนักงานออกบิล">
+                        <group>
+                            <field name="userissue" readonly="1"/>
+                            <field name="emp_nickname" readonly="1"/>
+                            <field name="emp_fullname" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

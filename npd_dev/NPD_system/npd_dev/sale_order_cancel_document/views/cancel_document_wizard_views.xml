@@ -1,0 +1,157 @@
+<odoo>
+    <!-- ============================================= -->
+    <!-- Wizard Form View -->
+    <!-- ============================================= -->
+    <record id="view_cancel_document_wizard_form" model="ir.ui.view">
+        <field name="name">sale.order.cancel.document.wizard.form</field>
+        <field name="model">sale.order.cancel.document.wizard</field>
+        <field name="arch" type="xml">
+            <form string="ยกเลิกเอกสารอ้างอิงบิลเช่า">
+                <group string="ข้อมูลใบเช่า">
+                    <field name="sale_id" readonly="1"/>
+                    <field name="so_display_name" readonly="1"/>
+                </group>
+
+                <group string="เลือกรายการที่ต้องการยกเลิก">
+                    <field name="select_all" widget="boolean_toggle"
+                           style="font-weight: bold; color: #007cba;"/>
+                    <separator colspan="2"/>
+
+                    <!-- 1. ยกเลิกใบเช่า -->
+                    <field name="cancel_sale_order"/>
+                    <field name="so_display_name" string="เลขเอกสาร" readonly="1"
+                           attrs="{'invisible': [('cancel_sale_order', '=', False)]}"/>
+                    <field name="reason_sale_order" placeholder="กรุณาระบุเหตุผลในการยกเลิกใบเช่า..."
+                           attrs="{'invisible': [('cancel_sale_order', '=', False)],
+                                   'required': [('cancel_sale_order', '=', True)]}"/>
+
+                    <separator colspan="2"/>
+
+                    <!-- 2. ยกเลิกใบแจ้งหนี้ -->
+                    <field name="cancel_invoice"
+                           attrs="{'readonly': [('cancel_sale_order', '=', True)]}" force_save="1"/>
+                    <field name="invoice_display_names" string="เลขเอกสาร" readonly="1"
+                           attrs="{'invisible': [('cancel_invoice', '=', False)]}"/>
+                    <field name="reason_invoice" placeholder="กรุณาระบุเหตุผลในการยกเลิกใบแจ้งหนี้..."
+                           attrs="{'invisible': [('cancel_invoice', '=', False)],
+                                   'required': [('cancel_invoice', '=', True)]}"/>
+
+                    <separator colspan="2"/>
+
+                    <!-- 3. ยกเลิกใบจัดส่งสินค้า -->
+                    <field name="cancel_delivery"
+                           attrs="{'readonly': [('cancel_sale_order', '=', True)]}" force_save="1"/>
+                    <field name="delivery_display_names" string="เลขเอกสาร" readonly="1"
+                           attrs="{'invisible': [('cancel_delivery', '=', False)]}"/>
+                    <field name="reason_delivery" placeholder="กรุณาระบุเหตุผลในการยกเลิกใบจัดส่งสินค้า..."
+                           attrs="{'invisible': [('cancel_delivery', '=', False)],
+                                   'required': [('cancel_delivery', '=', True)]}"/>
+
+                    <separator colspan="2"/>
+
+                    <!-- 4. ยกเลิกการตัดสต๊อก -->
+                    <field name="cancel_stock_cut"
+                           attrs="{'readonly': [('cancel_sale_order', '=', True)]}" force_save="1"/>
+                    <field name="reason_stock_cut" placeholder="กรุณาระบุเหตุผลในการยกเลิกการตัดสต๊อก..."
+                           attrs="{'invisible': [('cancel_stock_cut', '=', False)],
+                                   'required': [('cancel_stock_cut', '=', True)]}"/>
+
+                    <separator colspan="2"/>
+
+                    <!-- 5. ยกเลิกใบรับเงินประกัน -->
+                    <field name="cancel_insurance"
+                           attrs="{'readonly': [('cancel_sale_order', '=', True)]}" force_save="1"/>
+                    <field name="insurance_display_names" string="เลขเอกสาร" readonly="1"
+                           attrs="{'invisible': [('cancel_insurance', '=', False)]}"/>
+                    <field name="reason_insurance" placeholder="กรุณาระบุเหตุผลในการยกเลิกใบรับเงินประกัน..."
+                           attrs="{'invisible': [('cancel_insurance', '=', False)],
+                                   'required': [('cancel_insurance', '=', True)]}"/>
+
+                    <separator colspan="2"/>
+
+                    <!-- 6a. ยกเลิกใบรับชำระใบแจ้งหนี้ -->
+                    <field name="cancel_payment_invoice"
+                           attrs="{'readonly': [('cancel_sale_order', '=', True)]}" force_save="1"/>
+                    <field name="payment_invoice_display_names" string="เลขเอกสาร" readonly="1"
+                           attrs="{'invisible': [('cancel_payment_invoice', '=', False)]}"/>
+                    <field name="reason_payment_invoice" placeholder="กรุณาระบุเหตุผลในการยกเลิกใบรับชำระใบแจ้งหนี้..."
+                           attrs="{'invisible': [('cancel_payment_invoice', '=', False)],
+                                   'required': [('cancel_payment_invoice', '=', True)]}"/>
+
+                    <separator colspan="2"/>
+
+                    <!-- 6b. ยกเลิกใบรับชำระเงินประกัน -->
+                    <field name="cancel_payment_insurance"
+                           attrs="{'readonly': [('cancel_sale_order', '=', True)]}" force_save="1"/>
+                    <field name="payment_insurance_display_names" string="เลขเอกสาร" readonly="1"
+                           attrs="{'invisible': [('cancel_payment_insurance', '=', False)]}"/>
+                    <field name="reason_payment_insurance" placeholder="กรุณาระบุเหตุผลในการยกเลิกใบรับชำระเงินประกัน..."
+                           attrs="{'invisible': [('cancel_payment_insurance', '=', False)],
+                                   'required': [('cancel_payment_insurance', '=', True)]}"/>
+
+                    <separator colspan="2"/>
+
+                    <!-- 7. ยกเลิก Debit Note -->
+                    <field name="cancel_debit_note"
+                           attrs="{'readonly': [('cancel_sale_order', '=', True)]}" force_save="1"/>
+                    <field name="debit_note_display_names" string="เลขเอกสาร" readonly="1"
+                           attrs="{'invisible': [('cancel_debit_note', '=', False)]}"/>
+                    <field name="reason_debit_note" placeholder="กรุณาระบุเหตุผลในการยกเลิกใบเพิ่มหนี้ Debit Note..."
+                           attrs="{'invisible': [('cancel_debit_note', '=', False)],
+                                   'required': [('cancel_debit_note', '=', True)]}"/>
+
+                    <separator colspan="2"/>
+
+                    <!-- 7.5 ยกเลิกใบรับชำระ Debit Note -->
+                    <field name="cancel_debit_note_payment"
+                           attrs="{'readonly': [('cancel_sale_order', '=', True)]}" force_save="1"/>
+                    <field name="debit_note_payment_display_names" string="เลขเอกสาร" readonly="1"
+                           attrs="{'invisible': [('cancel_debit_note_payment', '=', False)]}"/>
+                    <field name="reason_debit_note_payment" placeholder="กรุณาระบุเหตุผลในการยกเลิกใบรับชำระ Debit Note..."
+                           attrs="{'invisible': [('cancel_debit_note_payment', '=', False)],
+                                   'required': [('cancel_debit_note_payment', '=', True)]}"/>
+
+                    <separator colspan="2"/>
+
+                    <!-- 8. ยกเลิกใบลดหนี้ -->
+                    <field name="cancel_credit_note"
+                           attrs="{'readonly': [('cancel_sale_order', '=', True)]}" force_save="1"/>
+                    <field name="credit_note_display_names" string="เลขเอกสาร" readonly="1"
+                           attrs="{'invisible': [('cancel_credit_note', '=', False)]}"/>
+                    <field name="reason_credit_note" placeholder="กรุณาระบุเหตุผลในการยกเลิกใบลดหนี้..."
+                           attrs="{'invisible': [('cancel_credit_note', '=', False)],
+                                   'required': [('cancel_credit_note', '=', True)]}"/>
+                </group>
+
+                <footer>
+                    <button string="ยืนยันการยกเลิก"
+                            type="object"
+                            name="confirm_cancel"
+                            class="btn-primary"
+                            confirm="คุณแน่ใจหรือไม่ที่จะยกเลิกรายการที่เลือก? การดำเนินการนี้ไม่สามารถย้อนกลับได้"/>
+                    <button string="ปิดหน้าต่าง" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================= -->
+    <!-- Button on Sale Order Form Header -->
+    <!-- ============================================= -->
+    <record id="sale_order_form_inherit_cancel_document" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.cancel.document</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_open_cancel_document_wizard"
+                        type="object"
+                        string="ยกเลิกเอกสาร"
+                        icon="fa-times-circle"
+                        class="btn-warning"
+                        groups="base.group_user"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,55 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* base
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 14.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-12-25 05:01+0000\n"
+"PO-Revision-Date: 2021-12-25 05:01+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: base
+#: model:ir.module.module,description:base.module_l10n_vn_common
+msgid ""
+"\n"
+"What it does\n"
+"============\n"
+"This module allows:\n"
+"\n"
+"#. This is the base module to manage the generic accounting chart in Viet Nam\n"
+"\n"
+"#. Accounting QWeb Layouts for companies based in Vietnam\n"
+"\n"
+"Supported Editions \n"
+"==================\n"
+"1. Community Edition\n"
+"2. Enterprise Edition\n"
+"\n"
+msgstr ""
+"\n"
+"Ứng dụng này làm gì\n"
+"===================\n"
+"Mô đun này cho phép:\n"
+"\n"
+"#. Đây là mô-đun cơ sở để quản lý hoạch đồ kế toán Việt Nam\n"
+"\n"
+"#. Bố cục kế toán QWeb cho các công ty có trụ sở tại Việt Nam\n"
+"\n"
+"Ấn bản được hỗ trợ\n"
+"==================\n"
+"1. Ấn bản Community\n"
+"2. Ấn bản Enterprise\n"
+"\n"
+
+#. module: base
+#: model:ir.module.module,shortdesc:base.module_l10n_vn_common
+#: model:ir.module.module,summary:base.module_l10n_vn_common
+msgid "Vietnam Chart of Accounts"
+msgstr "Hệ thống Tài khoản Kế toán Việt Nam"

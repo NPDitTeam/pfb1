@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- Inherit Account Advance Form -->
+        <record id="view_account_advance_form_inherit_branch" model="ir.ui.view">
+            <field name="name">account.advance.form.inherit.branch</field>
+            <field name="model">account.advance</field>
+            <field name="inherit_id" ref="account_advance.account_advance_form_view"/> <!-- ✅ แก้ไขจาก view_account_advance_form -->
+            <field name="arch" type="xml">
+                <field name="employee_id" position="before">
+                    <field name="branch_id"/>
+                </field>
+            </field>
+        </record>
+
+        <!-- Inherit Account Advance Clear Form -->
+        <record id="view_account_advance_clear_form_inherit_branch" model="ir.ui.view">
+            <field name="name">account.advance.clear.form.inherit.branch</field>
+            <field name="model">account.advance.clear</field>
+            <field name="inherit_id" ref="account_advance_clear.account_advance_clear_form_view"/> <!-- ✅ แก้ไขให้ตรงกับ external_id -->
+            <field name="arch" type="xml">
+                <field name="employee_id" position="before">
+                    <field name="branch_id"/>
+                </field>
+            </field>
+        </record>
+
+        <!-- Inherit Account Advance Request Form -->
+        <record id="view_account_advance_request_form_inherit_branch" model="ir.ui.view">
+            <field name="name">account.advance.request.form.inherit.branch</field>
+            <field name="model">account.advance.request</field>
+            <field name="inherit_id" ref="account_advance_request.account_advance_request_form_view"/> <!-- ✅ แก้ไขให้ตรงกับ external_id -->
+            <field name="arch" type="xml">
+                <field name="employee_id" position="before">
+                    <field name="branch_id"/>
+                </field>
+            </field>
+        </record>
+
+    </data>
+</odoo>

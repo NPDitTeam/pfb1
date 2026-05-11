@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <!-- PDF REPORTS -->
+<!--    <report-->
+<!--      id="action_report_asset_register_qweb"-->
+<!--      model="report.asset.register"-->
+<!--      string="Asset Register"-->
+<!--      report_type="qweb-pdf"-->
+<!--      name="l10n_th_asset_register_report.report_asset_register_qweb"-->
+<!--      file="l10n_th_asset_register_report.report_asset_register_qweb"-->
+<!--      paperformat="l10n_th_asset_register_report.report_asset_qweb_paperformat"-->
+<!--      />-->
+
+    <!-- HMTL REPORTS -->
+<!--    <record id="action_report_asset_register_report_html" model="ir.actions.report">-->
+<!--        <field name="name">Report Asset Register (HTML)</field>-->
+<!--        <field name="model">report.asset.register</field>-->
+<!--        <field name="type">ir.actions.report</field>-->
+<!--        <field name="report_name">l10n_th_asset_register_report.report_asset_register_report_html</field>-->
+<!--        <field name="report_file">l10n_th_asset_register_report.report_asset_register_report_html</field>-->
+<!--        <field name="report_type">qweb-html</field>-->
+<!--    </record>-->
+
+<!--    New Format of Report (V. 14.0 ):-->
+    <record id="action_report_asset_register_qweb" model="ir.actions.report">
+        <field name="name">Asset Register</field>
+        <field name="model">report.asset.register</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_th_asset_register_report.report_asset_register_qweb</field>
+        <field name="report_file">l10n_th_asset_register_report.report_asset_register_qweb</field>
+    </record>
+
+
+    <!-- XLSX REPORTS -->
+    <record id="action_report_asset_register_xlsx" model="ir.actions.report">
+        <field name="name">Asset Register XLSX</field>
+        <field name="model">report.asset.register</field>
+        <field name="type">ir.actions.report</field>
+        <field name="report_name">asset_register_xlsx</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_file">Asset_Report</field>
+    </record>
+
+</odoo>

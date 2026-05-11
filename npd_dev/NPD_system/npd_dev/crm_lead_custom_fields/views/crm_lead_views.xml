@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit CRM Lead Form View -->
+     <record id="crm_lead_view_form_inherit_custom_fields" model="ir.ui.view">
+        <field name="name">crm.lead.form.inherit.custom.fields</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <!-- เพิ่มฟิลด์ในแท็บ Internal Notes หลังจาก description -->
+            <xpath expr="//page[@name='internal_notes']/field[@name='description']" position="after">
+                <!-- กลุ่มข้อมูลลูกค้า -->
+                <separator string="ข้อมูลลูกค้า"/>
+                <group>
+                    <group>
+                        <field name="x_job_position" widget="text" placeholder="ระบุหน้างานของลูกค้า..."/>
+                    </group>
+                    <group>
+                        <field name="x_products_interest" widget="text" placeholder="ระบุสินค้าที่สนใจ..."/>
+                    </group>
+                </group>
+
+                <!-- กลุ่มข้อมูลโครงการ -->
+                <separator string="ข้อมูลโครงการ"/>
+                <group>
+                    <group>
+                        <field name="x_project_details" widget="text" placeholder="ระบุรายละเอียดโครงการ..."/>
+                        <field name="x_project_duration" placeholder="เช่น 3 เดือน, 6 เดือน"/>
+                    </group>
+                    <group>
+                        <field name="x_project_budget" widget="monetary" options="{'currency_field': 'company_currency'}"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

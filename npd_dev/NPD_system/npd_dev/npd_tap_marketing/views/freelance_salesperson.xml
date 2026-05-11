@@ -1,0 +1,30 @@
+<odoo>
+    <data>
+        <!-- Tree View -->
+        <record id="view_freelance_salesperson_tree" model="ir.ui.view">
+            <field name="name">freelance.salesperson.tree</field>
+            <field name="model">freelance.salesperson</field>
+            <field name="arch" type="xml">
+                <tree string="เซลล์ Freelance" editable="bottom">
+                    <field name="sequence" widget="handle"/>
+                    <field name="name"/>
+                    <field name="active"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record id="action_freelance_salesperson" model="ir.actions.act_window">
+            <field name="name">เซลล์ Freelance</field>
+            <field name="res_model">freelance.salesperson</field>
+            <field name="view_mode">tree</field>
+        </record>
+
+        <!-- Menu under Sales > Configuration -->
+        <menuitem id="menu_freelance_salesperson"
+            name="เซลล์ Freelance"
+            parent="sale.menu_sale_config"
+            action="action_freelance_salesperson"
+            sequence="51"/>
+    </data>
+</odoo>

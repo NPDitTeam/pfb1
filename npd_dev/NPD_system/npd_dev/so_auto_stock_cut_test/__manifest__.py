@@ -1,0 +1,15 @@
+{
+    'name': 'สำหรับ DB TEST SO Auto Stock Cut',
+    'version': '14.0.1.0.0',
+    'summary': 'Auto reserve and validate stock picking from sale order using pfb_quantity.',
+    'category': 'Sales',
+    'author': 'ChatGPT',
+    'depends': ['sale_stock'],
+    'data': [
+        'security/ir.model.access.csv',
+        'views/sale_order_view.xml',
+        'views/stock_confirm_wizard_view.xml',
+    ],
+    'installable': True,
+    'auto_install': False,
+}

@@ -1,0 +1,22 @@
+{
+    'name': 'Account Advance',
+    'version': '14.0.1',
+    'summary': 'Account Advance',
+    'description': 'Account Advance',
+    'category': 'account',
+    "author": "Perfect Blending",
+    "website": "https://www.perfectblending.com",
+    "license": "AGPL-3",
+    'depends': ['base','account','hr','payment_method','withholding_tax_cert_amount','branch'],
+    'data': [
+        'data/ir_sequence_data.xml',
+        'data/advance_security.xml',
+        'security/ir.model.access.csv',
+        'views/account_advance_request_view.xml',
+        'views/account_advance_view.xml',
+        'views/account_advance_clear_view.xml',
+        'views/res_config_view.xml',
+    ],
+    'installable': True,
+    'auto_install': False,
+}

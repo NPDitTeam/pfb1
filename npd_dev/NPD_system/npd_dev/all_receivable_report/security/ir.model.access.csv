@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_all_receivable_report,access_all_receivable_report,model_all_receivable_report,base.group_user,1,1,1,1
+access_all_receivable_wizard,access_all_receivable_wizard,model_all_receivable_wizard,base.group_user,1,1,1,1
+access_tax_receivable_report,access_tax_receivable_report,model_tax_receivable_report,base.group_user,1,1,1,1
+access_tax_receivable_wizard,access_tax_receivable_wizard,model_tax_receivable_wizard,base.group_user,1,1,1,1

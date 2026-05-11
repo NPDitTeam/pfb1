@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<odoo>
+        <record id="view_sale_receipt_discount_form" model="ir.ui.view">
+            <field name="name">view.sale.receipt.discount.form.view</field>
+            <field name="model">account.voucher</field>
+            <field name="inherit_id" ref="account_voucher.view_sale_receipt_form"/>
+            <field name="arch" type="xml">
+
+                <field name="name" position="after">
+                    <field name="discount_type" widget="radio" />
+                </field>
+
+                <xpath expr="//group[@class='oe_subtotal_footer oe_right']" position="after">
+                    <group style="width: 65%;" attrs="{'invisible': [('discount_type','=','line')]}">
+                        <span attrs="{'invisible': [('discount_type','=','line')]}">Discount Method</span>
+                        <div attrs="{'invisible': [('discount_type','=','line')]}">
+                            <field name="discount_method" class="oe_inline" attrs="{'invisible': [('discount_type','=','line')]}"/>
+                        </div>
+                        <span attrs="{'invisible': [('discount_type','=','line')]}">Discount Amount</span>
+                        <div attrs="{'invisible': [('discount_type','=','line')]}">
+                            <field name="discount_amount" class="oe_inline" attrs="{'invisible': [('discount_type','=','line')]}"/>
+                            <span string="%%"
+                                attrs="{'invisible': [('discount_method', '!=', 'per')]}" class="oe_inline"/>
+                         </div>
+                    </group>
+                </xpath>
+                <field name="tax_amount" position="before">
+                    <field name="amount_price_subtotal_without_discount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                </field>                
+                
+                <field name="tax_amount" position="before">
+                    <field name="discount_amt" widget="monetary" options="{'currency_field': 'currency_id'}" attrs="{'invisible': [('discount_type','=','line')]}"/>
+                    <field name="discount_amt_line" widget="monetary" options="{'currency_field': 'currency_id'}" attrs="{'invisible': [('discount_type','=','global')]}"/>
+                    <!--<field name="tax_amount1" />-->
+                </field>
+                <field name="price_subtotal" position="before">
+                    <field name="price_subtotal_without_discount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                </field>
+                
+                
+
+                <xpath expr="//tree/field[@name='price_unit']" position="after">
+                    <field name="discount_type" invisible="1"/>
+                    <field name="discount_method" attrs="{'column_invisible': [('parent.discount_type', '=', 'global')],'invisible': [('discount_type','=','global')]}"/>
+                    <field name="discount_amount" attrs="{'column_invisible': [('parent.discount_type', '=', 'global')],'invisible': [('discount_type','=','global')],'readonly':  [('discount_method','!=','per'),('discount_method','!=','fix')]}"/>
+                    <field name="discount_amt" invisible="1"/>
+                </xpath>
+            </field>
+        </record>
+
+    <record id="view_purchase_receipt_discount_form" model="ir.ui.view">
+        <field name="name">view.purchase.receipt.discount.form.view</field>
+        <field name="model">account.voucher</field>
+        <field name="inherit_id" ref="account_voucher.view_purchase_receipt_form"/>
+            <field name="arch" type="xml">
+
+                <field name="name" position="after">
+                    <field name="discount_type" widget="radio" />
+                </field>
+
+                <xpath expr="//group[@class='oe_subtotal_footer oe_right']" position="after">
+                    <group style="width: 65%;" attrs="{'invisible': [('discount_type','=','line')]}">
+                        <span attrs="{'invisible': [('discount_type','=','line')]}">Discount Method</span>
+                        <div attrs="{'invisible': [('discount_type','=','line')]}">
+                            <field name="discount_method" class="oe_inline" attrs="{'invisible': [('discount_type','=','line')]}"/>
+                        </div>
+                        <span attrs="{'invisible': [('discount_type','=','line')]}">Discount Amount</span>
+                        <div attrs="{'invisible': [('discount_type','=','line')]}">
+                            <field name="discount_amount" class="oe_inline" attrs="{'invisible': [('discount_type','=','line')]}"/>
+                            <span string="%%"
+                                attrs="{'invisible': [('discount_method', '!=', 'per')]}" class="oe_inline"/>
+                         </div>
+                    </group>
+                </xpath>
+                <field name="tax_amount" position="before">
+                    <field name="amount_price_subtotal_without_discount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                </field>                
+                
+                <field name="tax_amount" position="before">
+                    <field name="discount_amt" widget="monetary" options="{'currency_field': 'currency_id'}" attrs="{'invisible': [('discount_type','=','line')]}"/>
+                    <field name="discount_amt_line" widget="monetary" options="{'currency_field': 'currency_id'}" attrs="{'invisible': [('discount_type','=','global')]}"/>
+                </field>
+                <field name="price_subtotal" position="before">
+                    <field name="price_subtotal_without_discount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                    <field name="price_tax" invisible="1"/>
+                </field>
+                
+                
+
+                <xpath expr="//tree/field[@name='price_unit']" position="after">
+                    <field name="discount_type" invisible="1"/>
+                    <field name="discount_method" attrs="{'column_invisible': [('parent.discount_type', '=', 'global')],'invisible': [('discount_type','=','global')]}"/>
+                    <field name="discount_amount" attrs="{'column_invisible': [('parent.discount_type', '=', 'global')],'invisible': [('discount_type','=','global')],'readonly':  [('discount_method','!=','per'),('discount_method','!=','fix')]}"/>
+                    <field name="discount_amt" invisible="1"/>
+                </xpath>
+            </field>    </record>
+    <!-- purchase_receipt -->
+    <!--<record id="view_purchase_receipt_form_fix" model="ir.ui.view">
+        <field name="name">view.purchase.receipt.form.fix</field>
+        <field name="model">account.voucher</field>
+        <field name="inherit_id" ref="account_voucher.view_purchase_receipt_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="domain">[('supplier','=',True),('parent_id','=',False)]</attribute>
+            </xpath>
+        </field>
+    </record>
+-->
+    <!-- sale.receipt -->
+   <!-- <record id="view_sale_receipt_form_fix" model="ir.ui.view">
+        <field name="name">view.sale.receipt.form.fix</field>
+        <field name="model">account.voucher</field>
+        <field name="inherit_id" ref="account_voucher.view_sale_receipt_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="domain">[('customer','=',True),('parent_id','=',False)]</attribute>
+            </xpath>
+        </field>
+    </record>
+       -->     
+</odoo>

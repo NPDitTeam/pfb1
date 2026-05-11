@@ -1,0 +1,82 @@
+
+[![Support the OCA](https://odoo-community.org/readme-banner-image)](https://odoo-community.org/get-involved?utm_source=repo-readme)
+
+# Server UX
+[![Runboat](https://img.shields.io/badge/runboat-Try%20me-875A7B.png)](https://runboat.odoo-community.org/builds?repo=OCA/server-ux&target_branch=14.0)
+[![Pre-commit Status](https://github.com/OCA/server-ux/actions/workflows/pre-commit.yml/badge.svg?branch=14.0)](https://github.com/OCA/server-ux/actions/workflows/pre-commit.yml?query=branch%3A14.0)
+[![Build Status](https://github.com/OCA/server-ux/actions/workflows/test.yml/badge.svg?branch=14.0)](https://github.com/OCA/server-ux/actions/workflows/test.yml?query=branch%3A14.0)
+[![codecov](https://codecov.io/gh/OCA/server-ux/branch/14.0/graph/badge.svg)](https://codecov.io/gh/OCA/server-ux)
+[![Translation Status](https://translation.odoo-community.org/widgets/server-ux-14-0/-/svg-badge.svg)](https://translation.odoo-community.org/engage/server-ux-14-0/?utm_source=widget)
+
+<!-- /!\ do not modify above this line -->
+
+Server side features for usability and user experience related.
+
+<!-- /!\ do not modify below this line -->
+
+<!-- prettier-ignore-start -->
+
+[//]: # (addons)
+
+Available addons
+----------------
+addon | version | maintainers | summary
+--- | --- | --- | ---
+[barcode_action](barcode_action/) | 14.0.1.0.3 |  | Allows to use barcodes as a launcher
+[base_action_visibility_restriction](base_action_visibility_restriction/) | 14.0.1.0.0 | <a href='https://github.com/JordiMForgeFlow'><img src='https://github.com/JordiMForgeFlow.png' width='32' height='32' style='border-radius:50%;' alt='JordiMForgeFlow'/></a> <a href='https://github.com/CetmixGitDrone'><img src='https://github.com/CetmixGitDrone.png' width='32' height='32' style='border-radius:50%;' alt='CetmixGitDrone'/></a> | Restrict (with groups) action visibilty
+[base_action_visibility_restriction_domain](base_action_visibility_restriction_domain/) | 14.0.1.0.0 | <a href='https://github.com/ilyasprogrammer'><img src='https://github.com/ilyasprogrammer.png' width='32' height='32' style='border-radius:50%;' alt='ilyasprogrammer'/></a> | Restrict with groups and domain action access
+[base_archive_date](base_archive_date/) | 14.0.1.0.0 | <a href='https://github.com/GuillemCForgeFlow'><img src='https://github.com/GuillemCForgeFlow.png' width='32' height='32' style='border-radius:50%;' alt='GuillemCForgeFlow'/></a> | Adds an archive timestamp and user doing the archiving to all models.
+[base_cancel_confirm](base_cancel_confirm/) | 14.0.1.1.0 | <a href='https://github.com/kittiu'><img src='https://github.com/kittiu.png' width='32' height='32' style='border-radius:50%;' alt='kittiu'/></a> | Base Cancel Confirm
+[base_custom_filter](base_custom_filter/) | 14.0.1.0.1 | <a href='https://github.com/AshishHirapara'><img src='https://github.com/AshishHirapara.png' width='32' height='32' style='border-radius:50%;' alt='AshishHirapara'/></a> <a href='https://github.com/ForgeFlow'><img src='https://github.com/ForgeFlow.png' width='32' height='32' style='border-radius:50%;' alt='ForgeFlow'/></a> | Add custom filters in standard filters and group by dropdowns
+[base_export_manager](base_export_manager/) | 14.0.1.1.0 |  | Manage model export profiles
+[base_import_security_group](base_import_security_group/) | 14.0.1.0.1 |  | Group-based permissions for importing CSV files
+[base_menu_visibility_restriction](base_menu_visibility_restriction/) | 14.0.1.0.0 | <a href='https://github.com/victoralmau'><img src='https://github.com/victoralmau.png' width='32' height='32' style='border-radius:50%;' alt='victoralmau'/></a> | Restrict (with groups) menu visibilty
+[base_optional_quick_create](base_optional_quick_create/) | 14.0.1.0.0 |  | Avoid "quick create" on m2o fields, on a "by model" basis
+[base_recurrence](base_recurrence/) | 14.0.1.0.0 | <a href='https://github.com/rousseldenis'><img src='https://github.com/rousseldenis.png' width='32' height='32' style='border-radius:50%;' alt='rousseldenis'/></a> | Allows to define base methods for recurrence computation
+[base_revision](base_revision/) | 14.0.1.1.1 |  | Keep track of revised document
+[base_rule_visibility_restriction](base_rule_visibility_restriction/) | 14.0.1.0.0 | <a href='https://github.com/GuillemCForgeFlow'><img src='https://github.com/GuillemCForgeFlow.png' width='32' height='32' style='border-radius:50%;' alt='GuillemCForgeFlow'/></a> | Exclude Record Rules for certain groups
+[base_search_custom_field_filter](base_search_custom_field_filter/) | 14.0.1.1.1 | <a href='https://github.com/pedrobaeza'><img src='https://github.com/pedrobaeza.png' width='32' height='32' style='border-radius:50%;' alt='pedrobaeza'/></a> | Add custom filters for fields via UI
+[base_substate](base_substate/) | 14.0.1.0.0 |  | Base Sub State
+[base_technical_features](base_technical_features/) | 14.0.1.1.1 |  | Access to technical features without activating debug mode
+[base_tier_validation](base_tier_validation/) | 14.0.4.1.1 | <a href='https://github.com/LoisRForgeFlow'><img src='https://github.com/LoisRForgeFlow.png' width='32' height='32' style='border-radius:50%;' alt='LoisRForgeFlow'/></a> | Implement a validation process based on tiers.
+[base_tier_validation_correction](base_tier_validation_correction/) | 14.0.1.0.2 | <a href='https://github.com/kittiu'><img src='https://github.com/kittiu.png' width='32' height='32' style='border-radius:50%;' alt='kittiu'/></a> | Correct tier.review data after it has been created.
+[base_tier_validation_formula](base_tier_validation_formula/) | 14.0.2.0.1 |  | Formulas for Base tier validation
+[base_tier_validation_forward](base_tier_validation_forward/) | 14.0.1.0.2 | <a href='https://github.com/kittiu'><img src='https://github.com/kittiu.png' width='32' height='32' style='border-radius:50%;' alt='kittiu'/></a> | Forward option for base tiers
+[base_tier_validation_report](base_tier_validation_report/) | 14.0.1.1.2 | <a href='https://github.com/kittiu'><img src='https://github.com/kittiu.png' width='32' height='32' style='border-radius:50%;' alt='kittiu'/></a> | Reports related to tier validation
+[base_tier_validation_server_action](base_tier_validation_server_action/) | 14.0.2.0.0 | <a href='https://github.com/kittiu'><img src='https://github.com/kittiu.png' width='32' height='32' style='border-radius:50%;' alt='kittiu'/></a> | Add option to call server action when a tier is validated
+[base_tier_validation_waiting](base_tier_validation_waiting/) | 14.0.1.0.0 |  | Base Tier Validation Extension to add waiting status
+[base_user_locale](base_user_locale/) | 14.0.1.2.0 |  | User Locale Settings
+[chained_swapper](chained_swapper/) | 14.0.1.0.2 |  | Chained Swapper
+[date_range](date_range/) | 14.0.2.2.0 | <a href='https://github.com/lmignon'><img src='https://github.com/lmignon.png' width='32' height='32' style='border-radius:50%;' alt='lmignon'/></a> | Manage all kind of date range
+[date_range_account](date_range_account/) | 14.0.1.0.0 | <a href='https://github.com/alexis-via'><img src='https://github.com/alexis-via.png' width='32' height='32' style='border-radius:50%;' alt='alexis-via'/></a> | Add Date Range menu entry in Invoicing app
+[default_multi_user](default_multi_user/) | 14.0.1.0.0 | <a href='https://github.com/LoisRForgeFlow'><img src='https://github.com/LoisRForgeFlow.png' width='32' height='32' style='border-radius:50%;' alt='LoisRForgeFlow'/></a> | Allows to share user-defined defaults among several users.
+[document_quick_access](document_quick_access/) | 14.0.1.0.0 | <a href='https://github.com/etobella'><img src='https://github.com/etobella.png' width='32' height='32' style='border-radius:50%;' alt='etobella'/></a> | Document quick access
+[document_quick_access_folder_auto_classification](document_quick_access_folder_auto_classification/) | 14.0.2.1.3 | <a href='https://github.com/etobella'><img src='https://github.com/etobella.png' width='32' height='32' style='border-radius:50%;' alt='etobella'/></a> | Auto classification of Documents after reading a QR
+[filter_multi_user](filter_multi_user/) | 14.0.1.0.0 | <a href='https://github.com/LoisRForgeFlow'><img src='https://github.com/LoisRForgeFlow.png' width='32' height='32' style='border-radius:50%;' alt='LoisRForgeFlow'/></a> | Allows to share user-defined filters filters among several users.
+[mass_editing](mass_editing/) | 14.0.1.1.4 |  | Mass Editing
+[mass_operation_abstract](mass_operation_abstract/) | 14.0.1.0.2 |  | Abstract Tools used for modules that realize operation on many items
+[multi_step_wizard](multi_step_wizard/) | 14.0.1.0.0 |  | Multi-Steps Wizards
+[sequence_check_digit](sequence_check_digit/) | 14.0.1.0.2 |  | Adds a check digit on sequences
+[sequence_range_end](sequence_range_end/) | 14.0.1.0.1 |  | Sequence prefix/suffix option, 'range_end_', to use the beginning of the range
+[sequence_reset_period](sequence_reset_period/) | 14.0.1.0.0 |  | Auto-generate yearly/monthly/weekly/daily sequence period ranges
+[server_action_domain](server_action_domain/) | 14.0.1.0.0 |  | Apply a domain filter before executing server actions on records
+[test_base_tier_validation](test_base_tier_validation/) | 14.0.1.0.2 | <a href='https://github.com/victoralmau'><img src='https://github.com/victoralmau.png' width='32' height='32' style='border-radius:50%;' alt='victoralmau'/></a> | Test Base Tier Validation
+[web_archive_date](web_archive_date/) | 14.0.1.0.1 | <a href='https://github.com/GuillemCForgeFlow'><img src='https://github.com/GuillemCForgeFlow.png' width='32' height='32' style='border-radius:50%;' alt='GuillemCForgeFlow'/></a> | Reflects the Latest Archived Date and Latest Archived by on the record metadata.
+[web_tree_customized_field_list](web_tree_customized_field_list/) | 14.0.1.0.0 | <a href='https://github.com/ilyasProgrammer'><img src='https://github.com/ilyasProgrammer.png' width='32' height='32' style='border-radius:50%;' alt='ilyasProgrammer'/></a> | Add fields into list view
+
+[//]: # (end addons)
+
+<!-- prettier-ignore-end -->
+
+## Licenses
+
+This repository is licensed under [AGPL-3.0](LICENSE).
+
+However, each module can have a totally different license, as long as they adhere to Odoo Community Association (OCA)
+policy. Consult each module's `__manifest__.py` file, which contains a `license` key
+that explains its license.
+
+----
+OCA, or the [Odoo Community Association](http://odoo-community.org/), is a nonprofit
+organization whose mission is to support the collaborative development of Odoo features
+and promote its widespread use.

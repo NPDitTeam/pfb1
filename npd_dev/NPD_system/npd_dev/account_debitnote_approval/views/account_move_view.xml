@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_move_form_inherit_approval" model="ir.ui.view">
+        <field name="name">account.move.form.approval</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+
+            <!-- เพิ่ม field need_approval และ approval_state (invisible) เพื่อใช้ในเงื่อนไข -->
+            <xpath expr="//form" position="inside">
+                <field name="need_approval" invisible="1"/>
+                <field name="approval_state" invisible="1"/>
+            </xpath>
+
+            <!-- เพิ่มปุ่มส่งอนุมัติ - แสดงเมื่อ draft หรือ revise -->
+            <xpath expr="//header" position="inside">
+                <button name="%(account_debitnote_approval.action_request_approval_wizard)d"
+                        type="action"
+                        string="ส่งอนุมัติ"
+                        class="btn-primary"
+                        attrs="{'invisible': ['|', '|',
+                                             ('need_approval', '=', False),
+                                             ('approval_state', 'not in', ['draft', 'revise']),
+                                             ('state', '!=', 'draft')]}"/>
+            </xpath>
+
+            <!-- เพิ่มปุ่มอนุมัติ/ส่งกลับ - เปิด wizard -->
+            <xpath expr="//header" position="inside">
+                <button name="%(account_debitnote_approval.action_approval_wizard)d"
+                        type="action"
+                        string="พิจารณาอนุมัติ"
+                        class="btn-primary"
+                        groups="account.group_account_manager"
+                        attrs="{'invisible': [('approval_state', '!=', 'waiting')]}"/>
+            </xpath>
+
+            <!-- แก้ไขปุ่ม Confirm (action_post) -->
+            <xpath expr="//button[@name='action_post']" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', ('state', '!=', 'draft'), '&amp;', ('need_approval', '=', True), ('approval_state', '!=', 'approved')]}</attribute>
+            </xpath>
+
+            <!-- เพิ่มข้อมูลการอนุมัติในฟอร์ม -->
+            <xpath expr="//sheet/group" position="after">
+                <group string="ข้อมูลการอนุมัติ" attrs="{'invisible': [('need_approval', '=', False)]}">
+                    <group>
+                        <field name="approval_state" widget="badge" readonly="1"/>
+                        <field name="approver_id" readonly="1"
+                               attrs="{'invisible': [('approval_state', 'in', ['draft'])]}"/>
+                        <field name="request_note" readonly="1"
+                               attrs="{'invisible': [('approval_state', 'in', ['draft'])]}"
+                               string="หมายเหตุการขออนุมัติ"/>
+                    </group>
+                    <group>
+                        <field name="note_approver" readonly="1"
+                               attrs="{'invisible': [('approval_state', 'not in', ['approved', 'revise'])]}"
+                               string="หมายเหตุการพิจารณา"/>
+                    </group>
+                </group>
+            </xpath>
+
+            <!-- แสดงข้อความเตือนเมื่อต้องอนุมัติ -->
+            <xpath expr="//sheet" position="before">
+                <!-- ข้อความเตือนทั่วไป -->
+                <div class="alert alert-warning"
+                     attrs="{'invisible': ['|', '|',
+                                          ('need_approval', '=', False),
+                                          ('approval_state', '=', 'approved'),
+                                          ('approval_state', '=', 'revise')]}">
+                    <strong>หมายเหตุ:</strong> เอกสารนี้มีส่วนลดเกิน 30% จำเป็นต้องได้รับการอนุมัติก่อนจึงจะ Confirm ได้
+                </div>
+
+                <!-- ข้อความเมื่อถูกส่งกลับแก้ไข -->
+                <div class="alert alert-danger"
+                     attrs="{'invisible': [('approval_state', '!=', 'revise')]}">
+                    <strong>ถูกส่งกลับแก้ไข:</strong>
+                    <field name="note_approver" readonly="1" nolabel="1"/>
+                    <br/><strong>กรุณาแก้ไขและส่งอนุมัติใหม่อีกครั้ง</strong>
+                </div>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

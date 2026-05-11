@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <record id="view_hr_payslip_form_inherit_cancel" model="ir.ui.view">
+        <field name="name">hr.payslip.form.cancel</field>
+        <field name="model">hr.payslip</field>
+        <field name="inherit_id" ref="sh_hr_payroll.view_hr_payslip_form" />
+        <field name="arch" type="xml">
+            <!-- Displays cancel button in all the states -->
+            <xpath expr="//button[@name='action_payslip_cancel']" position="attributes">
+                <attribute name="groups">sh_all_in_one_hrms.group_sh_payslip_cancel</attribute>
+                <attribute name="states">draft,hr_check,confirm,verify,done</attribute>
+            </xpath>
+
+            <field name="credit_note" position="after">
+                <field name="refunded_payslip_id" groups="sh_all_in_one_hrms.group_sh_payslip_cancel" attrs="{'invisible': [('refunded_payslip_id', '=', False)]}" />
+            </field>
+        </field>
+    </record>
+</odoo>

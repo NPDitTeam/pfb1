@@ -1,0 +1,23 @@
+<odoo>
+
+    <!-- PDF REPORTS -->
+    <record id="action_report_delivery_product" model="ir.actions.report">
+        <field name="name">Delivery Product</field>
+        <field name="model">stock.picking</field>
+        <field name="report_name">pfb_std_delivery_product_print.report_delivery_product_print</field>
+        <field name="report_file">pfb_std_delivery_product_print.report_delivery_product_print</field>
+        <field name="report_type">qweb-pdf</field>
+        <field
+                name="paperformat_id"
+                ref="pfb_std_delivery_product_print.paperformat_delivery_product_print"
+        />
+        <field name="print_report_name">'Delivery Product - %s%s' % (object.name, object.state == 'draft' and '-draft' or '')</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field>
+
+    </record>
+
+
+
+
+</odoo>

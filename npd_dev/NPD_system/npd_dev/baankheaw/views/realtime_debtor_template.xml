@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <menuitem id="baankheaw_menu_root"
+              name="🏠 บ้านเขียว"
+              sequence="10"
+              groups="base.group_user"/>
+
+    <record id="action_realtime_debtors" model="ir.actions.act_window">
+        <field name="name">สรุปลูกหนี้ทั้งหมด</field>
+        <field name="res_model">baankheaw.debtor_summary</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p>📌 รายงานนี้แสดงข้อมูลลูกหนี้จากระบบภายนอก</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_realtime_debtors"
+              name="สรุปลูกหนี้ทั้งหมด"
+              parent="baankheaw_menu_root"
+              action="action_realtime_debtors"
+              sequence="20"
+              groups="base.group_user"/>
+
+    <record id="view_realtime_debtor_tree" model="ir.ui.view">
+        <field name="name">baankheaw.debtor_summary.tree</field>
+        <field name="model">baankheaw.debtor_summary</field>
+        <field name="arch" type="xml">
+            <tree string="สรุปลูกหนี้">
+                <field name="cus_fullname"/>
+                <field name="cus_tel"/>
+                <field name="cus_cpnname"/>
+                <field name="cus_cpntel"/>
+                <field name="branch_name"/>
+                <field name="amount"/>
+                <field name="vat"/>
+                <field name="tax"/>
+                <field name="insure"/>
+                <field name="lost"/>
+                <field name="broken"/>
+                <field name="transport"/>
+                <field name="customer_id"/>
+                <field name="total_debt"/>
+                <field name="total_paid"/>
+                <field name="remaining_balance"/>
+                <field name="arh_date"/>
+                <field name="due_date"/>
+                <field name="bill_status"/>
+                <field name="debt_duration"/>
+                <field name="responsible_party"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_realtime_debtor_form" model="ir.ui.view">
+        <field name="name">baankheaw.debtor_summary.form</field>
+        <field name="model">baankheaw.debtor_summary</field>
+        <field name="arch" type="xml">
+            <form string="สรุปลูกหนี้">
+                <header>
+                    <button name="action_update_realtime_data"
+                            type="object"
+                            string="🔄 อัปเดตข้อมูลลูกหนี้"
+                            class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group string="ข้อมูลลูกค้า">
+                        <field name="cus_fullname"/>
+                        <field name="cus_tel"/>
+                        <field name="cus_address"/>
+                        <field name="cus_cpnname"/>
+                        <field name="cus_cpntel"/>
+                        <field name="cus_cpnadd"/>
+                        <field name="branch_name"/>
+                        <field name="customer_id"/>
+                        <field name="bill_status"/>
+                        <field name="responsible_party"/>
+                    </group>
+                    <group string="รายละเอียดหนี้">
+                        <field name="amount"/>
+                        <field name="vat"/>
+                        <field name="tax"/>
+                        <field name="insure"/>
+                        <field name="lost"/>
+                        <field name="broken"/>
+                        <field name="transport"/>
+                    </group>
+                    <group string="สรุปยอด">
+                        <field name="total_debt"/>
+                        <field name="total_paid"/>
+                        <field name="remaining_balance"/>
+                        <field name="arh_date"/>
+                        <field name="due_date"/>
+                        <field name="debt_duration"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

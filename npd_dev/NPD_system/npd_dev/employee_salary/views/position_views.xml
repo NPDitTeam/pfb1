@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View สำหรับ ตำแหน่ง -->
+    <record id="view_position_tree" model="ir.ui.view">
+        <field name="name">hr.position.custom.tree</field>
+        <field name="model">hr.position.custom</field>
+        <field name="arch" type="xml">
+            <tree string="ตำแหน่ง" editable="bottom">
+                <field name="id" string="รหัส"/>
+                <field name="name" string="ชื่อตำแหน่ง"/>
+                <field name="is_active" string="สถานะ" widget="boolean_toggle"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View สำหรับ ตำแหน่ง -->
+    <record id="view_position_form" model="ir.ui.view">
+        <field name="name">hr.position.custom.form</field>
+        <field name="model">hr.position.custom</field>
+        <field name="arch" type="xml">
+            <form string="ตำแหน่ง">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="id" string="รหัส" readonly="1"/>
+                            <field name="name" string="ชื่อตำแหน่ง"/>
+                        </group>
+                        <group>
+                            <field name="is_active" string="สถานะ" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action สำหรับ ตำแหน่ง (ใช้แสดงผลหลัง sync) -->
+    <record id="action_position" model="ir.actions.act_window">
+        <field name="name">ตำแหน่ง</field>
+        <field name="res_model">hr.position.custom</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                สร้างตำแหน่งใหม่
+            </p>
+        </field>
+    </record>
+
+    <!-- Server Action สำหรับซิงค์และเปิดหน้าตำแหน่ง -->
+    <record id="action_sync_and_open_position" model="ir.actions.server">
+        <field name="name">ตำแหน่ง</field>
+        <field name="model_id" ref="model_hr_position_custom"/>
+        <field name="state">code</field>
+        <field name="code">action = model.sync_and_open_view()</field>
+    </record>
+</odoo>

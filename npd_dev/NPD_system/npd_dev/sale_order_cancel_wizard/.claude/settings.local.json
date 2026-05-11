@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(del \"C:\\\\Program Files\\\\Odoo 14.0.20231205\\\\server\\\\odoo\\\\pfb1\\\\npd_dev\\\\NPD_system\\\\npd_dev\\\\sale_order_cancel_wizard\\\\models\\\\__pycache__\\\\cancel_wizard.cpython-37.pyc\")",
+      "Bash(del /f /q \"C:\\\\Program Files\\\\Odoo 14.0.20231205\\\\server\\\\odoo\\\\pfb1\\\\npd_dev\\\\NPD_system\\\\npd_dev\\\\sale_order_cancel_wizard\\\\models\\\\__pycache__\\\\cancel_wizard.cpython-37.pyc\")",
+      "Bash(dir:*)"
+    ]
+  }
+}

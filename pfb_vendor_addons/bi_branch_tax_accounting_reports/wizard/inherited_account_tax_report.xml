@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Balance Sheet Inherit Form View to Modify it -->
+        <record id="bi_account_tax_report_form_view_inherit_form_add_branch_field"
+                model="ir.ui.view">
+            <field name="name">bi.account.tax.report.form.view.inherit.form.add.branch.field
+            </field>
+            <field name="model">bi.account.tax.report</field>
+            <field name="inherit_id"
+                   ref="bi_account_tax_report.bi_account_tax_report_form_view"/>
+            <field name="arch" type="xml">
+
+                <form position="replace">
+                    <form>
+                    <group>
+                        <group>
+                            <field name='date_from'/>
+                            <field name='date_to'/>
+
+                        </group>
+                        <group>
+                            <field name="branch_ids" widget="many2many_tags"/>
+                        </group>
+                    </group>
+
+                    <footer>
+                        <button name="print_tax_report" string="Print" type="object" default_focus="1"
+                                class="oe_highlight"/>
+                        <button name="print_tax_report" string="Print Excel" type="object"
+                                context="{'report_type':'excel'}"
+                                class="oe_highlight"/>
+                        <button string="Cancel" class="btn btn-default" special="cancel"/>
+                    </footer>
+                    </form>
+                </form>
+
+            </field>
+        </record>
+    </data>
+</odoo>

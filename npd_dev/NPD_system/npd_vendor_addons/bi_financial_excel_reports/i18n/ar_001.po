@@ -1,0 +1,88 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* bi_financial_excel_reports
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 13.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-09-30 14:36+0000\n"
+"PO-Revision-Date: 2021-09-30 14:36+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: bi_financial_excel_reports
+#: model:ir.model,name:bi_financial_excel_reports.model_accounting_report_bi
+msgid "Accounting Report"
+msgstr "تقرير محاسبي"
+
+#. module: bi_financial_excel_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_excel_reports.view_excel_report
+msgid "Cancel"
+msgstr "يلغي"
+
+#. module: bi_financial_excel_reports
+#: model:ir.model.fields,field_description:bi_financial_excel_reports.field_excel_report__create_uid
+msgid "Created by"
+msgstr "انشأ من قبل"
+
+#. module: bi_financial_excel_reports
+#: model:ir.model.fields,field_description:bi_financial_excel_reports.field_excel_report__create_date
+msgid "Created on"
+msgstr "تم إنشاؤها على"
+
+#. module: bi_financial_excel_reports
+#: model:ir.model.fields,field_description:bi_financial_excel_reports.field_excel_report__display_name
+msgid "Display Name"
+msgstr "اسم العرض"
+
+#. module: bi_financial_excel_reports
+#: model:ir.model.fields,field_description:bi_financial_excel_reports.field_excel_report__file_name
+msgid "Excel File"
+msgstr "ملف اكسل"
+
+#. module: bi_financial_excel_reports
+#: model:ir.model.fields,field_description:bi_financial_excel_reports.field_excel_report__excel_file
+msgid "Excel Report"
+msgstr "تقرير Excel"
+
+#. module: bi_financial_excel_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_excel_reports.view_excel_report
+msgid "Genrated xls File"
+msgstr "تم إنشاء ملف xls"
+
+#. module: bi_financial_excel_reports
+#: model:ir.model.fields,field_description:bi_financial_excel_reports.field_excel_report__id
+msgid "ID"
+msgstr "هوية شخصية"
+
+#. module: bi_financial_excel_reports
+#: model:ir.model.fields,field_description:bi_financial_excel_reports.field_excel_report____last_update
+msgid "Last Modified on"
+msgstr "تاريخ آخر تعديل"
+
+#. module: bi_financial_excel_reports
+#: model:ir.model.fields,field_description:bi_financial_excel_reports.field_excel_report__write_uid
+msgid "Last Updated by"
+msgstr "آخر تحديث بواسطة"
+
+#. module: bi_financial_excel_reports
+#: model:ir.model.fields,field_description:bi_financial_excel_reports.field_excel_report__write_date
+msgid "Last Updated on"
+msgstr "آخر تحديث في"
+
+#. module: bi_financial_excel_reports
+#: model_terms:ir.ui.view,arch_db:bi_financial_excel_reports.account_trail_balance_inherit_form_add_print_excel_button
+#: model_terms:ir.ui.view,arch_db:bi_financial_excel_reports.bi_financial_pdf_reports_form_account_report_custom_inherit_form_add_print_excel_button
+#: model_terms:ir.ui.view,arch_db:bi_financial_excel_reports.bi_financial_pdf_reports_form_general_ledger_custom_inherit_form_add_print_excel_button
+msgid "Print Excel"
+msgstr "اطبع إكسل"
+
+#. module: bi_financial_excel_reports
+#: model:ir.model,name:bi_financial_excel_reports.model_excel_report
+msgid "excel.report"
+msgstr ""

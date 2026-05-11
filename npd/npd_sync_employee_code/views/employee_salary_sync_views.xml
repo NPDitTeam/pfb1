@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit employee.salary form view: เพิ่มปุ่มและสถานะ sync -->
+    <record id="employee_salary_form_view_inherit_sync" model="ir.ui.view">
+        <field name="name">employee.salary.form.inherit.sync</field>
+        <field name="model">employee.salary</field>
+        <field name="inherit_id" ref="employee_salary.employee_salary_form_view"/>
+        <field name="arch" type="xml">
+            <!-- เพิ่มปุ่ม sync ที่ header -->
+            <xpath expr="//header" position="inside">
+                <button name="action_sync_employee_code"
+                        string="อัพเดทรหัสพนักงาน"
+                        type="object"
+                        class="oe_highlight"
+                        confirm="ต้องการอัพเดทรหัสพนักงานไปยัง DB ปลายทางหรือไม่?"
+                        attrs="{'invisible': ['|', ('employee_code', '=', False), ('status', '!=', 'active')]}"/>
+            </xpath>
+
+            <!-- เพิ่มฟิลด์สถานะ sync ต่อจาก allow_multi_login -->
+            <field name="allow_multi_login" position="after">
+                <field name="sync_status"/>
+                <field name="sync_date"/>
+            </field>
+
+            <!-- เพิ่ม sync_message ในแท็บใหม่ -->
+            <xpath expr="//notebook" position="inside">
+                <page string="สถานะ Sync รหัสพนักงาน">
+                    <group>
+                        <group>
+                            <field name="sync_status"/>
+                            <field name="sync_date"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="sync_message" nolabel="1" colspan="2"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit employee.salary tree view: เพิ่มคอลัมน์สถานะ -->
+    <record id="employee_salary_tree_view_inherit_sync" model="ir.ui.view">
+        <field name="name">employee.salary.tree.inherit.sync</field>
+        <field name="model">employee.salary</field>
+        <field name="inherit_id" ref="employee_salary.employee_salary_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="employee_code" position="after">
+                <field name="sync_status" optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Server Action: อัพเดทรหัสพนักงาน จาก การดำเนินการ (ติ๊กเลือกหลายคน) -->
+    <record id="action_server_sync_employee_code_multi" model="ir.actions.server">
+        <field name="name">อัพเดทรหัสพนักงาน</field>
+        <field name="model_id" ref="employee_salary.model_employee_salary"/>
+        <field name="binding_model_id" ref="employee_salary.model_employee_salary"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+if records:
+    action = records.action_sync_employee_code_multi()
+        </field>
+    </record>
+
+    <!-- Menu item: ปุ่มอัพเดทรหัสพนักงาน (เปิด wizard) -->
+    <menuitem id="menu_sync_employee_code"
+              name="อัพเดทรหัสพนักงาน"
+              parent="employee_salary.main_employee_salary_menu"
+              action="npd_sync_employee_code.action_sync_employee_code_wizard"
+              sequence="15"/>
+</odoo>

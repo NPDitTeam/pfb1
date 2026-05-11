@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="action_rental_quotation" model="ir.actions.act_window">
+        <field name="name">ใบเสนอราคาเช่า</field>
+        <field name="res_model">baankheaw.rental_quotation</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p>📜 รายการใบเสนอราคาเช่า</p>
+            <p>กดปุ่ม <b>🔄 อัปเดตข้อมูล</b> เพื่อรีเฟรชชุดข้อมูลล่าสุด</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_rental_quotation"
+              name="ใบเสนอราคาเช่า"
+              parent="baankheaw.baankheaw_menu_root"
+              action="action_rental_quotation"
+              sequence="29"
+              groups="base.group_user"/>
+
+    <record id="view_rental_quotation_tree" model="ir.ui.view">
+        <field name="name">baankheaw.rental_quotation.tree</field>
+        <field name="model">baankheaw.rental_quotation</field>
+        <field name="arch" type="xml">
+            <tree string="ใบเสนอราคาเช่า">
+                <field name="branch_name"/>
+                <field name="q_id"/>
+                <field name="dateissue"/>
+                <field name="q_cusname"/>
+                <field name="q_mobile"/>
+                <field name="q_site"/>
+                <field name="q_amount"/>
+                <field name="q_insure"/>
+                <field name="q_discountinsure"/>
+                <field name="q_days"/>
+                <field name="emp_nickname"/>
+                <field name="emp_name"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_rental_quotation_form" model="ir.ui.view">
+        <field name="name">baankheaw.rental_quotation.form</field>
+        <field name="model">baankheaw.rental_quotation</field>
+        <field name="arch" type="xml">
+            <form string="ใบเสนอราคาเช่า (รายละเอียด)" >
+                <header>
+                    <button name="action_update_rental_quotation"
+                            type="object"
+                            string="🔄 อัปเดตข้อมูล"
+                            class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="รายละเอียดใบเสนอราคา">
+                            <field name="branch_name"/>
+                            <field name="q_id"/>
+                            <field name="dateissue"/>
+                            <field name="q_days"/>
+                            <field name="q_amount"/>
+                            <field name="q_insure"/>
+                            <field name="q_discountinsure"/>
+                        </group>
+                        <group string="ลูกค้า/ผู้ออกใบเสนอราคา">
+                            <field name="q_cusname"/>
+                            <field name="q_mobile"/>
+                            <field name="q_site"/>
+                            <field name="q_remark"/>
+                            <field name="emp_nickname"/>
+                            <field name="emp_name"/>
+                            <field name="userissue"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="ข้อมูลลูกค้า (master_customer)">
+                            <group>
+                                <field name="cus_fullname"/>
+                                <field name="cus_address"/>
+                                <field name="cus_tel"/>
+                                <field name="cus_cpnname"/>
+                                <field name="cus_cpntel"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="action_rental_invoice_receipt" model="ir.actions.act_window">
+        <field name="name">ใบเสร็จใบกำกับเช่า</field>
+        <field name="res_model">baankheaw.rental_invoice_receipt</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">📌 รายงานนี้แสดงข้อมูลใบเสร็จใบกำกับเช่าจากระบบภายนอก</p>
+            <p>กรุณากดปุ่ม "🔄 อัปเดตข้อมูลใบเสร็จ/กำกับ" เพื่อดึงข้อมูลล่าสุด</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_rental_invoice_receipt"
+              name="ใบเสร็จใบกำกับเช่า"
+              parent="baankheaw.baankheaw_menu_root"
+              action="action_rental_invoice_receipt"
+              sequence="30" groups="base.group_user"/>
+
+    <record id="view_rental_invoice_receipt_tree" model="ir.ui.view">
+        <field name="name">baankheaw.rental_invoice_receipt.tree</field>
+        <field name="model">baankheaw.rental_invoice_receipt</field>
+        <field name="arch" type="xml">
+            <tree string="สรุป ใบเสร็จใบกำกับเช่า" default_order="dateissue desc, inv_no desc">
+                <field name="inv_no"/>
+                <field name="dateissue"/>
+                <field name="inv_rentid"/>
+                <field name="branch_name"/>
+                <field name="cus_fullname"/>
+                <field name="cus_cpnname"/>
+                <field name="rent_perday"/>
+                <field name="inv_days"/>
+                <field name="rent_amount" sum="รวมค่าเช่า"/>
+                <field name="inv_statustax"/>
+                <field name="full_create"/> </tree>
+        </field>
+    </record>
+
+    <record id="view_rental_invoice_receipt_form" model="ir.ui.view">
+        <field name="name">baankheaw.rental_invoice_receipt.form</field>
+        <field name="model">baankheaw.rental_invoice_receipt</field>
+        <field name="arch" type="xml">
+            <form string="รายละเอียด ใบเสร็จใบกำกับเช่า">
+                <header>
+                    <button name="action_update_rental_invoice_data"
+                            type="object"
+                            string="🔄 อัปเดตข้อมูลใบเสร็จ/กำกับ"
+                            class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group>
+                         <group string="ข้อมูลใบเสร็จ/การเช่า">
+                            <field name="inv_no"/>
+                            <field name="dateissue"/>
+                            <field name="inv_rentid"/>
+                            <field name="branch_name"/>
+                            <field name="inv_statustax"/>
+                            <field name="full_create"/> </group>
+                        <group string="ข้อมูลค่าเช่า">
+                            <field name="rent_perday"/>
+                            <field name="inv_days"/>
+                            <field name="rent_amount"/>
+                        </group>
+                    </group>
+                    <group string="ข้อมูลลูกค้า">
+                        <field name="cus_fullname"/>
+                        <field name="cus_cpnname"/>
+                        <field name="cus_cpntaxid"/>
+                        <field name="cus_cpnadd"/>
+                        <field name="cus_cpntel"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

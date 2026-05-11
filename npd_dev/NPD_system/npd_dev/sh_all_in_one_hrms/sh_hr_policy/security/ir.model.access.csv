@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+sh_all_in_one_hrms.access_sh_company_policy_wizard,access_sh_company_policy_wizard,sh_all_in_one_hrms.model_sh_company_policy_wizard,base.group_user,1,1,1,1
+sh_all_in_one_hrms.access_sh_department_policy_wizard,access_sh_department_policy_wizard,sh_all_in_one_hrms.model_sh_department_policy_wizard,base.group_user,1,1,1,1
+sh_all_in_one_hrms.access_sh_blank_data_wizard,access_sh_blank_data_wizard,sh_all_in_one_hrms.model_sh_blank_data_wizard,base.group_user,1,1,1,1

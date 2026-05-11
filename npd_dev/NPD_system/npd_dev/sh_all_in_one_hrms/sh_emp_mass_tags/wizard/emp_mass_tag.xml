@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- CREATE NEW FORM VIEW FOR WIZARD FOR UPDATE TAGS BY MULTI ACTION -->
+    <record id="sh_empmt_emp_mass_tag_multi_action_form_view" model="ir.ui.view">
+        <field name="name">sh.empmt.emp.mass.tag.multi.action.form.view</field>
+        <field name="model">sh.emp.mass.tag.multi.action</field>
+        <field name="arch" type="xml">
+            <form string="Update Tags">
+                <group>
+                    <group>
+                        <field name="update_tag_type" widget="radio" />
+                        <field name="category_ids" widget="many2many_tags" options="{'color_field': 'color', 'no_create_edit': True}" />
+                    </group>
+                </group>
+
+                <field name="employee_ids" options="{'no_create': True}">
+                    <tree editable="bottom">
+                        <field name="name" />
+                        <field name="work_phone" />
+                        <field name="work_email" />
+                        <field name="company_id" groups="base.group_multi_company" />
+                        <field name="department_id" />
+                        <field name="job_id" />
+                        <field name="parent_id" />
+                    </tree>
+                </field>
+
+                <footer>
+                    <button class="btn-primary" name="action_update_tags" type="object" string="Update Tags" />
+                    <button string="Cancel" class="oe_link" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_empmt_emp_mass_tags_multi_action" model="ir.actions.act_window">
+        <field name="name">Update Employees Tags</field>
+        <field name="res_model">sh.emp.mass.tag.multi.action</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="sh_empmt_emp_mass_tag_multi_action_form_view" />
+        <field name="target">new</field>
+        <field name="groups_id" eval="[(4, ref('hr.group_hr_user'))]" />
+        <field name="binding_model_id" ref="hr.model_hr_employee" />
+        <field name="binding_view_types">list</field>
+    </record>
+
+    <record id="sh_empmt_emp_mass_tags_action_menu" model="ir.actions.act_window">
+        <field name="name">Update Employees Tags</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.emp.mass.tag.multi.action</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="sh_empmt_emp_mass_tag_multi_action_form_view" />
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="sh_empmt_emp_mass_tags_menuitem" parent="hr.menu_hr_root" action="sh_empmt_emp_mass_tags_action_menu" sequence="4" name="Update Employees Tags" groups="sh_all_in_one_hrms.group_hide_menu_emp_mass_tag" />
+</odoo>

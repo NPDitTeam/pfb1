@@ -1,0 +1,27 @@
+<odoo>
+    <data>
+        <!-- Action สำหรับเมนู -->
+        <record id="action_fleet_license_plate" model="ir.actions.act_window">
+            <field name="name">ทะเบียนรถ</field>
+            <field name="res_model">fleet.license_plate</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    ยังไม่มีข้อมูลทะเบียนรถเพิ่มข้อมูลใหม่เพื่อเริ่มต้น
+                </p>
+            </field>
+        </record>
+
+        <!-- เมนูหลักของทะเบียนรถ -->
+        <menuitem id="menu_fleet_license_plate_main"
+          name="ทะเบียนรถ"
+          parent="sale.menu_sale_config"/>
+
+
+        <!-- เมนูรายการทะเบียนรถ -->
+        <menuitem id="menu_fleet_license_plate"
+                  name="ทะเบียนรถ"
+                  parent="menu_fleet_license_plate_main"
+                  action="action_fleet_license_plate"/>
+    </data>
+</odoo>

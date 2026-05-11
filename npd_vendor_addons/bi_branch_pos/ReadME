@@ -1,0 +1,4 @@
+Version:-
+
+14.0.0.2 ==> fixed issue of branch is not printed in receipt of pos.
+14.0.0.3 ==>added branch filter in search view of pos order.

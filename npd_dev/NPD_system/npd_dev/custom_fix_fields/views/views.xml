@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Sale Order View Extensions -->
+        <record id="view_order_form_custom_fix" model="ir.ui.view">
+            <field name="name">sale.order.form.custom.fix</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='date_order']" position="after">
+                    <field name="c_date"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Invoice View Extensions -->
+        <record id="view_move_form_custom_fix" model="ir.ui.view">
+            <field name="name">account.move.form.custom.fix</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='narration']" position="after">
+                    <field name="custom_notes"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

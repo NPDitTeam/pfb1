@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Search View -->
+        <record id="view_search_tax_receivable_report" model="ir.ui.view">
+            <field name="name">tax.receivable.report.search</field>
+            <field name="model">tax.receivable.report</field>
+            <field name="arch" type="xml">
+                <search string="ค้นหารายงานลูกหนี้ค้าง Tax">
+                    <field name="partner_code"/>
+                    <field name="partner_name"/>
+                    <field name="partner_phone"/>
+
+                    <filter string="มียอดหัก ณ ที่จ่าย"
+                            name="has_wht"
+                            domain="[('withholding_tax_amount', '>', 0)]"/>
+
+                    <group expand="0" string="จัดกลุ่มตาม">
+                        <filter string="ลูกค้า" name="group_by_partner" context="{'group_by': 'partner_name'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Tree View -->
+        <record id="view_tree_tax_receivable_report" model="ir.ui.view">
+            <field name="name">tax.receivable.report.tree</field>
+            <field name="model">tax.receivable.report</field>
+            <field name="arch" type="xml">
+                <tree string="รายงานลูกหนี้ค้าง Tax"
+                      decoration-danger="withholding_tax_amount > 0"
+                      default_order="partner_name">
+                    <field name="partner_code" string="รหัสลูกค้า"/>
+                    <field name="partner_name" string="ชื่อลูกค้า"/>
+                    <field name="partner_phone" string="เบอร์โทร"/>
+                    <field name="partner_address" string="ที่อยู่"/>
+                    <field name="withholding_tax_amount" string="หัก ณ ที่จ่าย" sum="รวมหัก ณ ที่จ่าย"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Wizard View -->
+        <record id="view_form_tax_receivable_wizard" model="ir.ui.view">
+            <field name="name">tax.receivable.wizard.form</field>
+            <field name="model">tax.receivable.wizard</field>
+            <field name="arch" type="xml">
+                <form string="🔍 รายงานลูกหนี้ค้าง Tax">
+                    <sheet>
+                        <div class="oe_title">
+                            <h2>กำหนดเงื่อนไขในการดึงข้อมูล</h2>
+                        </div>
+                        <group>
+                            <group string="📅 ช่วงเวลา">
+                                <field name="date_from" placeholder="เว้นว่างเพื่อดูทั้งหมด"/>
+                                <field name="date_to" placeholder="เว้นว่างเพื่อดูทั้งหมด"/>
+                            </group>
+                            <group string="🏢 ตัวกรอง">
+                                <field name="branch_ids"
+                                       widget="many2many_tags"
+                                       placeholder="เลือกสาขา (เว้นว่างเพื่อดูทุกสาขา)"
+                                       options="{'no_create': True}"/>
+                            </group>
+                        </group>
+                        <group>
+                            <div class="alert alert-info" role="alert">
+                                <i class="fa fa-info-circle"/> <strong>หมายเหตุ:</strong>
+                                <ul>
+                                    <li>ดึงข้อมูลจาก account.payment ที่มีหัก ณ ที่จ่าย</li>
+                                    <li>แสดงเฉพาะ Payment ที่ Posted และติ๊ก "ได้รับใบหัก ณ ที่จ่าย"</li>
+                                    <li>เว้นว่างช่องวันที่เพื่อดูข้อมูลทั้งหมด</li>
+                                    <li>เว้นว่างสาขาเพื่อดูข้อมูลทุกสาขา</li>
+                                </ul>
+                            </div>
+                        </group>
+                    </sheet>
+                    <footer>
+                        <button name="action_generate_report"
+                                type="object"
+                                string="🔍 ค้นหารายงาน"
+                                class="btn-primary"/>
+                        <button string="ยกเลิก"
+                                class="btn-secondary"
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action Window สำหรับเปิด Wizard -->
+        <record id="action_tax_receivable_wizard" model="ir.actions.act_window">
+            <field name="name">ลูกหนี้ค้าง Tax</field>
+            <field name="res_model">tax.receivable.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <!-- Action Window สำหรับดูรายงาน -->
+        <record id="action_view_tax_receivable_report" model="ir.actions.act_window">
+            <field name="name">ดูรายงานลูกหนี้ค้าง Tax</field>
+            <field name="res_model">tax.receivable.report</field>
+            <field name="view_mode">tree</field>
+            <field name="search_view_id" ref="view_search_tax_receivable_report"/>
+            <field name="context">{'search_default_has_wht': 1}</field>
+        </record>
+
+        <!-- เมนูลูกหนี้ค้าง Tax -->
+        <menuitem id="menu_tax_receivable_wizard"
+                  name="ลูกหนี้ค้าง Tax"
+                  parent="stock_report_dashboard.menu_stock_dashboard_root"
+                  action="action_tax_receivable_wizard"
+                  sequence="16"/>
+    </data>
+</odoo>

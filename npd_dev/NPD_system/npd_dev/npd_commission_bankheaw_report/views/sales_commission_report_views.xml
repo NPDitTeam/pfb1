@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Sales Commission Report Tree View -->
+    <record id="view_sales_commission_report_tree" model="ir.ui.view">
+        <field name="name">npd.sales.commission.report.tree</field>
+        <field name="model">npd.sales.commission.report</field>
+        <field name="arch" type="xml">
+            <tree string="รายงานค่าคอมบ้านเขียว" create="0" edit="0" delete="0"
+                  decoration-info="report_type == 'branch'"
+                  decoration-success="report_type == 'sales'">
+                <field name="report_period"/>
+                <field name="report_type"/>
+                <field name="branch_id"/>
+                <field name="branch_id_odoo"/>
+                <field name="branch_name"/>
+                <field name="employee_code"/>
+                <field name="salesperson_name"/>
+                <field name="initial_rent" sum="รวมค่าเช่าเริ่มต้น"/>
+                <field name="discount" sum="รวมส่วนลด"/>
+                <field name="rent_difference" sum="รวมส่วนต่าง"/>
+                <field name="total_rent_revenue" sum="รวมรายได้ค่าเช่า"/>
+                <field name="outstanding_bill_count" sum="รวมบิล"/>
+                <field name="total_outstanding" sum="รวมค้างชำระ"/>
+                <field name="total_paid" sum="รวมรับชำระ"/>
+                <field name="net_outstanding" sum="รวมค้างสุทธิ"/>
+                <field name="old_debt_paid" sum="รวมรับชำระบิลเก่า"/>
+                <field name="net_total" sum="รวมยอดสุทธิ"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Sales Commission Report Form View -->
+    <record id="view_sales_commission_report_form" model="ir.ui.view">
+        <field name="name">npd.sales.commission.report.form</field>
+        <field name="model">npd.sales.commission.report</field>
+        <field name="arch" type="xml">
+            <form string="รายงานค่าคอมบ้านเขียว" create="0" edit="0" delete="0">
+                <header>
+                    <button name="action_refresh_data"
+                            type="object"
+                            string="🔄 อัปเดตข้อมูล"
+                            class="oe_highlight"
+                            icon="fa-refresh"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="ข้อมูลทั่วไป">
+                            <field name="report_period"/>
+                            <field name="report_type"/>
+                            <field name="branch_id"/>
+                            <field name="branch_id_odoo"/>
+                            <field name="branch_name"/>
+                        </group>
+                        <group string="ข้อมูลพนักงาน" attrs="{'invisible': [('report_type', '=', 'branch')]}">
+                            <field name="employee_code"/>
+                            <field name="salesperson_name"/>
+                            <field name="employee_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="ค่าเช่า">
+                            <field name="initial_rent"/>
+                            <field name="discount"/>
+                            <field name="rent_difference"/>
+                            <field name="total_rent_revenue"/>
+                        </group>
+                        <group string="ค้างชำระ">
+                            <field name="outstanding_bill_count"/>
+                            <field name="total_outstanding"/>
+                            <field name="total_paid"/>
+                            <field name="net_outstanding"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="หนี้เก่า">
+                            <field name="old_debt_paid"/>
+                        </group>
+                        <group string="ยอดสุทธิ">
+                            <field name="net_total"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="ช่วงวันที่รายงาน">
+                            <field name="report_date_from"/>
+                            <field name="report_date_to"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Sales Commission Report Search View -->
+    <record id="view_sales_commission_report_search" model="ir.ui.view">
+        <field name="name">npd.sales.commission.report.search</field>
+        <field name="model">npd.sales.commission.report</field>
+        <field name="arch" type="xml">
+            <search string="ค้นหารายงานค่าคอม">
+                <field name="branch_id"/>
+                <field name="branch_name"/>
+                <field name="employee_code"/>
+                <field name="salesperson_name"/>
+                <filter name="filter_branch" string="สาขา"
+                        domain="[('report_type', '=', 'branch')]"/>
+                <filter name="filter_sales" string="เซลล์"
+                        domain="[('report_type', '=', 'sales')]"/>
+                <separator/>
+                <filter name="filter_has_revenue" string="มีรายได้"
+                        domain="[('total_rent_revenue', '>', 0)]"/>
+                <filter name="filter_has_outstanding" string="มีค้างชำระ"
+                        domain="[('net_outstanding', '>', 0)]"/>
+                <group expand="0" string="จัดกลุ่มตาม">
+                    <filter name="group_report_type" string="ประเภท"
+                            context="{'group_by': 'report_type'}"/>
+                    <filter name="group_branch" string="สาขา"
+                            context="{'group_by': 'branch_name'}"/>
+                    <filter name="group_salesperson" string="เซลล์"
+                            context="{'group_by': 'salesperson_name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Wizard Form View -->
+    <record id="view_sales_commission_report_wizard_form" model="ir.ui.view">
+        <field name="name">npd.sales.commission.report.wizard.form</field>
+        <field name="model">npd.sales.commission.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="รายงานค่าคอมสาขา">
+                <group>
+                    <group>
+                        <field name="month" string="เดือน"/>
+                        <field name="year" string="ปี"/>
+                    </group>
+                    <group>
+                        <field name="branch_filter" string="สาขา"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_generate_report"
+                            string="ดูรายงาน"
+                            type="object"
+                            class="btn-primary"/>
+                    <button string="ยกเลิก" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Wizard Action -->
+    <record id="action_sales_commission_report_wizard" model="ir.actions.act_window">
+        <field name="name">รายงานค่าคอมบ้านเขียว</field>
+        <field name="res_model">npd.sales.commission.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Report List Action -->
+    <record id="action_sales_commission_report" model="ir.actions.act_window">
+        <field name="name">รายงานค่าคอมบ้านเขียว</field>
+        <field name="res_model">npd.sales.commission.report</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ไม่มีข้อมูลรายงานค่าคอม
+            </p>
+            <p>
+                กดปุ่ม "อัปเดตข้อมูล" เพื่อดึงข้อมูลจากฐานข้อมูลบ้านเขียว
+            </p>
+        </field>
+    </record>
+
+    <!-- Server Action for Refresh Button -->
+    <record id="action_refresh_commission_data" model="ir.actions.server">
+        <field name="name">อัปเดตข้อมูลค่าคอม</field>
+        <field name="model_id" ref="model_npd_sales_commission_report"/>
+        <field name="binding_model_id" ref="model_npd_sales_commission_report"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+env['npd.sales.commission.report'].sudo().fetch_commission_data()
+action = {'type': 'ir.actions.client', 'tag': 'reload'}
+        </field>
+    </record>
+
+    <!-- Menu under Accounting > Reporting -->
+    <menuitem id="menu_sales_commission_report"
+              name="รายงานค่าคอมบ้านเขียว"
+              parent="account.menu_finance_reports"
+              action="action_sales_commission_report_wizard"
+              sequence="9999"/>
+
+</odoo>

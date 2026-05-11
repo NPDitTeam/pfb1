@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_yalecom_call_log_user,yalecom.call.log.user,model_yalecom_call_log,base.group_user,1,0,0,0
+access_yalecom_call_log_manager,yalecom.call.log.manager,model_yalecom_call_log,base.group_system,1,1,1,1
+access_yalecom_webhook_log_user,yalecom.webhook.log.user,model_yalecom_webhook_log,base.group_user,1,0,0,0
+access_yalecom_webhook_log_manager,yalecom.webhook.log.manager,model_yalecom_webhook_log,base.group_system,1,1,1,1
+access_yalecom_config_manager,yalecom.config.manager,model_yalecom_config,base.group_system,1,1,1,1

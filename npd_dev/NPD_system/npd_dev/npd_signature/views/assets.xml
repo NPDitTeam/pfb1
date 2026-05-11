@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Load CSS and JS -->
+    <template id="assets_backend" inherit_id="web.assets_backend" name="NPD Signature Assets">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/css" href="/npd_signature/static/src/css/signature.css"/>
+            <script type="text/javascript" src="/npd_signature/static/src/js/signature_widget.js"/>
+        </xpath>
+    </template>
+</odoo>

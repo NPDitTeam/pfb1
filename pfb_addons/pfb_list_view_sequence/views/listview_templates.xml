@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+    	<template id="assets_backend" name="pfb_list_view_sequence assets" inherit_id="web.assets_backend">
+            <xpath expr="." position="inside">
+            	<link rel="stylesheet" href="/pfb_list_view_sequence/static/src/scss/list_view.scss" />
+                <script type="text/javascript" src="/pfb_list_view_sequence/static/src/js/list_view.js"></script>
+            </xpath> 
+        </template>
+
+    </data>
+</odoo>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="journal_entries_total_groups">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-foreach="docs" t-as="o">
+                    <div class="page">
+                        <div align="center">
+                            <h5>
+                                <span>Journal Entry</span>
+                                <span t-esc="o.name"/>
+                            </h5>
+                        </div>
+                        <br/>
+                        <div>
+                            <h6>
+                                <strong>Date</strong>
+                                <span style="padding-left:20px;padding-right:20px" t-esc="o.date.strftime('%Y-%m-%d')"/>
+                            </h6>
+                        </div>
+                        <div class="row">
+                            <style>
+                                .tblbordr {
+                                text-align: center;
+                                border: 2px solid black;
+                                }
+                            </style>
+                            <br/>
+                            <table width="100%">
+                                <thead>
+                                    <tr>
+                                        <th style="font-size: 15px;border: 1px solid #000;padding: 10px" class="text-center">Account</th>
+                                        <th style="font-size: 15px;border: 1px solid #000;padding: 10px" class="text-center">Debit</th>
+                                        <th style="font-size: 15px;border: 1px solid #000;padding: 10px" class="text-center">Credit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="o.account_move_group_total" t-as="line">
+                                        <tr>
+                                            <t t-if="line.balance &gt; 0">
+                                                <td style="font-size: 15px;border-top: 1px solid #d0cece;border-right: 1px solid #000;border-left: 1px solid #000;padding: 10px">
+                                                    <span t-esc="line.account"/>
+                                                </td>
+                                            </t>
+                                            <t t-else="">
+                                                <td style="font-size: 15px;border-top: 1px solid #d0cece;border-right: 1px solid #000;border-left: 1px solid #000;padding: 10px" class="text-center">
+                                                    <span t-esc="line.account"/>
+                                                </td>
+                                            </t>
+                                            <td style="font-size: 15px;border-top: 1px solid #d0cece;border-right: 1px solid #000;border-left: 1px solid #000;padding: 10px" class="text-center">
+                                                <t t-if="line.balance &gt; 0">
+                                                    <span t-esc="'{:,.2f}'.format(line.debit)"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <span/>
+                                                </t>
+                                            </td>
+                                            <td style="font-size: 15px;border-top: 1px solid #d0cece;border-right: 1px solid #000;border-left: 1px solid #000;padding: 10px" class="text-center">
+                                                <t t-if="line.balance &lt; 0">
+                                                    <span t-esc="'{:,.2f}'.format(line.credit)"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <span/>
+                                                </t>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                                <tfooter>
+                                    <tr>
+                                        <td style="font-size: 15px;border: 1px solid #000;padding: 10px;text-align: center !important;" class="text-right">
+                                            <strong>
+                                                Total
+                                            </strong>
+                                        </td>
+                                        <td style="font-size: 15px;border: 1px solid #000;padding: 10px" class="text-center">
+                                            <strong t-esc="'{:,.2f}'.format(o.totals_debit_credit().get('dr_total'))"/>
+                                        </td>
+                                        <td style="font-size: 15px;border: 1px solid #000;padding: 10px" class="text-center">
+                                            <strong t-esc="'{:,.2f}'.format(o.totals_debit_credit().get('cr_total'))"/>
+                                        </td>
+                                    </tr>
+                                </tfooter>
+                            </table>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+    <report
+            id="journal_entries_totals_print_group"
+            model="account.move"
+            string="Print Grouped Lines"
+            report_type="qweb-pdf"
+            name="psn_grouping_journal_items.journal_entries_total_groups"
+            file="psn_grouping_journal_items.journal_entries_total_groups"
+    />
+</odoo>

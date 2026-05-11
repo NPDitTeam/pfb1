@@ -1,0 +1,8 @@
+1) Version: 14.0.0.2 | Date : 26/11/2020
+-->  Demo data can not be loaded, Fix this issue.
+-->  Give user access rights for confirm, modify and sell or dispose assets.
+
+Version: 14.0.0.3 | Date : 25/05/2021
+-->  Solved Issue on posting the invoice of asset the asset was not getting sent to close state.
+
+14.0.0.4 ==>fixed issue of traceback when click on journal Items.

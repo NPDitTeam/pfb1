@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="transport_management_transporter_vehicle_form" model="ir.ui.view">
+            <field name="name">res.partner.vehicle.form</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <xpath expr = "//div[@name = 'button_box']" position="inside">
+                    <button class="oe_stat_button" type="object" name="show_vehicle"  icon="fa-tasks">
+                        <field name="vehicle_count" widget="statinfo"/>
+                    </button>
+                </xpath>
+                <xpath expr="//page[last()]" position="after">
+                    <page string="Transporter">
+                        <group>
+                            <group>
+                                <field name="transporter"/>
+                                <field name="trans_type" widget="radio"/>
+                            </group>
+                            <group>
+                                <field name="driver_id" widget='many2many_tags'/>
+                                <field name="vehicle" widget='many2many_tags'/>
+                                <field name="route" widget='many2many_tags'/>
+                                <field name="rate"/>
+                            </group>
+                        </group>
+
+                    </page>
+                </xpath>
+            </field>
+        </record>
+        <record model="ir.actions.act_window" id="action_transport_partner">
+            <field name="name">Transporters</field>
+            <field name="res_model">res.partner</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('transporter','=',1)]</field>
+            <field name="context">{'default_transporter': 1}</field>
+
+        </record>
+        <menuitem id="menu_transport_partner"
+            name="Transporters"
+            parent="menu_transport_childe"
+            action='action_transport_partner'/>
+    </data>
+</odoo>

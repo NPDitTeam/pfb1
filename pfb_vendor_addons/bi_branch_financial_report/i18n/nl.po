@@ -1,0 +1,103 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* bi_branch_financial_report
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 13.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-09-02 13:37+0000\n"
+"PO-Revision-Date: 2021-09-02 13:37+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: bi_branch_financial_report
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_balancesheet_inherit_add_branch_filter
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_generalledger_inherit_add_branch_filter
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_trialbalance_inherit_add_branch_filter
+msgid "<strong>Branch:</strong>"
+msgstr "<strong>Tak:</strong>"
+
+#. module: bi_branch_financial_report
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_balancesheet_inherit_add_branch_filter
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_trialbalance_inherit_add_branch_filter
+msgid "<strong>Date from :</strong>"
+msgstr "<strong>Datum vanaf :</strong>"
+
+#. module: bi_branch_financial_report
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_balancesheet_inherit_add_branch_filter
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_trialbalance_inherit_add_branch_filter
+msgid "<strong>Date to :</strong>"
+msgstr "<strong>Datum tot:</strong>"
+
+#. module: bi_branch_financial_report
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_trialbalance_inherit_add_branch_filter
+msgid "<strong>Display Account:</strong>"
+msgstr "<strong>Account weergeven:</strong>"
+
+#. module: bi_branch_financial_report
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_generalledger_inherit_add_branch_filter
+msgid "<strong>Display Account</strong>"
+msgstr "<strong>Account weergeven</strong>"
+
+#. module: bi_branch_financial_report
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_generalledger_inherit_add_branch_filter
+msgid "<strong>Journals:</strong>"
+msgstr "<strong>Journals:</strong>"
+
+#. module: bi_branch_financial_report
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_balancesheet_inherit_add_branch_filter
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_generalledger_inherit_add_branch_filter
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_trialbalance_inherit_add_branch_filter
+msgid "<strong>Target Moves:</strong>"
+msgstr "<strong>Doelbewegingen:</strong>"
+
+#. module: bi_branch_financial_report
+#: model:ir.model,name:bi_branch_financial_report.model_accounting_report_bi
+msgid "Accounting Report"
+msgstr "Boekhoudkundig rapport"
+
+#. module: bi_branch_financial_report
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_balancesheet_inherit_add_branch_filter
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_generalledger_inherit_add_branch_filter
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_trialbalance_inherit_add_branch_filter
+msgid "All Entries"
+msgstr "Alle inzendingen"
+
+#. module: bi_branch_financial_report
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_balancesheet_inherit_add_branch_filter
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_generalledger_inherit_add_branch_filter
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_trialbalance_inherit_add_branch_filter
+msgid "All Posted Entries"
+msgstr "Alle geplaatste berichten"
+
+#. module: bi_branch_financial_report
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_trialbalance_inherit_add_branch_filter
+msgid "All accounts"
+msgstr "Alle accounts"
+
+#. module: bi_branch_financial_report
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_generalledger_inherit_add_branch_filter
+msgid "All accounts'"
+msgstr "Alle accounts'"
+
+#. module: bi_branch_financial_report
+#: model:ir.model.fields,field_description:bi_branch_financial_report.field_accounting_report_bi__branch_ids
+msgid "Branch"
+msgstr "Tak"
+
+#. module: bi_branch_financial_report
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_generalledger_inherit_add_branch_filter
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_trialbalance_inherit_add_branch_filter
+msgid "With balance not equal to zero"
+msgstr "Met saldo niet gelijk aan nul"
+
+#. module: bi_branch_financial_report
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_generalledger_inherit_add_branch_filter
+#: model_terms:ir.ui.view,arch_db:bi_branch_financial_report.report_trialbalance_inherit_add_branch_filter
+msgid "With movements"
+msgstr "Met bewegingen"

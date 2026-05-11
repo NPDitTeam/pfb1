@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Form View - Simple Layout -->
+    <record id="view_npd_signature_form" model="ir.ui.view">
+        <field name="name">npd.signature.form</field>
+        <field name="model">npd.signature</field>
+        <field name="arch" type="xml">
+            <form string="ลายเซ็น">
+                <header>
+                    <button name="action_set_default" type="object" string="ตั้งเป็นลายเซ็นหลัก" 
+                            class="btn-primary" icon="fa-star"
+                            attrs="{'invisible': [('is_default', '=', True)]}"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
+                            <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
+                        </button>
+                    </div>
+                    
+                    <widget name="web_ribbon" title="ลายเซ็นหลัก" bg_color="bg-success" 
+                            attrs="{'invisible': [('is_default', '=', False)]}"/>
+                    
+                    <!-- ส่วนที่ 1: ข้อมูลพื้นฐาน -->
+                    <group>
+                        <group>
+                            <field name="name" placeholder="พิมพ์ชื่อ-นามสกุล..." string="ชื่อลายเซ็น" required="1"/>
+                            <field name="user_id" string="ผู้ทำ" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="signature_type" widget="radio" string="ประเภท"/>
+                            <field name="is_default" string="ลายเซ็นหลัก"/>
+                        </group>
+                    </group>
+                    
+                    <!-- ส่วนที่ 2: วาดลายเซ็น (แสดงเมื่อเลือก "เซ็นผ่านระบบ") -->
+                    <group string="วาดลายเซ็น" attrs="{'invisible': [('signature_type', '!=', 'draw')]}">
+                        <div style="background: #fff; border: 1px solid #ced4da; border-radius: 4px; padding: 10px;">
+                            <field name="signature_draw" widget="signature" nolabel="1"/>
+                        </div>
+                    </group>
+                    
+                    <!-- ส่วนที่ 3: ลายเซ็นที่บันทึก -->
+                    <group string="ลายเซ็นที่บันทึก">
+                        <div style="background: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px; padding: 20px; text-align: center; min-height: 80px;">
+                            <field name="signature_final" widget="image" nolabel="1" style="max-height: 80px;"/>
+                        </div>
+                    </group>
+                    
+                    <!-- ส่วนที่ 4: หมายเหตุ -->
+                    <group string="หมายเหตุ">
+                        <field name="note" nolabel="1" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)..."/>
+                    </group>
+                    
+                    <!-- Hidden fields -->
+                    <field name="company_id" invisible="1"/>
+                    
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Tree View -->
+    <record id="view_npd_signature_tree" model="ir.ui.view">
+        <field name="name">npd.signature.tree</field>
+        <field name="model">npd.signature</field>
+        <field name="arch" type="xml">
+            <tree string="ลายเซ็น">
+                <field name="signature_final" widget="image" string=" " class="oe_avatar"/>
+                <field name="name" string="ชื่อลายเซ็น"/>
+                <field name="signature_type" string="ประเภท"/>
+                <field name="is_default" string="ลายเซ็นหลัก"/>
+                <field name="create_date" string="วันที่สร้าง"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Kanban View -->
+    <record id="view_npd_signature_kanban" model="ir.ui.view">
+        <field name="name">npd.signature.kanban</field>
+        <field name="model">npd.signature</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="id"/>
+                <field name="name"/>
+                <field name="signature_final"/>
+                <field name="signature_type"/>
+                <field name="is_default"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record">
+                            <div class="o_kanban_image" style="width: 100px; text-align: center;">
+                                <field name="signature_final" widget="image" options="{'size': [80, 60]}"/>
+                            </div>
+                            <div class="oe_kanban_details">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                        <t t-if="record.is_default.raw_value">
+                                            <span class="badge badge-success ml-2">หลัก</span>
+                                        </t>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_body text-muted">
+                                    <field name="signature_type"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_npd_signature_search" model="ir.ui.view">
+        <field name="name">npd.signature.search</field>
+        <field name="model">npd.signature</field>
+        <field name="arch" type="xml">
+            <search string="ค้นหาลายเซ็น">
+                <field name="name" string="ชื่อ"/>
+                <separator/>
+                <filter name="filter_default" string="ลายเซ็นหลัก" 
+                        domain="[('is_default', '=', True)]"/>
+                <filter name="filter_draw" string="วาดลายเซ็น" 
+                        domain="[('signature_type', '=', 'draw')]"/>
+                <filter name="filter_text" string="ข้อความ" 
+                        domain="[('signature_type', '=', 'text')]"/>
+                <separator/>
+                <filter name="filter_archived" string="เก็บถาวร" 
+                        domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_npd_signature" model="ir.actions.act_window">
+        <field name="name">ลายเซ็น</field>
+        <field name="res_model">npd.signature</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                สร้างลายเซ็นแรกของคุณ!
+            </p>
+            <p>
+                วาดลายเซ็น หรือใช้ชื่อเป็นลายเซ็นได้
+            </p>
+        </field>
+    </record>
+</odoo>

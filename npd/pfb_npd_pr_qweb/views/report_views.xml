@@ -1,0 +1,16 @@
+<odoo>
+
+    <!-- PDF REPORTS -->
+    <!--    Purchase Request-->
+    <record id="action_report_purchase_request_print" model="ir.actions.report">
+        <field name="name">ใบขอซื้อ</field>
+        <field name="model">purchase.request</field>
+        <field name="report_name">pfb_npd_pr_qweb.report_pr</field>
+        <field name="report_file">pfb_npd_pr_qweb.report_pr</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="paperformat_id" ref="pfb_npd_pr_qweb.paperformat_purchase_request"/>
+        <field name="print_report_name">'%s%s' % (object.name, object.state == 'draft' and '-draft' or '')
+        </field>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

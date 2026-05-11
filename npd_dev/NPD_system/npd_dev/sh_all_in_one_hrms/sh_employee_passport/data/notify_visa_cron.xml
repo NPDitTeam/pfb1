@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sh_ir_cron_visa" model="ir.cron">
+        <field name="name">Automate Email From Employee Visa Expire Notify</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False" />
+        <field name="model_id" ref="base.model_res_company" />
+        <field name="code">model._run_notify_visa_email_from_employee()</field>
+        <field name="state">code</field>
+    </record>
+    <record id="sh_ir_cron_visa_expired" model="ir.cron">
+        <field name="name">Automate Visa Expired</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False" />
+        <field name="model_id" ref="sh_all_in_one_hrms.model_sh_employee_passport" />
+        <field name="code">model._run_visa_expire()</field>
+        <field name="state">code</field>
+    </record>
+</odoo>

@@ -1,0 +1,317 @@
+<odoo>
+    <!-- Search View -->
+    <record id="view_payroll_salary_search" model="ir.ui.view">
+        <field name="name">payroll.salary.search</field>
+        <field name="model">payroll.salary</field>
+        <field name="arch" type="xml">
+            <search string="ค้นหาใบจ่ายเงินเดือน">
+                <filter string="เดือนปัจจุบันและถัดไป" name="current_month"
+                        domain="['|',
+                                    '&amp;', ('month', '=', context_today().strftime('%m')),
+                                           ('year', '=', context_today().strftime('%Y')),
+                                    '&amp;', ('month', '=', (context_today() + relativedelta(months=1)).strftime('%m')),
+                                           ('year', '=', (context_today() + relativedelta(months=1)).strftime('%Y'))
+                                 ]"/>
+                <separator/>
+                <filter string="ที่จัดเก็บ" name="inactive" domain="[('active','=',False)]"/>
+                <separator/>
+                <filter string="มีค่าคอมมิชชั่นสาขา" name="has_commission" domain="[('income_commission','>',0)]"/>
+                <filter string="มีเงินกู้" name="has_loan" domain="[('expense_loan','>',0)]"/>
+                <filter string="มีขาด/ลา/สาย" name="has_absent" domain="['|','|',('deduction_late','>',0),('deduction_leave','>',0),('deduction_absent','>',0)]"/>
+                <field name="branch_id"/>
+                <group expand="1" string="จัดกลุ่มตาม">
+                    <filter string="เดือน" name="group_by_month" context="{'group_by':'month'}"/>
+                    <filter string="ปี" name="group_by_year" context="{'group_by':'year'}"/>
+                    <filter string="พนักงาน" name="group_by_employee" context="{'group_by':'employee_id'}"/>
+                    <filter string="สาขา" name="group_by_branch" context="{'group_by':'branch_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_payroll_salary" model="ir.actions.act_window">
+        <field name="name">ทำเงินเดือน</field>
+        <field name="res_model">payroll.salary</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_payroll_salary_search"/>
+        <field name="context">{'search_default_current_month': 1, 'search_default_group_by_month': 1}</field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem id="sub_payroll_salary_menu"
+              name="ทำเงินเดือน"
+              parent="main_employee_salary_menu"
+              action="action_payroll_salary"
+              sequence="20"/>
+
+    <!-- Tree View -->
+    <record id="view_payroll_salary_tree" model="ir.ui.view">
+        <field name="name">payroll.salary.tree</field>
+        <field name="model">payroll.salary</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="employee_id"/>
+                <field name="employee_code"/>
+                <field name="branch_id"/>
+                <field name="month"/>
+                <field name="year"/>
+                <field name="base_salary"/>
+                <field name="ot_total"/>
+                <field name="income_allowance"/>
+                <field name="income_food"/>
+                <field name="income_transport"/>
+                <field name="income_commission"/>
+                <field name="income_commission_sale"/>
+                <field name="expense_provident"/>
+                <field name="expense_loan"/>
+                <field name="deduction_late"/>
+                <field name="deduction_leave"/>
+                <field name="deduction_absent"/>
+                <field name="total_gross"/>
+                <field name="total_deduction"/>
+                <field name="net_salary"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_payroll_salary_form" model="ir.ui.view">
+        <field name="name">payroll.salary.form</field>
+        <field name="model">payroll.salary</field>
+        <field name="arch" type="xml">
+            <form string="ทำเงินเดือน">
+                <header>
+                    <button name="action_recalculate_all"
+                            type="object"
+                            string="คำนวณใหม่"
+                            class="oe_link"/>
+                    <button name="action_print_payslip"
+                            type="object"
+                            string="🖨 พิมพ์สลิปเงินเดือน"
+                            class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object"
+                                class="oe_stat_button" icon="fa-archive">
+                            <field name="active" widget="boolean_button"
+                                   options='{"terminology": "archive"}'/>
+                        </button>
+                    </div>
+                    <group>
+                        <field name="employee_id"/>
+                        <field name="employee_code"/>
+                        <field name="branch_id"/>
+                        <field name="firstname"/>
+                        <field name="lastname"/>
+                        <field name="base_salary"/>
+                        <field name="month"/>
+                        <field name="year"/>
+                        <field name="cutoff_day"/>
+                        <field name="payment_date"/>
+                        <field name="accumulated_income"/>
+                    </group>
+                    <notebook>
+                        <!-- รายละเอียดเงินเดือน -->
+                        <page string="รายละเอียดเงินเดือน" context="{'default_payroll_id': active_id}">
+                            <field name="line_ids">
+                                <tree editable="bottom" create="true" delete="true">
+                                    <field name="name"/>
+                                    <field name="type"/>
+                                    <field name="amount" widget="monetary"/>
+                                </tree>
+                            </field>
+                            <group class="oe_subtotal_footer oe_right">
+                                <field name="override_totals" string="ปรับแก้ยอดรวมด้วยมือ"/>
+                                <field name="other_income_total" string="เงินได้อื่นๆ" widget="monetary" readonly="1"/>
+                                <field name="base_salary" string="เงินเดือน" widget="monetary"/>
+                                <field name="total_gross" attrs="{'readonly': [('override_totals', '=', False)]}" string="รวมรายได้"/>
+                                <field name="total_deduction" attrs="{'readonly': [('override_totals', '=', False)]}" string="รวมรายจ่าย"/>
+                                <field name="net_salary" attrs="{'readonly': [('override_totals', '=', False)]}" string="เงินสุทธิ"/>
+                            </group>
+                        </page>
+
+                        <!-- รายได้ -->
+                        <page string="รายได้">
+                            <group>
+                                <group>
+                                    <field name="income_cost_of_living" readonly="1"/>
+                                    <field name="income_position_allowance" readonly="1"/>
+                                    <field name="income_experience_allowance" readonly="1"/>
+                                    <field name="income_professional_allowance" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="income_allowance"/>
+                                    <field name="income_food"/>
+                                    <field name="income_transport"/>
+                                    <field name="income_fuel"/>
+                                    <field name="income_commission" widget="monetary"/>
+                                    <button name="action_view_commission_branch_detail"
+                                            type="object" string="🔍 ดูรายละเอียดค่าคอมสาขา"
+                                            class="oe_link btn-sm"/>
+                                    <field name="income_commission_sale" widget="monetary"/>
+                                    <button name="action_view_commission_sale_detail"
+                                            type="object" string="🔍 ดูรายละเอียดค่าคอม Sales"
+                                            class="oe_link btn-sm"/>
+                                    <field name="income_other"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- รายจ่าย -->
+                        <page string="รายจ่าย">
+                            <group>
+                                <group>
+                                    <field name="expense_provident"/>
+                                    <field name="expense_advance"/>
+                                    <field name="expense_loan"/>
+                                </group>
+                                <group>
+                                    <field name="expense_ksl"/>
+                                    <field name="expense_insurance"/>
+                                    <field name="expense_other"/>
+                                </group>
+                            </group>
+                            <separator string="หัก ขาด/ลา/สาย"/>
+                            <group>
+                                <field name="manual_override"/>
+                                <field name="deduction_late"/>
+                                <field name="deduction_leave"/>
+                                <field name="deduction_absent"/>
+                            </group>
+                        </page>
+
+                        <!-- คำนวณ OT -->
+                        <page string="คำนวณ OT">
+                            <group>
+                                <field name="ot_api_url" invisible="1"/>
+                            </group>
+                            <group>
+                                <field name="holiday_template_year" string="ใช้เทมเพลตวันหยุดประจำปี"/>
+                                <field name="ot_calculation_method" widget="radio"/>
+                            </group>
+
+
+                            <group string="แก้ไขค่าล่วงเวลาด้วยมือ">
+                                <field name="override_ot"/>
+                                <field name="manual_ot_weekday"/>
+                                <field name="manual_ot_holiday"/>
+                                <field name="manual_ot_sunday"/>
+                                <field name="ot_total" readonly="1" invisible="1"/>
+                            </group>
+
+                            <field name="ot_line_ids"
+                                   attrs="{'readonly': [('override_ot', '=', False)]}">
+                                <tree editable="bottom" create="true" delete="true">
+                                    <field name="date"/>
+                                    <field name="start_time" widget="datetime" invisible="1"/>
+                                    <field name="end_time" widget="datetime" invisible="1"/>
+                                    <field name="start_time_x" />
+                                    <field name="end_time_x"  />
+                                    <field name="ot_hours"/>
+                                    <field name="ot_type"/>
+                                    <field name="rate_multiplier"/>
+                                    <field name="ot_amount" sum="Total OT"/>
+                                </tree>
+                            </field>
+                        </page>
+
+                        <!-- คำนวณขาดลามาสาย -->
+                        <page string="คำนวณขาดลามาสาย">
+                            <button name="action_open_lateness_summary"
+                    string="📊 สรุปขาดลามาสาย"
+                    type="object"
+                    class="btn-primary"/>
+                            <group>
+                                <field name="lateness_grace_period"/>
+                                <field name="cutoff_day"/>
+                            </group>
+                            <group string="สรุปเวลา (นาที)">
+                                <field name="lateness_minutes" readonly="1"/>
+                                <field name="late_checkin_minutes" readonly="1"/>
+                                <field name="early_checkout_minutes" readonly="1"/>
+                                <field name="missed_days" readonly="1"/>
+                            </group>
+                            <separator string="ยอดหัก (บาท)"/>
+                            <group>
+                                <field name="late_checkin_deduction" readonly="1"/>
+                                <field name="early_checkout_deduction" readonly="1"/>
+                                <field name="missed_days_deduction" readonly="1"/>
+                                <field name="leave_deduction_total" readonly="1"/>
+                                <field name="lateness_deduction" readonly="1"/>
+                            </group>
+                        </page>
+
+                        <!-- การตั้งค่าภาษี -->
+                        <page string="การตั้งค่าภาษี">
+                            <group>
+                                <field name="expense_deduction"/>
+                                <field name="personal_deduction"/>
+                                <field name="provident_fund_rate"/>
+                                <field name="provident_fund_deduction_max"/>
+                                <field name="tax_monthly"/>
+
+                                <field name="accumulated_vat"/>
+                            </group>
+                            <field name="tax_bracket_ids">
+                                <tree editable="bottom">
+                                    <field name="sequence"/>
+                                    <field name="income_from"/>
+                                    <field name="income_to"/>
+                                    <field name="rate"/>
+                                    <field name="deduction"/>
+                                </tree>
+                            </field>
+                        </page>
+
+                        <!-- การตั้งค่าประกันสังคม -->
+                        <page string="การตั้งค่าประกันสังคม">
+                            <group>
+                                <field name="sso_rate"/>
+                                <field name="sso_min_wage"/>
+
+                                <field name="sso_total"/>
+                                <field name="accumulated_social_security"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Server Action -->
+    <record id="action_server_generate_next_month" model="ir.actions.server">
+        <field name="name">สร้างเดือนถัดไป</field>
+        <field name="model_id" ref="model_payroll_salary"/>
+        <field name="binding_model_id" ref="model_payroll_salary"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+            if records:
+                records.action_generate_next_month()
+        </field>
+    </record>
+
+
+    <!-- Action สำหรับเปิด URL รายงานเงินเดือน -->
+    <record id="action_payroll_report_url" model="ir.actions.act_url">
+        <field name="name">รายงานเงินเดือน</field>
+        <field name="url">https://npdhrms.com/payroll_report.php</field>
+        <field name="target">new</field> <!-- เปิดในแท็บใหม่ -->
+    </record>
+
+    <!-- Menu รายงานเงินเดือน -->
+    <menuitem id="sub_payroll_report_menu"
+              name="รายงานเงินเดือน"
+              parent="main_employee_salary_menu"
+              action="action_payroll_report_url"
+              sequence="21"/>
+
+</odoo>

@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<odoo>
+    <!--Sh Idea Object views and action -->
+    <record id="sh_idea_form_view" model="ir.ui.view">
+        <field name="name">sh.idea.form</field>
+        <field name="model">sh.idea</field>
+        <field name="arch" type="xml">
+            <form string="Idea">
+                <header>
+                    <button name="new_idea_button" type="object" states="new" string="Post Idea" class="oe_highlight" />
+                    <button name="approve_button" string="Approve" type="object" class="oe_highlight" attrs="{'invisible':['|',('is_approve','=',True),('state','!=', 'waiting')]}" />
+                    <button name="refuse_button" string="Refuse" type="object" class="oe_highlight" attrs="{'invisible':['|',('is_approve','=',True),('state','!=', 'waiting')]}" />
+                    <button name="close_button" string="Close" type="object" states="approve" class="oe_highlight" />
+                    <button name="reset_to_draft_button" string="Reset To Draft" type="object" states="refused,closed" class="oe_highlight" />
+                    <field name="state" widget="statusbar" statusbar_visible="new,waiting,approve,refused,closed" readonly="1" />
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1" />
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="subject" attrs="{'readonly':[('state','!=','new')]}" required="True" />
+                            <field name="idea_category" attrs="{'readonly':[('state','!=','new')]}" required="True" options="{'no_create': True, 'no_open':True,'no_create_edit':True}" />
+                            <field name="create_date" attrs="{'readonly':[('state','!=','new')]}" />
+                        </group>
+                        <group>
+                            <field name="created_by" attrs="{'readonly':[('state','!=','new')]}" readonly="1" required="True" />
+                            <field name="resp_persons" widget="many2many_tags" attrs="{'readonly':[('state','!=','new')]}" readonly="1" required="True" />
+                            <field name="is_approve" invisible="1" />
+                            <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company" attrs="{'readonly':[('state','!=','new')]}" />
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" string="Description" attrs="{'readonly':[('state','!=','new')]}" />
+                    </group>
+                    <notebook>
+                        <page string="Approved" name="approved_page" attrs="{'invisible':[('state','not in',['approve','closed'])]}">
+                            <group>
+                                <group>
+                                    <field name="rating" widget="priority" readonly="1" />
+                                    <field name="approved_by" readonly="1" />
+                                    <field name="approved_comment" readonly="1" />
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Refused" name="refused_page" attrs="{'invisible':[('state','not in',['refused'])]}">
+                            <group>
+                                <group>
+                                    <field name="rating" widget="priority" readonly="1" />
+                                    <field name="refused_by" readonly="1" />
+                                    <field name="refused_comment" readonly="1" />
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="o_attachment_preview" />
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers" />
+                    <field name="activity_ids" widget="mail_activity" />
+                    <field name="message_ids" widget="mail_thread" />
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="sh_idea_tree_view" model="ir.ui.view">
+        <field name="name">sh.idea.tree</field>
+        <field name="model">sh.idea</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" string="Sequence" />
+                <field name="subject" />
+                <field name="idea_category" />
+                <field name="create_date" />
+                <field name="created_by" />
+                <field name="state" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="sh_idea_search_views" model="ir.ui.view">
+        <field name="name">sh.idea.search</field>
+        <field name="model">sh.idea</field>
+        <field name="arch" type="xml">
+            <search string="Idea">
+                <field name="name" />
+                <filter string="To Approve Idea" name="to_app_idea" domain="[('state', '=', 'waiting')]" />
+                <filter string="Approved Idea" name="app_idea" domain="[('state','=','approve')]" />
+                <filter string="Refused Idea" name="refused" domain="[('state','=','refused')]" />
+                <separator />
+                <group expand="0" string="Group by...">
+                    <filter string="Sequence" name="name" context="{'group_by': 'name'}" />
+                    <filter string="Subject" name="subject" context="{'group_by': 'subject'}" />
+                    <filter string="Idea Categories" name="idea_category" context="{'group_by': 'idea_category'}" />
+                    <filter string="Created Date" name="create_date" context="{'group_by': 'create_date'}" />
+                    <filter string="Created By" name="created_by" context="{'group_by': 'created_by'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="sh_idea_view_actions" model="ir.actions.act_window">
+        <field name="name">Idea</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sh.idea</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

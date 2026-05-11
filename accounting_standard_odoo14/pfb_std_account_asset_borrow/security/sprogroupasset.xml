@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Rules -->
+    <record id="asset_equipment_request_rule_user" model="ir.rule">
+        <field name="name">Users are allowed to access their own asset requests</field>
+        <field name="model_id" ref="model_asset_request"/>
+        <field name="domain_force">
+            ['|', ('message_partner_ids', 'in', [user.partner_id.id]),
+            ('technician_user_id.id', '=', user.id)]
+        </field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+
+    <!-- Rules -->
+    <record id="asset_borrow_request_rule_manger_user" model="ir.rule">
+        <field name="name">Manager Users are allowed to access their own asset borrow requests</field>
+        <field name="model_id" ref="model_asset_borrow_request"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('pfb_std_asset_menu.group_asset_manager'))]"/>
+    </record>
+
+
+    <record id="asset_equipment_request_rule_admin_user" model="ir.rule">
+        <field name="name">Administrator of asset requests</field>
+        <field name="model_id" ref="model_asset_request"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('pfb_std_asset_menu.group_asset_manager'))]"/>
+    </record>
+
+    <!-- Rules -->
+    <record id="asset_provide_request_rule_manger_user" model="ir.rule">
+        <field name="name">Manager Users are allowed to access their own asset provide requests</field>
+        <field name="model_id" ref="model_asset_provide_request"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('pfb_std_asset_menu.group_asset_manager'))]"/>
+    </record>
+
+
+    <!-- Rules -->
+    <record id="asset_provide_request_rule_user" model="ir.rule">
+        <field name="name">Users are allowed to access their own asset provide requests</field>
+        <field name="model_id" ref="model_asset_provide_request"/>
+        <field name="domain_force">['|',
+                                        ('create_uid.id', '=', user.id),
+                                            '|',
+                                                ('owner_user_id.id', '=', user.id),
+                                            '|',
+                                                ('rejected_user_id.id', '=', user.id),
+                                                ('approved_user_id.id', '=', user.id),
+                                    ]
+        </field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+</odoo>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================ -->
+    <!-- ปุ่ม "ดำเนินการรับชำระใหม่" บนหน้า Payment -->
+    <!-- แสดงเฉพาะ: state=cancel + user มีสิทธิ์     -->
+    <!-- ============================================ -->
+    <record id="view_account_payment_form_reprocess_button" model="ir.ui.view">
+        <field name="name">account.payment.form.reprocess.button</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+            <header position="inside">
+                <field name="allow_reprocess_visible" invisible="1"/>
+                <button name="action_open_reprocess_wizard"
+                        string="ดำเนินการรับชำระใหม่"
+                        type="object"
+                        class="btn-warning"
+                        attrs="{'invisible': ['|', ('state', '!=', 'cancel'), ('allow_reprocess_visible', '=', False)]}"/>
+            </header>
+        </field>
+    </record>
+
+</odoo>

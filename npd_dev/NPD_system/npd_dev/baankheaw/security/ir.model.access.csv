@@ -1,0 +1,30 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_baankheaw_employee,access.baankheaw.employee,model_baankheaw_employee,,1,1,1,1
+access_debtor_summary_user,access.debtor.summary.user,model_baankheaw_debtor_summary,base.group_user,1,1,1,1
+access_stock_daily_report_user,access.stock.daily.report.user,model_baankheaw_stock_daily_report,base.group_user,1,1,1,1
+
+access_rental_bill_summary_user,rental.bill.summary.user,model_baankheaw_rental_bill_summary,base.group_user,1,1,1,1
+access_rental_bill_summary_manager,rental.bill.summary.manager,model_baankheaw_rental_bill_summary,base.group_system,1,1,1,1
+access_quotation_summary_user,quotation.summary.user,model_baankheaw_quotation_summary,base.group_user,1,1,1,1
+access_quotation_summary_manager,quotation.summary.manager,model_baankheaw_quotation_summary,base.group_system,1,1,1,1
+
+access_baankheaw_quotation_summary,access.baankheaw.quotation.summary,model_baankheaw_quotation_summary,base.group_user,1,1,1,1
+access_baankheaw_rental_stock_summary,access.baankheaw.rental.stock.summary,model_baankheaw_rental_stock_summary,base.group_user,1,1,1,1
+access_baankheaw_total_rental_stock,access.baankheaw.total.rental.stock,model_baankheaw_total_rental_stock,base.group_user,1,1,1,1
+
+
+access_rental_invoice_receipt_user,Rental Invoice Receipt User,model_baankheaw_rental_invoice_receipt,base.group_user,1,1,1,1
+access_rental_invoice_receipt_manager,Rental Invoice Receipt Manager,model_baankheaw_rental_invoice_receipt,base.group_system,1,1,1,1
+access_bill_arrears_summary_user,access.bill.arrears.summary.user,model_baankheaw_bill_arrears_summary,base.group_user,1,1,1,1
+
+
+access_baankheaw_product_stock_summary,access_baankheaw_product_stock_summary,model_baankheaw_product_stock_summary,base.group_user,1,1,1,1
+access_old_customer_summary_user,access_old_customer_summary_user,model_baankheaw_old_customer_summary,base.group_user,1,1,1,1
+
+access_rental_quotation_user,access_rental_quotation_user,model_baankheaw_rental_quotation,base.group_user,1,1,1,1
+
+access_baankheaw_receive_payment_user,access_baankheaw_receive_payment_user,model_baankheaw_receive_payment,base.group_user,1,1,1,1
+
+
+access_baankheaw_product_stock_summary_day,access_baankheaw_product_stock_summary_day,model_baankheaw_product_stock_summary_day,base.group_user,1,1,1,1
+

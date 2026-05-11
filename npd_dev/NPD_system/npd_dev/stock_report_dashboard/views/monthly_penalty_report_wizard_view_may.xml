@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Wizard Form View -->
+        <record id="view_monthly_penalty_report_wizard_may" model="ir.ui.view">
+            <field name="name">monthly.penalty.report.wizard.may.form</field>
+            <field name="model">monthly.penalty.report.wizard.may</field>
+            <field name="arch" type="xml">
+                <form string="🔍 เงื่อนไขการสรุปรายงานหนี้ค้างชำระ">
+                    <sheet>
+                        <div class="oe_title">
+                            <h2>เลือกเดือนและปี</h2>
+                        </div>
+                        <group>
+                            <group string="📅 เลือกช่วงเวลา">
+                                <field name="month" required="True" widget="selection"/>
+                                <field name="year" required="True"/>
+                            </group>
+                            <group string="🏢 ตัวเลือกเพิ่มเติม">
+                                <field name="branch_ids"
+                                       widget="many2many_tags"
+                                       placeholder="เลือกสาขา (เว้นว่างเพื่อดูทุกสาขา)"
+                                       options="{'no_create': True}"/>
+                                <field name="contact_type"
+                                        placeholder="เลือกประเภท (เว้นว่างเพื่อดูทุกประเภท)"/>
+                            </group>
+                        </group>
+                        <group>
+                            <div class="alert alert-info" role="alert">
+                                <i class="fa fa-info-circle"/> <strong>หมายเหตุ:</strong>
+                                <ul>
+                                    <li>ระบบจะแสดงรายการทั้งหมดของเดือนและปีที่เลือก</li>
+                                    <li>จะไม่แสดงแยกตามวัน เพียงแค่รวมยอดทั้งหมด</li>
+                                    <li>ระบบจะลบข้อมูลเก่าทั้งหมดก่อนสร้างใหม่</li>
+                                    <li>เว้นว่างสาขาเพื่อดูข้อมูลทุกสาขา</li>
+                                    <li>เว้นว่างประเภท Contact เพื่อดูข้อมูลทุกประเภท</li>
+                                </ul>
+                            </div>
+                        </group>
+                    </sheet>
+                    <footer>
+                        <button name="action_generate_report_may"
+                                type="object"
+                                string="🔍 ค้นหารายงาน"
+                                class="btn-primary"/>
+                        <button string="ยกเลิก"
+                                class="btn-secondary"
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Wizard Action -->
+        <record id="action_monthly_penalty_report_wizard_may" model="ir.actions.act_window">
+            <field name="name">สรุปรายงานหนี้ค้างชำระ</field>
+            <field name="res_model">monthly.penalty.report.wizard.may</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="view_id" ref="view_monthly_penalty_report_wizard_may"/>
+        </record>
+
+        <!-- เมนูสำหรับเรียก Wizard -->
+        <menuitem id="menu_monthly_penalty_report_wizard"
+                  name="สรุปรายงานหนี้ค้างชำระ"
+                  parent="menu_stock_dashboard_root"
+                  action="action_monthly_penalty_report_wizard_may"
+                  sequence="20"/>
+    </data>
+</odoo>

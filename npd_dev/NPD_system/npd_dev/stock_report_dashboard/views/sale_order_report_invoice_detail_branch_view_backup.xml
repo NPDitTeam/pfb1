@@ -1,0 +1,66 @@
+<odoo>
+    <data>
+
+        <!-- ✅ Tree View -->
+        <record id="view_tree_sale_order_report_invoice_detail_branch" model="ir.ui.view">
+            <field name="name">sale.order.report.invoice.detail.branch.tree</field>
+            <field name="model">sale.order.report.invoice.detail.branch</field>
+            <field name="arch" type="xml">
+                <tree string="รายงานใบแจ้งหนี้ค้างชำระ(สาขา)">
+                    <field name="branch_name"/>
+                    <field name="due_date"/>
+                    <field name="sale_id" widget="many2one"/>
+                    <field name="partner_name"/>
+                    <field name="due_amount" sum="รวมยอดค้าง"/>
+                    <field name="paid_date"/>
+                    <field name="paid_amount" sum="รวมรับชำระ"/>
+                    <field name="user_name"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- ✅ Form View พร้อมปุ่มดึงข้อมูล -->
+        <record id="view_form_sale_order_report_invoice_detail_branch" model="ir.ui.view">
+            <field name="name">sale.order.report.invoice.detail.branch.form</field>
+            <field name="model">sale.order.report.invoice.detail.branch</field>
+            <field name="arch" type="xml">
+                <form string="รายงานใบแจ้งหนี้ค้างชำระ(สาขา)">
+                    <header>
+                        <button name="generate_report"
+                                type="object"
+                                string="📊 ดึงข้อมูลใหม่"
+                                class="btn-primary"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <div class="o_form_label">กดปุ่มด้านบนเพื่อดึงข้อมูลใบแจ้งหนี้ค้างชำระใหม่</div>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ✅ Action Window -->
+        <record id="action_sale_order_report_invoice_detail_branch" model="ir.actions.act_window">
+            <field name="name">รายงานใบแจ้งหนี้ค้างชำระ(สาขา)</field>
+            <field name="res_model">sale.order.report.invoice.detail.branch</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- ✅ เมนู -->
+        <menuitem id="menu_sale_order_report_invoice_detail_branch"
+                  name="รายงานใบแจ้งหนี้ค้างชำระ(สาขา)"
+                  parent="menu_stock_dashboard_root"
+                  action="action_sale_order_report_invoice_detail_branch"
+                  sequence="15"/>
+
+        <!-- ✅ Server Action (เรียกใช้ generate_report จากจุดอื่นได้) -->
+        <record id="server_action_generate_sale_order_report_invoice_detail_branch" model="ir.actions.server">
+            <field name="name">ดึงข้อมูลใบแจ้งหนี้ค้างชำระ(สาขา)</field>
+            <field name="model_id" ref="model_sale_order_report_invoice_detail_branch"/>
+            <field name="state">code</field>
+            <field name="code">model.generate_report()</field>
+        </record>
+
+    </data>
+</odoo>

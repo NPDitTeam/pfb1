@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+	   
+	   
+	    <record id="hr_department_branch_manager_rule" model="ir.rule">
+	        <field name="name">Department Branch Manager</field>
+	        <field name="model_id" ref="model_hr_department"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','in',[branch.id for branch in user.branch_ids])]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user_manager'))]"/>
+	    </record>
+	
+	    <record id="hr_department_branch_rule" model="ir.rule">
+	        <field name="name">Department Branch User</field>
+	        <field name="model_id" ref="model_hr_department"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','=',user.branch_id.id)]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user'))]"/>
+	    </record>
+	
+	     <record id="hr_applicant_branch_manager_rule" model="ir.rule">
+	        <field name="name">Applicant Branch Manager</field>
+	        <field name="model_id" ref="model_hr_applicant"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','in',[branch.id for branch in user.branch_ids])]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user_manager'))]"/>
+	    </record>
+	
+	    <record id="hr_applicant_branch_rule" model="ir.rule">
+	        <field name="name">Applicant Branch User</field>
+	        <field name="model_id" ref="model_hr_applicant"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','=',user.branch_id.id)]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user'))]"/>
+	    </record> 
+	    
+	     <record id="hr_employee_branch_manager_rule" model="ir.rule">
+	        <field name="name">Employee Branch Manager</field>
+	        <field name="model_id" ref="model_hr_employee"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','in',[branch.id for branch in user.branch_ids])]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user_manager'))]"/>
+	    </record>
+	
+	    <record id="hr_employee_branch_rule" model="ir.rule">
+	        <field name="name">Employee Branch User</field>
+	        <field name="model_id" ref="model_hr_employee"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','=',user.branch_id.id)]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user'))]"/>
+	    </record> 
+	    
+	     <record id="hr_attendance_branch_manager_rule" model="ir.rule">
+	        <field name="name">Attendance Branch Manager</field>
+	        <field name="model_id" ref="model_hr_attendance"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','in',[branch.id for branch in user.branch_ids])]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user_manager'))]"/>
+	    </record>
+	
+	    <record id="hr_attendance_branch_rule" model="ir.rule">
+	        <field name="name">Attendance Branch User</field>
+	        <field name="model_id" ref="model_hr_attendance"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','=',user.branch_id.id)]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user'))]"/>
+	    </record> 
+	    
+	     <record id="hr_contract_branch_manager_rule" model="ir.rule">
+	        <field name="name">Contract Branch Manager</field>
+	        <field name="model_id" ref="model_hr_contract"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','in',[branch.id for branch in user.branch_ids])]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user_manager'))]"/>
+	    </record>
+	
+	    <record id="hr_contract_branch_rule" model="ir.rule">
+	        <field name="name">Contract Branch User</field>
+	        <field name="model_id" ref="model_hr_contract"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','=',user.branch_id.id)]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user'))]"/>
+	    </record> 
+	
+	     <record id="hr_payslip_branch_manager_rule" model="ir.rule">
+	        <field name="name">Payslip Branch Manager</field>
+	        <field name="model_id" ref="model_hr_payslip"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','in',[branch.id for branch in user.branch_ids])]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user_manager'))]"/>
+	    </record>
+	
+	    <record id="hr_payslip_branch_rule" model="ir.rule">
+	        <field name="name">Payslip Branch User</field>
+	        <field name="model_id" ref="model_hr_payslip"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','=',user.branch_id.id)]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user'))]"/>
+	    </record>
+	
+	    <record id="hr_expense_sheet_branch_manager_rule" model="ir.rule">
+	        <field name="name">Expense Sheet Branch Manager</field>
+	        <field name="model_id" ref="model_hr_expense_sheet"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','in',[branch.id for branch in user.branch_ids])]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user_manager'))]"/>
+	    </record>
+	
+	    <record id="hr_expense_sheet_branch_rule" model="ir.rule">
+	        <field name="name">Expense Sheet Branch User</field>
+	        <field name="model_id" ref="model_hr_expense_sheet"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','=',user.branch_id.id)]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user'))]"/>
+	    </record>
+	    
+	    <record id="hr_expense_branch_manager_rule" model="ir.rule">
+	        <field name="name">Expense Branch Manager</field>
+	        <field name="model_id" ref="model_hr_expense"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','in',[branch.id for branch in user.branch_ids])]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user_manager'))]"/>
+	    </record>
+	
+	    <record id="hr_expense_branch_rule" model="ir.rule">
+	        <field name="name">Expense Branch User</field>
+	        <field name="model_id" ref="model_hr_expense"/>
+	        <field name="global" eval="True"/>
+	        <field name="domain_force">['|',('branch_id','=',False),('branch_id','=',user.branch_id.id)]</field>
+	        <field name="groups" eval="[(4, ref('branch.group_branch_user'))]"/>
+	    </record>
+	    
+	
+	
+	    
+	</data>
+</odoo>

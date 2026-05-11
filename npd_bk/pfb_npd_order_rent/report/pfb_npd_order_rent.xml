@@ -1,0 +1,634 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+<!--        กำหนดค่ากระดาษ-->
+    <record id="paperformat_pfb_npd_order_rent" model="report.paperformat">
+        <field name="name">A4 Sample</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">10</field> <!-- ระยะขอบด้านบนตั้งค่าเป็น 1 หน่วย -->
+        <field name="margin_bottom">10</field> <!-- ระยะขอบด้านล่างตั้งค่าเป็น 5 หน่วย -->
+        <field name="margin_left">10</field>
+        <field name="margin_right">10</field>
+        <field name="dpi">90</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <!-- กำหนดขนาดตัวอักษรเป็น 12 -->
+<!--        <field name="font_size">12</field>-->
+    </record>
+
+    <report
+            id="action_order_rent"
+            string="Rental Returns"
+            name="pfb_npd_order_rent.report_pfb_npd_order_rent"
+            model="sale.order"
+            report_type="qweb-pdf"
+            print_report_name="'Sale - %s' %(object.name)"
+            paperformat="pfb_npd_order_rent.paperformat_pfb_npd_order_rent"
+    />
+
+<!--    หัวข้อรายงาน-->
+    <template id="report_header">
+        <style>
+            .table-right {
+                  width: 100%;
+                  border-collapse: collapse;
+            }
+
+           .table-right td {
+                 padding: 8px;
+                 border: 1px solid #ddd;
+                 text-align: right; /* จัดตำแหน่งเนื้อหาทางขวา */
+           }
+
+           .table-right h2 {
+                margin: 0;
+                text-align: right; /* จัดตำแหน่งหัวข้อทางขวา */
+           }
+            .mt-1 {
+                margin-top: 1rem;
+            }
+
+            .mb-1 {
+                margin-bottom: 1rem;
+            }
+        </style>
+        <div class="row">
+            <div class="col-3">
+                <img src="web/binary/company_logo" class="img-responsive" alt="Company Logo"/>
+            </div>
+            <div class="col-6">
+                <table style="width: 100%;">
+                    <tr>
+                         <h2><strong>ใบคืนการเช่า</strong></h2>
+                    </tr>
+                    <tr>
+                         <td class="font-size: 20px;"><strong><span t-esc="doc.company_id.name"/></strong></td>
+                    </tr>
+                    <tr>
+                        <td class="font-size: 20px;">
+                              <strong>ที่อยู่:</strong>
+                              <span t-esc="doc.company_id.street"/>
+                              <span t-esc="doc.company_id.street2"/>
+                              <span t-esc="doc.company_id.city"/>
+                        <!-- <span t-esc="doc.company_id.state_id.name"/> -->
+                        </td>
+                    </tr>
+                    <tr>
+                    <td class="font-size: 20px;">
+                        <strong>เลขที่ผู้เสียภาษี:</strong>
+                        <span t-esc="doc.company_id.vat"/>
+                    </td>
+                    </tr>
+                    <tr>
+                        <td class="font-size: 20px;"><strong>[ติดต่อ : ศาลายา 084-7512304]</strong></td>
+                    </tr>
+                </table>
+            </div>        <!-- โลโก้บริษัท -->
+            <div class="col-3">
+                <table style="width: 100%;">
+                    <tr>
+                         <td class="text-center" style="font-size: 18px;"><h2><strong>เลขที่ใบคืน</strong></h2></td>
+                    </tr>
+                    <tr>
+                         <td class="text-center" style="font-size: 18px;">
+                               <strong><span t-esc="doc.name"/></strong>
+                         </td>
+                    </tr>
+                    <tr>
+                         <td class="text-center">
+                              <strong>อ้างอิงใบกำกับการเช่า</strong>
+                         </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </template>
+
+
+    <template id="report_day">
+        <style>
+            .rounded-square {
+                border: 1px solid #000;
+                border-radius: 10px;
+                padding: 10px;
+                width: 90%;
+                font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+<!--                margin: auto; /* Center align */-->
+            }
+            .text-left {
+                text-align: left;
+            }
+
+            .text-right {
+                text-align: right;
+            }
+
+            .mt-1 {
+                margin-top: 1rem;
+            }
+
+            .mb-1 {
+                margin-bottom: 1rem;
+            }
+
+            .mr-1 {
+                margin-right: 1rem;
+            }
+        </style>
+        <div class="row">
+            <div class="mb-1 rounded-square" >
+                <div class="col-10">
+                    <table width="100%">
+                        <tr>
+                            <td class="text-left">
+<!--                            <span t-esc="doc.get_date_baht_text" t-options='{"widget":"date"}'/>-->
+                            </td>
+                            <td class="text-right" >
+                                    <strong class="mr-1">รวม</strong>
+                                    <span t-esc="doc.pfb_date_of_rent"/> วัน
+                                </td>
+                        </tr>
+                  <div class="col-2">
+                      <tr>
+                          <td class="text-center">
+                          </td>
+                      </tr>
+                  </div>
+
+                    </table>
+                </div>
+            </div>
+        </div>
+    </template>
+
+<!--    รายละเอียด-->
+    <template id="report_detail">
+        <style>
+            .table-right {
+                  width: 100%;
+                  border-collapse: collapse;
+            }
+
+           .table-right td {
+                 padding: 8px;
+                 border: 1px solid #ddd;
+                 text-align: right; /* จัดตำแหน่งเนื้อหาทางขวา */
+           }
+
+           .table-right h2 {
+                margin: 0;
+                text-align: right; /* จัดตำแหน่งหัวข้อทางขวา */
+           }
+            .preserve-whitespace
+            {
+                white-space: pre; /* Preserve leading and other white spaces */
+            }
+            .mt-1 {
+                margin-top: 1rem; /* ระยะห่างด้านบน */
+            }
+            .mb-1 {
+                margin-bottom: 1rem; /* ระยะห่างด้านล่าง */
+            }
+            .mr-1 {
+                margin-right: 1rem; /* ระยะห่างด้านขวา */
+            }
+            .ml-1 {
+                margin-left: 1em /* ระยะห่างด้านซ้าย */
+            }
+            .space{
+            margin-left: 1em; /* ช่องว่างด้านซ้ายเทียบเท่ากับขนาดของ 5 ตัวอักษร */
+           }
+            .space2{
+            margin-left: 2.4em; /* ช่องว่างด้านซ้ายเทียบเท่ากับขนาดของ 5 ตัวอักษร */
+           }
+            .space2-1{
+            margin-left: 2.6em; /* ช่องว่างด้านซ้ายเทียบเท่ากับขนาดของ 5 ตัวอักษร */
+           }
+            .space3{
+            margin-left: 5.2em; /* ช่องว่างด้านซ้ายเทียบเท่ากับขนาดของ 5 ตัวอักษร */
+           }
+           .m-1 {
+               margin: 1rem; /* ระยะห่างในทุกทิศทาง */
+           }
+        </style>
+<!--         ส่วนของข้อมูล-->
+        <div class="row" style="mt-1">
+            <table class="width :100%">
+                <tr class="font-size: 20px;">
+<!--                        ชื่อผู้เช่า-->
+                    <strong class="space2">ผู้เช่า :</strong>
+                </tr>
+                <tr>
+                    <td><span class="ml-1" t-esc="doc.partner_id.name"/></td>
+                </tr>
+            </table>
+        </div>
+        <div class="row" style="mt-1">
+            <table style="width :100%">
+                <tr class="font-size: 20px;">
+                    <td>
+                        <strong class="space2-1">ที่อยู่ :</strong>
+                        <span class="ml-1" t-esc="doc.partner_id.street"/>
+                        <span class="ml-1" t-esc="doc.partner_id.street2"/>
+                        <span class="ml-1" t-esc="doc.partner_id.city"/>
+                        <span class="ml-1" t-esc="doc.partner_id.state_id.name"/>
+                        <span class="ml-1" t-esc="doc.partner_id.zip"/>
+                        <tb class="ml-1">[<span t-esc="doc.partner_id.phone"/>]</tb>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="row">
+            <table style="width :100%">
+                <tr>
+                    <td class="font-size: 20px;">
+                        <tb class="space3">ผู้ติดต่อ :</tb>
+                        <tb class="ml-1"><span t-esc="doc.partner_id.name"/></tb>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="row">
+            <table style="width :100%">
+                <tr>
+                    <td class="ml-1 font-size: 20px;"  >
+                        <strong class="space">หน้างาน :</strong>
+                        <span class="ml-1" t-esc="doc.partner_invoice_id.name"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </template>
+
+<!--    ตาราง-->
+    <template id="report_table">
+    <style>
+<!--        .table-row {-->
+<!--            height: 370px; /* Adjust the height as needed */-->
+<!--        }-->
+        .table td {
+        padding: 18px; /* ลด padding เพื่อให้ความสูงลดลง */
+    }
+        .border_report {
+    border-bottom: 1px solid black !important;
+    border-top: 1px solid black !important
+}
+    </style>
+    <table width="100%" class="table" style="mt-1">
+        <thead>
+            <tr style="border-bottom: 1px solid black !important;">
+                <th width="5%" class="text-center border_report">ลำดับ</th>
+                <th width="30%" class="text-left  border_report">รายการสินค้า</th>
+                <th width="15%" class="text-right border_report">น้ำหนักสินค้า</th>
+                <th width="15%" class="text-right border_report">ราคาต่อสินค้า</th>
+                <th width="15%" class="text-right border_report">จำนวน</th>
+                <th width="20%" class="text-right  border_report">รวมเป็นเงิน</th>
+            </tr>
+        </thead>
+        <tbody>
+            <t t-foreach="doc.order_line" t-as="l">
+                <t t-set="number" t-vatue="number + (l.price_unit * l.product_uom_qty)"/>
+                <tr class="table">
+                    <td class="text-center"><span t-esc="l_index + 1"/></td>
+                    <td class="text-left"><span t-esc="l.product_id.name"/></td>
+<!--                    หาไม่เจอ-->
+                    <td class="text-right"><span t-esc="'{0:,.2f}'.format(l.product_uom_qty)"/></td>
+                    <td class="text-right"><span t-esc="'{0:,.2f}'.format(l.price_unit)"/></td>
+                    <td class="text-right"><span t-esc="'{0:,.0f}'.format(l.product_uom_qty)"/></td>
+                    <td class="text-right"><span t-esc="'{0:,.2f}'.format(l.price_subtotal)"/></td>
+                </tr>
+            </t>
+        </tbody>
+    </table>
+    <div class="row" style="margin-bottom: 550px;"></div>
+    </template>
+
+<!--    สรุป-->
+    <template id="report_total">
+    <style>
+        .rounded-square {
+            border: 1px solid #000;
+            border-radius: 10px;
+            padding: 5px 20px;
+            width: 100%;
+            font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+<!--                margin: auto; /* Center align */-->
+        .vertical {
+            float: left;
+            border-right: 2px solid darkcyan;
+            padding-right: 0.5rem;
+            margin-right: 0.5rem;
+        }
+        .mt-1 {
+            margin-top: 1px;
+        }
+        .mt-2 {
+            margin-top: 20px;
+        }
+        .spacer-row {
+            height: 40px; /* กำหนดความสูงของแถวว่าง */
+        }
+        .table td {
+            padding: 5px; /* เพิ่มระยะห่างภายในเซลล์ */
+
+        .mb-1 {
+            margin-bottom: 1rem;
+        }
+        .mb-2 {
+            margin-bottom: 10px;
+        }
+        .text-left {
+            text-align: left;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+        .table {
+            width: 100%; /* ใช้ความกว้างเต็มที่ */
+            border-collapse: collapse; /* รวมขอบของเซลล์ในตาราง */
+    }
+    </style>
+    <div style="border-bottom: 1px solid black" class="mb-1"/>
+    <div class="row" >
+        <div class="col-6" >
+            <div class="rounded-square ">
+                <table class="width :100%">
+                    <tr>
+                        <td class="text-left">ลูกค้าโอนเปิดบิล/ขนส่งพี่อ้วนNPD</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left" ><div class="row" style="margin-bottom: 75px;"></div></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left"><div class="mt-1" style="border-bottom: 1px solid black"></div></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left">
+                            <tb class="vertical"><strong>ค่าเช่า :</strong>เงินโอน(<span t-esc="'{0:,.2f}'.format(doc.amount_tax)"/>) |</tb>
+                            <strong class="ml-1">ค่าประกัน :</strong>เงินโอน(<span t-esc="'{0:,.2f}'.format(doc.amount_total)"/>)
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="col-3">
+            <table class="width:100%">
+                <tr>
+                    <td class="text-right" style="font-size: 18px;"><strong>ค่าเช่าสินค้าก่อนภาษี </strong></td>
+                </tr>
+                <tr class="">
+                    <td class=" text-right mt-2">ภาษีมูลค่าเพิ่ม 7 % </td>
+                </tr>
+                <tr class="">
+                    <td class=" text-right mb-2" style="font-size: 18px;"><strong>ค่าเช่าสินค้าสุทธิ </strong></td>
+                </tr>
+                <tr>
+                    <td class="text-right" style="font-size: 18px;"><strong>ค่าประกันสินค้า </strong></td>
+                </tr>
+                <tr>
+                    <td class="text-right"><strong>ค่าเช่าสินค้าต่อวัน </strong></td>
+                </tr>
+            </table>
+        </div>
+            <div class="col-3">
+                <div>
+                    <table class="width :100%">
+                        <tr>
+                            <td class="text-right" style="font-size: 18px;"><strong><span t-esc="'{0:,.2f}'.format(doc.amount_untaxed)"/></strong></td></tr>
+                        <tr>
+                            <td class=" text-right mt-2" ><span t-esc="'{0:,.2f}'.format(doc.amount_tax)"/></td></tr>
+                        <tr>
+                            <td class="text-right mb-2" style="font-size: 18px;"><strong><span t-esc="'{0:,.2f}'.format(doc.amount_total)"/></strong></td></tr>
+                        <tr>
+                            <td class="text-right" style="font-size: 18px;"><strong><span t-esc="'{0:,.2f}'.format(doc.pfb_amount)"/></strong></td></tr>
+                        <tr>
+                            <td class="text-right"><strong><span t-esc="'{0:,.2f}'.format(doc.get_rent_daily())"/></strong></td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </template>
+
+
+    <template id="report_rounded-square">
+        <div class="rounded-square">
+            <div class="row" >
+                <div class="col-3">
+                    <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                        <tr>
+                            <td class="text-left"><strong> ค่าเช่าเเละค่าประกันสุทธิ :</strong></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-5">
+                    <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                        <tr>
+                            <td class="text-left"><span t-esc="doc.get_total_baht_text()"/></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-2">
+                    <table width="20%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                        <tr>
+                            <td class="text-left">|</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-3">
+                    <table width="50%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                        <tr>
+                            <td class="text-left" style="font-size: 20px">
+                                <strong><span t-esc="'{0:,.2f}'.format(doc.pfb_amount + doc.amount_total)"/></strong>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="row" style="margin-bottom: 5px;"></div>
+    </template>
+
+
+
+<!--<div class="row mb-1">-->
+<!--    <div class="rounded-square">-->
+<!--        <table class="table">-->
+<!--            <tr>-->
+<!--                <td class="text-left" style="font-size: 18px; padding: 8px;">-->
+<!--                    <strong>ค่าเช่าเเละค่าประกันสุทธิ :</strong>-->
+<!--                </td>-->
+<!--                <td class="text-center" style="font-size: 18px; padding: 8px;">-->
+<!--                    <span t-esc="doc.get_total_baht_text()"/>-->
+<!--                </td>-->
+<!--                <td>-->
+<!--                    <strong>|</strong>-->
+<!--                </td>-->
+<!--                <td class="text-right" style="font-size: 20px; padding: 8px;">-->
+<!--                    <strong><span t-esc="'{0:,.2f}'.format(doc.pfb_amount + doc.amount_total)"/></strong>-->
+<!--                </td>-->
+<!--            </tr>-->
+<!--        </table>-->
+<!--    </div>-->
+<!--</div>-->
+<!--</template>-->
+
+
+<!--    ลายเช็น-->
+    <template id="report_signature">
+        <style>
+            .mt-1 {
+                margin-top: 1rem;
+            }
+
+            .mb-1 {
+                margin-bottom: 1rem;
+            }
+        </style>
+        <div class="mb-1 row">
+                <div class="col-3 font-size: 20px;">
+                <table>
+                    <tr>
+                        <td class="text-center"><strong>ผู้รับเงิน</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">............................................................</td>
+                    <tr>
+                    </tr>
+                        <td class="text-center">วันที่...............................................</td>
+                    </tr>
+                </table>
+            </div>
+                <div class="col-3 font-size: 20px;">
+                <table>
+                    <tr>
+                        <td class="text-center"><strong>ผู้เช่าสินค้า</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">............................................................</td>
+                    <tr>
+                    </tr>
+                        <td class="text-center">วันที่...............................................</td>
+                    </tr>
+                </table>
+            </div>
+                <div class="col-3 font-size: 20px;">
+                <table>
+                    <tr>
+                        <td class="text-center"><strong>ผู้รับสินค้า</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">............................................................</td>
+                    <tr>
+                    </tr>
+                        <td class="text-center">วันที่...............................................</td>
+                    </tr>
+                </table>
+            </div>
+                <div class="col-3 font-size: 20px;">
+                <table>
+                    <tr>
+                        <td class="text-center"><strong>ผู้ลงข้อมูล</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">............................................................</td>
+                    <tr>
+                    </tr>
+                        <td class="text-center">วันที่...............................................</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </template>
+
+    <template id="report_end">
+        <div class="row">
+            <div class="col-6">
+                <table class="width :100%">
+                    <tr>
+                        กรุณาตรวจสอบความถูกต้องของเอกสารเเละสินค้าที่เช่า ก่อนออกจากสาขาห้ามตัดขต่อ เจาะรู หรือ ดัดแปลงสินค้า มิฉะนั้นจะมีค่าปรับชำรุดหรือปรับหายเปิดทำการเวลา 08:00-16:00 น.
+                        หยุดทุกวันอาทิตย์เเละวันหยุดตามปฎิทินบริษัทฯ
+                    </tr>
+                </table>
+            </div>
+            <div class="col-7">
+                <table class="table">
+                    <tr>
+                        <td class="text-center">
+                            <strong>น้ำหนักรวมสินค้ารวมสุทธิ</strong>
+                        </td>
+<!--                      <td><span t-esc="doc."/> </td>-->
+<!--                      <td><strong><span/></strong></td>-->
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </template>
+
+    <template id="report_pfb_npd_order_rent">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.basic_layout">
+                    <t t-set="number" t-vatue="0"/>
+                    <table class="width :100%" border="1">
+                        <tr>
+                            <td>
+<!--                                หัวข้อรายงาน-->
+                                <t t-call="pfb_npd_order_rent.report_header"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <t t-call="pfb_npd_order_rent.report_day"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+<!--                                รายละเอียด-->
+                                <t t-call="pfb_npd_order_rent.report_detail"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+<!--                                ตาราง-->
+                                <t t-call="pfb_npd_order_rent.report_table"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+<!--                                สรุป-->
+<!--                                <t t-call="pfb_npd_order_rent.report_summarize"/>-->
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <t t-call="pfb_npd_order_rent.report_total"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <t t-call="pfb_npd_order_rent.report_rounded-square"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+<!--                            ลายเช็น-->
+                                <t t-call="pfb_npd_order_rent.report_signature"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <t t-call="pfb_npd_order_rent.report_end"/>
+                            </td>
+                        </tr>
+                    </table>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

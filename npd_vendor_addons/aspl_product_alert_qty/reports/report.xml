@@ -1,0 +1,25 @@
+<odoo>
+    <data>
+
+        <record id="aspl_product_alert_paper_format" model='report.paperformat'>
+            <field name="name">Product Alert Format</field>
+            <field name="format">custom</field>
+            <field name="orientation">Landscape</field>
+            <field name="margin_top">47</field>
+            <field name="header_spacing">45</field>
+        </record>
+
+         <record id="action_report_alert_qty_wizard" model="ir.actions.report">
+            <field name="name">Stock Reorder Report</field>
+            <field name="model">alert.report.wizard</field>
+             <field name="report_type">qweb-pdf</field>
+             <field name="report_name">aspl_product_alert_qty.report_wizard_template</field>
+            <field name="report_file">aspl_product_alert_qty.report_wizard_template</field>
+             <field name="print_report_name">'Stock Reorder Report'</field>
+              <field name="paperformat_id" ref="aspl_product_alert_paper_format"/>
+             <field name="binding_model_id" ref="model_alert_report_wizard"/>
+            <field name="binding_type">report</field>
+        </record>
+
+    </data>
+</odoo>

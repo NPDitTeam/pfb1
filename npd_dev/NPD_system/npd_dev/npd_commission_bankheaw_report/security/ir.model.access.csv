@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_npd_sales_commission_report_user,npd.sales.commission.report.user,model_npd_sales_commission_report,account.group_account_user,1,1,1,1
+access_npd_sales_commission_report_manager,npd.sales.commission.report.manager,model_npd_sales_commission_report,account.group_account_manager,1,1,1,1
+access_npd_sales_commission_report_wizard_user,npd.sales.commission.report.wizard.user,model_npd_sales_commission_report_wizard,account.group_account_user,1,1,1,1
+access_npd_sales_commission_report_wizard_manager,npd.sales.commission.report.wizard.manager,model_npd_sales_commission_report_wizard,account.group_account_manager,1,1,1,1

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="ir_module_inherit" model="ir.ui.view">
+        <field name="name">ir.module.module.form.inherit</field>
+        <field name="model">ir.module.module</field>
+        <field name="inherit_id" ref="base.module_form"/>
+        <field name="arch" type="xml">
+              <xpath expr="//field[@name='name']" position="before">
+                <field name="skip_update"></field>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

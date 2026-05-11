@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Tree View -->
+    <record id="active_address_template_tree" model="ir.ui.view">
+        <field name="name">active.address.template.tree</field>
+        <field name="model">active.address.template</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="is_active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="active_address_template_form" model="ir.ui.view">
+        <field name="name">active.address.template.form</field>
+        <field name="model">active.address.template</field>
+        <field name="arch" type="xml">
+            <form string="Active Address Template">
+                <header>
+                    <button name="action_set_active" type="object" string="Set Active" class="oe_highlight" attrs="{'invisible': [('is_active', '=', True)]}"/>
+                    <button name="action_set_inactive" type="object" string="Set Inactive" class="oe_highlight" attrs="{'invisible': [('is_active', '=', False)]}"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="is_active"/>
+                        <field name="company_id"/>
+                    </group>
+                    <group string="Address">
+                        <field name="address" nolabel="1"/>
+                    </group>
+                    <group string="Address WT Certificates">
+                        <field name="address_wt" nolabel="1"/>
+                    </group>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="active_address_template_search" model="ir.ui.view">
+        <field name="name">active.address.template.search</field>
+        <field name="model">active.address.template</field>
+        <field name="arch" type="xml">
+            <search string="Address Templates">
+                <field name="name" string="Template Name"/>
+                <separator/>
+                <filter name="active_filter" string="Active" domain="[('is_active', '=', True)]"/>
+                <filter name="inactive_filter" string="Inactive" domain="[('is_active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="active_address_template_action" model="ir.actions.act_window">
+        <field name="name">Address Templates</field>
+        <field name="res_model">active.address.template</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="active_address_template_tree"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first address template
+            </p>
+            <p>
+                Use address templates to manage and switch between different company or office addresses.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="active_address_template_menu_root"
+              name="Active Address Template"
+              sequence="1"
+              action="active_address_template_action"
+              web_icon="active_address_template,static/description/icon.png"/>
+
+</odoo>

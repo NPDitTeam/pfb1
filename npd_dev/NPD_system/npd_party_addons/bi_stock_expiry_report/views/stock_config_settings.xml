@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+    <record id="view_stock_config_inherit_bi" model="ir.ui.view">
+        <field name="name">view.stock.config.inherit.bi</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="stock.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='production_lot_info']" position="after">
+				<h2 id="stock_info">Stock Expiry Report</h2>
+                    <div class="row mt16 o_settings_container">
+                       <div class="col-xs-12 col-md-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label string="Generate Report For (Days)"/>
+                                <div class="text-muted">
+                                    Generate Report For (Days)
+                                </div>
+                                <div class="text-muted">
+                                    <field name="stock_expiry_days"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-md-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="include_expiry"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label string="Include Expiry Stock"/>
+                                <div class="text-muted">
+                                    Include Expiry Stock
+                                </div>
+                            </div>
+		                </div>
+                        <div class="col-xs-12 col-md-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label string="Mail Recipients"/>
+                                <div class="text-muted">
+                                    Mail Recipients
+                                </div>
+                                <div class="text-muted">
+                                    <field name="recipients_ids" widget="many2many_tags" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-md-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label string="Report Type"/>
+                                <div class="text-muted">
+                                    Report Type
+                                </div>
+                                <div class="text-muted">
+                                    <field name="report_type"/>
+                                </div>
+                            </div>
+		                </div>
+                        <div class="col-xs-12 col-md-6 o_setting_box" attrs="{'invisible': [('report_type', 'in', ['all','location'])]}">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label string="Warehouses"/>
+                                <div class="text-muted">
+                                    Warehouses
+                                </div>
+                                <div class="text-muted">
+                                    <field name="warehouse_ids" widget="many2many_tags" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-md-6 o_setting_box" attrs="{'invisible': [('report_type', 'in', ['all','warehouse'])]}">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label string="Locations"/>
+                                <div class="text-muted">
+                                    Locations
+                                </div>
+                                <div class="text-muted">
+                                    <field name="location_ids" widget="many2many_tags"/>
+                                </div>
+                            </div>
+		                </div>
+                   </div>
+			</xpath>
+
+        </field>
+    </record>
+
+    </data>
+</odoo>

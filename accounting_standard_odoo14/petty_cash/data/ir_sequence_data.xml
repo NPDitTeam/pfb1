@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_petty_expense" model="ir.sequence">
+            <field name="name">Petty Expense</field>
+            <field name="code">petty.expense</field>
+            <field name="prefix">PPE%(year)s%(month)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+          <record id="seq_petty_payment" model="ir.sequence">
+            <field name="name">Petty Payment</field>
+            <field name="code">petty.payment</field>
+            <field name="prefix">PPT%(year)s%(month)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+    </data>
+</odoo>

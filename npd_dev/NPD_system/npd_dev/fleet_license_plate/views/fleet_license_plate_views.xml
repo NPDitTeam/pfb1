@@ -1,0 +1,38 @@
+<odoo>
+    <data>
+        <!-- ฟอร์มสำหรับป้ายทะเบียน -->
+        <record id="view_fleet_license_plate_form" model="ir.ui.view">
+            <field name="name">fleet.license_plate.form</field>
+            <field name="model">fleet.license_plate</field>
+            <field name="arch" type="xml">
+                <form string="ทะเบียนรถ">
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="brand"/>
+                            <field name="model"/>
+                            <field name="year"/>
+                            <field name="employee_id"/>
+                            <field name="active"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- รายการทะเบียนรถ -->
+        <record id="view_fleet_license_plate_tree" model="ir.ui.view">
+            <field name="name">fleet.license_plate.tree</field>
+            <field name="model">fleet.license_plate</field>
+            <field name="arch" type="xml">
+                <tree string="ทะเบียนรถ">
+                    <field name="name"/>
+                    <field name="brand"/>
+                    <field name="model"/>
+                    <field name="year"/>
+                    <field name="employee_id"/>
+                </tree>
+            </field>
+        </record>
+    </data>
+</odoo>

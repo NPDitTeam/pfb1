@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Tree View -->
+    <record id="view_employee_warning_tree" model="ir.ui.view">
+        <field name="name">employee.warning.tree</field>
+        <field name="model">employee.warning</field>
+        <field name="arch" type="xml">
+            <tree string="ใบเตือนพนักงาน">
+                <field name="employee_code"/>
+                <field name="firstname"/>
+                <field name="lastname"/>
+                <field name="position_id"/>
+                <field name="branch_id"/>
+                <field name="department_id"/>
+                <field name="warning_count"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_employee_warning_form" model="ir.ui.view">
+        <field name="name">employee.warning.form</field>
+        <field name="model">employee.warning</field>
+        <field name="arch" type="xml">
+            <form string="ใบเตือนพนักงาน">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="employee_id" string="ชื่อพนักงาน"/>
+                        <h1>
+                            <field name="employee_id"
+                                   options="{'no_create': True, 'no_create_edit': True}"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="ข้อมูลพนักงาน">
+                            <field name="employee_code"/>
+                            <field name="firstname"/>
+                            <field name="lastname"/>
+                        </group>
+                        <group string="ตำแหน่งงาน">
+                            <field name="position_id"/>
+                            <field name="department_id"/>
+                            <field name="branch_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="รายการใบเตือน">
+                            <field name="warning_line_ids">
+                                <tree editable="bottom">
+                                    <field name="warning_date"/>
+                                    <field name="subject"/>
+                                    <field name="warning_type"/>
+                                    <field name="warning_number"/>
+                                    <field name="warning_number_display"/>
+                                    <field name="attachment"
+                                           filename="attachment_filename"
+                                           widget="binary"/>
+                                    <field name="attachment_filename" invisible="1"/>
+                                    <field name="description"/>
+                                </tree>
+                                <form string="รายละเอียดใบเตือน">
+                                    <sheet>
+                                        <group>
+                                            <group>
+                                                <field name="warning_date"/>
+                                                <field name="warning_type"/>
+                                                <field name="warning_number"/>
+                                                <field name="warning_number_display"/>
+                                            </group>
+                                            <group>
+                                                <field name="attachment"
+                                                       filename="attachment_filename"
+                                                       widget="binary"/>
+                                                <field name="attachment_filename"
+                                                       invisible="1"/>
+                                            </group>
+                                        </group>
+                                        <group string="เรื่องที่โดนเตือน">
+                                            <field name="subject" nolabel="1"/>
+                                        </group>
+                                        <group string="รายละเอียดเพิ่มเติม">
+                                            <field name="description" nolabel="1"/>
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="หมายเหตุ">
+                            <field name="note"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_employee_warning_search" model="ir.ui.view">
+        <field name="name">employee.warning.search</field>
+        <field name="model">employee.warning</field>
+        <field name="arch" type="xml">
+            <search string="ค้นหาใบเตือนพนักงาน">
+                <field name="employee_id"/>
+                <field name="employee_code"/>
+                <field name="firstname"/>
+                <field name="lastname"/>
+                <field name="position_id"/>
+                <field name="branch_id"/>
+                <field name="department_id"/>
+                <group expand="0" string="จัดกลุ่ม">
+                    <filter name="group_branch" string="สาขา"
+                            context="{'group_by': 'branch_id'}"/>
+                    <filter name="group_department" string="แผนก"
+                            context="{'group_by': 'department_id'}"/>
+                    <filter name="group_position" string="ตำแหน่ง"
+                            context="{'group_by': 'position_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_employee_warning" model="ir.actions.act_window">
+        <field name="name">ใบเตือนพนักงาน</field>
+        <field name="res_model">employee.warning</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_employee_warning_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                เพิ่มใบเตือนพนักงานใหม่
+            </p>
+            <p>
+                บันทึกใบเตือนพนักงาน พร้อมรายการรายละเอียด
+                เช่น วันที่ออกใบเตือน เรื่องที่โดนเตือน
+                ประเภท และไฟล์แนบ
+            </p>
+        </field>
+    </record>
+
+</odoo>

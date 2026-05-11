@@ -1,0 +1,371 @@
+<odoo>
+    <template id="bankandcash_journal_common" name="Bank And Cash Voucher Form common assets"
+              inherit_id="web.report_assets_common">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/css"
+                  href="/pfb_std_bankandcash_journal_report/static/scss/style_report.css"/>
+        </xpath>
+    </template>
+    <!-- Header -->
+    <template id="external_layout_standard">
+        <div t-attf-class="header">
+            <style>
+                .table {
+                margin-bottom: 0rem;
+
+                }
+                table, td, th {
+                border: 1px solid white;
+                border-top: 2px solid white;
+                table-layout: fixed; width: 100%;
+                }
+                .border_column260{
+                color: #090909;
+                width:260px;
+
+                padding-left: 20px;
+                }
+                .border_column410{
+                color: #090909;
+                width:410px;
+                }
+                .border_column130{
+                color: #090909;
+                width:130px;
+                }
+                .border_column130{
+                color: #090909;
+                width:130px;
+                font-size:16px;
+                }
+                .border_column100 {
+                color: #090909;
+                width:100px;
+                }
+                .border_column80 {
+                color: #090909;
+                width:75px;
+                }
+                .border_header {
+                border: 2px solid #000000;
+                padding: 5px;
+                border-radius: 15px;
+                background-color: gainsboro;
+
+                }
+                .red{
+                color: red;
+                padding-left 10px;
+                }
+                .margin_left{
+                margin-right: 10px;
+                margin-left: 10px;
+                }
+            </style>
+            <center>
+                <h4>
+                    <t t-esc="company_name"/>
+                </h4>
+                <h5>
+                <t t-esc="journal_name"/>
+                </h5>
+                <t t-if="date_end">
+                    วันที่
+                    <t t-esc="date_start"/>
+                    -
+                    <t t-esc="date_end"/>
+                </t>
+                <t t-else="">
+                    วันที่
+                    <t t-esc="date_start"/>
+                </t>
+            </center>
+        </div>
+
+        <div t-attf-class="article o_report_layout_standard"
+             t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <t t-raw="0"/>
+        </div>
+    </template>
+
+    <template id="external_layout">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+
+        <t t-call="pfb_std_bankandcash_journal_report.external_layout_standard">
+            <t t-raw="0"/>
+        </t>
+    </template>
+
+    <template id="bankandcash_journal_layout">
+        <div class="article o_journal_voucher_from">
+        </div>
+    </template>
+
+    <template id="line">
+        <t t-call="web.html_container">
+            <t t-call="pfb_std_bankandcash_journal_report.external_layout">
+                <div class="page">
+                    <div class="oe_structure"/>
+                    <style>
+                        table, td, th {
+
+                        table-layout: fixed; width: 100%;
+                        }
+                        .border_column140{
+                        color: #090909;
+                        <!--                        border-bottom: 1px solid #090909;-->
+                        width:140px;
+                        }
+                        .border_column80 {
+                        color: #090909;
+                        <!--                        border-bottom: 1px solid #090909;-->
+                        width:80px;
+                        }
+                        .border_column90 {
+                        color: #090909;
+                        width:90px;
+                        }                        
+                        .border_column100 {
+                        color: #090909;
+                        <!--                        border-bottom: 1px solid #090909;-->
+                        width:100px;
+                        }
+                        .border_column120 {
+                        color: #090909;
+                        <!--                        border-bottom: 1px solid #090909;-->
+                        width:120px;
+                        }
+                        .border_column230 {
+                        color: #090909;
+                        border-bottom: 1px solid #090909;
+                        width:230px;
+                        }
+                        .border_column130 {
+                        color: #090909;
+                        <!--                        border-bottom: 1px solid #090909;-->
+                        width:130px;
+                        }
+                        .border_column50 {
+                        color: #090909;
+                        <!--                        border-bottom: 1px solid #090909;-->
+                        width:50px;
+                        }
+                        .border_column60 {
+                        color: #090909;
+                        <!--                        border-bottom: 1px solid #090909;-->
+                        width:60px;
+                        }
+                        .thead_table thead th{
+                        <!--                        background: gainsboro;-->
+                        <!--                        border: 1px solid #000000;-->
+                        display: table-cell;
+                        text-align: center;
+                        vertical-align: middle;
+                        border-top: 1px solid #000000;
+                        border-bottom: 1px solid #000000;
+                        }
+                        <!--                        .table-condensed tr:first-child td{-->
+                        <!--                        border-bottom: 1px solid #000000;-->
+                        <!--                        background: #FFFFFF;-->
+                        <!--                        }-->
+
+                    </style>
+                    <table class="table thead_table table-condensed">
+                        <thead class="text-center">
+                            <tr>
+                                <th rowspan="2" class="border_column90">วันที่
+                                    <br/>
+                                    รหัสบัญชี
+                                </th>
+                                <th rowspan="2" class="border_column130">เลขที่เอกสาร
+                                    <br/>
+                                    ชื่อบัญชี
+                                </th>
+                                <th rowspan="2" class="border_column90">งวด&amp;nbsp;&amp;nbsp;&amp;nbsp;สมุด</th>
+                                <th rowspan="2" class="border_column120">รายการบัญชี</th>
+                                <th rowspan="2" class="border_column80">เดบิต</th>
+                                <th rowspan="2" class="border_column80">เครดิต</th>
+                            </tr>
+                        </thead>
+                        <tbody name="line_body" class="work_acceptance_line_tbody">
+                            <t t-set="sum_credit" t-value="0"/>
+                            <t t-set="sum_debit" t-value="0"/>
+                            <t t-set="start_date" t-value=""/>
+                            <t t-set="end_date" t-value=""/>
+                            <t t-set="tmp_date"/>
+                            <t t-foreach="doc_ids" t-as="o">
+                                <tr style="border-top: 2px dotted black !important;">
+                                    <td class="text-center">
+                                        <t t-if="o.date">
+                                            <t t-esc="o.date.strftime('%d/%m/%Y')"/>
+                                        </t>                                        
+                                    </td>
+                                    <td colspan="1">
+                                        <t t-esc="o.name"/>
+                                        <t t-esc="o.ref"/>
+                                    </td>
+                                    <td class="text-center">
+                                    <!--<t t-foreach="docs" t-as="line">
+                                        <t t-if="line.move_id.id == o.id">
+                                            <t t-if="line.date">
+                                                <t t-if="tmp_date">
+                                                    <t t-if="tmp_date > line.date">
+                                                        <t t-set="start_date" t-value="line.date"/>
+                                                        <t t-set="end_date" t-value="tmp_date"/>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <t t-set="start_date" t-value="tmp_date"/>
+                                                        <t t-set="end_date" t-value="line.date"/>
+                                                    </t>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-set="tmp_date" t-value="line.date"/>
+                                                    <t t-set="start_date" t-value="line.date"/>
+                                                    <t t-set="end_date" t-value="line.date"/>
+                                                </t>
+                                            </t>  
+                                        </t>
+                                    </t>-->    
+                                        <!--<t t-if="start_date.strftime('%m') == end_date.strftime('%m')">
+                                            <t t-esc="start_date.strftime('%m')"/>
+                                        </t>
+                                        <t t-else="">
+                                            <t t-esc="start_date.strftime('%m')"/> - <t t-esc="end_date.strftime('%m')"/>
+                                        </t>-->
+                                        <t t-if="o.date">
+                                            <t t-esc="o.date.strftime('%m')"/>
+                                        </t>
+                                        &amp;nbsp;&amp;nbsp;
+                                        <t t-esc="o.journal_id.code"/>
+                                    </td>                                    
+                                    <td colspan="3">
+                                        <t t-esc="o.narration"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="docs" t-as="line">
+                                   <t t-if="line.move_id.id == o.id">
+                                    <tr style="border: 1px solid #FFFFFF !important;">
+                                        <td class="text-center">
+                                            <t t-esc="line.account_id.code"/>
+                                        </td>
+                                        <td colspan="3">
+                                            <t t-esc="line.account_id.name"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="'{0:,.2f}'.format(line.debit)"/>
+                                            <t t-set="sum_debit" t-value="sum_debit+line.debit"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="'{0:,.2f}'.format(line.credit)"/>
+                                            <t t-set="sum_credit" t-value="sum_credit+line.credit"/>
+                                        </td>
+                                    </tr>                                     
+                                   </t>
+                                </t>
+                                <!--<t t-foreach="o.line_ids" t-as="l">
+                                    <tr style="border: 1px solid #FFFFFF !important;">
+                                        <td class="text-center">
+                                            <t t-esc="l.account_id.code"/>
+                                        </td>
+                                        <td colspan="3">
+                                            <t t-esc="l.account_id.name"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="'{0:,.2f}'.format(l.debit)"/>
+                                            <t t-set="sum_debit" t-value="sum_debit+l.debit"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="'{0:,.2f}'.format(l.credit)"/>
+                                            <t t-set="sum_credit" t-value="sum_credit+l.credit"/>
+                                        </td>
+                                    </tr>
+                                </t>-->
+                            </t>
+                            <tr style="border-bottom: 2px solid #000000 !important;">
+                                <td class="text-left" colspan="2">
+                                    <span>(( end of report ))</span>
+                                    <br/>
+                                    <span t-esc="datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')"/>
+
+
+                                </td>
+                                <td colspan="2" class="text-right">
+                                    **** รวม .....
+                                </td>
+                                <td>
+                                    <t t-esc="'{0:,.2f}'.format(sum_debit)"/>
+                                </td>
+                                <td>
+                                    <t t-esc="'{0:,.2f}'.format(sum_credit)"/>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                    <div class="oe_structure"/>
+        <div class="footer">
+        <div class="last-page">
+            <style>
+                table, td, th {
+                border: none !important;
+                }
+                .table-border tr td{
+                border: 1px solid #000000 !important;
+                border-collapse: collapse;
+                }
+                .column70 {
+                width:70px;
+                }
+                .column370 {
+                width:370px;
+                }
+                .column320 {
+                width:320px;
+                }
+                .column120 {
+                width:120px;
+                }
+                .no_border{
+                border-bottom: 2px solid white;
+                }
+                .no_border tr{
+                border-top: 2px solid white;
+                border-bottom: 2px solid white;
+                }
+                .no_border td{
+                border-left: 2px solid white;
+                border-right: 2px solid white;
+                }
+            </style>
+            <table class="table table-sm table-condensed "
+                   style="table-layout: fixed; width: 100%;">
+                <tr>
+                    <td class="text-center">
+                        <span>______________________________</span>
+                    </td>
+                    <td class="text-center">
+                        <span>______________________________</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-center">
+                        <span>ผู้จัดทำ / ลงวันที่</span>
+                    </td>
+                    <td class="text-center">
+                        <span>ผู้ตรวจสอบ / ลงวันที่</span>
+                    </td>
+                </tr>
+            </table>
+            </div>
+        </div>                    
+                </div>
+            </t>
+
+            <!--            <t t-foreach="docs" t-as="o">-->
+            <!--                -->
+            <!--                <t t-call="pfb_std_purchase_journal_report.purchase_journal_layout"/>-->
+            <!--            </t>-->
+        </t>
+    </template>
+</odoo>

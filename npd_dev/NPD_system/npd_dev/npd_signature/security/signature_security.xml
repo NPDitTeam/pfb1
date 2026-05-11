@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================== Record Rules ==================== -->
+    
+    <!-- ผู้ใช้ทุกคนเห็นเฉพาะลายเซ็นของตัวเอง -->
+    <record id="signature_rule_own" model="ir.rule">
+        <field name="name">ลายเซ็น: เห็นเฉพาะของตัวเอง</field>
+        <field name="model_id" ref="model_npd_signature"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+</odoo>

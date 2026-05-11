@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Sequence for Debt Tracking Document Number -->
+        <record id="seq_npd_debt_tracking" model="ir.sequence">
+            <field name="name">Debt Tracking Sequence</field>
+            <field name="code">npd.debt.tracking</field>
+            <field name="prefix">DC-%(y)s%(month)s-</field>
+            <field name="padding">4</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+            <field name="use_date_range">True</field>
+        </record>
+    </data>
+</odoo>

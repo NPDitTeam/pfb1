@@ -1,0 +1,321 @@
+<odoo>
+    <template id="external_layout_pv_standard">
+        <div t-attf-class="header o_company_#{company.id}_layout" t-att-style="report_header_style">
+        </div>
+        <div t-attf-class="article o_report_layout_standard o_company_#{company.id}_layout"
+             t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')" style="font-size: 22px;">
+            <div class="row">
+                <div class="col-12 text-center" style="font-size: 30px;">
+                    <b t-field="company.name" style="font-size:30px;"/>
+                    <br/>
+                    <b style="font-size:30px;color:purple;">
+                        รายงานแสดงสรุปค่าใช้จ่าย
+                    </b>
+                </div>
+            </div>
+
+            <t t-raw="0"/>
+        </div>
+        <!--        <div t-attf-class="footer o_standard_footer o_company_#{company.id}_layout">-->
+        <!--            <table width="100%">-->
+        <!--                <tr>-->
+        <!--                    <td width="20%" align="center">-->
+        <!--                        <br/>-->
+        <!--                        <br/>-->
+        <!--                        <b>____________________________</b>-->
+        <!--                        <br/>-->
+        <!--                        <b>Prepared By</b>-->
+        <!--                        <br/>-->
+        <!--                        <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/>-->
+        <!--                    </td>-->
+        <!--                    <td width="5%" style="color:white">_</td>-->
+        <!--                    <td width="20%" align="center">-->
+        <!--                        <br/>-->
+        <!--                        <br/>-->
+        <!--                        <b>____________________________</b>-->
+        <!--                        <br/>-->
+        <!--                        <b>Checked By</b>-->
+        <!--                    </td>-->
+        <!--                    <td width="5%" style="color:white">_</td>-->
+        <!--                    <td width="20%" align="center">-->
+        <!--                        <br/>-->
+        <!--                        <br/>-->
+        <!--                        <b>____________________________</b>-->
+        <!--                        <br/>-->
+        <!--                        <b>Approved By</b>-->
+        <!--                    </td>-->
+        <!--                    <td width="5%" style="color:white">_</td>-->
+        <!--                    <td width="20%" align="center">-->
+        <!--                        <br/>-->
+        <!--                        <br/>-->
+        <!--                        <b>____________________________</b>-->
+        <!--                        <br/>-->
+        <!--                        <b>Approved By</b>-->
+        <!--                    </td>-->
+        <!--                    <td width="5%" style="color:white">_</td>-->
+        <!--                </tr>-->
+        <!--            </table>-->
+        <!--            <div class="text-center" style="border-top: 1px solid black;">-->
+        <!--                <ul class="list-inline mb4">-->
+        <!--                    &lt;!&ndash; using the list-inline-item class from bootstrap causes weird behaviours in pdf report-->
+        <!--                         adding d-inline class fixes the problem&ndash;&gt;-->
+        <!--                    <li t-if="company.phone" class="list-inline-item d-inline">-->
+        <!--                        <span class="o_force_ltr" t-field="company.phone"/>-->
+        <!--                    </li>-->
+        <!--                    <li t-if="company.email" class="list-inline-item d-inline">-->
+        <!--                        <span t-field="company.email"/>-->
+        <!--                    </li>-->
+        <!--                    <li t-if="company.website" class="list-inline-item d-inline">-->
+        <!--                        <span t-field="company.website"/>-->
+        <!--                    </li>-->
+        <!--                    <li t-if="company.vat" class="list-inline-item d-inline"><t-->
+        <!--                            t-esc="company.country_id.vat_label or 'Tax ID'"/>:-->
+        <!--                        <span t-field="company.vat"/>-->
+        <!--                    </li>-->
+        <!--                </ul>-->
+
+        <!--                <div name="financial_infos">-->
+        <!--                    <span t-field="company.report_footer"/>-->
+        <!--                </div>-->
+
+        <!--                <div t-if="report_type == 'pdf'" class="text-muted">-->
+        <!--                    Page:-->
+        <!--                    <span class="page"/>-->
+        <!--                    /-->
+        <!--                    <span class="topage"/>-->
+        <!--                </div>-->
+        <!--            </div>-->
+        <!--        </div>-->
+
+    </template>
+    <template id="external_layout_pv">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+
+        <t t-if="not company">
+            <!-- Multicompany -->
+            <t t-if="company_id">
+                <t t-set="company" t-value="company_id"/>
+            </t>
+            <t t-elif="o and 'company_id' in o">
+                <t t-set="company" t-value="o.company_id.sudo()"/>
+            </t>
+            <t t-else="else">
+                <t t-set="company" t-value="res_company"/>
+            </t>
+        </t>
+
+        <t t-call="pfb_std_petty_cash_summary.external_layout_pv_standard">
+            <t t-raw="0"/>
+        </t>
+    </template>
+    <template id="petty_cash_summary_pdf">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="pfb_std_petty_cash_summary.external_layout_pv">
+                    <style>
+                        table, td, th {
+                        border: none;
+                        border-top: none;
+                        table-layout: fixed;
+                        width: 100%;
+                        }
+
+                        .table thead tr {
+                        border-top: none;
+                        border: none;
+
+                        }
+                        .table tbody td {
+                        border-top: none;
+                        border: none;
+                        }
+                        .table-bordered {
+                        border-top: none;
+                        border-bottom: none;
+                        }
+
+                        .column30{
+                        width:30px;
+                        }
+                        .column35{
+                        color: black;
+                        width:35px;
+                        }
+
+                        .column140{
+                        color: #090909;
+                        width:140px;
+                        }
+                        .column100 {
+                        color: #090909;
+                        width:100px;
+                        }
+                        .column200{
+                        color: #090909;
+                        width:200px;
+                        }
+                        .column260{
+                        color: #090909;
+                        width:260px;
+                        padding-left: 20px;
+                        }
+
+                        .column130{
+                        color: #090909;
+                        width:130px;
+                        font-size:16px;
+                        }
+                        .column120 {
+                        color: #090909;
+                        width:120px;
+                        }
+
+                        .column50 {
+                        color: #090909;
+                        width:50px;
+                        }
+                        .column60 {
+                        color: #090909;
+                        width:60px;
+                        }
+                        .column65 {
+                        color: #090909;
+                        width:65px;
+                        }
+                        .column70 {
+                        color: #090909;
+                        width:70px;
+                        }
+                        .column80 {
+                        color: #090909;
+                        width:80px;
+                        }
+
+                        .watermark1 {
+                        position: fixed;
+                        top: 298px;
+                        }
+                        .column170{
+                        color: #090909;
+                        width:170px;
+                        }
+                        .column190{
+                        color: #090909;
+                        width:190px;
+                        }
+                        .column180{
+                        width:180px;
+                        }
+                        .column50{
+                        width:50px;
+                        }
+                        .header_text {
+                        font-size:16px;
+                        }
+                        .header {
+                        border: none;
+                        padding: 2px;
+                        border-radius: none;
+                        }
+                        .header2 {
+                        border-left:none;
+                        }
+                        .header3 {
+                        text-align: center;
+                        border-top: none;
+                        height: 25px;
+                        }
+                        .line_ids {
+                        border-right: none;
+                        font-size: 20px !important;
+                        }
+                        .line_ids_right {
+                        border-right: none;
+                        }
+
+                    </style>
+                    <div class="page">
+                        <br/>
+                        <table class="table_asset table table-sm table-condensed"
+                               style="font-size: 22px; border-top: none; line-height: 1.2;">
+                            <thead style="border-top: none;">
+                                <tr style="border-bottom: 1px solid black; border-top: none;">
+                                    <td class="column35 header3"
+                                        style="vertical-align: middle;">
+                                        <span>Petty Cash</span>
+                                    </td>
+                                    <td class="column200 header3 text-left" style="vertical-align: middle;">
+                                        <span>Description</span>
+                                    </td>
+                                    <td class="column60 text-center header3" style="vertical-align: middle;">
+                                        <span>User</span>
+                                    </td>
+                                    <td class="column60 text-center header3" style="vertical-align: middle;">
+                                        <span>Date</span>
+                                    </td>
+                                    <td class="column70 text-center header3" style="vertical-align: middle;">
+                                        <span>Total</span>
+                                    </td>
+                                    <td class="column70 text-center header3" style="vertical-align: middle;">
+                                        <span>Company</span>
+                                    </td>
+                                    <td class="column70 text-center header3" style="vertical-align: middle;">
+                                        <span>Wht</span>
+                                    </td>
+                                    <td class="column70 text-center header3" style="vertical-align: middle;">
+                                        <span>Note</span>
+                                    </td>
+                                    <td class="column70 text-center header3" style="vertical-align: middle;">
+                                        <span>State</span>
+                                    </td>
+                                    <td class="column70 text-center header3" style="vertical-align: middle;">
+                                        <span>Amount</span>
+                                    </td>
+
+
+                                </tr>
+                            </thead>
+                            <tbody name="line_body" class="line_body">
+                                <tr>
+                                    <td class="text-center line_ids" style="vertical-align: middle;">
+                                        <span t-esc="o.petty_cash_id.name"/>
+                                    </td>
+                                    <td class="text-center line_ids" style="vertical-align: middle;">
+                                        <span t-esc="o.expense_name"/>
+                                    </td>
+                                    <td class="text-center line_ids" style="vertical-align: middle;">
+                                        <span t-esc="o.user_id.name"/>
+                                    </td>
+                                    <td class="text-center line_ids" style="vertical-align: middle;">
+                                        <span t-esc="o.date"/>
+                                    </td>
+                                    <td class="text-center line_ids" style="vertical-align: middle;">
+                                        <span t-esc="o.total"/>
+                                    </td>
+                                    <td class="text-center line_ids" style="vertical-align: middle;">
+                                        <span t-esc="o.company_id.name"/>
+                                    </td>
+                                    <td class="text-center line_ids" style="vertical-align: middle;">
+                                        <span t-esc="o.wht_amount"/>
+                                    </td>
+                                    <td class="text-center line_ids" style="vertical-align: middle;">
+                                        <span t-esc="o.note"/>
+                                    </td>
+                                    <td class="text-center line_ids" style="vertical-align: middle;">
+                                        <span t-esc="o.state"/>
+                                    </td>
+                                     <td class="text-center line_ids" style="vertical-align: middle;">
+                                        <span t-esc="o.amount"/>
+                                    </td>
+
+
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

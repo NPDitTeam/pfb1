@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <record model="ir.ui.view" id="view_purchase_invoice_plan_pivot">
+            <field name="name">product.invoice.plan.report.pivot</field>
+            <field name="model">purchase.invoice.plan</field>
+            <field name="arch" type="xml">
+                <pivot string="Purchase Invoice Plan" disable_linking="True" display_quantity="true" sample="1">
+                    <field name="amount_invoiced" type="row"/>
+                    <field name="percent" type="measure"/>
+                    <field name="installment" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+        <record id="action_purchase_invoice_plan_report_all" model="ir.actions.act_window">
+        <field name="name">Purchase Invoice Plan</field>
+        <field name="res_model">purchase.invoice.plan</field>
+        <field name="view_mode">graph,pivot</field>
+        <field name="view_id"></field>  <!-- force empty -->
+        <field name="help">Purchase Analysis allows you to easily check and analyse your company purchase history and performance. From this menu you can track your negotiation performance, the delivery performance of your vendors, etc.</field>
+        <field name="target">current</field>
+    </record>
+    <menuitem id="purchase_report_root" name="Reporting" parent="purchase.menu_purchase_root" sequence="99" groups="purchase.group_purchase_manager" />
+
+    <menuitem id="purchase.purchase_report" name="Purchase Analysis" parent="purchase_report_root" sequence="99" groups="purchase.group_purchase_manager" action="purchase.action_purchase_order_report_all"/>
+    <menuitem id="purchase_invoice_plan" name="Purchase Invoice Plan" parent="purchase_report_root" sequence="99" groups="purchase.group_purchase_manager" action="action_purchase_invoice_plan_report_all"/>
+</odoo>

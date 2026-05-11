@@ -1,0 +1,20 @@
+<odoo>
+    <record id="sh_project_project_form_view_inherit" model="ir.ui.view">
+        <field name="name">project.project.form.view.inherit</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project" />
+        <field name="arch" type="xml">
+
+            <xpath expr="//page[@name='settings']" position="after">
+                <page string="Stages" groups="sh_all_in_one_pms.group_enable_project_stage">
+                    <group>
+                        <group>
+                            <field name="sh_stage_template_id" />
+                            <field name="sh_stage_ids" widget="many2many_tags" />
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!--vendor bill -->
+        <record id="invoice_supplier_form_inherit" model="ir.ui.view">
+                <field name="name">account.supplier.bill.form</field>
+                <field name="model">account.move</field>
+                <field name="inherit_id" ref="account.view_move_form"/>
+                <field name="arch" type="xml">
+                <xpath expr="//notebook/page/field[@name='invoice_line_ids']/tree/field[@name='product_uom_id']" position="after">
+                        <field name="secondary_quantity" groups="secondary_uom_inventory_app.group_secondary_uom"/>
+                        <field name="secondary_uom_id" groups="secondary_uom_inventory_app.group_secondary_uom"/>
+                </xpath>
+                </field>
+        </record>
+
+
+</data>
+</odoo>

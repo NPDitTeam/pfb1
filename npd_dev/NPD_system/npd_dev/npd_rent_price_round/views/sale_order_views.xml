@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_npd_use_new_calc" model="ir.ui.view">
+        <field name="name">sale.order.form.npd.use_new_calc</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="can_edit_use_new_calc" invisible="1"/>
+                <field name="use_new_calc"
+                       attrs="{'readonly': [('can_edit_use_new_calc', '=', False)]}"/>
+                <field name="use_baan_kheaw"/>
+                <field name="vat_from_total"/>
+            </xpath>
+            <!-- ซ่อน price_unit เดิม แล้วใส่ price_unit_no_vat ที่หัว column ชื่อ "ราคาต่อหน่วย" -->
+            <xpath expr="//field[@name='order_line']/tree//field[@name='price_unit']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/tree//field[@name='price_unit']" position="after">
+                <field name="price_unit_no_vat" string="ราคาต่อหน่วย"/>
+                <field name="use_new_calc" invisible="1"/>
+                <field name="use_baan_kheaw" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

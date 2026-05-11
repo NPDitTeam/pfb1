@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extend Account Advance Clear Form View -->
+    <record id="view_account_advance_clear_form_approver" model="ir.ui.view">
+        <field name="name">account.advance.clear.form.approver</field>
+        <field name="model">account.advance.clear</field>
+        <field name="inherit_id" ref="account_advance.account_advance_clear_form_view"/>
+        <field name="arch" type="xml">
+            <!-- Add hidden field for checking current user is approver -->
+            <xpath expr="//field[@name='avance_cl_approve_show']" position="after">
+                <field name="is_current_user_approver" invisible="1"/>
+                <field name="is_approved" invisible="1"/>
+            </xpath>
+            
+            <!-- Add approver button in header -->
+            <xpath expr="//header" position="inside">
+                <button name="action_open_approver_wizard"
+                        string="ยืนยันผู้ตรวจสอบ"
+                        type="object"
+                        class="btn-primary"
+                        attrs="{'invisible': ['|', ('is_current_user_approver', '=', False), ('is_approved', '=', True)]}"/>
+                <button name="action_reset_approver"
+                        string="ยกเลิกการยืนยัน"
+                        type="object"
+                        class="btn-secondary"
+                        attrs="{'invisible': ['|', ('is_current_user_approver', '=', False), ('is_approved', '=', False)]}"
+                        confirm="คุณต้องการยกเลิกการยืนยันผู้ตรวจสอบหรือไม่?"/>
+            </xpath>
+            
+            <!-- Add ribbon when approved - position at beginning of sheet -->
+            <xpath expr="//sheet/group[1]" position="before">
+                <widget name="web_ribbon" title="ตรวจสอบแล้ว" bg_color="bg-success" attrs="{'invisible': [('is_approved', '=', False)]}"/>
+            </xpath>
+            
+            <!-- Add approver fields after move_id -->
+            <xpath expr="//field[@name='move_id']" position="after">
+                <field name="approver_id"/>
+                <field name="approver_date"/>
+                <field name="approver_note"/>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- Extend Tree View to show approver -->
+    <record id="view_account_advance_clear_tree_approver" model="ir.ui.view">
+        <field name="name">account.advance.clear.tree.approver</field>
+        <field name="model">account.advance.clear</field>
+        <field name="inherit_id" ref="account_advance.account_advance_clear_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="before">
+                <field name="approver_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
