@@ -1158,8 +1158,7 @@ class AccountVoucher(models.Model):
 
             # ---- ค่าพื้นฐาน ----
             pfb_amount = _to_float(related_picking.sale_id.pfb_amount if related_picking.sale_id else 0.0)
-            amount_total = _to_float(related_picking.sale_id.amount_total if related_picking.sale_id else 0.0)
-            # print('amount_total',amount_total)
+            amount_untaxed = _to_float(related_picking.sale_id.amount_untaxed if related_picking.sale_id else 0.0)
             if related_picking.approval_state == 'approved':
 
                 total_rental_discount = related_picking.rent_discount
@@ -1173,7 +1172,7 @@ class AccountVoucher(models.Model):
             if sx and ex and fx:
                 total_days = (ex - sx).days or 1
                 actual_days = (fx - sx).days or 1
-                daily_cost = round(amount_total / total_days, 2) if total_days > 0 else 0.0
+                daily_cost = round((amount_untaxed / total_days) * 1.07, 2) if total_days > 0 else 0.0
                 value_16 = daily_cost * (actual_days - total_days)
             else:
                 value_16 = 0.0
