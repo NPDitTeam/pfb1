@@ -1,0 +1,701 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!--        กำหนดค่ากระดาษ-->
+    <record id="paperformat_pfb_npd_sale_form_rent_invoice" model="report.paperformat">
+        <field name="name">A4 Sample</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">60</field> <!-- ระยะขอบด้านบน -->
+        <field name="margin_bottom">110</field> <!-- ระยะขอบด้านล่างตั้งค่าเป็น 5 หน่วย -->
+        <field name="margin_left">10</field>
+        <field name="margin_right">10</field>
+        <field name="dpi">90</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">60</field>
+        <!-- กำหนดขนาดตัวอักษรเป็น 12 -->
+        <!--        <field name="font_size">12</field>-->
+    </record>
+
+    <report
+            id="action_rent_invoice"
+            string="ใบกำกับการเช่า"
+            name="pfb_npd_sale_form_rent_invoice.report_pfb_npd_sale_form_rent_invoice"
+            model="sale.order"
+            report_type="qweb-pdf"
+            print_report_name="'Sale - %s' %(object.name)"
+            paperformat="pfb_npd_sale_form_rent_invoice.paperformat_pfb_npd_sale_form_rent_invoice"
+    />
+
+    <!--    หัวข้อรายงาน-->
+    <template id="report_header">
+        <style>
+            .mt-1 {
+            margin-top: 1rem;
+            }
+            .mb-1 {
+            margin-bottom: 1rem;
+            }
+            .ml-45 {
+            margin-left: 50px;
+            }.ml-2 {
+            margin-left: 10px;
+            }
+        </style><br/>
+        <div class="row">
+            <div class="col-2 mr-1" style="margin-top: 14px;">
+                <img src="web/binary/company_logo" class="img-responsive"/>
+            </div>
+            <div class="col-7" style="margin-top: 15px;">
+                <table style="width: 100%;" class="ml-45">
+                    <tr>
+                        <td><strong class="ml-2" style="font-size: 22px;">ใบกำกับการเช่า</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong class="ml-2" style="font-size: 13px;"><span
+                                t-esc="doc.company_id.name"/></strong></td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 10px;font-size: 14px">
+                            <span t-field="doc.branch_id.address" style="line-height: 1.3;font-size: 13px;"/><br/>
+                            เลขประจำตัวผู้เสียภาษี <span t-esc="doc.company_id.vat"></span>
+                                    <span t-if="doc.branch_id.telephone == '00000'">(สำนักงานใหญ่)</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>        <!-- โลโก้บริษัท -->
+            <div class="col-3" style="margin-top: 15px;">
+                <table style="width: 100%;">
+                    <tr>
+                        <td class="text-center"><strong style="font-size: 18px;">เลขที่ใบเช่า</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">
+                            <strong style="font-size: 13px;"><span t-esc="doc.name"/></strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">
+                            <strong style="font-size: 13px;">อ้างอิงใบกำกับการเช่า</strong>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </template>
+
+
+    <template id="report_day">
+        <style>
+            .rounded-square {
+                border: 1px solid #000;
+                border-radius: 10px;
+                padding: 10px;
+                font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+<!--                margin: auto; /* Center align */-->
+            }
+            .text-left {
+                text-align: left;
+            }
+
+
+            .text-right {
+                text-align: right;
+            }
+
+            .mt-1 {
+                margin-top: 1rem;
+            }
+
+            .mb-1 {
+                margin-bottom: 1rem;
+            }
+
+            .mr-1 {
+                margin-right: 1rem;
+            }
+        </style>
+        <div class="row">
+            <div class="mb-1 rounded-square" style="display: block; width:900px;">
+                <div class="col-26">
+                    <table width="100%">
+                        <tr>
+                            <td class="text-left">
+                                <strong class="ml-1">
+                                    <span style="font-size: 13px;">เริ่มเช่าวันที่</span>
+                                    <span style="font-size: 13px;" t-esc="doc.start_rent_date.strftime('%d') + ' ' + {1: 'มกราคม', 2: 'กุมภาพันธ์', 3: 'มีนาคม', 4: 'เมษายน', 5: 'พฤษภาคม', 6: 'มิถุนายน', 7: 'กรกฎาคม', 8: 'สิงหาคม', 9: 'กันยายน', 10: 'ตุลาคม', 11: 'พฤศจิกายน', 12: 'ธันวาคม'}[int(doc.start_rent_date.strftime('%m'))] + ' ' + str(int(doc.start_rent_date.strftime('%Y')) + 543)"/>
+                                    <span style="font-size: 13px;" class="ml-1">ถึง</span>
+                                    <span style="font-size: 13px;"  t-esc="doc.end_rent_date.strftime('%d') + ' ' + {1: 'มกราคม', 2: 'กุมภาพันธ์', 3: 'มีนาคม', 4: 'เมษายน', 5: 'พฤษภาคม', 6: 'มิถุนายน', 7: 'กรกฎาคม', 8: 'สิงหาคม', 9: 'กันยายน', 10: 'ตุลาคม', 11: 'พฤศจิกายน', 12: 'ธันวาคม'}[int(doc.end_rent_date.strftime('%m'))] + ' ' + str(int(doc.end_rent_date.strftime('%Y')) + 543)"/>
+                                </strong>
+                            </td>
+                            <td class="text-right" style="font-size: 13px;">
+                                <strong class="mr-1">รวม</strong>
+                                <strong class="mr-1"><span t-esc="doc.pfb_date_of_rent"/></strong>
+                                <strong>วัน</strong>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+<!--            <div style="position:fixed;  top: 165px; right: 60px;font-family: 'Kinnari' !important;font-size: 13px;">-->
+<!--                <span>เวลาออกเอกสาร</span>-->
+<!--                <span t-esc="confirmed_time"/>-->
+<!--                <t t-esc="doc.confirmed_time.strftime('%H:%M:%S') or 'N/A'"/>-->
+<!--            </div>-->
+        </div>
+    </template>
+
+    <!--    รายละเอียด-->
+    <template id="report_detail">
+        <style>
+            .table2t {
+            width: 100%;
+            border-collapse: collapse;
+            }
+
+            .table-right td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: right; /* จัดตำแหน่งเนื้อหาทางขวา */
+            }
+
+            .table-right h2 {
+            margin: 0;
+            text-align: right; /* จัดตำแหน่งหัวข้อทางขวา */
+            }
+            .preserve-whitespace
+            {
+            white-space: pre; /* Preserve leading and other white spaces */
+            }
+            .mt-1 {
+            margin-top: 1rem; /* ระยะห่างด้านบน */
+            }
+            .mb-1 {
+            margin-bottom: 1rem; /* ระยะห่างด้านล่าง */
+            }
+            .mr-1 {
+            margin-right: 1rem; /* ระยะห่างด้านขวา */
+            }
+            .ml-1 {
+            margin-left: 1em /* ระยะห่างด้านซ้าย */
+            }
+            .space{
+            margin-left: 1em; /* ช่องว่างด้านซ้ายเทียบเท่ากับขนาดของ 5 ตัวอักษร */
+            }
+            .space2{
+            margin-left: 2.4em; /* ช่องว่างด้านซ้ายเทียบเท่ากับขนาดของ 5 ตัวอักษร */
+            }
+            .space2-1{
+            margin-left: 2.6em; /* ช่องว่างด้านซ้ายเทียบเท่ากับขนาดของ 5 ตัวอักษร */
+            }
+            .space3{
+            margin-left: 5.2em; /* ช่องว่างด้านซ้ายเทียบเท่ากับขนาดของ 5 ตัวอักษร */
+            }
+            .m-1 {
+            margin: 1rem; /* ระยะห่างในทุกทิศทาง */
+            }
+        </style>
+        <!--         ส่วนของข้อมูล-->
+        <div class="row" style="mt-1">
+            <table class="width :100%">
+                <tr>
+                    <!--                        ชื่อผู้เช่า-->
+                    <strong class="space2" style="font-size: 13px;">ผู้เช่า :</strong>
+                </tr>
+                <tr>
+                    <td style="font-size: 13px;"><span class="ml-1" t-esc="doc.partner_id.name"/></td>
+                </tr>
+            </table>
+        </div>
+        <div class="row" style="mt-1">
+            <table style="width :100%">
+                <tr style="font-size: 13px;">
+                    <td style="font-size: 13px;">
+                        <strong class="space2-1">ที่อยู่ :</strong>
+                        <span class="ml-1" t-esc="doc.partner_id.street"/>
+                        <span class="ml-1" t-esc="doc.partner_id.street2"/>
+                        <span class="ml-1" t-esc="doc.partner_id.city"/>
+                        <span class="ml-1" t-esc="doc.partner_id.state_id.name"/>
+                        <span class="ml-1" t-esc="doc.partner_id.zip"/>
+                        <tb class="ml-1">[<span t-esc="doc.partner_id.phone"/>]</tb>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="row">
+            <table style="width :100%">
+                <tr>
+                    <td style="font-size: 13px;">
+                        <tb class="space3">ผู้ติดต่อ :</tb>
+                        <tb class="ml-1"><span t-esc="doc.partner_id.name"/></tb>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="row">
+            <table style="width :100%">
+                <tr>
+                    <td style="ml-1 font-size: 13px;">
+                        <strong class="space" style="font-size: 13px;">หน้างาน :</strong>
+<!--                        <span class="ml-1" t-esc="doc.partner_shipping_id.street"/>-->
+<!--                        <span class="ml-1" t-esc="doc.partner_shipping_id.street2"/>-->
+<!--                        <span class="ml-1" t-esc="doc.partner_shipping_id.city"/>-->
+<!--                        <span class="ml-1" t-esc="doc.partner_shipping_id.state_id.name"/>-->
+<!--                        <span class="ml-1" t-esc="doc.partner_shipping_id.zip"/>-->
+                        <span class="ml-1" style="font-size: 13px;" t-esc="doc.on_site"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </template>
+
+    <!--    ตาราง-->
+    <template id="report_table">
+        <style>
+            .table2{
+            width: 100%;
+            height: 140px;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            .empty-row td {
+                height: 22px;
+            }
+        </style>
+        <t t-set="chunk_size" t-value="13"/>
+        <t t-set="order_lines" t-value="doc.order_line"/>
+        <t t-set="total_lines" t-value="len(order_lines)"/>
+        <t t-set="num_chunks" t-value="max(1, (total_lines + chunk_size - 1) // chunk_size)"/>
+        <t t-foreach="range(num_chunks)" t-as="group_index">
+            <t t-set="start" t-value="group_index * chunk_size"/>
+            <t t-set="end" t-value="start + chunk_size"/>
+            <t t-set="group" t-value="order_lines[start:end]"/>
+            <t t-set="empty_count" t-value="chunk_size - len(group)"/>
+            <table width="100%" style="mt-1">
+                <thead>
+                    <tr style="border-bottom: 1px solid black !important; font-size: 13px;">
+                        <th width="3%" class="text-center border_report" style="font-size: 13px;">ลำดับ</th>
+                        <th width="20%" class="text-center border_report" style="font-size: 13px;">รายการสินค้า</th>
+                        <th width="7%" class="text-right border_report" style="padding: 0 4px;font-size: 13px;">น้ำหนักสินค้า</th>
+                        <th width="6%" class="text-right border_report" style="font-size: 13px;">จำนวน</th>
+                        <th width="12%" class="text-right border_report" style="padding: 0 6px;font-size: 13px;">ค่าปรับเงินประกัน<br/>หลังหักค่าเสื่อมแล้ว</th>
+                        <th width="9%" class="text-right border_report" style="padding: 0 6px;font-size: 13px;">ค่าซ่อมแซม<br/>(B/ชิ้น)</th>
+                        <th width="9%" class="text-right border_report" style="padding: 0 4px;font-size: 13px;">ค่าเช่า<br/>ต่อหน่วย</th>
+                        <th width="11%" class="text-right border_report" style="padding: 0 4px;font-size: 13px;">รวมเป็นเงิน</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="group" t-as="l">
+                        <tr>
+                            <td class="text-center" style="font-size: 13px;border-bottom:hidden;"><span
+                                    t-esc="start + l_index + 1"/></td>
+                            <td class="text-left" style="font-size: 13px;border-bottom:hidden;">
+                                <span t-esc="l.product_template_id.name"/></td>
+                            <td class="text-right" style="font-size: 13px; border-bottom: hidden;">
+                                <span t-esc="'{0:,.2f}'.format(l.second_uom_qty * l.pfb_quantity)"/>
+                            </td>
+                            <td class="text-right" style="font-size: 13px;border-bottom:hidden;"><span
+                                    t-esc="'{0:,.0f}'.format(l.pfb_quantity)"/></td>
+                            <td class="text-right" style="font-size: 13px;border-bottom:hidden;"><span
+                                    t-esc="'{0:,.2f}'.format(l.pfb_insurance_price or 0)"/></td>
+                            <td class="text-right" style="font-size: 13px;border-bottom:hidden;">ตามจริง</td>
+                            <td class="text-right" style="font-size: 13px;border-bottom:hidden;"><span
+                                    t-esc="'{0:,.2f}'.format((l.price_unit_no_vat or 0))"/></td>
+                            <td class="text-right" style="font-size: 13px;border-bottom:hidden;"><span
+                                    t-esc="'{0:,.2f}'.format((l.price_subtotal or 0))"/></td>
+                        </tr>
+                    </t>
+                    <t t-foreach="range(empty_count)" t-as="empty_i">
+                        <tr class="empty-row">
+                            <td style="font-size: 13px;border-bottom:hidden;">&#160;</td>
+                            <td style="font-size: 13px;border-bottom:hidden;">&#160;</td>
+                            <td style="font-size: 13px;border-bottom:hidden;">&#160;</td>
+                            <td style="font-size: 13px;border-bottom:hidden;">&#160;</td>
+                            <td style="font-size: 13px;border-bottom:hidden;">&#160;</td>
+                            <td style="font-size: 13px;border-bottom:hidden;">&#160;</td>
+                            <td style="font-size: 13px;border-bottom:hidden;">&#160;</td>
+                            <td style="font-size: 13px;border-bottom:hidden;">&#160;</td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+            <t t-if="group_index + 1 &lt; num_chunks">
+                <div class="page-break"/>
+            </t>
+        </t>
+    </template>
+
+    <!--    สรุป-->
+    <template id="report_total">
+        <style>
+            .rounded-square {
+            border: 1px solid #000;
+            border-radius: 10px;
+            padding: 5px 20px;
+            width: 100%;
+            font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+            .vertical {
+            float: left;
+            border-right: 2px solid darkcyan;
+            padding-right: 0.5rem;
+            margin-right: 0.5rem;
+            }
+            .mt-2 {
+            margin-top: 20px;
+            }
+            .mb-1 {
+            margin-bottom: 1rem;
+            }
+            .mb-2 {
+            margin-bottom: 10px;
+            }.mr-99{
+            margin-right: 20px;
+            }
+        </style>
+        <!--        <div style="border-bottom: 1px solid black" class="mb-1"/>-->
+        <!--        <div class="row">-->
+        <!--            <div class="col-6" >-->
+        <!--                <div class="rounded-square ">-->
+        <!--                    <p class="text-left">หมายเหตุ</p>-->
+        <!--                    <p style="color : white; font-size: 13px;">.</p>-->
+        <!--                    <p style="color : white; font-size: 20px;">.</p>-->
+        <!--                    <p style="border-bottom: 1px solid black"/>-->
+        <!--                    <p class="text-left" style="font-size: 13px;">-->
+        <!--                        <strong class="mr-1">ค่าเช่า :</strong>เงินโอน(<span t-esc="'{0:,.2f}'.format(doc.amount_total)"/>)<span> | </span>-->
+        <!--                        <strong class="mr-1">ค่าประกัน :</strong>เงินโอน(<span t-esc="'{0:,.2f}'.format(doc.pfb_amount)"/>)</p>-->
+        <!--                </div>-->
+        <!--            </div>-->
+        <!--            <div class="col-3">-->
+        <!--                <p class="text-right" style="font-size: 18px;">-->
+        <!--                    <strong class="text-left" style="font-size: 18px;">ค่าเช่าสินค้าก่อนภาษี</strong>-->
+        <!--                </p>-->
+        <!--                <p class="text-right mt-2" style="font-size: 13px;">ภาษีมูลค่าเพิ่ม 7 %</p>-->
+        <!--                <p class="text-right mb-2" style="font-size: 18px;"><strong>ค่าเช่าสินค้าสุทธิ</strong></p>-->
+        <!--                <p class="text-right mb-2" style="font-size: 18px;"><strong>ค่าประกันสินค้า</strong></p>-->
+        <!--                <p class="text-right" style="font-size: 13px">ค่าเช่าสินค้าต่อวัน</p>-->
+        <!--            </div>-->
+        <!--&lt;!&ndash;            <div class="col-1"/>&ndash;&gt;-->
+        <!--            <div class="col-3">-->
+        <!--                <p class="text-right" style="font-size: 18px;"><strong><span t-esc="'{0:,.2f}'.format(doc.amount_untaxed)"/></strong></p>-->
+        <!--                <p class="text-right mt-2" style="font-size: 13px;"><span t-esc="'{0:,.2f}'.format(doc.amount_tax)"/></p>-->
+        <!--                <p class="text-right mb-2" style="font-size: 18px;"><strong><span t-esc="'{0:,.2f}'.format(doc.amount_total)"/></strong></p>-->
+        <!--                <p class="text-right mb-2" style="font-size: 18px;"><strong><span t-esc="'{0:,.2f}'.format(doc.pfb_amount)"/></strong></p>-->
+        <!--                <t t-set="total" t-value="sum([l.price_unit * l.product_uom_qty for l in doc.order_line])"/>-->
+        <!--                <p class="text-right" style="font-size: 13px;"><span t-esc="'{0:,.2f}'.format(doc.amount_total / doc.pfb_date_of_rent)"/></p>-->
+        <!--            </div>-->
+        <!--        </div>-->
+        <!--        <div class="rounded-square">-->
+        <!--            <div class="row" >-->
+        <!--                <div class="col-4">-->
+        <!--                    <p class="text-left"><strong> ค่าเช่าเเละค่าประกันสุทธิ :</strong></p>-->
+        <!--                </div>-->
+        <!--                <div class="col-5">-->
+        <!--                    <p class="text-right mr-99">(<span t-esc="doc.get_total_baht_text()"/>)-->
+        <!--                        <span>  |  </span>-->
+        <!--                    </p>-->
+        <!--                </div>-->
+        <!--                <div class="col-3">-->
+        <!--                    <p class="text-right">-->
+        <!--                        <strong style="font-size: 18px;" ><span t-esc="'{0:,.2f}'.format(doc.pfb_amount + doc.amount_total)"/></strong></p>-->
+        <!--                </div>-->
+        <!--            </div>-->
+        <!--        </div>-->
+    </template>
+
+    <!--    ลายเช็น-->
+    <template id="report_signature">
+<!--        <div style="display: block; width: 900px; position: fixed; left: 10px; top: 980px;">-->
+            <div style="display: block; width: calc(100% - 20px); position: fixed; left: 10px; right: 10px; top: 740px;">
+            <style>
+                .mt-1 {
+                margin-top: 1rem;
+                }
+                .mr-68 {
+                margin-right: 4em;
+                }
+                .rounded-square {
+                border: 1px solid #000;
+                border-radius: 5px;
+                padding: 5px 20px;
+                width: 100%;
+                font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+                }
+                .vertical {
+                float: left;
+                border-right: 2px solid darkcyan;
+                padding-right: 0.5rem;
+                margin-right: 0.5rem;
+                }
+                .mt-2 {
+                margin-top: 20px;
+                }
+                .mb-1 {
+                margin-bottom: 1rem;
+                }
+                .mb-2 {
+                margin-bottom: 10px;
+                }
+                .mr-99 {
+                margin-right: 20px;
+                }
+            </style>
+<t t-if="doc.contact_type == 'sale'">
+                  <strong class="text-left" style="font-size: 13px;">
+                    เจ้าหน้าที่ฝ่ายขาย:<span style="margin-left:10px;"></span><t t-esc="doc.sales_contact.name"/>
+                </strong>
+
+                </t>
+            <div style="border-bottom: 1px solid black" class="mb-1"/>
+            <t t-set="subtotal_notax" t-value="sum([(l.pfb_quantity or 0) * (doc.pfb_date_of_rent or 0) * round((l.price_unit or 0) / 1.07, 2) for l in doc.order_line])"/>
+            <t t-set="vat_amount" t-value="round(subtotal_notax * 0.07, 2)"/>
+            <t t-set="total_with_vat" t-value="subtotal_notax + vat_amount"/>
+            <div class="row">
+                <div class="col-6">
+                    <div class="rounded-square" style="height: 145px; position: relative;">
+                        <p class="text-left" style="font-size: 13px; margin: 0; max-height: 95px; overflow: hidden;">
+                            หมายเหตุ
+                            <span class="ml-1" t-raw="doc.note.replace('&lt;p&gt;', '').replace('&lt;/p&gt;', '')"/>
+                        </p>
+                        <div style="position: absolute; bottom: 5px; left: 20px; right: 20px;">
+                            <p style="border-bottom: 1px solid black; margin: 0 0 4px 0;"/>
+                            <p class="text-left" style="font-size: 13px; margin: 0;">
+                                <strong class="mr-1">ค่าเช่า :</strong>เงินโอน(<span
+                                    t-esc="'{0:,.2f}'.format(doc.amount_total)"/>)<span> | </span>
+                                <strong class="mr-1">ค่าประกัน :</strong>เงินโอน(<span
+                                    t-esc="'{0:,.2f}'.format(doc.pfb_amount)"/>)</p>
+
+                            <p class="text-left" style="font-size: 13px; margin: 0;">
+                                <t t-set="sum_weight" t-value="sum([line.second_uom_qty * line.pfb_quantity for line in doc.order_line])"/>
+                                <strong class="mr-1">น้ำหนักรวมสินค้ารวมสุทธิ :</strong> <span t-esc="'{0:,.2f}'.format(sum_weight)"/> กก. </p>
+
+                        </div>
+
+                    </div>
+                </div>
+                <div class="col-6" style="margin-left: -30px;">
+                    <table width="100%">
+                        <tr>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong>ค่าเช่าสินค้าก่อนภาษี</strong></td>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(doc.amount_untaxed)"/></strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong>ภาษีมูลค่าเพิ่ม 7 %</strong></td>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(doc.amount_tax)"/></strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong>ค่าเช่าสินค้าสุทธิ</strong></td>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(doc.amount_total)"/></strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong>ค่าประกันสินค้า</strong></td>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(doc.pfb_amount)"/></strong></td>
+                        </tr>
+<!--                        <tr>-->
+<!--                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong>ค่าเช่าต่อวันรวม(vat)</strong></td>-->
+<!--                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(total_with_vat / (doc.pfb_date_of_rent or 1))"/></strong></td>-->
+<!--                        </tr>-->
+                        <tr>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong>ค่าเช่าต่อวันรวม(vat)</strong></td>
+                            <t t-set="rent_days" t-value="(doc.end_rent_date - doc.start_rent_date).days or 1"/>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(round((doc.amount_untaxed / rent_days) * 1.07, 2))"/></strong></td>
+                        </tr>
+
+
+                    </table>
+                </div>
+            </div>
+            <div class="rounded-square">
+                <div class="row">
+                    <div class="col-3">
+                        <p class="text-left"><strong style="font-size: 13px;"> ค่าเช่าเเละค่าประกันสุทธิ :</strong></p>
+                    </div>
+                    <div class="col-6">
+                        <p class="text-right mr-99" style="font-size: 13px;">(<span t-esc="doc.get_total_baht_text()"/>)
+                            <span> | </span>
+                        </p>
+                    </div>
+                    <div class="col-3">
+                        <p class="text-right">
+                            <strong style="font-size: 14px;"><span
+                                    t-esc="'{0:,.2f}'.format(doc.pfb_amount + doc.amount_total)"/></strong></p>
+                    </div>
+                </div>
+            </div>
+            <!-- เงื่อนไข -->
+            <div class="mt-1" style="font-size: 13px;">
+                <strong>เงื่อนไข:</strong>
+                <table style="width: 100%; margin-top: 5px; margin-left: 40px;">
+                    <tr>
+                        <td style="vertical-align: top; width: 30px;">1.</td>
+                        <td>"ค่าเช่าสินค้า"หรือ"การเช่าสินค้า" ตามใบเสนอราคาหรือใบสั่งเช่าสินค้านี้<br/>
+                            <span style="margin-left: 15px;">หมายถึง ค่าเช่าสินค้า ค่าซ่อมแซมสินค้า ค่าสินค้าเช่าที่ผู้เช่ายังไม่ได้ส่งคืน ค่าสินค้าชำรุดเสียหายใช้งานไม่ได้ ค่าสินค้าสูญหาย ค่าบริการขนส่งและหนี้อื่นๆที่เกิด</span><br/>
+                            <span style="margin-left: 15px;">จากการเช่าสินค้านี้</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">2.</td>
+                        <td>ชำระค่าซ่อมแซมตามจริง (ไม่รวมค่าสินค้าชำรุดเสียหายใช้งานไม่ได้)</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">3.</td>
+                        <td>ผู้เช่าต้องเช่าสินค้าเป็นระยะเวลาอย่างน้อย 30 วัน หลังจากนั้นคิดค่าเช่าสินค้าเป็นรายวัน</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">4.</td>
+                        <td>หากสินค้าที่ส่งคืนไม่สามารถซ่อมแซมได้ หรือสินค้าเช่าที่ผู้เช่ายังไม่ได้ส่งคืน ให้หักราคาค่าสินค้า ตามใบเสนอราคา/ใบสั่งเช่าสินค้าค้างต้น</td>
+                    </tr>
+
+                    <t t-if="request.db == 'NPD_Intertrading_New'">
+                    <tr>
+                        <td style="vertical-align: top;">5.</td>
+                        <td>ค่าประกันสินค้า โอนเงินเข้าบัญชี บช.บริษัท นภดล อินเตอร์เทรดดิ้ง จำกัด กสิกรไทย เลขที่บัญชี 033-885651-2</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">6.</td>
+                        <td>ค่าเช่าสินค้า โอนเงินเข้าบัญชี : บช.บริษัท นภดล อินเตอร์เทรดดิ้ง จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 408-546107-1</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">7.</td>
+                        <td>ค่าขนส่ง.สินค้า โอนเงินเข้าบัญชี : บช.บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6</td>
+                    </tr>
+                    </t>
+
+                    <t t-if="request.db == 'NPD_Bangkok_New'">
+                    <tr>
+                        <td style="vertical-align: top;">5.</td>
+                        <td>ค่าประกันสินค้า โอนเงินเข้าบัญชี บช.บริษัท นภดล กรุงเทพ จำกัด กสิกรไทย เลขที่บัญชี 025-290298-8</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">6.</td>
+                        <td>ค่าเช่าสินค้า โอนเงินเข้าบัญชี : บช.บริษัท นภดล กรุงเทพ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 186-224773-9</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">7.</td>
+                        <td>ค่าขนส่ง.สินค้า โอนเงินเข้าบัญชี : บช.บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6</td>
+                    </tr>
+                    </t>
+
+                    <t t-if="request.db == 'NPD_S_Group_New_V2'">
+                    <tr>
+                        <td style="vertical-align: top;">5.</td>
+                        <td>ค่าประกันสินค้า โอนเงินเข้าบัญชี บช.บริษัท นภดล เอส กรุ๊ป จํากัด กสิกรไทย เลขที่บัญชี 020-893777-4</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">6.</td>
+                        <td>ค่าเช่าสินค้า โอนเงินเข้าบัญชี : บช.บริษัท นภดล เอส กรุ๊ป จํากัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 186-222160-2</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">7.</td>
+                        <td>ค่าขนส่ง.สินค้า โอนเงินเข้าบัญชี : บช.บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6</td>
+                    </tr>
+                    </t>
+
+                    <t t-if="request.db == 'NPD_Steeltech_New'">
+                    <tr>
+                        <td style="vertical-align: top;">5.</td>
+                        <td>ค่าประกันสินค้า โอนเงินเข้าบัญชี บช.บริษัท เอ็นพีดี สตีลเทค จำกัด กสิกรไทย เลขที่บัญชี 035-1-39757-8</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">6.</td>
+                        <td>ค่าเช่าสินค้า โอนเงินเข้าบัญชี : บช.บริษัท เอ็นพีดี สตีลเทค จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 408-582058-4</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">7.</td>
+                        <td>ค่าขนส่ง.สินค้า โอนเงินเข้าบัญชี : บช.บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6</td>
+                    </tr>
+                    </t>
+
+                    <t t-if="request.db == 'NPD_Logistics_New'">
+                    <tr>
+                        <td style="vertical-align: top;">5.</td>
+                        <td>ค่าประกันสินค้า โอนเงินเข้าบัญชี บช.บริษัท เอ็นพีดี โลจิสติกส์ จำกัด กสิกรไทย เลขที่บัญชี 117-1-78329-8</td>
+                    </tr>
+<!--                    <tr>-->
+<!--                        <td style="vertical-align: top;">6.</td>-->
+<!--                        <td>ค่าเช่าสินค้า โอนเงินเข้าบัญชี : บช.บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6</td>-->
+<!--                    </tr>-->
+                    <tr>
+                        <td style="vertical-align: top;">6.</td>
+                        <td>ค่าขนส่ง.สินค้า โอนเงินเข้าบัญชี : บช.บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6</td>
+                    </tr>
+                    </t>
+
+
+                </table>
+            </div>
+            <!-- ตารางลายเซ็น -->
+            <div class="mt-1">
+                <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
+                    <thead>
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: center; width: 33.33%; font-size: 13px;">ขอแสดงความนับถือ</th>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: center; width: 33.33%; font-size: 13px;">ผู้รับสินค้า</th>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: center; width: 33.34%; font-size: 13px;">อนุมัติเช่าสินค้าตามรายการสินค้า อัตราค่าเช่า และเงื่อนไขข้างต้น</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: bottom; height: 110px; font-size: 13px;">
+                                <br/><br/><br/>
+                                <div>.................................................................................</div>
+                                <br/>
+                                <span t-esc="user.name"/><br/>
+                                <span t-esc="user.partner_id.phone or user.partner_id.mobile or ''"/><br/>
+                                <strong><span t-esc="doc.company_id.name"/></strong>
+                            </td>
+                            <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: bottom; height: 110px; font-size: 13px;">
+                                <div style="height: 25px;"></div>
+                                <div>..................................................................</div>
+                                <br/>
+                                <div style="margin-top: 10px;">วันที่..........................................</div>
+                            </td>
+                            <td style="border: 1px solid #000; padding: 8px; text-align: center; height: 110px; font-size: 13px;">
+                                <div style="height: 65px;"></div>
+                                <div>.................................................................................</div>
+                                <br/>
+                                <div>ผู้มีอำนาจสั่งเช่า................/................/................</div>
+                                <div style="border-top: 1px solid #000; margin-top: 4px; padding-top: 4px;">
+                                    <strong><span t-esc="doc.partner_id.name"/></strong>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+<!--        <div class="printed-on"-->
+<!--             style="position:fixed;  top: 1360px; right: 50px;font-family: 'Kinnari' !important;font-size: 13px;">-->
+<!--            <strong style="font-size: 10px mr-1">วันที่พิมพ์เอกสาร :</strong>-->
+<!--            <strong style="font-size: 10px mr-1"><span t-esc="time.strftime('%d-%m-%Y')"/></strong>-->
+<!--            <strong style="font-size: 10px mr-1">เวลา :</strong>-->
+<!--            <strong style="font-size: 10px mr-1"><span t-esc="time.strftime('%H:%M:%S')"/></strong>-->
+<!--        </div>-->
+<!--        <div style="position:fixed;  top: 1290px; right: 95px;font-family: 'Kinnari' !important;font-size: 13px;">-->
+<!--            <t t-esc="doc.date_order.strftime('%d/%m/') + str(doc.date_order.year + 543)"/>-->
+
+<!--        </div>-->
+<!--        <div style="position: fixed; top: 1250px; right: 80px; font-family: 'Kinnari' !important; font-size: 13px; width: 160px; white-space: normal; word-wrap: break-word;">-->
+<!--    <t t-esc="doc.user_id.name"/>-->
+<!--</div>-->
+
+    </template>
+
+
+    <template id="report_pfb_npd_sale_form_rent_invoice">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.basic_layout">
+                    <t t-set="number" t-vatue="0"/>
+                    <div class="header">
+                        <t t-call="pfb_npd_sale_form_rent_invoice.report_header"/>
+                        <t t-call="pfb_npd_sale_form_rent_invoice.report_day"/>
+                        <t t-call="pfb_npd_sale_form_rent_invoice.report_detail"/>
+                        <t t-call="pfb_npd_sale_form_rent_invoice.report_signature"/>
+                    </div>
+                    <t t-call="pfb_npd_sale_form_rent_invoice.report_table"/>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
