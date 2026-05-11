@@ -53,6 +53,25 @@ class PayrollPeriod(models.Model):
         for rec in self:
             rec.payroll_count = len(rec.payroll_ids)
 
+    @api.onchange('month', 'year', 'cutoff_end_day')
+    def _onchange_set_auto_run_date(self):
+        """ตั้งค่าเริ่มต้นวันที่อัตโนมัติเมื่อเลือกเดือน/ปี:
+        - auto_run_date = วันที่ cutoff_end_day ของเดือนรอบ (รัน auto วันสิ้นสุด cycle)
+        - payment_date  = วันที่ 28 ของเดือนรอบ (วันจ่ายเงินเดือน)
+        """
+        if self.month and self.year:
+            try:
+                import calendar
+                m = int(self.month)
+                y = int(self.year)
+                last_day = calendar.monthrange(y, m)[1]
+                if self.cutoff_end_day:
+                    day = int(self.cutoff_end_day)
+                    self.auto_run_date = date(y, m, min(day, last_day))
+                self.payment_date = date(y, m, min(28, last_day))
+            except (ValueError, TypeError):
+                pass
+
     def action_run_auto_payroll(self):
         """รันทำเงินเดือน Auto สำหรับพนักงานที่เปิด auto_payroll"""
         self.ensure_one()
@@ -150,7 +169,7 @@ class PayrollPeriod(models.Model):
                 skipped += 1
                 continue
 
-            # คำนวณ auto_run_date = วันที่ cutoff_end_day ของเดือนนั้น
+            # คำนวณ auto_run_date = วันที่ cutoff_end_day ของเดือนรอบ (สิ้นสุด cycle)
             try:
                 auto_run = date(int(year), m, self.cutoff_end_day)
             except ValueError:
@@ -159,11 +178,8 @@ class PayrollPeriod(models.Model):
                 last_day = calendar.monthrange(int(year), m)[1]
                 auto_run = date(int(year), m, min(self.cutoff_end_day, last_day))
 
-            # คำนวณ payment_date = วันที่ 28 ของเดือนถัดไป
-            if m == 12:
-                pay_date = date(int(year) + 1, 1, 28)
-            else:
-                pay_date = date(int(year), m + 1, 28)
+            # payment_date = วันที่ 28 ของเดือนรอบ (เดือนเดียวกัน)
+            pay_date = date(int(year), m, 28)
 
             self.create({
                 'month': m,
@@ -298,10 +314,8 @@ class PayrollPeriod(models.Model):
                     last_day = calendar.monthrange(int(next_year), next_month)[1]
                     auto_run = date(int(next_year), next_month, min(cutoff_end, last_day))
 
-                # payment_date = วันที่ 28 ของเดือนถัดไปอีกที
-                pay_m = next_month + 1 if next_month < 12 else 1
-                pay_y = int(next_year) if next_month < 12 else int(next_year) + 1
-                pay_date = date(pay_y, pay_m, 28)
+                # payment_date = วันที่ 28 ของเดือนรอบใหม่ (เดือนเดียวกัน)
+                pay_date = date(int(next_year), next_month, 28)
 
                 self.create({
                     'month': next_month,
