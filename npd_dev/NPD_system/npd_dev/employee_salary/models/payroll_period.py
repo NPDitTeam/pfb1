@@ -2,6 +2,7 @@
 
 import logging
 from datetime import date, datetime
+from psycopg2 import IntegrityError
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
@@ -100,14 +101,16 @@ class PayrollPeriod(models.Model):
         success_count = 0
         error_count = 0
 
+        PayrollSalary = self.env['payroll.salary']
         for emp in employees:
             # อ่าน label ออกมาก่อนเข้า savepoint เพื่อใช้ใน except ได้แม้ tx aborted
             emp_label_first = emp.firstname or ''
             emp_label_code = emp.employee_code or ''
             try:
                 with self.env.cr.savepoint():
-                    # ตรวจสอบว่ามี payroll record อยู่แล้วหรือไม่
-                    existing = self.env['payroll.salary'].search([
+                    # flush ORM cache ให้ search เห็น record ที่เพิ่ง create ในรอบเดียวกัน
+                    PayrollSalary.flush()
+                    existing = PayrollSalary.search([
                         ('employee_id', '=', emp.id),
                         ('month', '=', self.month),
                         ('year', '=', self.year),
@@ -130,11 +133,24 @@ class PayrollPeriod(models.Model):
                     if self.payment_date:
                         payroll_vals['payment_date'] = self.payment_date
 
-                    self.env['payroll.salary'].create(payroll_vals)
+                    PayrollSalary.create(payroll_vals)
                     success_count += 1
                     log_lines.append("[OK] %s (%s) - สร้างเงินเดือนสำเร็จ" % (
                         emp_label_first, emp_label_code))
 
+            except IntegrityError as e:
+                # unique constraint (employee_id, month, year) — มี record อยู่แล้วแม้ search ไม่เจอ
+                # ถือเป็น SKIP เพราะข้อมูลก็มีอยู่แล้วไม่ต้อง create ซ้ำ
+                if 'employee_month_year_uniq' in str(e):
+                    log_lines.append(
+                        "[SKIP-DUP] %s (%s) - มีรายการเงินเดือนอยู่แล้วใน DB (ข้อมูลค้างจาก run ก่อน)"
+                        % (emp_label_first, emp_label_code))
+                    success_count += 1
+                else:
+                    error_count += 1
+                    log_lines.append("[ERROR] %s (%s) - DB constraint: %s" % (
+                        emp_label_first, emp_label_code, str(e)))
+                    _logger.exception("Auto payroll DB error for %s", emp_label_code)
             except Exception as e:
                 error_count += 1
                 log_lines.append("[ERROR] %s (%s) - %s" % (
