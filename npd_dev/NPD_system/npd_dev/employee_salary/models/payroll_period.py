@@ -101,41 +101,45 @@ class PayrollPeriod(models.Model):
         error_count = 0
 
         for emp in employees:
+            # อ่าน label ออกมาก่อนเข้า savepoint เพื่อใช้ใน except ได้แม้ tx aborted
+            emp_label_first = emp.firstname or ''
+            emp_label_code = emp.employee_code or ''
             try:
-                # ตรวจสอบว่ามี payroll record อยู่แล้วหรือไม่
-                existing = self.env['payroll.salary'].search([
-                    ('employee_id', '=', emp.id),
-                    ('month', '=', self.month),
-                    ('year', '=', self.year),
-                ], limit=1)
+                with self.env.cr.savepoint():
+                    # ตรวจสอบว่ามี payroll record อยู่แล้วหรือไม่
+                    existing = self.env['payroll.salary'].search([
+                        ('employee_id', '=', emp.id),
+                        ('month', '=', self.month),
+                        ('year', '=', self.year),
+                    ], limit=1)
 
-                if existing:
-                    log_lines.append("[SKIP] %s (%s) - มีรายการเงินเดือนอยู่แล้ว" % (
-                        emp.firstname, emp.employee_code))
+                    if existing:
+                        log_lines.append("[SKIP] %s (%s) - มีรายการเงินเดือนอยู่แล้ว" % (
+                            emp_label_first, emp_label_code))
+                        success_count += 1
+                        continue
+
+                    # สร้าง payroll record ใหม่
+                    payroll_vals = {
+                        'employee_id': emp.id,
+                        'month': self.month,
+                        'year': self.year,
+                        'cutoff_day': self.cutoff_end_day,
+                        'period_id': self.id,
+                    }
+                    if self.payment_date:
+                        payroll_vals['payment_date'] = self.payment_date
+
+                    self.env['payroll.salary'].create(payroll_vals)
                     success_count += 1
-                    continue
-
-                # สร้าง payroll record ใหม่
-                payroll_vals = {
-                    'employee_id': emp.id,
-                    'month': self.month,
-                    'year': self.year,
-                    'cutoff_day': self.cutoff_end_day,
-                    'period_id': self.id,
-                }
-                if self.payment_date:
-                    payroll_vals['payment_date'] = self.payment_date
-
-                self.env['payroll.salary'].create(payroll_vals)
-                success_count += 1
-                log_lines.append("[OK] %s (%s) - สร้างเงินเดือนสำเร็จ" % (
-                    emp.firstname, emp.employee_code))
+                    log_lines.append("[OK] %s (%s) - สร้างเงินเดือนสำเร็จ" % (
+                        emp_label_first, emp_label_code))
 
             except Exception as e:
                 error_count += 1
                 log_lines.append("[ERROR] %s (%s) - %s" % (
-                    emp.firstname, emp.employee_code, str(e)))
-                _logger.error("Auto payroll error for %s: %s", emp.employee_code, e)
+                    emp_label_first, emp_label_code, str(e)))
+                _logger.exception("Auto payroll error for %s", emp_label_code)
 
         final_state = 'done' if error_count == 0 else 'error'
         self.write({
