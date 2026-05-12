@@ -498,7 +498,7 @@
                         <tr>
                             <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong>ค่าเช่าต่อวันรวม(vat)</strong></td>
                             <t t-set="rent_days" t-value="(doc.end_rent_date - doc.start_rent_date).days or 1"/>
-                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(round((doc.amount_untaxed / rent_days) * 1.07, 2))"/></strong></td>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(doc.amount_total / rent_days)"/></strong></td>
                         </tr>
 
 
