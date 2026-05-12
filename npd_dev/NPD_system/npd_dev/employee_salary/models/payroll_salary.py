@@ -294,6 +294,11 @@ class PayrollSalary(models.Model):
         string="วันที่จ่ายเงิน",
         default=lambda self: self._get_default_date_28()
     )
+    manual_override_accumulated = fields.Boolean(
+        string="ปรับค่าสะสมเอง",
+        default=False,
+        help="เมื่อเปิดอยู่ ระบบจะไม่คำนวณค่าสะสมทับค่าที่ผู้ใช้ใส่เอง"
+    )
     accumulated_income = fields.Float(
         string="รายรับสะสม",
         compute="_compute_accumulated_values",
@@ -430,43 +435,48 @@ class PayrollSalary(models.Model):
             rec._populate_all_lines()
 
 
-    # ฟังก์ชันคำนวณ (เหมือนเดิม)
-    @api.depends('employee_id', 'month', 'year', 'base_salary', 'tax_monthly', 'sso_total')
+    # ฟังก์ชันคำนวณ — สะสมต่อเดือนภายในปีเดียวกัน, reset ทุกปีใหม่ (ม.ค.)
+    @api.depends('employee_id', 'month', 'year', 'base_salary', 'tax_monthly', 'sso_total',
+                 'manual_override_accumulated')
     def _compute_accumulated_values(self):
         for rec in self:
+            # ถ้า user แก้ค่าเองแล้ว → ไม่คำนวณทับ
+            if rec.manual_override_accumulated:
+                continue
+
             base_salary = rec.base_salary or 0.0
             tax = rec.tax_monthly or 0.0
             sso = rec.sso_total or 0.0
 
-            # หา record ก่อนหน้า (เดือน-ปี ที่น้อยกว่าอันนี้)
+            # หา record ของ "เดือนก่อนหน้าในปีเดียวกัน" เท่านั้น
+            # → ม.ค. = ไม่เจอ prev → reset เริ่มใหม่
             prev = self.env['payroll.salary'].search([
                 ('employee_id', '=', rec.employee_id.id),
-                '|',
-                ('year', '<', rec.year),
-                '&', ('year', '=', rec.year), ('month', '<', rec.month)
-            ], order='year desc, month desc', limit=1)
+                ('year', '=', rec.year),
+                ('month', '<', rec.month),
+            ], order='month desc', limit=1)
 
             if prev:
                 rec.accumulated_income = prev.accumulated_income + base_salary
                 rec.accumulated_vat = prev.accumulated_vat + tax
                 rec.accumulated_social_security = prev.accumulated_social_security + sso
             else:
-                # เดือนแรก → ใช้ค่าของเดือนนี้เลย
+                # เดือนแรกของปี (ม.ค.) → reset เริ่มใหม่
                 rec.accumulated_income = base_salary
                 rec.accumulated_vat = tax
                 rec.accumulated_social_security = sso
 
-    # ฟังก์ชัน inverse → อนุญาตให้ user แก้ไขค่าเองได้
+    # ฟังก์ชัน inverse → ตั้ง flag ให้ compute ไม่ทับค่าที่ user แก้
     def _inverse_accumulated_values(self):
         for rec in self:
             _logger.info(
-                "[INVERSE] Override EmpCode=%s | income=%s vat=%s sso=%s",
+                "[INVERSE] Manual override EmpCode=%s | income=%s vat=%s sso=%s",
                 rec.employee_id.employee_code if rec.employee_id else "-",
                 rec.accumulated_income,
                 rec.accumulated_vat,
                 rec.accumulated_social_security
             )
-            # ไม่ต้องทำอะไรพิเศษ → Odoo จะบันทึกค่าที่ผู้ใช้แก้ไขไว้
+            rec.manual_override_accumulated = True
 
     @api.model
     def _get_default_date_28(self):

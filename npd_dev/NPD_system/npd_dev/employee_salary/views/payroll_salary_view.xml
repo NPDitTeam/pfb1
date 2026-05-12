@@ -111,6 +111,7 @@
                         <field name="cutoff_day"/>
                         <field name="payment_date"/>
                         <field name="accumulated_income"/>
+                        <field name="manual_override_accumulated"/>
                     </group>
                     <notebook>
                         <!-- รายละเอียดเงินเดือน -->
