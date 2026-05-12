@@ -140,11 +140,26 @@ class PayrollPeriod(models.Model):
 
             except IntegrityError as e:
                 # unique constraint (employee_id, month, year) — มี record อยู่แล้วแม้ search ไม่เจอ
-                # ถือเป็น SKIP เพราะข้อมูลก็มีอยู่แล้วไม่ต้อง create ซ้ำ
+                # ถือเป็น SKIP + ผูก period_id ของ record เดิมมาที่รอบนี้ (เพื่อให้โผล่ในรายการ)
                 if 'employee_month_year_uniq' in str(e):
-                    log_lines.append(
-                        "[SKIP-DUP] %s (%s) - มีรายการเงินเดือนอยู่แล้วใน DB (ข้อมูลค้างจาก run ก่อน)"
-                        % (emp_label_first, emp_label_code))
+                    # savepoint rollback แล้ว → query ใหม่ได้
+                    existing = PayrollSalary.search([
+                        ('employee_id', '=', emp.id),
+                        ('month', '=', self.month),
+                        ('year', '=', self.year),
+                    ], limit=1)
+                    moved = False
+                    if existing and existing.period_id.id != self.id:
+                        existing.period_id = self.id
+                        moved = True
+                    if moved:
+                        log_lines.append(
+                            "[SKIP-DUP] %s (%s) - มีอยู่ในรอบอื่น → ย้ายมารอบนี้แล้ว"
+                            % (emp_label_first, emp_label_code))
+                    else:
+                        log_lines.append(
+                            "[SKIP-DUP] %s (%s) - มีรายการเงินเดือนอยู่แล้ว"
+                            % (emp_label_first, emp_label_code))
                     success_count += 1
                 else:
                     error_count += 1
