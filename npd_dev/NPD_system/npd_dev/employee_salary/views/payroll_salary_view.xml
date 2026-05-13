@@ -275,6 +275,8 @@
                                 <field name="late_checkin_minutes" readonly="1"/>
                                 <field name="early_checkout_minutes" readonly="1"/>
                                 <field name="missed_days" readonly="1"/>
+                                <field name="missed_days_detail" readonly="1"
+                                       attrs="{'invisible': [('missed_days', '=', 0)]}"/>
                             </group>
                             <separator string="ยอดหัก (บาท)"/>
                             <group>

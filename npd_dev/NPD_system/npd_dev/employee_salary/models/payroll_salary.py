@@ -285,6 +285,7 @@ class PayrollSalary(models.Model):
     early_checkout_minutes = fields.Float(string='รวมเวลาออกก่อนเวลา (นาที)', readonly=True)
     lateness_minutes = fields.Float(string='รวมเวลาขาดงาน (นาที)', readonly=True)
     missed_days = fields.Integer(string='จำนวนวันขาดงาน', readonly=True)
+    missed_days_detail = fields.Text(string='รายละเอียดวันขาดงาน', readonly=True)
     late_checkin_deduction = fields.Float(string='ยอดหักสาย', readonly=True)
     early_checkout_deduction = fields.Float(string='ยอดหักออกก่อนเวลา', readonly=True)
     missed_days_deduction = fields.Float(string='ยอดหักขาดงาน', readonly=True)
@@ -2074,20 +2075,37 @@ class PayrollSalary(models.Model):
         # ถ้า OT อยู่นอกช่วงเวลา
         return start_dt < shift_start_dt or end_dt > shift_end_dt
 
+    THAI_DOW_NAMES = {0: 'จันทร์', 1: 'อังคาร', 2: 'พุธ', 3: 'พฤหัสบดี',
+                      4: 'ศุกร์', 5: 'เสาร์', 6: 'อาทิตย์'}
+
+    def _format_missed_days_detail(self, date_strs):
+        """แปลง list วันที่ ['2026-05-09', ...] เป็น text แสดงในฟอร์ม"""
+        if not date_strs:
+            return ''
+        lines = ['สาเหตุ: ไม่มีเช็คอิน/เช็คเอาท์ และไม่มีใบลาที่อนุมัติในวันต่อไปนี้']
+        for d in date_strs:
+            try:
+                dt = datetime.datetime.strptime(d, '%Y-%m-%d').date()
+                dow = self.THAI_DOW_NAMES.get(dt.weekday(), '')
+                lines.append("• %s (%s)" % (dt.strftime('%d/%m/%Y'), dow))
+            except (ValueError, TypeError):
+                lines.append("• %s" % d)
+        return '\n'.join(lines)
+
     def _prepare_lateness_data(self):
         self.ensure_one()
         # ✅ ข้ามคำนวณขาดลามาสายสำหรับประธาน
         if self.employee_code and self.employee_code in self.EXECUTIVE_EMPLOYEE_CODES:
             _logger.info("[LATENESS] ข้ามคำนวณขาดลามาสายสำหรับประธาน emp=%s", self.employee_code)
-            return 0, 0, 0, 0, 0, 0, 0, 0, 0, None
+            return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], None
         if not self.lateness_api_url or not self.employee_id:
-            # คืนค่า 10 ตัวให้ครบรูปแบบ
-            return 0, 0, 0, 0, 0, 0, 0, 0, 0, None
+            # คืนค่า 11 ตัวให้ครบรูปแบบ
+            return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], None
 
         work_schedule = self.env['hr.work.schedule'].search([('employee_id', '=', self.employee_id.id)], limit=1)
         if not work_schedule:
             _logger.warning("ไม่พบข้อมูลตารางการทำงานสำหรับพนักงานนี้: %s", self.employee_id.firstname)
-            return 0, 0, 0, 0, 0, 0, 0, 0, 0, {
+            return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], {
                 'warning': {
                     'title': _("ข้อมูลไม่ครบ"),
                     'message': _("ไม่พบข้อมูลตารางการทำงานสำหรับพนักงานนี้ กรุณาตั้งค่าในเมนู 'ตารางการทำงาน' ก่อน")
@@ -2138,6 +2156,8 @@ class PayrollSalary(models.Model):
             _logger.info("Lateness API Response: %s", json.dumps(api_response, indent=2, ensure_ascii=False))
 
             if api_response.get('status') == 'success':
+                debug = api_response.get('debug') or {}
+                missed_days_log = debug.get('missed_days_log') or []
                 return (
                     api_response.get('total_late_checkin_minutes', 0),  # 1
                     api_response.get('total_early_checkout_minutes', 0),  # 2
@@ -2148,19 +2168,20 @@ class PayrollSalary(models.Model):
                     api_response.get('deduction_absent', 0),  # 7  (ขาดงานเต็มวันอย่างเดียว)
                     api_response.get('early_checkout_deduction', 0),  # 8  (ออกก่อนเวลา แปลงเป็นนาที→เงิน)
                     api_response.get('deduction_absent_total', 0),  # 9  (รวม ขาดงาน + ออกก่อนเวลา)
-                    None  # 10 warning
+                    missed_days_log,  # 10 รายการวันที่ขาดงาน (list of 'YYYY-MM-DD')
+                    None  # 11 warning
                 )
             else:
                 warning_dict = {
                     'warning': {'title': _("API Error"), 'message': api_response.get('message', "Unknown error")}
                 }
-                return 0, 0, 0, 0, 0, 0, 0, 0, 0, warning_dict
+                return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], warning_dict
 
         except requests.exceptions.RequestException as e:
             warning_dict = {
                 'warning': {'title': _("API Connection Error"), 'message': _("ไม่สามารถเชื่อมต่อ API ได้: %s") % e}
             }
-            return 0, 0, 0, 0, 0, 0, 0, 0, 0, warning_dict
+            return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], warning_dict
 
     def _populate_all_lines(self):
         self.ensure_one()
@@ -2187,6 +2208,7 @@ class PayrollSalary(models.Model):
          deduction_absent,  # ขาดงานเต็มวัน
          early_checkout_deduction,  # ออกก่อนเวลา คิดเป็นเงินต่อนาที
          deduction_absent_total,  # รวมสองอันบนแล้ว
+         missed_days_log,  # รายการวันที่ขาดงาน (list of 'YYYY-MM-DD')
          lateness_warning_dict) = self._prepare_lateness_data()
 
         if not self.manual_override:
@@ -2194,6 +2216,8 @@ class PayrollSalary(models.Model):
             self.late_checkin_minutes = late_checkin_minutes
             self.early_checkout_minutes = early_checkout_minutes
             self.missed_days = missed_days
+            # ✅ แทนที่ของเดิมทุกครั้งที่คำนวณใหม่ — ถ้าไม่มีวันขาดงาน เคลียร์เป็น ''
+            self.missed_days_detail = self._format_missed_days_detail(missed_days_log) if missed_days_log else ''
             self.lateness_minutes = total_lateness_minutes
             self.leave_deduction_total = round_half_up(leave_deduction_total)
 
