@@ -1172,7 +1172,8 @@ class AccountVoucher(models.Model):
             if sx and ex and fx:
                 total_days = (ex - sx).days or 1
                 actual_days = (fx - sx).days or 1
-                daily_cost = round((amount_untaxed / total_days) * 1.07, 2) if total_days > 0 else 0.0
+                amount_total_so = _to_float(related_picking.sale_id.amount_total if related_picking.sale_id else 0.0)
+                daily_cost = round((amount_total_so + total_rental_discount) / total_days, 2) if total_days > 0 else 0.0
                 value_16 = daily_cost * (actual_days - total_days)
             else:
                 value_16 = 0.0

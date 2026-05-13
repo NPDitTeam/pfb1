@@ -133,7 +133,7 @@ class MonthlyPenaltyReportWizard(models.TransientModel):
                             stock.return_date.date() - stock.start_x_date).days)
 
                     billed_days = 1 if stock.end_x_date == stock.start_x_date else (stock.end_x_date - stock.start_x_date).days
-                    rental_per_day = round((so.amount_untaxed / billed_days) * 1.07, 2)
+                    rental_per_day = round((so.amount_total + so.total_rental_discount) / billed_days, 2)
                     rent_for_this_stock = rental_per_day * days_used
                     total_rent = rent_for_this_stock
 

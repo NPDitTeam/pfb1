@@ -406,7 +406,7 @@
                 <span t-esc="days_used"/> x
 
                 <span t-set="rental_per_day"
-                      t-value="round((doc.sale_id.amount_untaxed / (1 if (doc.end_x_date == doc.start_x_date) else (doc.end_x_date - doc.start_x_date).days)) * 1.07, 2)"/>
+                      t-value="round((doc.sale_id.amount_total + doc.sale_id.total_rental_discount) / (1 if (doc.end_x_date == doc.start_x_date) else (doc.end_x_date - doc.start_x_date).days), 2)"/>
                 <span t-esc="'{0:,.2f}'.format(rental_per_day)"/> =
 
                 <span t-set="total_rent" t-value="rental_per_day * days_used"/>
@@ -435,7 +435,7 @@
                                 <tr>
                                     <td class="text-right">ค่าเช่าสินค้าต่อวัน</td>
                                     <td class="text-right" style="padding-right: 80px;">
-                                        <span t-esc="'{0:,.2f}'.format(round((doc.sale_id.amount_untaxed / (1 if (doc.end_x_date == doc.start_x_date) else (doc.end_x_date - doc.start_x_date).days)) * 1.07, 2))"/>
+                                        <span t-esc="'{0:,.2f}'.format(round((doc.sale_id.amount_total + doc.sale_id.total_rental_discount) / (1 if (doc.end_x_date == doc.start_x_date) else (doc.end_x_date - doc.start_x_date).days), 2))"/>
                                     </td>
                                 </tr>
                             </table>
@@ -541,7 +541,7 @@
                            t-value="1 if (doc.end_x_date == doc.start_x_date) else (doc.end_x_date - doc.start_x_date).days"/>
 
                         <t t-set="rental_per_day"
-                           t-value="round((doc.sale_id.amount_untaxed / billed_days) * 1.07, 2)"/>
+                           t-value="round((doc.sale_id.amount_total + doc.sale_id.total_rental_discount) / billed_days, 2)"/>
 
                         <t t-set="total_rent" t-value="rental_per_day * days_used"/>
 
