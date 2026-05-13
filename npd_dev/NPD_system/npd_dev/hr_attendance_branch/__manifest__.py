@@ -10,7 +10,7 @@
         'views/menu.xml',
         'views/manual_time_log_views.xml',
         'views/attendance_views.xml',
-
+        'views/payroll_salary_inherit.xml',
     ],
     'installable': True,
     'auto_install': False,

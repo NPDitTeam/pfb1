@@ -125,7 +125,8 @@
                             </field>
                             <group class="oe_subtotal_footer oe_right">
                                 <field name="override_totals" string="ปรับแก้ยอดรวมด้วยมือ"/>
-                                <field name="other_income_total" string="เงินได้อื่นๆ" widget="monetary" readonly="1"/>
+                                <field name="actor_content_total" string="ค่าตัวนักแสดง ถ่าย content" widget="monetary" readonly="1"/>
+                                <field name="other_income_total" string="เงินได้อื่นๆ (รวม)" widget="monetary" readonly="1"/>
                                 <field name="base_salary" string="เงินเดือน" widget="monetary"/>
                                 <field name="total_gross" attrs="{'readonly': [('override_totals', '=', False)]}" string="รวมรายได้"/>
                                 <field name="total_deduction" attrs="{'readonly': [('override_totals', '=', False)]}" string="รวมรายจ่าย"/>
@@ -155,9 +156,32 @@
                                     <button name="action_view_commission_sale_detail"
                                             type="object" string="🔍 ดูรายละเอียดค่าคอม Sales"
                                             class="oe_link btn-sm"/>
-                                    <field name="income_other"/>
+                                    <field name="income_other_manual"/>
+                                    <field name="income_other" readonly="1"/>
+                                    <field name="income_bonus"/>
+                                    <field name="bonus_active" widget="boolean_toggle"/>
+                                    <field name="income_missed_payment"/>
                                 </group>
                             </group>
+                            <separator name="sep_other_income_lines" string="◆ รายการเงินได้อื่นๆ (จากเมนูเงินได้อื่นๆ)"/>
+                            <!-- actor_content_breakdown_ids tree ไม่อยู่ที่นี่
+                                 ดูใน hr_attendance_branch/views/payroll_salary_inherit.xml -->
+                            <field name="other_income_breakdown_ids" nolabel="1" readonly="1">
+                                <tree>
+                                    <field name="payment_date"/>
+                                    <field name="note"/>
+                                    <field name="amount" sum="รวม"/>
+                                    <field name="state"/>
+                                </tree>
+                            </field>
+                            <separator string="◆ คืนเงินประกัน — พนักงานลาออกในเดือนนี้ (จากจัดการเงินประกันการทำงาน)"/>
+                            <field name="income_deposit_refund_breakdown_ids" nolabel="1" readonly="1">
+                                <tree>
+                                    <field name="employee_id"/>
+                                    <field name="resign_date"/>
+                                    <field name="refund_amount" sum="รวม"/>
+                                </tree>
+                            </field>
                         </page>
 
                         <!-- รายจ่าย -->
@@ -170,10 +194,28 @@
                                 </group>
                                 <group>
                                     <field name="expense_ksl"/>
-                                    <field name="expense_insurance"/>
-                                    <field name="expense_other"/>
+                                    <field name="expense_insurance" invisible="1"/>
+                                    <field name="expense_other_manual"/>
+                                    <field name="expense_other" readonly="1"/>
                                 </group>
                             </group>
+                            <separator string="◆ หักรายเดือน (จากจัดการเงินประกันการทำงาน)"/>
+                            <field name="expense_deposit_regular_breakdown_ids" nolabel="1" readonly="1">
+                                <tree>
+                                    <field name="payment_date"/>
+                                    <field name="amount" sum="รวม"/>
+                                    <field name="is_synced"/>
+                                </tree>
+                            </field>
+                            <separator string="◆ หัก Work Permit / วีซ่า / อื่นๆ"/>
+                            <field name="expense_deposit_extra_breakdown_ids" nolabel="1" readonly="1">
+                                <tree>
+                                    <field name="payment_date"/>
+                                    <field name="payment_type"/>
+                                    <field name="amount" sum="รวม"/>
+                                    <field name="is_synced"/>
+                                </tree>
+                            </field>
                             <separator string="หัก ขาด/ลา/สาย"/>
                             <group>
                                 <field name="manual_override"/>

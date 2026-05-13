@@ -113,12 +113,14 @@ HRMS_COMPANY = [
 
 REASON_TYPE = [
     ("ทำงานนอกสถานที่", "ทำงานนอกสถานที่"),
+    ("ทำงานวันหยุด", "ทำงานวันหยุด"),
     ("ระบบมีปัญหา", "ระบบมีปัญหา"),
     ("ลืมลงเวลา", "ลืมลงเวลา"),
     ("ขอโอที", "ขอโอที"),
     ("ค่าเบี้ยเลี้ยงออกนอกสถานที่", "ค่าเบี้ยเลี้ยงออกนอกสถานที่"),
     ("ค่ารักษาพยาบาล", "ค่ารักษาพยาบาล"),
     ("ค่าอาหาร", "ค่าอาหาร"),
+    ("ค่าตัวนักแสดง ถ่าย content", "ค่าตัวนักแสดง ถ่าย content"),
     ("ไม่ระบุ", "ไม่ระบุ"),
 ]
 
@@ -208,11 +210,22 @@ class ManualTimeLog(models.Model):
                 raise UserError('ไม่พบข้อมูลบันทึกเวลาด้วยตนเองสำหรับวันนี้จาก API')
 
             for record in manual_records:
-                existing_record = self.env['hr.manual.time.log'].search([
-                    ('user_id', '=', record['user_id']),
-                    ('work_date', '=', record['work_date']),
-                    ('checkin_time', '=', record['checkin_time']),
-                ], limit=1)
+                # match ด้วย hr_id_manual_time_log (PK จาก PHP) เป็นหลัก
+                # → ถึง work_date / checkin_time จะเปลี่ยนใน PHP record ฝั่ง Odoo ก็ update ตาม
+                # ไม่สร้างซ้ำ
+                existing_record = False
+                hr_id = record.get('hr_id_manual_time_log')
+                if hr_id:
+                    existing_record = self.env['hr.manual.time.log'].search([
+                        ('hr_id_manual_time_log', '=', hr_id),
+                    ], limit=1)
+                # fallback (data เก่าที่ยังไม่มี hr_id) ใช้ logic เดิม
+                if not existing_record:
+                    existing_record = self.env['hr.manual.time.log'].search([
+                        ('user_id', '=', record['user_id']),
+                        ('work_date', '=', record['work_date']),
+                        ('checkin_time', '=', record['checkin_time']),
+                    ], limit=1)
 
                 file_url = None
                 if record.get('file_path'):

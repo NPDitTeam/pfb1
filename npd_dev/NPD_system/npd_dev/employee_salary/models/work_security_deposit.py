@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import calendar
 import logging
+from datetime import date
 from dateutil.relativedelta import relativedelta
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
@@ -430,6 +432,38 @@ class WorkSecurityDeposit(models.Model):
             }
         }
 
+    def action_sync_resign_dates(self):
+        """ดึง resign_date จาก employee.salary ของแต่ละ line มาเซ็ตในตาราง
+        + ตั้ง work_status = 'resigned' ให้อัตโนมัติ
+        ใช้เมื่อมีการอัพเดท resign_date ที่ employee.salary แล้ว
+        และต้องการให้ deposit รับรู้ + คำนวณ refund"""
+        self.ensure_one()
+        updated = 0
+        for line in self.line_ids:
+            emp = line.employee_id
+            if not emp:
+                continue
+            emp_resign = getattr(emp, 'resign_date', False)
+            if not emp_resign:
+                continue
+            # เทียบกับค่าใน line — อัพเดทเฉพาะที่เปลี่ยน
+            if line.resign_date != emp_resign or line.work_status != 'resigned':
+                line.write({
+                    'resign_date': emp_resign,
+                    'work_status': 'resigned',
+                })
+                updated += 1
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'ดึงวันที่ออกจากงาน',
+                'message': 'อัพเดท %d รายการ' % updated,
+                'type': 'success' if updated > 0 else 'warning',
+                'sticky': False,
+            }
+        }
+
     def action_refresh_employees(self):
         """ดึงพนักงานใหม่ในสาขา+แผนกเดียวกัน ที่ยังไม่อยู่ใน line_ids → เพิ่มเข้าพร้อม schedule เริ่มต้น"""
         self.ensure_one()
@@ -622,6 +656,12 @@ class WorkSecurityDepositLine(models.Model):
         ('pending', 'รอคืนเงิน'),
         ('refunded', 'คืนแล้ว'),
     ], string='สถานะการคืนเงิน', compute='_compute_refund_status', store=True)
+    manual_refunded = fields.Boolean(
+        string='ปรับสถานะ "คืนแล้ว" เอง', default=False,
+        help='ติ๊กเพื่อบังคับให้ refund_status = "คืนแล้ว" — ใช้กับเศษพนักงานเก่าที่ไม่ผ่านระบบทำเงินเดือน',
+    )
+    manual_refunded_date = fields.Date(string='วันที่คืน (ระบุเอง)')
+    manual_refunded_note = fields.Char(string='หมายเหตุการคืน (ระบุเอง)')
 
     @api.depends('payment_ids', 'payment_ids.amount', 'payment_ids.payment_date',
                  'payment_ids.payment_type')
@@ -693,15 +733,54 @@ class WorkSecurityDepositLine(models.Model):
             rec.months_deducted = len(paid)
             rec.refund_amount = sum(paid.mapped('amount'))
 
-    @api.depends('work_status', 'refund_payroll_id', 'refund_amount')
+    @api.depends('work_status', 'refund_payroll_id', 'refund_amount', 'manual_refunded')
     def _compute_refund_status(self):
         for rec in self:
-            if rec.work_status != 'resigned' or rec.refund_amount <= 0:
+            if rec.manual_refunded:
+                rec.refund_status = 'refunded'
+            elif rec.work_status != 'resigned' or rec.refund_amount <= 0:
                 rec.refund_status = 'none'
             elif rec.refund_payroll_id:
                 rec.refund_status = 'refunded'
             else:
                 rec.refund_status = 'pending'
+
+    def action_mark_refunded_manual(self):
+        """ปรับสถานะ 'คืนแล้ว' โดยไม่ผ่าน payroll — สำหรับเศษพนักงานเก่า"""
+        for rec in self:
+            rec.write({
+                'manual_refunded': True,
+                'manual_refunded_date': rec.manual_refunded_date or fields.Date.context_today(rec),
+            })
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'ปรับสถานะคืนแล้ว',
+                'message': 'ปรับ %d รายการ เป็น "คืนแล้ว"' % len(self),
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+
+    def action_unmark_refunded_manual(self):
+        """ยกเลิกการ mark คืนเงินแบบ manual"""
+        for rec in self:
+            rec.write({
+                'manual_refunded': False,
+                'manual_refunded_date': False,
+                'manual_refunded_note': False,
+            })
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'ยกเลิกสถานะคืนแล้ว',
+                'message': 'ยกเลิก %d รายการ' % len(self),
+                'type': 'success',
+                'sticky': False,
+            }
+        }
 
     def _inverse_months_deducted(self):
         # User override — ค่าที่ user แก้จะถูกเก็บไว้
@@ -1292,19 +1371,71 @@ class PayrollSalaryInherit(models.Model):
                     to_sync.mapped('line_id')._compute_resign_info()
 
     def _populate_all_lines(self):
-        # ป้องกัน recursion: write expense_insurance → payroll.write → _populate_all_lines อีก
+        # ⚠️ DEPRECATED hook: เลิกเขียน expense_insurance แล้ว
+        # ตอนนี้ deposit ถูกดึงผ่าน computed fields (expense_deposit_regular_total, ฯลฯ)
+        # ที่ contribute เข้า expense_other / income_other โดยตรง
+        # เก็บ _refresh_security_deposit ไว้สำหรับ mark is_synced + refund_payroll_id
         if self.env.context.get('skip_security_deposit_hook'):
             return super(PayrollSalaryInherit, self)._populate_all_lines()
-        self.with_context(skip_security_deposit_hook=True)._refresh_security_deposit()
+        self.with_context(skip_security_deposit_hook=True)._refresh_security_deposit_meta()
         return super(PayrollSalaryInherit, self)._populate_all_lines()
 
     @api.model_create_multi
     def create(self, vals_list):
-        """หลัง save → re-run hook เพื่อตั้ง refund_payroll_id (รอบแรกที่ compute fire ตอน rec.id ยังเป็น NewId)"""
+        """หลัง save → mark is_synced + refund_payroll_id ของ deposit payments ที่ตรงเดือนนี้"""
         payrolls = super(PayrollSalaryInherit, self).create(vals_list)
         if payrolls:
-            payrolls.with_context(skip_security_deposit_hook=True)._refresh_security_deposit()
+            payrolls.with_context(skip_security_deposit_hook=True)._refresh_security_deposit_meta()
         return payrolls
+
+    def _refresh_security_deposit_meta(self):
+        """Mark is_synced + refund_payroll_id เท่านั้น (ไม่เขียน expense_insurance อีกแล้ว)"""
+        Payment = self.env['work.security.deposit.line.payment'].sudo()
+        DepositLine = self.env['work.security.deposit.line'].sudo()
+        for rec in self:
+            if not rec.employee_id or not rec.month or not rec.year or not isinstance(rec.id, int):
+                continue
+            try:
+                m = int(rec.month)
+                y = int(rec.year)
+                last_day = calendar.monthrange(y, m)[1]
+                start_d = date(y, m, 1)
+                end_d = date(y, m, last_day)
+            except (ValueError, TypeError):
+                continue
+
+            # mark payments ที่ตกในเดือนนี้ → is_synced + payroll_id
+            payments_in_month = Payment.search([
+                ('line_id.employee_id', '=', rec.employee_id.id),
+                ('line_id.deposit_id.state', '=', 'confirmed'),
+                ('payment_date', '>=', start_d),
+                ('payment_date', '<=', end_d),
+            ])
+            payments_in_month = payments_in_month.filtered(
+                lambda p: not (p.line_id.work_status == 'resigned' and p.line_id.resign_date
+                               and p.payment_date > p.line_id.resign_date)
+            )
+            to_sync = payments_in_month.filtered(
+                lambda p: not p.is_synced or p.payroll_id.id != rec.id
+            )
+            if to_sync:
+                to_sync.write({'is_synced': True, 'payroll_id': rec.id})
+
+            # mark refund_payroll_id ของ lines ที่ลาออกในเดือนนี้
+            # ★ ข้าม line ที่ mark manual_refunded แล้ว
+            resigned_lines = DepositLine.search([
+                ('employee_id', '=', rec.employee_id.id),
+                ('deposit_id.state', '=', 'confirmed'),
+                ('work_status', '=', 'resigned'),
+                ('resign_date', '>=', start_d),
+                ('resign_date', '<=', end_d),
+                ('manual_refunded', '=', False),
+            ])
+            lines_to_update = resigned_lines.filtered(
+                lambda l: l.refund_payroll_id.id != rec.id
+            )
+            if lines_to_update:
+                lines_to_update.write({'refund_payroll_id': rec.id})
 
     def unlink(self):
         """ลบ payroll → ปลด is_synced + payroll_id ของ payment ที่เคย sync เข้า payroll นี้

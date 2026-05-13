@@ -233,7 +233,6 @@ class PayrollSalary(models.Model):
         ('round_down', 'ปัดเศษเป็นชั่วโมงเต็ม'),
         ('actual', 'คำนวณตามจริง')
     ], string="วิธีการคำนวณชั่วโมง OT", default='round_down', required=True)
-    ot_line_ids = fields.One2many('payroll.ot.line', 'payroll_id', string='รายการ OT')
     line_ids = fields.One2many("payroll.salary.line", "payroll_id", string="รายละเอียดเงินเดือน")
     
     # ✅ เพิ่ม flag สำหรับ override ยอดรวม
@@ -245,7 +244,17 @@ class PayrollSalary(models.Model):
         compute="_compute_other_income_total",
         store=True,
         readonly=True,
-        help="ยอดรวมเงินได้อื่นๆ ที่ยืนยันแล้ว และวันที่จ่ายเงินอยู่ในเดือนเดียวกับวันที่จ่ายเงินในรายการเงินเดือนนี้",
+        help="ยอดรวมเงินได้อื่นๆ ที่ยืนยันแล้ว และวันที่จ่ายเงินอยู่ในเดือนเดียวกับวันที่จ่ายเงินในรายการเงินเดือนนี้ (รวมค่าตัวนักแสดงด้วย)",
+    )
+
+    # ✅ ยอดค่าตัวนักแสดง ถ่าย content จาก hr.manual.time.log ของรอบตัดเงินเดือน
+    actor_content_total = fields.Float(
+        string="ค่าตัวนักแสดง ถ่าย content",
+        compute="_compute_actor_content_total",
+        store=True,
+        readonly=True,
+        help="ยอดรวม 'จำนวนเงิน' จาก hr.manual.time.log ที่ reason_type='ค่าตัวนักแสดง ถ่าย content' "
+             "และ work_date อยู่ในช่วงตัดรอบเงินเดือน",
     )
 
     total_gross = fields.Float(
@@ -335,15 +344,82 @@ class PayrollSalary(models.Model):
     income_fuel = fields.Float(string="อินเซนทีฟ", default=0.0)
     income_commission = fields.Float(string="ค่าคอมมิชชั่นสาขา", default=0.0)
     income_commission_sale = fields.Float(string="ค่าคอมมิชชั่นSale", default=0.0)
-    income_other = fields.Float(string="รายได้อื่นๆ", default=0.0)
+    income_other = fields.Float(string="รายได้อื่นๆ (รวมทั้งหมด)", default=0.0,
+                                help="ผลรวม: รายได้อื่นๆ (ใส่เพิ่ม) + ค่าตัวนักแสดง + โบนัส + เงินตกหล่น + เมนูเงินได้อื่นๆ "
+                                     "(ใช้ในสลิปเงินเดือนเป็น line 'รายได้อื่นๆ')")
+    income_other_manual = fields.Float(
+        string="รายได้อื่นๆ (ใส่เพิ่ม)", default=0.0,
+        help="ใส่ค่า free-form เพิ่มเติม ที่ไม่ใช่ค่าตัวนักแสดง / โบนัส / เงินตกหล่น"
+    )
+    # ตารางแสดงรายการที่ระบบดึงมาให้เห็นยอดที่เข้ามาในรายได้อื่นๆ
+    other_income_breakdown_ids = fields.Many2many(
+        'other.income.line', string="รายการเงินได้อื่นๆ (จากเมนู)",
+        compute='_compute_other_income_breakdowns',
+    )
+    actor_content_breakdown_ids = fields.Many2many(
+        'hr.manual.time.log', string="รายการค่าตัวนักแสดง ถ่าย content",
+        compute='_compute_other_income_breakdowns',
+    )
+
+    # โบนัส — เฉพาะเดือนนี้, ติ๊กเพื่อใช้, เดือนใหม่ default = ไม่ติ๊ก (auto reset)
+    income_bonus = fields.Float(string="โบนัส", default=0.0)
+    bonus_active = fields.Boolean(
+        string="ใช้โบนัสเดือนนี้", default=False,
+        help="ติ๊กเพื่อให้โบนัสนับรวมเงินเดือนเดือนนี้ "
+             "เดือนถัดไประบบจะ default = ไม่ติ๊ก (ไม่นับ) อัตโนมัติ"
+    )
+
+    # เงินตกหล่นจากรอบเงินเดือน — ใส่ต่อเดือน, เดือนใหม่ default = 0, ค่าเก่าเก็บใน record เดิม
+    income_missed_payment = fields.Float(
+        string="เงินตกหล่นจากรอบเงินเดือน", default=0.0,
+        help="เงินที่ตกหล่นจากรอบก่อนหน้า — แต่ละ payroll record มีค่าของเดือนนั้น "
+             "(เดือนถัดไป default = 0, ดูประวัติได้จากรอบเก่า)"
+    )
 
     # รายจ่ายใหม่
     expense_provident = fields.Float(string="กองทุนสำรองเลี้ยงชีพ", default=0.0)
     expense_advance = fields.Float(string="เบิกเงินล่วงหน้า", default=0.0)
     expense_loan = fields.Float(string="เงินกู้", default=0.0)
     expense_ksl = fields.Float(string="กยศ", default=0.0)
-    expense_insurance = fields.Float(string="เงินประกันการทำงาน", default=0.0)
-    expense_other = fields.Float(string="หักอื่นๆ", default=0.0)
+    expense_insurance = fields.Float(string="เงินประกันการทำงาน (ไม่ใช้แล้ว)", default=0.0,
+                                     help="Deprecated — ย้าย logic ไปที่ expense_other / income_other")
+    expense_other = fields.Float(string="หักอื่นๆ (รวมทั้งหมด)", default=0.0,
+                                 compute='_compute_expense_other_total', store=True,
+                                 help="ผลรวม: หักอื่นๆ (ใส่เพิ่ม) + หักรายเดือน + หัก Work Permit (จาก work.security.deposit)")
+    expense_other_manual = fields.Float(
+        string="หักอื่นๆ (ใส่เพิ่ม)", default=0.0,
+        help="ใส่ค่า free-form เพิ่มเติม ที่ไม่ใช่จาก work.security.deposit"
+    )
+
+    # ✅ ยอดหักจาก work.security.deposit แยกตามประเภท
+    expense_deposit_regular_total = fields.Float(
+        string="หักรายเดือน (จาก work.security.deposit)",
+        compute='_compute_deposit_amounts', store=True,
+    )
+    expense_deposit_extra_total = fields.Float(
+        string="หัก Work Permit / อื่นๆ (จาก work.security.deposit)",
+        compute='_compute_deposit_amounts', store=True,
+    )
+    income_deposit_refund_total = fields.Float(
+        string="คืนเงินประกันรายเดือน (จาก work.security.deposit)",
+        compute='_compute_deposit_amounts', store=True,
+        help="ถ้าพนักงานลาออกในเดือนนี้ → คืนเงินประกัน regular ที่หักไปแล้ว",
+    )
+    # ตารางแสดงรายการ deposit ที่ดึงมา (สำหรับ view)
+    expense_deposit_regular_breakdown_ids = fields.Many2many(
+        'work.security.deposit.line.payment', relation='payroll_deposit_regular_rel',
+        string="รายการหักรายเดือน",
+        compute='_compute_deposit_amounts',
+    )
+    expense_deposit_extra_breakdown_ids = fields.Many2many(
+        'work.security.deposit.line.payment', relation='payroll_deposit_extra_rel',
+        string="รายการหัก Work Permit / อื่นๆ",
+        compute='_compute_deposit_amounts',
+    )
+    income_deposit_refund_breakdown_ids = fields.Many2many(
+        'work.security.deposit.line', string="รายการคืนเงินประกัน (พนักงานลาออก)",
+        compute='_compute_deposit_amounts',
+    )
 
     # แยก ขาด-ลา-สาย
     deduction_late = fields.Float(string="สาย", default=0.0)
@@ -695,18 +771,23 @@ class PayrollSalary(models.Model):
             )
             data = record._prepare_data_for_php()
             record._send_data_to_php_api('create', data)
+            # sync sso/tax ของเดือนล่าสุด → employee.salary
+            record._sync_latest_to_employee()
         return records
 
     def write(self, vals):
         res = super(PayrollSalary, self).write(vals)
         for record in self:
             if not record.manual_override:
+                # NOTE: income_other / expense_other เป็น computed (set โดย compute) → ห้ามใส่
+                # มิฉะนั้น recurrsion: write → _populate_all_lines → compute → write income_other → ...
                 if any(f in vals for f in [
                     'employee_id', 'ot_calculation_method', 'month', 'year', 'cutoff_day',
                     'income_allowance', 'income_food', 'income_transport',
-                    'income_fuel', 'income_commission', 'income_commission_sale', 'income_other',
+                    'income_fuel', 'income_commission', 'income_commission_sale',
+                    'income_other_manual', 'income_bonus', 'bonus_active', 'income_missed_payment',
                     'expense_provident', 'expense_advance', 'expense_loan',
-                    'expense_ksl', 'expense_insurance', 'expense_other'
+                    'expense_ksl', 'expense_other_manual'
                 ]):
                     record._populate_all_lines()
 
@@ -717,16 +798,50 @@ class PayrollSalary(models.Model):
             )
             data = record._prepare_data_for_php()
             record._send_data_to_php_api('update', data)
+            # sync sso_total / tax_monthly ของเดือนล่าสุด → employee.salary
+            record._sync_latest_to_employee()
         return res
+
+    def _sync_latest_to_employee(self):
+        """ถ้า payroll นี้เป็นเดือน/ปีล่าสุดของพนักงาน → push ค่า sso_total + tax_monthly
+        ไปอัพเดท employee.salary (ฟิลด์ ค่าคงที่ของประกันสังคม + จำนวนภาษีคงที่ต่อเดือน)
+        เพื่อให้ข้อมูลพนักงานมีค่าล่าสุดเสมอ"""
+        for rec in self:
+            if not rec.employee_id or self.env.context.get('_skip_sync_to_employee'):
+                continue
+            # หา payroll ล่าสุดของพนักงานคนนี้
+            latest = self.search([
+                ('employee_id', '=', rec.employee_id.id),
+            ], order='year desc, month desc', limit=1)
+            if latest.id != rec.id:
+                continue  # ไม่ใช่ล่าสุด → ไม่ update
+            try:
+                rec.employee_id.with_context(_skip_sync_to_employee=True).write({
+                    'social_security_fixed_amount': rec.sso_total or 0.0,
+                    'tax_exception': rec.tax_monthly or 0.0,
+                })
+                _logger.info(
+                    "[SYNC→EMPLOYEE] emp=%s | sso=%.2f tax=%.2f (จาก payroll %s/%s)",
+                    rec.employee_id.employee_code, rec.sso_total or 0.0, rec.tax_monthly or 0.0,
+                    rec.month, rec.year,
+                )
+            except Exception as e:
+                _logger.warning("[SYNC→EMPLOYEE] failed emp=%s: %s",
+                                rec.employee_id.employee_code, e)
 
     @api.onchange(
         'income_allowance', 'income_food', 'income_transport',
-        'income_fuel', 'income_commission', 'income_commission_sale', 'income_other',
+        'income_fuel', 'income_commission', 'income_commission_sale',
+        'income_other_manual', 'income_bonus', 'bonus_active', 'income_missed_payment',
         'expense_provident', 'expense_advance', 'expense_loan',
-        'expense_ksl', 'expense_insurance', 'expense_other'
+        'expense_ksl', 'expense_other_manual'
     )
     def _onchange_income_expense_fields(self):
         if self:
+            # บังคับ recompute computes ก่อน → set income_other / expense_other = total ทันที
+            self._compute_deposit_amounts()
+            self._compute_other_income_total()
+            self._compute_expense_other_total()
             self._populate_all_lines()
 
     def _get_sales_commission_rate(self, total_net_rental):
@@ -1685,57 +1800,66 @@ class PayrollSalary(models.Model):
         for rec in self:
             rec.holiday_template_year = rec.year
 
+    # รหัสพนักงานระดับประธาน — ข้ามการคำนวณ OT + ขาดลามาสาย
+    EXECUTIVE_EMPLOYEE_CODES = ('0022', '1343', '0203')
+
     def _prepare_ot_lines(self):
         self.ensure_one()
-        if not self.ot_api_url or not self.employee_code:
-            return [], 0, None
 
-        params = {'employee_code': self.employee_code, 'month': self.month, 'year': self.year}
-        _logger.info("OT API Request URL: %s", self.ot_api_url)
-        _logger.info("OT API Payload (params): %s", json.dumps(params, indent=2, ensure_ascii=False))
+        # ✅ ข้ามคำนวณ OT สำหรับประธาน
+        if self.employee_code and self.employee_code in self.EXECUTIVE_EMPLOYEE_CODES:
+            _logger.info("[OT] ข้ามคำนวณ OT สำหรับประธาน emp=%s", self.employee_code)
+            return [], 0.0, None
 
-        try:
-            response = requests.get(self.ot_api_url, params=params, timeout=10)
-            response.raise_for_status()
-            ot_logs = response.json()
-            _logger.info("OT API Response: %s", json.dumps(ot_logs, indent=2, ensure_ascii=False))
-            if not ot_logs:
-                return [], 0, None
-        except requests.exceptions.MissingSchema:
-            warning_dict = {
-                'warning': {'title': _("API URL Error"),
-                            'message': _("รูปแบบ API URL ไม่ถูกต้อง กรุณาขึ้นต้นด้วย http:// หรือ https://")}
-            }
-            return [], 0, warning_dict
-        except requests.exceptions.RequestException as e:
-            warning_dict = {
-                'warning': {'title': _("API Connection Error"),
-                            'message': _("ไม่สามารถเชื่อมต่อ API ได้: %s") % e}
-            }
-            return [], 0, warning_dict
+        # ----- ค่าพื้นฐานที่ใช้ทั้ง PHP API และ hr.manual.time.log -----
+        ot_lines_to_create = []
+        total_ot_amount = 0.0
+        warning_dict = None
 
-        # -----------------------------
         # ✅ ดึงตารางกะทำงานของพนักงาน
-        work_schedule = self.env['hr.work.schedule'].search([('employee_id', '=', self.employee_id.id)], limit=1)
+        work_schedule = self.env['hr.work.schedule'].search(
+            [('employee_id', '=', self.employee_id.id)], limit=1) if self.employee_id else False
 
         # ✅ ดึงวันหยุดนักขัตฤกษ์ของปี
         holiday_template = self.env['payroll.holiday'].search([('year', '=', self.year)], limit=1)
         holidays = [line.date.strftime('%Y-%m-%d') for line in holiday_template.line_ids] if holiday_template else []
 
-        # 👉 ต้องมีโค้ด generate OT line ที่นี่
-        # เช่น:
-        ot_lines_to_create = []
-        total_ot_amount = 0.0
-
-        # ✅ เงินเดือนต่อชั่วโมง (ฐานเงินเดือน / 30 วัน / 8 ชั่วโมง)
-        # ✅ เงินเดือนต่อชั่วโมง (ปัดเศษ)
-        salary_per_day = self.base_salary / 30
+        # ✅ เงินเดือนต่อชั่วโมง
+        salary_per_day = (self.base_salary or 0.0) / 30
         hourly_rate_raw = salary_per_day / 8.0
         hourly_rate = round_half_up(hourly_rate_raw)
+
+        # ----- ดึง OT จาก PHP API (เฉพาะ weekday/sunday — holiday จะมาจาก manual log) -----
+        ot_logs = []
+        if self.ot_api_url and self.employee_code:
+            params = {'employee_code': self.employee_code, 'month': self.month, 'year': self.year}
+            _logger.info("OT API Request URL: %s", self.ot_api_url)
+            _logger.info("OT API Payload (params): %s", json.dumps(params, indent=2, ensure_ascii=False))
+            try:
+                response = requests.get(self.ot_api_url, params=params, timeout=10)
+                response.raise_for_status()
+                ot_logs = response.json() or []
+                _logger.info("OT API Response: %s", json.dumps(ot_logs, indent=2, ensure_ascii=False))
+            except requests.exceptions.MissingSchema:
+                warning_dict = {
+                    'warning': {'title': _("API URL Error"),
+                                'message': _("รูปแบบ API URL ไม่ถูกต้อง กรุณาขึ้นต้นด้วย http:// หรือ https://")}
+                }
+                ot_logs = []
+            except requests.exceptions.RequestException as e:
+                warning_dict = {
+                    'warning': {'title': _("API Connection Error"),
+                                'message': _("ไม่สามารถเชื่อมต่อ API ได้: %s") % e}
+                }
+                ot_logs = []
 
         for log in ot_logs:
             # ดึงวันที่จาก log['work_date']
             work_date = fields.Date.from_string(log['work_date'])
+
+            # ⚠️ ข้ามวันหยุดนักขัตฤกษ์ — จะดึงจาก hr.manual.time.log แทน (ดูบล็อกด้านล่าง)
+            if work_date.strftime('%Y-%m-%d') in holidays:
+                continue
 
             # รวมวันที่กับเวลา
             start_str = f"{work_date} {log['start_time']}"
@@ -1762,22 +1886,17 @@ class PayrollSalary(models.Model):
                     remaining_hours = ot_hours - 1
                     ot_hours = first_hour + max(0, remaining_hours)
 
-            # ✅ ถ้าเป็นวันหยุดนักขัตฤกษ์
-            if work_date.strftime('%Y-%m-%d') in holidays:
-                ot_type = 'holiday'
-                multiplier = 2.0
-                ot_hours = (end_dt - start_dt).total_seconds() / 3600.0
-            else:
-                if self._is_outside_shift(work_date, start_dt, end_dt, work_schedule):
-                    ot_type = 'weekday'
-                    multiplier = 1.5
+            # ไม่ใช่วันหยุดนักขัตฤกษ์ → จัดเป็น weekday หรือ sunday
+            if self._is_outside_shift(work_date, start_dt, end_dt, work_schedule):
+                ot_type = 'weekday'
+                multiplier = 1.5
 
-                    # ✅ ตัดเวลาที่อยู่ในกะออก
-                    shift_start, shift_end = self._get_shift_time(work_date, work_schedule)
-                    ot_hours = self._calculate_ot_outside_shift(start_dt, end_dt, shift_start, shift_end)
-                else:
-                    ot_type = 'sunday'
-                    multiplier = 1.0
+                # ✅ ตัดเวลาที่อยู่ในกะออก
+                shift_start, shift_end = self._get_shift_time(work_date, work_schedule)
+                ot_hours = self._calculate_ot_outside_shift(start_dt, end_dt, shift_start, shift_end)
+            else:
+                ot_type = 'sunday'
+                multiplier = 1.0
 
             ot_amount = ot_hours * hourly_rate * multiplier
             total_ot_amount += ot_amount
@@ -1793,7 +1912,78 @@ class PayrollSalary(models.Model):
                 'ot_type': ot_type,
             }))
 
-        return ot_lines_to_create, total_ot_amount, None
+        # ✅ ดึง OT วันหยุดนักขัตฤกษ์จาก hr.manual.time.log (reason_type='ทำงานวันหยุด', state='อนุมัติ')
+        # ใช้ work_date / checkin_time / checkout_time × อัตราเงินเดือนต่อชั่วโมง × 2.0
+        # เช็ค hr.manual.time.log model ผ่าน try/except (กรณี hr_attendance_branch ยังไม่ load)
+        ManualTimeLogModel = None
+        try:
+            ManualTimeLogModel = self.env['hr.manual.time.log']
+        except KeyError:
+            pass
+        if self.employee_id and self.month and self.year and ManualTimeLogModel is not None:
+            try:
+                m = int(self.month)
+                y = int(self.year)
+                end_day = self.cutoff_day or 24
+                start_day = (self.period_id.cutoff_start_day if self.period_id else None) or 25
+                last_end = calendar.monthrange(y, m)[1]
+                end_date_cycle = date(y, m, min(end_day, last_end))
+                if m == 1:
+                    prev_m, prev_y = 12, y - 1
+                else:
+                    prev_m, prev_y = m - 1, y
+                last_start = calendar.monthrange(prev_y, prev_m)[1]
+                start_date_cycle = date(prev_y, prev_m, min(start_day, last_start))
+
+                manual_logs = ManualTimeLogModel.search([
+                    ('employee_id', '=', self.employee_id.id),
+                    ('reason_type', '=', 'ทำงานวันหยุด'),
+                    ('state', '=', 'อนุมัติ'),
+                    ('work_date', '>=', start_date_cycle),
+                    ('work_date', '<=', end_date_cycle),
+                ])
+                for ml in manual_logs:
+                    if not ml.work_date or not ml.checkin_time or not ml.checkout_time:
+                        continue
+                    # นับเฉพาะวันที่อยู่ใน payroll.holiday (เป็นวันหยุดนักขัตฤกษ์จริง)
+                    if ml.work_date.strftime('%Y-%m-%d') not in holidays:
+                        continue
+                    try:
+                        start_dt = datetime.datetime.strptime(
+                            f"{ml.work_date} {ml.checkin_time}", "%Y-%m-%d %H:%M:%S")
+                        end_dt = datetime.datetime.strptime(
+                            f"{ml.work_date} {ml.checkout_time}", "%Y-%m-%d %H:%M:%S")
+                    except (ValueError, TypeError):
+                        continue
+                    if end_dt <= start_dt:
+                        end_dt += datetime.timedelta(days=1)
+                    ot_hours = (end_dt - start_dt).total_seconds() / 3600.0
+
+                    # หักเวลาพักเที่ยง 12:00–13:00 ออก
+                    lunch_start = datetime.datetime.combine(start_dt.date(), datetime.time(12, 0))
+                    lunch_end = datetime.datetime.combine(start_dt.date(), datetime.time(13, 0))
+                    overlap_start = max(start_dt, lunch_start)
+                    overlap_end = min(end_dt, lunch_end)
+                    if overlap_start < overlap_end:
+                        ot_hours -= (overlap_end - overlap_start).total_seconds() / 3600.0
+                    ot_hours = max(0, ot_hours)
+
+                    ot_amount = ot_hours * hourly_rate * 2.0
+                    total_ot_amount += ot_amount
+                    ot_lines_to_create.append((0, 0, {
+                        'date': ml.work_date,
+                        'start_time': start_dt,
+                        'end_time': end_dt,
+                        'start_time_x': ml.checkin_time,
+                        'end_time_x': ml.checkout_time,
+                        'ot_hours': ot_hours,
+                        'ot_amount': ot_amount,
+                        'ot_type': 'holiday',
+                    }))
+            except (ValueError, TypeError) as e:
+                _logger.warning("[OT HOLIDAY] เกิดข้อผิดพลาดตอนคำนวณรอบ: %s", e)
+
+        return ot_lines_to_create, total_ot_amount, warning_dict
 
     def _get_shift_time(self, work_date, work_schedule):
         weekday_idx = work_date.weekday()
@@ -1871,6 +2061,10 @@ class PayrollSalary(models.Model):
 
     def _prepare_lateness_data(self):
         self.ensure_one()
+        # ✅ ข้ามคำนวณขาดลามาสายสำหรับประธาน
+        if self.employee_code and self.employee_code in self.EXECUTIVE_EMPLOYEE_CODES:
+            _logger.info("[LATENESS] ข้ามคำนวณขาดลามาสายสำหรับประธาน emp=%s", self.employee_code)
+            return 0, 0, 0, 0, 0, 0, 0, 0, 0, None
         if not self.lateness_api_url or not self.employee_id:
             # คืนค่า 10 ตัวให้ครบรูปแบบ
             return 0, 0, 0, 0, 0, 0, 0, 0, 0, None
@@ -1948,6 +2142,19 @@ class PayrollSalary(models.Model):
 
     def _populate_all_lines(self):
         self.ensure_one()
+        # safety guard กัน recursion (เช่น compute → write → populate → compute → ...)
+        if self.env.context.get('_in_populate_all_lines'):
+            return
+        self = self.with_context(_in_populate_all_lines=True)
+        emp_code = self.employee_id.employee_code if self.employee_id else '-'
+        _logger.info("[POPULATE_ALL_LINES] START emp=%s month=%s year=%s id=%s",
+                     emp_code, self.month, self.year, self.id)
+        # บังคับ recompute ทุก field ที่เกี่ยวข้องก่อน — กัน stored values stale
+        self._compute_actor_content_total()
+        self._compute_deposit_amounts()
+        self._compute_other_income_total()
+        self._compute_expense_other_total()
+        self._compute_other_income_breakdowns()
         ot_lines_commands, total_ot_amount, ot_warning_dict = self._prepare_ot_lines()
         (late_checkin_minutes,
          early_checkout_minutes,
@@ -2094,11 +2301,12 @@ class PayrollSalary(models.Model):
         lines_to_create.append(
                 (0, 0, {'name': 'ค่าคอมมิชชั่น', 'type': 'income', 'amount': self.income_commission + self.income_commission_sale}))
 
-        # รายได้อื่นๆ (ฟิลด์ income_other มี auto-bump ให้ >= other_income_total แล้ว)
+        # รายได้อื่นๆ = ผลรวมทั้งหมด (manual + actor + bonus + missed + เมนูเงินได้อื่นๆ)
+        # → ใช้ในสลิปเงินเดือนเป็น line เดียว ไม่ double-count กับการ breakdown
         lines_to_create.append((0, 0, {
             'name': 'รายได้อื่นๆ',
             'type': 'income',
-            'amount': self.income_other
+            'amount': self.income_other or 0.0,
         }))
 
         # รายจ่ายใหม่
@@ -2113,9 +2321,8 @@ class PayrollSalary(models.Model):
 
         lines_to_create.append((0, 0, {'name': 'กยศ', 'type': 'deduction', 'amount': self.expense_ksl}))
 
-        lines_to_create.append(
-                (0, 0, {'name': 'เงินประกันการทำงาน', 'type': 'deduction', 'amount': self.expense_insurance}))
-
+        # หักเงินอื่นๆ = expense_other (รวม manual + deposit_regular + deposit_extra)
+        # → ใช้ใน slip บรรทัดเดียว ไม่ double-count กับ "เงินประกันการทำงาน" (ลบออกแล้ว)
         lines_to_create.append(
             (0, 0, {'name': 'หักเงินอื่นๆ', 'type': 'deduction', 'amount': self.expense_other}))
 
@@ -2149,15 +2356,15 @@ class PayrollSalary(models.Model):
                 'amount': provident_fund_amount
             }))
 
-        # ภาษี
+        # ภาษี — คำนวณ inline จาก base_salary + ot ของเดือนนี้ (ไม่พึ่ง self.tax_monthly
+        # ที่อาจ stale ใน onchange/create context)
         temp_gross_income = self.base_salary + total_ot_amount
         temp_tax, _ = self._calculate_tax(temp_gross_income, sso_amount)
-        # ภาษีหัก ณ ที่จ่าย
-        tax_line = self.line_ids.filtered(lambda l: l.name == 'ภาษีหัก ณ ที่จ่าย')
-        if tax_line:
-            tax_amount = tax_line.amount if tax_line.amount > 0 else self.tax_monthly
+        tax_line = self.line_ids.filtered(lambda l: l.name == 'ภาษีหัก ณ ที่จ่าย')[:1]
+        if tax_line and tax_line.amount > 0:
+            tax_amount = tax_line.amount   # user override → ใช้ค่า user
         else:
-            tax_amount = self.tax_monthly
+            tax_amount = temp_tax
 
         lines_to_create.append((0, 0, {
             'name': 'ภาษีหัก ณ ที่จ่าย',
@@ -2168,7 +2375,32 @@ class PayrollSalary(models.Model):
         # Apply to record
         # ถ้า override_ot=True → เก็บ ot_line_ids เดิมที่ user แก้ไว้ (ไม่ regenerate)
         if not self.override_ot:
-            self.ot_line_ids = [(5, 0, 0)] + ot_lines_commands
+            # บน real record (มี id จริง) ลบของเก่าด้วย unlink เพื่อกัน double ตอน write
+            # บน NewId / onchange context ใช้ command (5,0,0) เท่านั้น เพราะ unlink ทำลาย state
+            if self.id and not isinstance(self.id, models.NewId) and self.ot_line_ids:
+                self.ot_line_ids.sudo().unlink()
+                self.ot_line_ids = ot_lines_commands
+            else:
+                self.ot_line_ids = [(5, 0, 0)] + ot_lines_commands
+
+            # 🟢 set totals จาก ot_lines_commands โดยตรง — กัน cache issue ที่ทำให้
+            # _compute_ot_totals เห็น ot_line_ids เป็น (เก่า+ใหม่) แล้ว double
+            new_weekday = sum(cmd[2].get('ot_amount', 0.0) for cmd in ot_lines_commands
+                              if isinstance(cmd, tuple) and len(cmd) == 3
+                              and cmd[2].get('ot_type') == 'weekday')
+            new_holiday = sum(cmd[2].get('ot_amount', 0.0) for cmd in ot_lines_commands
+                              if isinstance(cmd, tuple) and len(cmd) == 3
+                              and cmd[2].get('ot_type') == 'holiday')
+            new_sunday = sum(cmd[2].get('ot_amount', 0.0) for cmd in ot_lines_commands
+                             if isinstance(cmd, tuple) and len(cmd) == 3
+                             and cmd[2].get('ot_type') == 'sunday')
+            self.ot_total_weekday = new_weekday
+            self.ot_total_holiday = new_holiday
+            self.ot_total_sunday = new_sunday
+            self.ot_total = new_weekday + new_holiday + new_sunday
+            self.manual_ot_weekday = new_weekday
+            self.manual_ot_holiday = new_holiday
+            self.manual_ot_sunday = new_sunday
         else:
             _logger.info("[OVERRIDE OT] Skip auto-update ot_line_ids for payroll %s", self.id)
 
@@ -2204,13 +2436,13 @@ class PayrollSalary(models.Model):
             rec.total_deduction = sum(l.amount for l in rec.line_ids if l.type == 'deduction')
             rec.net_salary = rec.total_gross - rec.total_deduction
 
-    @api.depends('employee_id', 'payment_date')
+    @api.depends('employee_id', 'payment_date', 'actor_content_total',
+                 'income_bonus', 'bonus_active', 'income_missed_payment',
+                 'income_other_manual', 'income_deposit_refund_total')
     def _compute_other_income_total(self):
         """
-        ดึงยอดรวมเงินได้อื่นๆ จาก other.income.line
-        โดยเลือกเฉพาะรายการที่ยืนยันแล้ว (state == 'confirmed')
-        และวันที่จ่ายเงินของบรรทัดอยู่ในเดือน/ปี เดียวกับ payment_date ของ payroll.salary
-        ถ้ายอด other_income_total > income_other → auto-bump income_other ให้เท่ากัน
+        ดึงยอดรวมเงินได้อื่นๆ = other.income.line + actor + bonus + missed + manual + deposit_refund
+        แล้ว set income_other = total
         """
         for rec in self:
             total = 0.0
@@ -2227,35 +2459,199 @@ class PayrollSalary(models.Model):
                     ('payment_date', '<=', end_month),
                 ])
                 total = sum(l.amount for l in lines)
+            # บวก: actor + bonus (ถ้าติ๊ก) + missed + manual + deposit refund (พนักงานลาออก)
+            other_income_lines_total = total
+            actor_val = rec.actor_content_total or 0.0
+            bonus_val = (rec.income_bonus or 0.0) if rec.bonus_active else 0.0
+            missed_val = rec.income_missed_payment or 0.0
+            manual_val = rec.income_other_manual or 0.0
+            refund_val = rec.income_deposit_refund_total or 0.0
+            total = other_income_lines_total + actor_val + bonus_val + missed_val + manual_val + refund_val
             rec.other_income_total = total
-            # auto-bump income_other ถ้าต่ำกว่ายอดเงินได้อื่นๆ
-            if total > 0 and (rec.income_other or 0.0) < total:
-                rec.income_other = total
+            rec.income_other = total
+            emp_code = rec.employee_id.employee_code if rec.employee_id else '-'
+            _logger.info(
+                "[INCOME_OTHER] emp=%s | lines=%.2f actor=%.2f bonus=%.2f missed=%.2f manual=%.2f refund=%.2f → total=%.2f",
+                emp_code, other_income_lines_total, actor_val, bonus_val, missed_val, manual_val, refund_val, total
+            )
 
-    @api.constrains('income_other', 'other_income_total')
-    def _check_income_other_min(self):
-        """รายได้อื่นๆ ต้องไม่ต่ำกว่า เงินได้อื่นๆ ที่ดึงมา"""
+    @api.depends('employee_id', 'month', 'year')
+    def _compute_deposit_amounts(self):
+        """ดึงยอดจาก work.security.deposit แยก 3 ส่วน
+        Note: work.security.deposit.* อยู่ใน employee_salary module เดียวกัน
+        ไม่ต้อง try/except"""
+        Payment = self.env['work.security.deposit.line.payment']
+        DepositLine = self.env['work.security.deposit.line']
         for rec in self:
-            if (rec.income_other or 0.0) < (rec.other_income_total or 0.0):
-                raise ValidationError(
-                    "รายได้อื่นๆ (%.2f) ต้องไม่ต่ำกว่าเงินได้อื่นๆ (%.2f)" % (
-                        rec.income_other or 0.0,
-                        rec.other_income_total or 0.0,
-                    )
-                )
+            regular_payments = Payment.browse()
+            extra_payments = Payment.browse()
+            refund_lines = DepositLine.browse()
 
-    @api.onchange('income_other')
-    def _onchange_income_other_min(self):
-        """กันไม่ให้ user พิมพ์ค่าต่ำกว่ายอดเงินได้อื่นๆ ที่ดึงมา (แจ้งเตือน + ดีดค่ากลับ)"""
-        if self.other_income_total and (self.income_other or 0.0) < self.other_income_total:
-            minimum = self.other_income_total
-            self.income_other = minimum
-            return {
-                'warning': {
-                    'title': 'ไม่สามารถกำหนดค่าต่ำกว่าเงินได้อื่นๆ',
-                    'message': 'รายได้อื่นๆ ต้องมากกว่าหรือเท่ากับ %.2f (ยอดจากเมนูเงินได้อื่นๆ)' % minimum,
-                }
-            }
+            emp_code = rec.employee_id.employee_code if rec.employee_id else '-'
+            _logger.info("[DEPOSIT_COMPUTE] emp=%s month=%s year=%s",
+                         emp_code, rec.month, rec.year)
+
+            if rec.employee_id and rec.month and rec.year:
+                try:
+                    m = int(rec.month)
+                    y = int(rec.year)
+                    last_day = calendar.monthrange(y, m)[1]
+                    start_d = date(y, m, 1)
+                    end_d = date(y, m, last_day)
+
+                    all_payments = Payment.search([
+                        ('line_id.employee_id', '=', rec.employee_id.id),
+                        ('line_id.deposit_id.state', '=', 'confirmed'),
+                        ('payment_date', '>=', start_d),
+                        ('payment_date', '<=', end_d),
+                    ])
+                    _logger.info("[DEPOSIT_COMPUTE] emp=%s | range=%s..%s | all_payments=%d",
+                                 emp_code, start_d, end_d, len(all_payments))
+
+                    regular_payments = all_payments.filtered(lambda p: p.payment_type == 'regular')
+                    extra_payments = all_payments.filtered(lambda p: p.payment_type != 'regular')
+
+                    regular_payments = regular_payments.filtered(
+                        lambda p: not (p.line_id.work_status == 'resigned' and p.line_id.resign_date
+                                       and p.payment_date > p.line_id.resign_date)
+                    )
+
+                    refund_lines = DepositLine.search([
+                        ('employee_id', '=', rec.employee_id.id),
+                        ('deposit_id.state', '=', 'confirmed'),
+                        ('work_status', '=', 'resigned'),
+                        ('resign_date', '>=', start_d),
+                        ('resign_date', '<=', end_d),
+                        ('manual_refunded', '=', False),  # ★ ข้าม line ที่ mark คืนเองแล้ว
+                    ])
+                    _logger.info("[DEPOSIT_COMPUTE] emp=%s | refund_lines=%d (resigned in %s..%s, ไม่รวม manual_refunded)",
+                                 emp_code, len(refund_lines), start_d, end_d)
+                except (ValueError, TypeError) as e:
+                    _logger.warning("[DEPOSIT_COMPUTE] error emp=%s: %s", emp_code, e)
+
+            rec.expense_deposit_regular_breakdown_ids = regular_payments if regular_payments else False
+            rec.expense_deposit_extra_breakdown_ids = extra_payments if extra_payments else False
+            rec.income_deposit_refund_breakdown_ids = refund_lines if refund_lines else False
+
+            rec.expense_deposit_regular_total = sum(regular_payments.mapped('amount')) if regular_payments else 0.0
+            rec.expense_deposit_extra_total = sum(extra_payments.mapped('amount')) if extra_payments else 0.0
+            refund_total = 0.0
+            if refund_lines:
+                for line in refund_lines:
+                    paid = line.payment_ids.filtered(
+                        lambda p: p.is_synced and p.payment_type == 'regular'
+                    )
+                    refund_total += sum(paid.mapped('amount'))
+            rec.income_deposit_refund_total = refund_total
+
+            _logger.info("[DEPOSIT_COMPUTE] emp=%s | regular=%.2f extra=%.2f refund=%.2f",
+                         emp_code, rec.expense_deposit_regular_total,
+                         rec.expense_deposit_extra_total, refund_total)
+
+    @api.depends('expense_other_manual', 'expense_deposit_regular_total', 'expense_deposit_extra_total')
+    def _compute_expense_other_total(self):
+        """expense_other (รวม) = manual + deposit_regular + deposit_extra"""
+        for rec in self:
+            rec.expense_other = ((rec.expense_other_manual or 0.0)
+                                 + (rec.expense_deposit_regular_total or 0.0)
+                                 + (rec.expense_deposit_extra_total or 0.0))
+
+    @api.depends('employee_id', 'payment_date', 'month', 'year', 'cutoff_day', 'period_id')
+    def _compute_other_income_breakdowns(self):
+        """รวบรวม records ที่ระบบ "ดึงมาใส่" ในรายได้อื่นๆ — เพื่อแสดงเป็นตารางในฟอร์ม"""
+        ManualTimeLog = None
+        try:
+            ManualTimeLog = self.env['hr.manual.time.log']
+        except KeyError:
+            pass
+        for rec in self:
+            # other.income.line — ตามเดือน/ปีของ payment_date
+            other_lines = self.env['other.income.line']
+            if rec.employee_id and rec.payment_date:
+                pd = rec.payment_date
+                start_month = pd.replace(day=1)
+                last_day = calendar.monthrange(pd.year, pd.month)[1]
+                end_month = pd.replace(day=last_day)
+                other_lines = self.env['other.income.line'].search([
+                    ('employee_id', '=', rec.employee_id.id),
+                    ('state', '=', 'confirmed'),
+                    ('payment_date', '>=', start_month),
+                    ('payment_date', '<=', end_month),
+                ])
+            rec.other_income_breakdown_ids = other_lines
+
+            # hr.manual.time.log — actor content ตามรอบตัด
+            actor_logs = ManualTimeLog.browse() if ManualTimeLog is not None else False
+            if ManualTimeLog is not None and rec.employee_id and rec.month and rec.year:
+                try:
+                    m = int(rec.month)
+                    y = int(rec.year)
+                    end_day = rec.cutoff_day or 24
+                    start_day = (rec.period_id.cutoff_start_day if rec.period_id else None) or 25
+                    last_end = calendar.monthrange(y, m)[1]
+                    end_date = date(y, m, min(end_day, last_end))
+                    if m == 1:
+                        prev_m, prev_y = 12, y - 1
+                    else:
+                        prev_m, prev_y = m - 1, y
+                    last_start = calendar.monthrange(prev_y, prev_m)[1]
+                    start_date = date(prev_y, prev_m, min(start_day, last_start))
+                    actor_logs = ManualTimeLog.search([
+                        ('employee_id', '=', rec.employee_id.id),
+                        ('reason_type', '=', 'ค่าตัวนักแสดง ถ่าย content'),
+                        ('state', '=', 'อนุมัติ'),
+                        ('work_date', '>=', start_date),
+                        ('work_date', '<=', end_date),
+                    ])
+                except (ValueError, TypeError):
+                    pass
+            rec.actor_content_breakdown_ids = actor_logs if actor_logs else False
+
+    @api.depends('employee_id', 'month', 'year', 'cutoff_day', 'period_id')
+    def _compute_actor_content_total(self):
+        """ดึงยอดค่าตัวนักแสดง ถ่าย content จาก hr.manual.time.log"""
+        try:
+            ManualTimeLog = self.env['hr.manual.time.log']
+        except KeyError:
+            _logger.info("[ACTOR_COMPUTE] hr.manual.time.log model not loaded yet → skip")
+            for rec in self:
+                rec.actor_content_total = 0.0
+            return
+        for rec in self:
+            total = 0.0
+            emp_code = rec.employee_id.employee_code if rec.employee_id else '-'
+            if rec.employee_id and rec.month and rec.year:
+                try:
+                    m = int(rec.month)
+                    y = int(rec.year)
+                    end_day = rec.cutoff_day or 24
+                    start_day = (rec.period_id.cutoff_start_day if rec.period_id else None) or 25
+
+                    last_end = calendar.monthrange(y, m)[1]
+                    end_date = date(y, m, min(end_day, last_end))
+
+                    if m == 1:
+                        prev_m, prev_y = 12, y - 1
+                    else:
+                        prev_m, prev_y = m - 1, y
+                    last_start = calendar.monthrange(prev_y, prev_m)[1]
+                    start_date = date(prev_y, prev_m, min(start_day, last_start))
+
+                    logs = ManualTimeLog.search([
+                        ('employee_id', '=', rec.employee_id.id),
+                        ('reason_type', '=', 'ค่าตัวนักแสดง ถ่าย content'),
+                        ('state', '=', 'อนุมัติ'),
+                        ('work_date', '>=', start_date),
+                        ('work_date', '<=', end_date),
+                    ])
+                    total = sum(l.amount or 0.0 for l in logs)
+                except (ValueError, TypeError):
+                    pass
+            rec.actor_content_total = total
+
+    # หมายเหตุ: ลบ constraint/onchange ของ income_other ออก
+    # เพราะ income_other = compute เสมอ (ดูใน _compute_other_income_total)
+    # user แก้ผ่าน income_other_manual / bonus / missed แทน
 
     def _inverse_total_gross(self):
         """ให้ user แก้ไข total_gross ได้ตรงๆ"""
@@ -2285,14 +2681,13 @@ class PayrollSalary(models.Model):
                  'provident_fund_rate', 'sso_total', 'tax_bracket_ids', 'line_ids')
     def _compute_tax(self):
         for rec in self:
-            tax_line = rec.line_ids.filtered(lambda l: l.name == 'ภาษีหัก ณ ที่จ่าย')
+            # ใช้ [:1] เพื่อรับ singleton — กรณีมี duplicate line
+            tax_line = rec.line_ids.filtered(lambda l: l.name == 'ภาษีหัก ณ ที่จ่าย')[:1]
             if tax_line and tax_line.amount > 0:  # ✅ ใช้ค่าที่ user override
                 rec.tax_monthly = tax_line.amount
                 rec.tax_annual = rec.tax_monthly * 12
             else:
                 sso_amount_monthly = rec.sso_total or 0.0
-                # ❌ เดิม: ใช้ rec.total_gross → รวมสะสม
-                # ✅ ใหม่: ใช้ base_salary + OT ของเดือนนี้
                 monthly_income = rec.base_salary + rec.ot_total
                 rec.tax_monthly, rec.tax_annual = rec._calculate_tax(monthly_income, sso_amount_monthly)
 
@@ -2393,10 +2788,30 @@ class PayrollTaxBracket(models.Model):
 class PayrollSalaryLine(models.Model):
     _name = "payroll.salary.line"
     _description = "รายละเอียดเงินเดือน"
+
+    ACTOR_NAME = 'ค่าตัวนักแสดง ถ่าย content'
+
     payroll_id = fields.Many2one("payroll.salary", string="Payroll", required=True, ondelete="cascade")
     name = fields.Char(string="รายการ")
     type = fields.Selection([('income', 'รายได้'), ('deduction', 'รายการหัก')], string="ประเภทรายการ", required=True)
     amount = fields.Float(string="จำนวนเงิน", required=True)
+
+    def write(self, vals):
+        # ถ้าแก้ amount ของบรรทัด "ค่าตัวนักแสดง ถ่าย content" → ปรับ income_other ของ parent
+        # ตามผลต่าง เพื่อให้ field income_other / other_income_total / total ตรงกัน
+        deltas = {}
+        if 'amount' in vals:
+            for line in self:
+                if (line.payroll_id and line.name == self.ACTOR_NAME
+                        and line.type == 'income'):
+                    delta = (vals['amount'] or 0.0) - (line.amount or 0.0)
+                    if delta:
+                        deltas[line.payroll_id.id] = deltas.get(line.payroll_id.id, 0.0) + delta
+        res = super().write(vals)
+        for payroll_id, delta in deltas.items():
+            payroll = self.env['payroll.salary'].browse(payroll_id)
+            payroll.write({'income_other': (payroll.income_other or 0.0) + delta})
+        return res
 
 
 class PayrollOtLine(models.Model):

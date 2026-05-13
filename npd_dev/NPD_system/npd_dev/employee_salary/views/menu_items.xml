@@ -67,11 +67,11 @@
               action="action_commission_rate_branch_sales"
               sequence="57"/>
 
-    <!-- เมนูจัดการค่ารักษาพยาบาล (กรอกเอง โดยเลือกพนักงานจาก employee.salary) -->
+    <!-- เมนูจัดการค่ารักษาพยาบาล (ดึงผ่าน PHP API จากแอป) -->
     <menuitem id="sub_medical_expense_menu"
               name="จัดการค่ารักษาพยาบาล"
               parent="main_employee_salary_menu"
-              action="action_medical_expense"
+              action="action_sync_medical_expense_from_api"
               sequence="60"/>
 
     <!-- เมนูจัดการค่าเบี้ยเลี้ยง -->

@@ -43,6 +43,11 @@
                                 type="object"
                                 class="btn-secondary"
                                 help="เพิ่มพนักงานในสาขา/แผนกเดียวกัน ที่ยังไม่อยู่ในตาราง พร้อมตารางการหักเริ่มต้น"/>
+                        <button name="action_sync_resign_dates"
+                                string="ดึงวันที่ออกจากงาน"
+                                type="object"
+                                class="btn-secondary"
+                                help="ดึง resign_date จาก employee.salary มาเซ็ตในตารางพนักงาน + ตั้ง work_status = 'ออกจากงาน' อัตโนมัติ (ใช้เมื่อมีการอัพเดท resign_date ที่ employee แล้ว)"/>
                         <button name="action_mark_historical_old_employees"
                                 string="ตั้งเป็นหักครบแล้ว (พนักงานเก่า)"
                                 type="object"
@@ -210,6 +215,18 @@
                                 class="btn-secondary"
                                 attrs="{'invisible': [('work_status', '!=', 'working')]}"
                                 confirm="ตั้งทุก payment ที่อยู่ในอดีตเป็น 'หักแล้ว' (สำหรับพนักงานเก่าที่หักครบไปก่อนใช้ระบบ)"/>
+                        <button name="action_mark_refunded_manual"
+                                string="✓ คืนแล้ว (เศษพนักงานเก่า)"
+                                type="object"
+                                class="btn-success"
+                                attrs="{'invisible': [('manual_refunded', '=', True)]}"
+                                confirm="ปรับสถานะเป็น 'คืนแล้ว' โดยไม่ผ่านระบบทำเงินเดือน (ใช้กับเศษพนักงานเก่าที่คืนเงินไปแล้วนอกระบบ)"/>
+                        <button name="action_unmark_refunded_manual"
+                                string="↶ ยกเลิกคืนแล้ว"
+                                type="object"
+                                class="btn-secondary"
+                                attrs="{'invisible': [('manual_refunded', '=', False)]}"
+                                confirm="ยกเลิกการ mark คืนเงินแบบ manual?"/>
                     </header>
                     <sheet>
                         <group>
@@ -248,6 +265,11 @@
                                        attrs="{'invisible': [('work_status', '!=', 'resigned')]}"/>
                                 <field name="refund_payroll_id"
                                        attrs="{'invisible': [('refund_status', '!=', 'refunded')]}"/>
+                                <field name="manual_refunded" invisible="1"/>
+                                <field name="manual_refunded_date"
+                                       attrs="{'invisible': [('manual_refunded', '=', False)]}"/>
+                                <field name="manual_refunded_note"
+                                       attrs="{'invisible': [('manual_refunded', '=', False)]}"/>
                             </group>
                         </group>
                         <group>
@@ -325,22 +347,10 @@
         </record>
 
         <!-- ============================================================ -->
-        <!-- Inherit payroll.salary form: ล็อก expense_insurance ถ้ามี deposit -->
+        <!-- DEPRECATED: เคย inherit payroll.salary เพื่อ lock expense_insurance -->
+        <!-- ตอนนี้ deposit ถูกย้ายไปที่ expense_other (รวม) ผ่าน computed field -->
+        <!-- จึงไม่จำเป็นต้อง lock อีกแล้ว — ลบ inheriting view ออก -->
         <!-- ============================================================ -->
-        <record id="view_payroll_salary_form_security_deposit_lock" model="ir.ui.view">
-            <field name="name">payroll.salary.form.security.deposit.lock</field>
-            <field name="model">payroll.salary</field>
-            <field name="inherit_id" ref="view_payroll_salary_form"/>
-            <field name="arch" type="xml">
-                <xpath expr="//field[@name='expense_insurance']" position="attributes">
-                    <attribute name="attrs">{'readonly': [('expense_insurance_locked', '=', True)]}</attribute>
-                    <attribute name="help">ยอดนี้ถูกล็อกจากเมนู "จัดการเงินประกันการทำงาน" เมื่อมีรายการที่ยืนยันแล้ว — แก้ที่นั่นแทน</attribute>
-                </xpath>
-                <xpath expr="//field[@name='expense_insurance']" position="after">
-                    <field name="expense_insurance_locked" invisible="1"/>
-                </xpath>
-            </field>
-        </record>
 
         <!-- ============================================================ -->
         <!-- Inherit employee.salary form: เพิ่ม resign_date + แท็บประวัติ -->

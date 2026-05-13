@@ -77,6 +77,12 @@ class EmployeeSalary(models.Model):
     employee_type = fields.Selection([('ประจำ', 'ประจำ'), ('ทดลองงาน', 'ทดลองงาน'), ('รายวัน', 'รายวัน')],
                                      string='ประเภทพนักงาน')
     salary = fields.Float(string='ค่าจ้าง')
+
+    # ค่าคงที่ของประกันสังคมไทย (ใช้ใน auto-calc)
+    SSO_RATE = 0.05
+    SSO_MIN_WAGE = 1650.0
+    SSO_MAX_WAGE = 17500.0
+
     advance_payment_type = fields.Selection([('ค่าเดินทาง', 'ค่าเดินทาง'), ('ค่าเบี้ยเลี้ยง', 'ค่าเบี้ยเลี้ยง')],
                                             string='เงินเบิกล่วงหน้า')
     advance_payment_limit = fields.Float(string='วงเงินเบิกล่วงหน้า')
@@ -87,6 +93,19 @@ class EmployeeSalary(models.Model):
         [('คิดตามฐานเงินเดือนจริงที่ได้รับ', 'คิดตามฐานเงินเดือนจริงที่ได้รับ')], string='เงื่อนไขประกันสังคม')
     social_security_fixed_amount = fields.Float(string='ค่าคงที่ของประกันสังคม')
     social_security_start_date = fields.Date(string='เงื่อนไขที่เริ่มคำนวณประกันสังคม')
+
+    @api.onchange('salary')
+    def _onchange_salary_set_sso(self):
+        """เมื่อกรอก/เปลี่ยน salary → set เงื่อนไข + ค่าคงที่ประกันสังคมอัตโนมัติ
+        - เงื่อนไข = 'คิดตามฐานเงินเดือนจริงที่ได้รับ' (default)
+        - ค่าคงที่ = clamp(salary, 1650, 17500) × 5% (สูงสุด 875)
+        """
+        for rec in self:
+            if rec.salary and rec.salary > 0:
+                if not rec.social_security_condition:
+                    rec.social_security_condition = 'คิดตามฐานเงินเดือนจริงที่ได้รับ'
+                effective_wage = max(min(rec.salary, self.SSO_MAX_WAGE), self.SSO_MIN_WAGE)
+                rec.social_security_fixed_amount = round(effective_wage * self.SSO_RATE, 2)
     enable_tax = fields.Boolean(string='ภาษี', default=True)
     tax_condition = fields.Selection([('คิดภาษี ภงด.1 ใหม่ทุกเดือน', 'คิดภาษี ภงด.1 ใหม่ทุกเดือน')],
                                      string='เงื่อนไขภาษี')

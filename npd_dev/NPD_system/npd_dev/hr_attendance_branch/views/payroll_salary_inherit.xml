@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    เพิ่ม table แสดง actor content breakdown ใน payroll.salary form
+    ต้องอยู่ใน module นี้ (ไม่ใช่ employee_salary) เพราะ hr.manual.time.log
+    define ที่นี่ — ถ้าใส่ใน employee_salary view จะ validate fail
+    (model ยังไม่ load ตอน parent module โหลด)
+-->
+<odoo>
+    <record id="view_payroll_salary_form_actor_breakdown" model="ir.ui.view">
+        <field name="name">payroll.salary.form.actor.breakdown</field>
+        <field name="model">payroll.salary</field>
+        <field name="inherit_id" ref="employee_salary.view_payroll_salary_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//separator[@name='sep_other_income_lines']" position="before">
+                <separator string="◆ ค่าตัวนักแสดง ถ่าย content"/>
+                <field name="actor_content_breakdown_ids" nolabel="1" readonly="1">
+                    <tree>
+                        <field name="work_date"/>
+                        <field name="checkin_time"/>
+                        <field name="checkout_time"/>
+                        <field name="amount" sum="รวม"/>
+                        <field name="state"/>
+                    </tree>
+                </field>
+            </xpath>
+        </field>
+    </record>
+</odoo>

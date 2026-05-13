@@ -135,6 +135,126 @@ class MedicalExpense(models.Model):
         }
 
     # ============================================================
+    # Sync ดึงรายการค่ารักษาพยาบาลทั้งหมดจาก PHP API
+    # ============================================================
+    @api.model
+    def sync_from_api(self):
+        """ดึงคำขอค่ารักษาพยาบาลจากแอป (PHP) มาเก็บใน Odoo
+        - record ที่มีอยู่แล้ว (php_id ตรงกัน) จะอัปเดตเฉพาะข้อมูลที่ผู้ใช้แอปแก้ไข
+          ยกเว้น state ที่อนุมัติแล้วใน Odoo จะไม่ทับ
+        - record ใหม่จะสร้างขึ้น โดยจับคู่ employee_id จาก employee_code
+        """
+        _logger.info("Medical Expense sync_from_api: starting...")
+        try:
+            response = requests.get(API_URL, timeout=30)
+            response.raise_for_status()
+            result = response.json()
+        except requests.exceptions.RequestException as e:
+            raise UserError("ไม่สามารถเชื่อมต่อ PHP API ได้: %s" % e)
+
+        if result.get('status') != 'success':
+            raise UserError("API Error: %s" % result.get('message', 'Unknown'))
+
+        records = result.get('data') or []
+        if not records:
+            _logger.info("Medical Expense sync_from_api: no records from API.")
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'ซิงค์ข้อมูลค่ารักษาพยาบาล',
+                    'message': 'ไม่พบรายการใหม่จาก PHP',
+                    'type': 'warning',
+                    'sticky': False,
+                },
+            }
+
+        Emp = self.env['employee.salary'].sudo()
+        created = 0
+        updated = 0
+        for rec in records:
+            php_id = int(rec.get('id') or 0)
+            if php_id <= 0:
+                continue
+
+            # หา employee.salary จาก employee_code → fallback ที่ชื่อ
+            employee = False
+            emp_code = (rec.get('employee_code') or '').strip()
+            if emp_code:
+                employee = Emp.search([('employee_code', '=', emp_code)], limit=1)
+            if not employee:
+                username = (rec.get('username') or '').strip()
+                if username:
+                    parts = username.split(' ', 1)
+                    if len(parts) == 2:
+                        employee = Emp.search([
+                            ('firstname', '=', parts[0]),
+                            ('lastname', '=', parts[1]),
+                        ], limit=1)
+
+            work_date = rec.get('work_date')
+            try:
+                amount = float(rec.get('amount') or 0)
+            except (TypeError, ValueError):
+                amount = 0.0
+
+            state = (rec.get('state') or 'รออนุมัติ').strip()
+            user_note = rec.get('user_note') or ''
+            reason = rec.get('reason') or ''
+            file_path = rec.get('file_path') or ''
+            approved_at = rec.get('approved_at')
+
+            vals = {
+                'php_id': php_id,
+                'work_date': work_date or fields.Date.context_today(self),
+                'amount': amount,
+                'user_note': user_note,
+                'reason': reason,
+                'file_path': file_path,
+            }
+            if employee:
+                vals['employee_id'] = employee.id
+            if approved_at and approved_at != '0000-00-00 00:00:00':
+                vals['approved_at'] = approved_at
+
+            existing = self.sudo().search([('php_id', '=', php_id)], limit=1)
+            if existing:
+                # ถ้าใน Odoo อนุมัติ/ไม่อนุมัติ/ยกเลิกไปแล้ว — ไม่ทับ state
+                # อัปเดตเฉพาะเนื้อหา (work_date, amount, user_note, file_path)
+                if existing.state == 'รออนุมัติ':
+                    vals['state'] = state
+                existing.sudo().write(vals)
+                updated += 1
+            else:
+                vals['state'] = state
+                self.sudo().create(vals)
+                created += 1
+
+        _logger.info("Medical Expense sync_from_api: created=%d updated=%d", created, updated)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'ซิงค์ข้อมูลค่ารักษาพยาบาล',
+                'message': 'เพิ่มใหม่ %d รายการ / อัปเดต %d รายการ' % (created, updated),
+                'type': 'success',
+                'sticky': False,
+            },
+        }
+
+    @api.model
+    def sync_and_open_view(self):
+        """sync + เปิดหน้า tree view"""
+        self.sync_from_api()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'ค่ารักษาพยาบาล',
+            'res_model': 'medical.expense',
+            'view_mode': 'tree,form',
+            'target': 'current',
+        }
+
+    # ============================================================
     # Sync state กลับไป PHP — เฉพาะ record ที่มาจาก PHP เท่านั้น
     # ============================================================
     def _sync_state_to_php(self, action, reason=''):
