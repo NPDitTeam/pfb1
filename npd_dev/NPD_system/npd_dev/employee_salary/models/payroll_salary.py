@@ -1898,6 +1898,15 @@ class PayrollSalary(models.Model):
                 ot_type = 'sunday'
                 multiplier = 1.0
 
+                # ✅ หักเวลาพักเที่ยง 12:00–13:00 ออก
+                lunch_start = datetime.datetime.combine(start_dt.date(), datetime.time(12, 0))
+                lunch_end = datetime.datetime.combine(start_dt.date(), datetime.time(13, 0))
+                overlap_start = max(start_dt, lunch_start)
+                overlap_end = min(end_dt, lunch_end)
+                if overlap_start < overlap_end:
+                    ot_hours -= (overlap_end - overlap_start).total_seconds() / 3600.0
+                ot_hours = max(0, ot_hours)
+
             ot_amount = ot_hours * hourly_rate * multiplier
             total_ot_amount += ot_amount
 
@@ -2203,7 +2212,8 @@ class PayrollSalary(models.Model):
                 for is_work, start, end in day_mapping:
                     if is_work and end > start:
                         work_hours = end - start
-                        if work_hours >= 9:
+                        # หักพักเที่ยง 1 ชม. ถ้ากะ >= 8 ชม. (ให้ตรงกับฝั่ง PHP calculate_lateness.php)
+                        if work_hours >= 8:
                             work_hours -= 1
                         total_work_hours += work_hours
                         work_days_count += 1
