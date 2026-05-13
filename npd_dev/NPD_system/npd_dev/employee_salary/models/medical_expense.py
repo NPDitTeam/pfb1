@@ -177,20 +177,28 @@ class MedicalExpense(models.Model):
             if php_id <= 0:
                 continue
 
-            # หา employee.salary จาก employee_code → fallback ที่ชื่อ
+            # หา employee.salary
+            # ลำดับ: 1) firstname + lastname จาก username (ชื่อจาก API ถูกต้องกว่า code)
+            #        2) fallback ด้วย employee_code ถ้าไม่เจอชื่อ
             employee = False
+            username = (rec.get('username') or '').strip()
             emp_code = (rec.get('employee_code') or '').strip()
-            if emp_code:
+
+            # 1. ลองจับด้วยชื่อ (split by any whitespace)
+            if username:
+                parts = username.split(None, 1)
+                if len(parts) == 2:
+                    employee = Emp.search([
+                        ('firstname', '=', parts[0].strip()),
+                        ('lastname', '=', parts[1].strip()),
+                    ], limit=1)
+                if not employee:
+                    # ลอง firstname อย่างเดียว (กรณีชื่อไม่มีนามสกุล)
+                    employee = Emp.search([('firstname', '=', username)], limit=1)
+
+            # 2. fallback ด้วย employee_code ถ้ายังไม่เจอ
+            if not employee and emp_code:
                 employee = Emp.search([('employee_code', '=', emp_code)], limit=1)
-            if not employee:
-                username = (rec.get('username') or '').strip()
-                if username:
-                    parts = username.split(' ', 1)
-                    if len(parts) == 2:
-                        employee = Emp.search([
-                            ('firstname', '=', parts[0]),
-                            ('lastname', '=', parts[1]),
-                        ], limit=1)
 
             work_date = rec.get('work_date')
             try:
