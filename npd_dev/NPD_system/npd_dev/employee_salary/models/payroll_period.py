@@ -80,7 +80,8 @@ class PayrollPeriod(models.Model):
         if self.state not in ('draft', 'error'):
             raise UserError("สามารถรันได้เฉพาะรอบที่สถานะเป็น 'ร่าง' หรือ 'มีข้อผิดพลาด' เท่านั้น")
 
-        self.write({'state': 'processing', 'log': ''})
+        # ไม่ล้าง log — เก็บประวัติการรันเดิมไว้ (จะถูก prepend ด้วย header timestamp ตอนจบ)
+        self.write({'state': 'processing'})
 
         # ถ้ามีพนักงานทดสอบ → ใช้เฉพาะคนที่เลือก, ถ้าว่าง → รันทุกคนที่เปิด Auto
         if self.test_employee_ids:
@@ -227,11 +228,16 @@ class PayrollPeriod(models.Model):
                     _logger.exception("Auto payroll error for %s", emp_label_code)
 
         final_state = 'done' if error_count == 0 else 'error'
+        # ใช้เวลาตาม timezone ของ user (เช่น Asia/Bangkok = UTC+7) แทน UTC
+        timestamp = fields.Datetime.context_timestamp(
+            self, fields.Datetime.now()).strftime('%Y-%m-%d %H:%M:%S')
+        new_log = "[%s] รันทำเงินเดือน Auto: สำเร็จ %d, ผิดพลาด %d\n%s" % (
+            timestamp, success_count, error_count, '\n'.join(log_lines))
         self.write({
             'state': final_state,
             'success_count': success_count,
             'error_count': error_count,
-            'log': '\n'.join(log_lines),
+            'log': new_log + '\n\n' + (self.log or ''),
         })
 
         return {
@@ -330,7 +336,9 @@ class PayrollPeriod(models.Model):
                     payroll.employee_id.firstname, payroll.employee_code, str(e)))
                 _logger.error("Refresh payroll error for %s: %s", payroll.employee_code, e)
 
-        timestamp = fields.Datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        # ใช้เวลาตาม timezone ของ user (เช่น Asia/Bangkok = UTC+7) แทน UTC
+        timestamp = fields.Datetime.context_timestamp(
+            self, fields.Datetime.now()).strftime('%Y-%m-%d %H:%M:%S')
         new_log = "[%s] อัพเดตข้อมูล: สำเร็จ %d, ผิดพลาด %d\n%s" % (
             timestamp, success_count, error_count, '\n'.join(log_lines))
         self.write({
