@@ -2403,21 +2403,17 @@ class PayrollSalary(models.Model):
                 'amount': provident_fund_amount
             }))
 
-        # ภาษี — คำนวณ inline จาก base_salary + ot ของเดือนนี้ (ไม่พึ่ง self.tax_monthly
+        # ภาษี — คำนวณ inline จาก base_salary + ot + bonus (ไม่พึ่ง self.tax_monthly
         # ที่อาจ stale ใน onchange/create context)
+        # ใช้ค่าที่คำนวณใหม่เสมอ — ถ้า user ต้องการล็อก ให้เปิด manual_override ทั้ง record
         temp_gross_income = self.base_salary + total_ot_amount
         bonus_for_tax = (self.income_bonus or 0.0) if self.bonus_active else 0.0
         temp_tax, _ = self._calculate_tax(temp_gross_income, sso_amount, bonus_for_tax)
-        tax_line = self.line_ids.filtered(lambda l: l.name == 'ภาษีหัก ณ ที่จ่าย')[:1]
-        if tax_line and tax_line.amount > 0:
-            tax_amount = tax_line.amount   # user override → ใช้ค่า user
-        else:
-            tax_amount = temp_tax
 
         lines_to_create.append((0, 0, {
             'name': 'ภาษีหัก ณ ที่จ่าย',
             'type': 'deduction',
-            'amount': tax_amount
+            'amount': temp_tax
         }))
 
         # Apply to record
