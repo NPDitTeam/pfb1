@@ -2406,7 +2406,8 @@ class PayrollSalary(models.Model):
         # ภาษี — คำนวณ inline จาก base_salary + ot ของเดือนนี้ (ไม่พึ่ง self.tax_monthly
         # ที่อาจ stale ใน onchange/create context)
         temp_gross_income = self.base_salary + total_ot_amount
-        temp_tax, _ = self._calculate_tax(temp_gross_income, sso_amount)
+        bonus_for_tax = (self.income_bonus or 0.0) if self.bonus_active else 0.0
+        temp_tax, _ = self._calculate_tax(temp_gross_income, sso_amount, bonus_for_tax)
         tax_line = self.line_ids.filtered(lambda l: l.name == 'ภาษีหัก ณ ที่จ่าย')[:1]
         if tax_line and tax_line.amount > 0:
             tax_amount = tax_line.amount   # user override → ใช้ค่า user
@@ -2736,9 +2737,19 @@ class PayrollSalary(models.Model):
             else:
                 sso_amount_monthly = rec.sso_total or 0.0
                 monthly_income = rec.base_salary + rec.ot_total
-                rec.tax_monthly, rec.tax_annual = rec._calculate_tax(monthly_income, sso_amount_monthly)
+                bonus_for_tax = (rec.income_bonus or 0.0) if rec.bonus_active else 0.0
+                rec.tax_monthly, rec.tax_annual = rec._calculate_tax(
+                    monthly_income, sso_amount_monthly, bonus_for_tax)
 
-    def _calculate_tax(self, gross_income, sso_monthly):
+    def _calculate_tax(self, gross_income, sso_monthly, bonus_amount=0.0):
+        """คำนวณภาษีต่อเดือน + ภาษีต่อปี
+
+        :param gross_income: รายได้ต่อเดือน (base_salary + ot_total) — ระบบสมมุติได้รายเดือนนี้ × 12
+        :param sso_monthly:  ประกันสังคมต่อเดือน
+        :param bonus_amount: โบนัสครั้งเดียวของเดือนนี้ (ถ้ามี)
+                             — จะถูกรวมเข้า annual_income แบบ "one-time" (ไม่ × 12)
+                             — และภาษีส่วนเพิ่มของโบนัสจะถูกหักในเดือนที่จ่ายโบนัสเท่านั้น
+        """
         annual_income = gross_income * 12
         sso_annual = min(sso_monthly * 12, 9000)
 
@@ -2747,26 +2758,31 @@ class PayrollSalary(models.Model):
             provident_fund_monthly = self.base_salary * (self.provident_fund_rate / 100)
             provident_fund_annual = min(provident_fund_monthly * 12, self.provident_fund_deduction_max)
 
-        # ✅ ค่าใช้จ่ายมาตรฐาน
-        expense_deduction_effective = min(annual_income * 0.5, self.expense_deduction)
+        def _bracket_tax(taxable):
+            for bracket in sorted(self.tax_bracket_ids, key=lambda b: b.sequence, reverse=True):
+                if taxable > bracket.income_from:
+                    return (taxable * (bracket.rate / 100.0)) - bracket.deduction
+            return 0.0
 
-        total_deduction = (
-                self.personal_deduction +
-                expense_deduction_effective +
-                sso_annual +
-                provident_fund_annual
-        )
+        def _annual_tax(annual_inc):
+            expense_eff = min(annual_inc * 0.5, self.expense_deduction)
+            total_ded = self.personal_deduction + expense_eff + sso_annual + provident_fund_annual
+            net_taxable = max(0, annual_inc - total_ded)
+            return _bracket_tax(net_taxable)
 
-        net_taxable_income = max(0, annual_income - total_deduction)
+        annual_tax_no_bonus = _annual_tax(annual_income)
+        monthly_tax_no_bonus = annual_tax_no_bonus / 12
 
-        annual_tax = 0
-        for bracket in sorted(self.tax_bracket_ids, key=lambda b: b.sequence, reverse=True):
-            if net_taxable_income > bracket.income_from:
-                annual_tax = (net_taxable_income * (bracket.rate / 100.0)) - bracket.deduction
-                break
-
-        # ❌ ไม่ปัดเศษ
-        monthly_tax = annual_tax / 12
+        # ถ้ามีโบนัสเดือนนี้ — หักภาษีโบนัสทั้งก้อนในเดือนนี้
+        # (เดือนอื่นไม่กระทบ เพราะ bonus_active=False)
+        if bonus_amount > 0:
+            annual_tax_with_bonus = _annual_tax(annual_income + bonus_amount)
+            bonus_tax = annual_tax_with_bonus - annual_tax_no_bonus
+            monthly_tax = monthly_tax_no_bonus + bonus_tax
+            annual_tax = annual_tax_with_bonus
+        else:
+            monthly_tax = monthly_tax_no_bonus
+            annual_tax = annual_tax_no_bonus
 
         return monthly_tax, annual_tax
 
