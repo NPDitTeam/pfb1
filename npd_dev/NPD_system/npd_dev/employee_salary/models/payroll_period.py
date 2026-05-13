@@ -237,7 +237,7 @@ class PayrollPeriod(models.Model):
             'state': final_state,
             'success_count': success_count,
             'error_count': error_count,
-            'log': new_log + '\n\n' + (self.log or ''),
+            'log': new_log,
         })
 
         return {
@@ -342,7 +342,7 @@ class PayrollPeriod(models.Model):
         new_log = "[%s] อัพเดตข้อมูล: สำเร็จ %d, ผิดพลาด %d\n%s" % (
             timestamp, success_count, error_count, '\n'.join(log_lines))
         self.write({
-            'log': new_log + '\n\n' + (self.log or ''),
+            'log': new_log,
         })
 
         return {
