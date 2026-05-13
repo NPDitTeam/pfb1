@@ -304,28 +304,36 @@ class PayrollSalary(models.Model):
         string="วันที่จ่ายเงิน",
         default=lambda self: self._get_default_date_28()
     )
+    # ✅ ยอดต้นรอบ — ใส่เฉพาะเดือนแรกที่ย้ายมาจากระบบเก่า (default 0 = เริ่มจากศูนย์)
+    # ระบบจะ: accumulated = opening + total_gross เดือนนี้
+    # เดือนถัดไประบบจะใช้ prev.accumulated + total_gross อัตโนมัติ
+    opening_accumulated_income = fields.Float(
+        string="รายรับสะสมต้นรอบ", default=0.0,
+        help="ใส่ยอดรายได้สะสมจากระบบเก่า (ไม่รวมเดือนนี้) — เฉพาะเดือนแรกที่ย้ายเข้าระบบ")
+    opening_accumulated_vat = fields.Float(
+        string="ภาษีสะสมต้นรอบ", default=0.0,
+        help="ใส่ยอดภาษีสะสมจากระบบเก่า (ไม่รวมเดือนนี้)")
+    opening_accumulated_social_security = fields.Float(
+        string="ปกส.สะสมต้นรอบ", default=0.0,
+        help="ใส่ยอดประกันสังคมสะสมจากระบบเก่า (ไม่รวมเดือนนี้)")
+
+    # ❌ deprecated — ไม่ใช้แล้ว เก็บไว้กันข้อมูลเก่าหาย
     manual_override_accumulated = fields.Boolean(
-        string="ปรับค่าสะสมเอง",
-        default=False,
-        help="เมื่อเปิดอยู่ ระบบจะไม่คำนวณค่าสะสมทับค่าที่ผู้ใช้ใส่เอง"
-    )
+        string="ปรับค่าสะสมเอง (legacy)", default=False)
     accumulated_income = fields.Float(
         string="รายรับสะสม",
         compute="_compute_accumulated_values",
-        inverse="_inverse_accumulated_values",
-        store=True
+        store=True, readonly=True
     )
     accumulated_vat = fields.Float(
         string="ภาษีสะสม",
         compute="_compute_accumulated_values",
-        inverse="_inverse_accumulated_values",
-        store=True
+        store=True, readonly=True
     )
     accumulated_social_security = fields.Float(
         string="ประกันสังคมสะสม",
         compute="_compute_accumulated_values",
-        inverse="_inverse_accumulated_values",
-        store=True
+        store=True, readonly=True
     )
 
 
@@ -513,20 +521,18 @@ class PayrollSalary(models.Model):
 
 
     # ฟังก์ชันคำนวณ — สะสมต่อเดือนภายในปีเดียวกัน, reset ทุกปีใหม่ (ม.ค.)
-    @api.depends('employee_id', 'month', 'year', 'base_salary', 'tax_monthly', 'sso_total',
-                 'manual_override_accumulated')
+    # ✅ รายรับใช้ total_gross (รวม OT, โบนัส, ค่าครองชีพ, ฯลฯ) ตามมาตรฐาน กม. ภาษี
+    # ✅ เดือนแรกของปี/เดือนแรกในระบบ → ใช้ opening balance + เดือนนี้
+    @api.depends('employee_id', 'month', 'year', 'total_gross', 'tax_monthly', 'sso_total',
+                 'opening_accumulated_income', 'opening_accumulated_vat',
+                 'opening_accumulated_social_security')
     def _compute_accumulated_values(self):
         for rec in self:
-            # ถ้า user แก้ค่าเองแล้ว → ไม่คำนวณทับ
-            if rec.manual_override_accumulated:
-                continue
-
-            base_salary = rec.base_salary or 0.0
+            gross = rec.total_gross or 0.0
             tax = rec.tax_monthly or 0.0
             sso = rec.sso_total or 0.0
 
-            # หา record ของ "เดือนก่อนหน้าในปีเดียวกัน" เท่านั้น
-            # → ม.ค. = ไม่เจอ prev → reset เริ่มใหม่
+            # หา record ของ "เดือนก่อนหน้าในปีเดียวกัน"
             prev = self.env['payroll.salary'].search([
                 ('employee_id', '=', rec.employee_id.id),
                 ('year', '=', rec.year),
@@ -534,26 +540,17 @@ class PayrollSalary(models.Model):
             ], order='month desc', limit=1)
 
             if prev:
-                rec.accumulated_income = prev.accumulated_income + base_salary
+                # มีเดือนก่อนหน้า → ใช้สะสมจากเดือนก่อน + เดือนนี้
+                rec.accumulated_income = prev.accumulated_income + gross
                 rec.accumulated_vat = prev.accumulated_vat + tax
                 rec.accumulated_social_security = prev.accumulated_social_security + sso
             else:
-                # เดือนแรกของปี (ม.ค.) → reset เริ่มใหม่
-                rec.accumulated_income = base_salary
-                rec.accumulated_vat = tax
-                rec.accumulated_social_security = sso
-
-    # ฟังก์ชัน inverse → ตั้ง flag ให้ compute ไม่ทับค่าที่ user แก้
-    def _inverse_accumulated_values(self):
-        for rec in self:
-            _logger.info(
-                "[INVERSE] Manual override EmpCode=%s | income=%s vat=%s sso=%s",
-                rec.employee_id.employee_code if rec.employee_id else "-",
-                rec.accumulated_income,
-                rec.accumulated_vat,
-                rec.accumulated_social_security
-            )
-            rec.manual_override_accumulated = True
+                # เดือนแรกในระบบ/ของปี → ใช้ opening balance + เดือนนี้
+                # opening = 0 (default) → behave เหมือน reset เริ่มจากศูนย์
+                # opening = ยอดจากระบบเก่า → ต่อยอดจากระบบเก่า
+                rec.accumulated_income = (rec.opening_accumulated_income or 0.0) + gross
+                rec.accumulated_vat = (rec.opening_accumulated_vat or 0.0) + tax
+                rec.accumulated_social_security = (rec.opening_accumulated_social_security or 0.0) + sso
 
     @api.model
     def _get_default_date_28(self):
@@ -570,19 +567,10 @@ class PayrollSalary(models.Model):
 
     def _prepare_data_for_php(self):
         self.ensure_one()
-        previous_payroll = self.env['payroll.salary'].search([
-            ('employee_id', '=', self.employee_id.id),
-            ('id', '!=', self.id)
-        ], order='year DESC, month DESC', limit=1)
-
-        accumulated_income = self.base_salary
-        accumulated_vat = self.tax_monthly
-        accumulated_social_security = self.sso_total
-
-        if previous_payroll:
-            accumulated_income += previous_payroll.accumulated_income
-            accumulated_vat += previous_payroll.accumulated_vat
-            accumulated_social_security += previous_payroll.accumulated_social_security
+        # ใช้ค่าที่ compute เก็บไว้แล้ว — รวม opening balance + ใช้ total_gross ตามมาตรฐาน
+        accumulated_income = self.accumulated_income or 0.0
+        accumulated_vat = self.accumulated_vat or 0.0
+        accumulated_social_security = self.accumulated_social_security or 0.0
 
         payment_date_str = self.payment_date.strftime('%Y-%m-%d') if self.payment_date else None
 
@@ -2798,30 +2786,8 @@ class PayrollSalary(models.Model):
                     'line_ids': [],
                     'ot_line_ids': [],
                 })
-                # Find the previous payroll record based on the new record's employee_id, and the month/year of the record we are copying from
-                prev_payroll = self.env['payroll.salary'].search([
-                    ('employee_id', '=', new_payroll.employee_id.id),
-                    ('month', '=', rec.month),
-                    ('year', '=', str(rec.year)),
-                ], limit=1)
-
-                # Set accumulated values based on previous record
-                if prev_payroll:
-                    new_payroll.accumulated_income = prev_payroll.accumulated_income + new_payroll.base_salary
-                    new_payroll.accumulated_vat = prev_payroll.accumulated_vat + new_payroll.tax_monthly
-                    new_payroll.accumulated_social_security = prev_payroll.accumulated_social_security + new_payroll.sso_total
-                    _logger.info("Found previous payroll record. Accumulated values: income=%s, vat=%s, sso=%s",
-                                 new_payroll.accumulated_income, new_payroll.accumulated_vat,
-                                 new_payroll.accumulated_social_security)
-                else:
-                    new_payroll.accumulated_income = new_payroll.base_salary
-                    new_payroll.accumulated_vat = new_payroll.tax_monthly
-                    new_payroll.accumulated_social_security = new_payroll.sso_total
-                    _logger.info(
-                        "No previous payroll record found. Initial accumulated values: income=%s, vat=%s, sso=%s",
-                        new_payroll.accumulated_income, new_payroll.accumulated_vat,
-                        new_payroll.accumulated_social_security)
-
+                # accumulated_* เป็น computed field — _onchange_employee_id() ด้านล่าง
+                # จะ trigger _compute_accumulated_values ให้อัตโนมัติ ใช้ total_gross + opening
                 new_payroll._onchange_employee_id()
         return True
 

@@ -110,8 +110,10 @@
                         <field name="year"/>
                         <field name="cutoff_day"/>
                         <field name="payment_date"/>
-                        <field name="accumulated_income"/>
-                        <field name="manual_override_accumulated"/>
+                        <field name="accumulated_income" readonly="1"/>
+                        <field name="opening_accumulated_income"/>
+                        <field name="opening_accumulated_vat"/>
+                        <field name="opening_accumulated_social_security"/>
                     </group>
                     <notebook>
                         <!-- รายละเอียดเงินเดือน -->
