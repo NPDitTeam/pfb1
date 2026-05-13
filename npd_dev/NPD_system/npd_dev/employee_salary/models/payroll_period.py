@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import time
 from datetime import date, datetime
-from psycopg2 import IntegrityError
+from psycopg2 import IntegrityError, OperationalError
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
@@ -102,75 +103,116 @@ class PayrollPeriod(models.Model):
         error_count = 0
 
         PayrollSalary = self.env['payroll.salary']
+        MAX_RETRIES = 3  # retry สำหรับ concurrent / serialization errors
         for emp in employees:
-            # อ่าน label ออกมาก่อนเข้า savepoint เพื่อใช้ใน except ได้แม้ tx aborted
             emp_label_first = emp.firstname or ''
             emp_label_code = emp.employee_code or ''
-            try:
-                with self.env.cr.savepoint():
-                    # flush ORM cache ให้ search เห็น record ที่เพิ่ง create ในรอบเดียวกัน
-                    PayrollSalary.flush()
-                    existing = PayrollSalary.search([
-                        ('employee_id', '=', emp.id),
-                        ('month', '=', self.month),
-                        ('year', '=', self.year),
-                    ], limit=1)
 
-                    if existing:
-                        log_lines.append("[SKIP] %s (%s) - มีรายการเงินเดือนอยู่แล้ว" % (
-                            emp_label_first, emp_label_code))
+            # ✅ ตรวจสอบเงินเดือนก่อน — ถ้าไม่ระบุ ห้ามสร้าง payroll (กัน 0/None ทำให้ compute พัง)
+            if not emp.salary or emp.salary <= 0:
+                log_lines.append(
+                    "[SKIP-NO-SALARY] %s (%s) - ไม่พบเงินเดือน กรุณาระบุเงินเดือนที่หน้าข้อมูลพนักงาน"
+                    % (emp_label_first, emp_label_code))
+                continue
+
+            attempt = 0
+            handled = False
+            while attempt < MAX_RETRIES and not handled:
+                attempt += 1
+                try:
+                    with self.env.cr.savepoint():
+                        PayrollSalary.flush()
+                        existing = PayrollSalary.search([
+                            ('employee_id', '=', emp.id),
+                            ('month', '=', self.month),
+                            ('year', '=', self.year),
+                        ], limit=1)
+
+                        if existing:
+                            log_lines.append("[SKIP] %s (%s) - มีรายการเงินเดือนอยู่แล้ว" % (
+                                emp_label_first, emp_label_code))
+                            success_count += 1
+                            handled = True
+                            continue
+
+                        payroll_vals = {
+                            'employee_id': emp.id,
+                            'month': self.month,
+                            'year': self.year,
+                            'cutoff_day': self.cutoff_end_day,
+                            'period_id': self.id,
+                        }
+                        if self.payment_date:
+                            payroll_vals['payment_date'] = self.payment_date
+
+                        PayrollSalary.create(payroll_vals)
                         success_count += 1
-                        continue
+                        log_lines.append("[OK] %s (%s) - สร้างเงินเดือนสำเร็จ" % (
+                            emp_label_first, emp_label_code))
+                        handled = True
 
-                    # สร้าง payroll record ใหม่
-                    payroll_vals = {
-                        'employee_id': emp.id,
-                        'month': self.month,
-                        'year': self.year,
-                        'cutoff_day': self.cutoff_end_day,
-                        'period_id': self.id,
-                    }
-                    if self.payment_date:
-                        payroll_vals['payment_date'] = self.payment_date
-
-                    PayrollSalary.create(payroll_vals)
-                    success_count += 1
-                    log_lines.append("[OK] %s (%s) - สร้างเงินเดือนสำเร็จ" % (
-                        emp_label_first, emp_label_code))
-
-            except IntegrityError as e:
-                # unique constraint (employee_id, month, year) — มี record อยู่แล้วแม้ search ไม่เจอ
-                # ถือเป็น SKIP + ผูก period_id ของ record เดิมมาที่รอบนี้ (เพื่อให้โผล่ในรายการ)
-                if 'employee_month_year_uniq' in str(e):
-                    # savepoint rollback แล้ว → query ใหม่ได้
-                    existing = PayrollSalary.search([
-                        ('employee_id', '=', emp.id),
-                        ('month', '=', self.month),
-                        ('year', '=', self.year),
-                    ], limit=1)
-                    moved = False
-                    if existing and existing.period_id.id != self.id:
-                        existing.period_id = self.id
-                        moved = True
-                    if moved:
-                        log_lines.append(
-                            "[SKIP-DUP] %s (%s) - มีอยู่ในรอบอื่น → ย้ายมารอบนี้แล้ว"
-                            % (emp_label_first, emp_label_code))
+                except IntegrityError as e:
+                    handled = True
+                    if 'employee_month_year_uniq' in str(e):
+                        existing = PayrollSalary.search([
+                            ('employee_id', '=', emp.id),
+                            ('month', '=', self.month),
+                            ('year', '=', self.year),
+                        ], limit=1)
+                        if existing:
+                            old_pid = existing.period_id.id
+                            # บังคับเขียน period_id = self.id เสมอ (idempotent ถ้าเหมือนเดิม)
+                            existing.write({'period_id': self.id})
+                            if old_pid != self.id:
+                                log_lines.append(
+                                    "[SKIP-DUP] %s (%s) - มีอยู่ในรอบอื่น (period_id=%s) → ย้ายมารอบนี้แล้ว"
+                                    % (emp_label_first, emp_label_code, old_pid))
+                            else:
+                                log_lines.append(
+                                    "[SKIP-DUP] %s (%s) - มีรายการเงินเดือนอยู่แล้วในรอบนี้"
+                                    % (emp_label_first, emp_label_code))
+                        else:
+                            log_lines.append(
+                                "[SKIP-DUP] %s (%s) - DB มี constraint แต่ search หาไม่เจอ"
+                                % (emp_label_first, emp_label_code))
+                        success_count += 1
                     else:
+                        error_count += 1
+                        log_lines.append("[ERROR] %s (%s) - DB constraint: %s" % (
+                            emp_label_first, emp_label_code, str(e)))
+                        _logger.exception("Auto payroll DB error for %s", emp_label_code)
+
+                except OperationalError as e:
+                    # serialization / concurrent update — retry
+                    msg = str(e)
+                    if 'could not serialize' in msg or 'deadlock detected' in msg:
+                        if attempt < MAX_RETRIES:
+                            time.sleep(0.1 * attempt)  # exponential-ish backoff
+                            _logger.warning(
+                                "[CONCURRENT] %s (%s) attempt %d/%d — retry...",
+                                emp_label_first, emp_label_code, attempt, MAX_RETRIES,
+                            )
+                            continue  # retry
+                        # ครบ retry → fail แต่บอก user ว่ารันใหม่ได้
+                        handled = True
+                        error_count += 1
                         log_lines.append(
-                            "[SKIP-DUP] %s (%s) - มีรายการเงินเดือนอยู่แล้ว"
+                            "[ERROR-CONCURRENT] %s (%s) - concurrent update (รันปุ่ม Auto ใหม่อีกครั้งเพื่อสร้าง)"
                             % (emp_label_first, emp_label_code))
-                    success_count += 1
-                else:
+                        _logger.warning("Concurrent failure for %s after %d attempts", emp_label_code, MAX_RETRIES)
+                    else:
+                        handled = True
+                        error_count += 1
+                        log_lines.append("[ERROR] %s (%s) - DB error: %s" % (
+                            emp_label_first, emp_label_code, msg))
+                        _logger.exception("Auto payroll OperationalError for %s", emp_label_code)
+
+                except Exception as e:
+                    handled = True
                     error_count += 1
-                    log_lines.append("[ERROR] %s (%s) - DB constraint: %s" % (
+                    log_lines.append("[ERROR] %s (%s) - %s" % (
                         emp_label_first, emp_label_code, str(e)))
-                    _logger.exception("Auto payroll DB error for %s", emp_label_code)
-            except Exception as e:
-                error_count += 1
-                log_lines.append("[ERROR] %s (%s) - %s" % (
-                    emp_label_first, emp_label_code, str(e)))
-                _logger.exception("Auto payroll error for %s", emp_label_code)
+                    _logger.exception("Auto payroll error for %s", emp_label_code)
 
         final_state = 'done' if error_count == 0 else 'error'
         self.write({
