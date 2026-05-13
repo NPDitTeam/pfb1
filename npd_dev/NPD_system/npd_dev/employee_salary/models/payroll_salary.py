@@ -1820,9 +1820,15 @@ class PayrollSalary(models.Model):
         work_schedule = self.env['hr.work.schedule'].search(
             [('employee_id', '=', self.employee_id.id)], limit=1) if self.employee_id else False
 
-        # ✅ ดึงวันหยุดนักขัตฤกษ์ของปี
-        holiday_template = self.env['payroll.holiday'].search([('year', '=', self.year)], limit=1)
+        # ✅ ดึงวันหยุดนักขัตฤกษ์ของปี (payroll.holiday.year เป็น Integer แต่ self.year เป็น Char → แปลงก่อน)
+        try:
+            year_int = int(self.year)
+        except (TypeError, ValueError):
+            year_int = 0
+        holiday_template = self.env['payroll.holiday'].search([('year', '=', year_int)], limit=1)
         holidays = [line.date.strftime('%Y-%m-%d') for line in holiday_template.line_ids] if holiday_template else []
+        _logger.info("[OT] Holiday template year=%s found=%s holidays_count=%d",
+                     year_int, bool(holiday_template), len(holidays))
 
         # ✅ เงินเดือนต่อชั่วโมง
         salary_per_day = (self.base_salary or 0.0) / 30
@@ -2103,9 +2109,16 @@ class PayrollSalary(models.Model):
             'sat_shift_end': work_schedule.sat_shift_end,
         }
 
-        current_year_holiday_template = self.env['payroll.holiday'].search([('year', '=', self.year)], limit=1)
+        # payroll.holiday.year เป็น Integer แต่ self.year เป็น Char → แปลงก่อนค้นหา
+        try:
+            year_int = int(self.year)
+        except (TypeError, ValueError):
+            year_int = 0
+        current_year_holiday_template = self.env['payroll.holiday'].search([('year', '=', year_int)], limit=1)
         official_holidays = [line.date.strftime('%Y-%m-%d') for line in
                              current_year_holiday_template.line_ids] if current_year_holiday_template else []
+        _logger.info("[LATENESS] Holiday template year=%s found=%s holidays_count=%d holidays=%s",
+                     year_int, bool(current_year_holiday_template), len(official_holidays), official_holidays)
 
         payload = {
             'employee_code': self.employee_id.employee_code,
