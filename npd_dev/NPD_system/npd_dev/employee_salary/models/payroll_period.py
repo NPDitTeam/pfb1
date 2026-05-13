@@ -154,27 +154,39 @@ class PayrollPeriod(models.Model):
                 except IntegrityError as e:
                     handled = True
                     if 'employee_month_year_uniq' in str(e):
-                        existing = PayrollSalary.search([
+                        # search รวม archived records (active=False) ด้วย — เพราะ DB constraint ก็ยัง enforce
+                        existing = PayrollSalary.with_context(active_test=False).search([
                             ('employee_id', '=', emp.id),
                             ('month', '=', self.month),
                             ('year', '=', self.year),
                         ], limit=1)
                         if existing:
                             old_pid = existing.period_id.id
-                            # บังคับเขียน period_id = self.id เสมอ (idempotent ถ้าเหมือนเดิม)
-                            existing.write({'period_id': self.id})
+                            # บังคับเขียน period_id + active=True เสมอ
+                            vals = {'period_id': self.id}
+                            if not existing.active:
+                                vals['active'] = True
+                            existing.write(vals)
                             if old_pid != self.id:
                                 log_lines.append(
-                                    "[SKIP-DUP] %s (%s) - มีอยู่ในรอบอื่น (period_id=%s) → ย้ายมารอบนี้แล้ว"
+                                    "[SKIP-DUP] %s (%s) - มีอยู่ในรอบอื่น (period_id=%s) → ย้ายมารอบนี้ + activate"
                                     % (emp_label_first, emp_label_code, old_pid))
                             else:
                                 log_lines.append(
                                     "[SKIP-DUP] %s (%s) - มีรายการเงินเดือนอยู่แล้วในรอบนี้"
                                     % (emp_label_first, emp_label_code))
                         else:
+                            # ดึงข้อมูลจาก DB ตรงๆ เพื่อ debug — บอก user ว่าใครเป็นเจ้าของ record นั้น
+                            self.env.cr.execute(
+                                """SELECT id, employee_id, period_id, active FROM payroll_salary
+                                   WHERE month=%s AND year=%s
+                                     AND employee_id IN (SELECT id FROM employee_salary
+                                                         WHERE employee_code=%s)""",
+                                (self.month, self.year, emp_label_code))
+                            rows = self.env.cr.fetchall()
                             log_lines.append(
-                                "[SKIP-DUP] %s (%s) - DB มี constraint แต่ search หาไม่เจอ"
-                                % (emp_label_first, emp_label_code))
+                                "[SKIP-DUP] %s (%s) - DB constraint fire แต่ search ไม่เจอ; raw rows=%s"
+                                % (emp_label_first, emp_label_code, rows))
                         success_count += 1
                     else:
                         error_count += 1
