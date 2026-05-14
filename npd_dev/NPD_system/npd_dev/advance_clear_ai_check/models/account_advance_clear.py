@@ -451,7 +451,7 @@ class AccountAdvanceClearAI(models.Model):
         _cb_match_re = self._check_cash_bill_match_detail()
         _cb_total_re = 0
         if _cbc_re.get('required', False) and _cb_match_re['pass']:
-            _cb_total_re = sum(cb.amount or 0 for cb in self.cash_bill_ids)
+            _cb_total_re = sum((cb.amount or 0) + (cb.vat_amount or 0) for cb in self.cash_bill_ids)
         ac_data['pass'] = abs(new_receipt_total + _sub_re['amount_to_count'] + _cb_total_re - s_total) < 1.0 if s_total > 0 else True
 
         # Check analytic (Python check)
@@ -2053,7 +2053,7 @@ class AccountAdvanceClearAI(models.Model):
         # ใช้ logic ใหม่ (cash_bill_ok) แทน AI's pass/cross-verify
         if cbc.get('required', False) and cash_bill_ok:
             # ถ้า new check ผ่าน ใช้ผลรวม cash_bill_ids ที่ user ลงทะเบียน
-            py_cb_total = sum(cb.amount or 0 for cb in self.cash_bill_ids)
+            py_cb_total = sum((cb.amount or 0) + (cb.vat_amount or 0) for cb in self.cash_bill_ids)
             if not py_cb_total:
                 py_cb_total = cbc_reg_total
         # ใบรับรองแทนใบเสร็จ — ตัดสินอัตโนมัติว่านับเข้า combined ไหม
@@ -2422,7 +2422,7 @@ class AccountAdvanceClearAI(models.Model):
         # ใช้ cash_bill_ok (logic ใหม่) แทน AI's pass
         if cbc.get('required', False) and cash_bill_ok:
             # ใช้ผลรวม cash_bill_ids ที่ user ลงทะเบียน (มากกว่า AI's registered_total ที่อาจ stale)
-            reg_total_val = sum(cb.amount or 0 for cb in self.cash_bill_ids)
+            reg_total_val = sum((cb.amount or 0) + (cb.vat_amount or 0) for cb in self.cash_bill_ids)
             if not reg_total_val:
                 reg_total_val = cbc.get('registered_total', 0)
             if isinstance(reg_total_val, (int, float)) and reg_total_val > 0:
@@ -3101,7 +3101,7 @@ class AccountAdvanceClearAI(models.Model):
         cb_total = 0
         # ใช้ cash_bill_ok (logic ใหม่) แทน AI's pass/cross-verify
         if cbc.get('required', False) and cash_bill_ok:
-            cb_total = sum(cb.amount or 0 for cb in self.cash_bill_ids)
+            cb_total = sum((cb.amount or 0) + (cb.vat_amount or 0) for cb in self.cash_bill_ids)
             if not cb_total:
                 cb_total = cbc_reg2
         # ใบรับรองแทนใบเสร็จ — ตัดสินอัตโนมัติว่านับเข้า combined ไหม
