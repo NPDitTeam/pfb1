@@ -7,11 +7,10 @@
     'description': 'โมดูลนี้ช่วยให้คุณสามารถจำกัดหรืออนุญาตการแก้ไขฟิลด์ค่าประกันที่ต้องการ (pfb_required_insurance_premium) ในหน้า Sale Order ตามสิทธิ์ของแต่ละ User',
     'author': 'NPD System',
     'website': 'https://github.com/npd-system',
-    'depends': ['base', 'sale', 'npd_all_customs'],
+    'depends': ['base', 'sale', 'pfb_npd_all_customs'],
     'data': [
         'security/ir.model.access.csv',
         'views/res_users_views.xml',
-        'data/disable_duplicate_menus.xml',
     ],
     'installable': True,
     'auto_install': False,

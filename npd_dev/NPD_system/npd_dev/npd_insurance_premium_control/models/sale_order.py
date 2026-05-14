@@ -11,6 +11,34 @@ _logger = logging.getLogger(__name__)
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
+    @api.depends(
+        'order_line.pfb_quantity',
+        'order_line.pfb_insurance_price',
+        'pfb_dis_amount_insurance',
+        'pfb_required_insurance_premium',
+    )
+    def _compute_amount_insurance(self):
+        super()._compute_amount_insurance()
+        for order in self:
+            if order.deposit_ref:
+                continue
+            if order.pfb_required_insurance_premium:
+                order.pfb_amount = order.pfb_required_insurance_premium
+                order.pfb_amount_c = order.pfb_amount
+
+    def write(self, vals):
+        if (
+            'pfb_required_insurance_premium' in vals
+            and 'pfb_dis_amount_insurance' not in vals
+        ):
+            required = vals.get('pfb_required_insurance_premium') or 0.0
+            if required and len(self) == 1 and not self.deposit_ref:
+                new_dis = (self.pfb_amount_insurance or 0.0) - required
+                if new_dis < 0:
+                    new_dis = 0.0
+                vals = dict(vals, pfb_dis_amount_insurance=new_dis)
+        return super().write(vals)
+
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
         res = super().fields_view_get(
