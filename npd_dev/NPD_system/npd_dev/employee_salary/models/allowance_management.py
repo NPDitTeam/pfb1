@@ -115,8 +115,8 @@ class AllowanceManagement(models.Model):
             ('state', '=', 'อนุมัติ'),
             ('branch_ids', 'in', [emp.branch_id.id]),
         ])
-        # เลือกราคาตามสัญชาติ: ต่างชาติ → amount_foreign, อื่น ๆ (ไทย/ไม่ระบุ) → amount
-        is_foreign = (emp.nationality == 'ต่างชาติ')
+        # เลือกราคาตามสัญชาติ: ไทย → amount, อื่น ๆ (รวมไม่ระบุ) → amount_foreign
+        is_foreign = (emp.nationality != 'ไทย')
         result = []
         seen = set()
         for rec in records:
