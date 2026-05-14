@@ -12,17 +12,17 @@
                     <sheet>
                         <group>
                             <group>
-                                <field name="employee_code"/>
+                                <field name="employee_code" required="1"/>
                                 <field name="fingerprint_id"/>
-                                <field name="pin"/>
+                                <field name="pin" required="1"/>
                                 <field name="allow_offsite_time"/>
                                 <field name="status"/>
                                 <field name="auto_payroll"/>
                             </group>
                             <group>
-                                <field name="gender"/>
-                                <field name="prefix_th"/>
-                                <field name="nationality"/>
+                                <field name="gender" required="1"/>
+                                <field name="prefix_th" required="1"/>
+                                <field name="nationality" required="1"/>
                                 <field name="device_id"/>
                                 <field name="allow_multi_login"/>
                                 <field name="check_date_up_device_id" invisible="1"/>
@@ -38,12 +38,12 @@
                                 </group>
                                 <group>
                                     <group>
-                                        <field name="firstname"/>
-                                        <field name="lastname"/>
+                                        <field name="firstname" required="1"/>
+                                        <field name="lastname" required="1"/>
                                         <field name="nickname"/>
                                         <field name="firstname_eng"/>
                                         <field name="lastname_eng"/>
-                                        <field name="branch_id" options="{'no_create': False, 'no_create_edit': False}"/>
+                                        <field name="branch_id" required="1" options="{'no_create': False, 'no_create_edit': False}"/>
                                         <field name="marital_status"/>
                                         <field name="personal_equipment"/>
                                         <field name="line_id"/>
@@ -71,13 +71,13 @@
                             <page string="ข้อมูลบริษัท">
                                 <group>
                                     <group>
-                                        <field name="department_id" options="{'no_create': False, 'no_create_edit': False}"/>
-                                        <field name="company"/>
-                                        <field name="employee_type"/>
-                                        <field name="salary"/>
+                                        <field name="department_id" required="1" options="{'no_create': False, 'no_create_edit': False}"/>
+                                        <field name="company" required="1"/>
+                                        <field name="employee_type" required="1"/>
+                                        <field name="salary" required="1"/>
                                     </group>
                                     <group>
-                                        <field name="position_id" options="{'no_create': False, 'no_create_edit': False}"/>
+                                        <field name="position_id" required="1" options="{'no_create': False, 'no_create_edit': False}"/>
                                         <field name="advance_payment_type"/>
                                         <field name="advance_payment_limit"/>
                                     </group>
@@ -100,7 +100,7 @@
                             <page string="ประวัติการทำงาน">
                                 <group>
                                     <group>
-                                        <field name="start_date"/>
+                                        <field name="start_date" required="1"/>
                                         <field name="appointment_date"/>
                                         <field name="contract_end_date"/>
                                         <field name="end_trial_date"/>
