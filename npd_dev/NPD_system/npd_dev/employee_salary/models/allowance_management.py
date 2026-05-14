@@ -115,6 +115,8 @@ class AllowanceManagement(models.Model):
             ('state', '=', 'อนุมัติ'),
             ('branch_ids', 'in', [emp.branch_id.id]),
         ])
+        # เลือกราคาตามสัญชาติ: ต่างชาติ → amount_foreign, อื่น ๆ (ไทย/ไม่ระบุ) → amount
+        is_foreign = (emp.nationality == 'ต่างชาติ')
         result = []
         seen = set()
         for rec in records:
@@ -123,10 +125,11 @@ class AllowanceManagement(models.Model):
                 if not key or key in seen:
                     continue
                 seen.add(key)
-                has_amount = bool(line.amount and line.amount > 0)
+                amount_val = line.amount_foreign if is_foreign else line.amount
+                has_amount = bool(amount_val and amount_val > 0)
                 result.append({
                     'name': line.name or '',
-                    'amount': float(line.amount) if has_amount else None,
+                    'amount': float(amount_val) if has_amount else None,
                     'has_amount': has_amount,
                     'note': line.note or '',
                 })
@@ -146,8 +149,12 @@ class AllowanceManagementLine(models.Model):
     )
     name = fields.Char(string='ประเภทค่าเบี้ยเลี้ยง', required=True)
     amount = fields.Float(
-        string='ราคา (บาท)',
-        help='ระบุได้หรือเว้นว่าง — หากเว้นว่างผู้ใช้สามารถระบุจำนวนเงินเองในแอปได้',
+        string='ราคา (บาท) ไทย',
+        help='สำหรับพนักงานสัญชาติไทย — เว้นว่างได้ผู้ใช้แอปจะกรอกเองตอนเลือก',
+    )
+    amount_foreign = fields.Float(
+        string='ราคา (บาท) ต่างชาติ',
+        help='สำหรับพนักงานสัญชาติต่างชาติ — เว้นว่างได้ผู้ใช้แอปจะกรอกเองตอนเลือก',
     )
     note = fields.Text(string='หมายเหตุ')
     state = fields.Selection(

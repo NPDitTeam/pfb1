@@ -86,8 +86,11 @@
                                     <tree string="รายการประเภทค่าเบี้ยเลี้ยง" editable="bottom">
                                         <field name="name"/>
                                         <field name="amount"
-                                               sum="รวม"
-                                               help="เว้นว่างได้ — ผู้ใช้แอปจะกรอกเองเมื่อเลือกประเภทนี้"/>
+                                               sum="รวมไทย"
+                                               help="ราคาสำหรับพนักงานสัญชาติไทย — เว้นว่างได้"/>
+                                        <field name="amount_foreign"
+                                               sum="รวมต่างชาติ"
+                                               help="ราคาสำหรับพนักงานสัญชาติต่างชาติ — เว้นว่างได้"/>
                                         <field name="note"/>
                                     </tree>
                                 </field>
