@@ -388,7 +388,13 @@ class AccountMoveLine(models.Model):
                     )
                     has_tax_invoice_table = cr.fetchone()[0] is not None
                     if has_tax_invoice_table:
-                        ti_balance = round(new_tax_amount, 2)
+                        # Refund/credit note: l10n_th_tax_invoice เก็บยอดเป็น
+                        # ลบ (sign = -1 ตอน create ด้วย reverse_tax_invoice)
+                        # ต้อง match sign ตอน sync ไม่งั้นใบลดหนี้แสดงยอดบวก
+                        ti_sign = -1 if move.move_type in (
+                            'out_refund', 'in_refund') else 1
+                        ti_tax_base = round(base_subtotal * ti_sign, 2)
+                        ti_balance = round(new_tax_amount * ti_sign, 2)
                         cr.execute(
                             """
                             UPDATE account_move_tax_invoice
@@ -396,7 +402,7 @@ class AccountMoveLine(models.Model):
                                 balance = %s
                             WHERE move_line_id = %s
                             """,
-                            (base_subtotal, ti_balance, tax_line.id),
+                            (ti_tax_base, ti_balance, tax_line.id),
                         )
 
                 # Rebalance receivable/payable lines so debit = credit on the move

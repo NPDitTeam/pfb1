@@ -7,16 +7,23 @@ class StockScrap(models.Model):
     _inherit = 'stock.scrap'
 
     # =======================
-    # NEW FIELDS - NPD Custom
+    # STATES
     # =======================
-    # เพิ่ม state 'cancel' สำหรับยกเลิกเอกสาร
     state = fields.Selection(
-        selection_add=[('cancel', 'Cancelled')],
-        ondelete={'cancel': 'set default'}
+        selection_add=[
+            ('cancel', 'Cancelled'),
+            ('pending_repair', 'รอดำเนินการแจ้งซ่อม'),
+            ('under_repair', 'อยู่ระหว่างการซ่อม'),
+            ('repaired', 'ซ่อมสำเร็จ'),
+        ],
+        ondelete={
+            'cancel': 'set default',
+            'pending_repair': 'set default',
+            'under_repair': 'set default',
+            'repaired': 'set default',
+        }
     )
-    
-    # Field เก็บเลขเอกสารเดิม เพื่อใช้เมื่อรีเซ็ตเป็นแบบร่างแล้วกดตรวจสอบใหม่
-    # จะได้ไม่รันเลขใหม่
+
     original_name = fields.Char(
         string='Original Reference',
         copy=False,
@@ -24,123 +31,218 @@ class StockScrap(models.Model):
         help='เก็บเลขเอกสารเดิมไว้ เมื่อรีเซ็ตเป็นแบบร่างจะใช้เลขเดิม'
     )
 
+    # ===== Repair Request fields (จากปุ่มแจ้งซ่อม) =====
+    damage_type = fields.Char(string='ประเภทความเสียหาย', readonly=True, copy=False)
+    repair_by = fields.Selection(
+        [('factory', 'โรงงาน'), ('branch', 'สาขา')],
+        string='ซ่อมโดย',
+        readonly=True,
+        copy=False,
+    )
+    technician_name = fields.Char(string='ชื่อผู้ซ่อม', readonly=True, copy=False)
+    repair_start_date = fields.Datetime(string='วันที่เริ่มซ่อม', readonly=True, copy=False)
+    damaged_attachment_ids = fields.Many2many(
+        'ir.attachment',
+        'rel_scrap_damaged_attachment',
+        'scrap_id',
+        'attachment_id',
+        string='รูปสินค้าที่ชำรุด',
+        copy=False,
+    )
+
+    # ===== Repair Complete fields (จากปุ่มซ่อมสำเร็จ) =====
+    spare_parts_used = fields.Text(string='อะไหล่ที่ใช้ในการซ่อม', readonly=True, copy=False)
+    parts_cost = fields.Float(string='ค่าอะไหล่', readonly=True, copy=False)
+    labor_cost = fields.Float(string='ค่าแรง', readonly=True, copy=False)
+    repair_end_date = fields.Datetime(string='วันที่ซ่อมเสร็จสิ้น', readonly=True, copy=False)
+    repaired_attachment_ids = fields.Many2many(
+        'ir.attachment',
+        'rel_scrap_repaired_attachment',
+        'scrap_id',
+        'attachment_id',
+        string='รูปภาพหลังซ่อม',
+        copy=False,
+    )
+
+    # ===== Stock return tracking =====
+    is_stock_returned = fields.Boolean(string='คืนสต็อกแล้ว', readonly=True, copy=False)
+    return_move_id = fields.Many2one(
+        'stock.move',
+        string='การคืนสต็อก',
+        readonly=True,
+        copy=False,
+    )
+    return_date = fields.Datetime(string='วันที่คืนสต็อก', readonly=True, copy=False)
+
+    # ===== Computed: ระยะเวลาในการซ่อม =====
+    repair_duration_display = fields.Char(
+        string='ระยะเวลาในการซ่อมสินค้า',
+        compute='_compute_repair_duration_display',
+        store=False,
+    )
+
+    @api.depends('repair_start_date', 'repair_end_date')
+    def _compute_repair_duration_display(self):
+        for rec in self:
+            start = rec.repair_start_date
+            end = rec.repair_end_date
+            if not start or not end:
+                rec.repair_duration_display = ''
+                continue
+            delta = end - start
+            total_seconds = int(delta.total_seconds())
+            if total_seconds <= 0:
+                rec.repair_duration_display = '0 นาที'
+                continue
+            days = total_seconds // 86400
+            hours = (total_seconds % 86400) // 3600
+            minutes = (total_seconds % 3600) // 60
+            parts = []
+            if days:
+                parts.append('%d วัน' % days)
+            if hours:
+                parts.append('%d ชั่วโมง' % hours)
+            if minutes and not days:
+                parts.append('%d นาที' % minutes)
+            if not parts:
+                parts.append('น้อยกว่า 1 นาที')
+            rec.repair_duration_display = ' '.join(parts)
+
     # =======================
     # OVERRIDE METHODS
     # =======================
     def do_scrap(self):
         """
-        Override method do_scrap เพื่อเช็คว่ามีเลขเอกสารเดิมหรือไม่
-        ถ้ามี original_name จะใช้เลขเดิม ไม่รัน sequence ใหม่
+        Override do_scrap:
+        - ใช้เลขเอกสารเดิมถ้ามี original_name (ไม่รัน sequence ใหม่)
+        - ถ้า reason_code มี is_damage_repair=True → state=pending_repair
+          มิฉะนั้น state=done (พฤติกรรมเดิม)
         """
         self._check_company()
         for scrap in self:
-            # NPD Custom: เช็คว่ามีเลขเอกสารเดิมหรือไม่
             if scrap.original_name:
-                # ใช้เลขเอกสารเดิม
                 scrap.name = scrap.original_name
             elif scrap.name == _('New') or not scrap.name:
-                # รัน sequence ใหม่เฉพาะกรณีที่ยังไม่มีเลข
                 scrap.name = self.env['ir.sequence'].next_by_code('stock.scrap') or _('New')
-            
-            # สร้าง stock move
+
             move = self.env['stock.move'].create(scrap._prepare_move_values())
             move.with_context(is_scrap=True)._action_done()
-            
-            # อัปเดต scrap record
+
+            new_state = 'done'
+            if scrap.reason_code_id and scrap.reason_code_id.is_damage_repair:
+                new_state = 'pending_repair'
+
             scrap.write({
                 'move_id': move.id,
-                'state': 'done',
-                'original_name': scrap.name,  # NPD Custom: เก็บเลขเอกสารไว้
+                'state': new_state,
+                'original_name': scrap.name,
             })
             scrap.date_done = fields.Datetime.now()
         return True
 
     # =======================
-    # NEW BUTTON METHODS - NPD Custom
+    # INTERNAL HELPERS
+    # =======================
+    def _create_reverse_move(self, prefix):
+        """สร้าง reverse stock move คืนสินค้าจาก scrap_location → location_id เดิม"""
+        self.ensure_one()
+        reverse_move_vals = {
+            'name': _('%s: %s') % (prefix, self.name),
+            'origin': self.name,
+            'company_id': self.company_id.id,
+            'product_id': self.product_id.id,
+            'product_uom': self.product_uom_id.id,
+            'state': 'draft',
+            'product_uom_qty': self.scrap_qty,
+            'location_id': self.scrap_location_id.id,
+            'location_dest_id': self.location_id.id,
+            'move_line_ids': [(0, 0, {
+                'product_id': self.product_id.id,
+                'product_uom_id': self.product_uom_id.id,
+                'qty_done': self.scrap_qty,
+                'location_id': self.scrap_location_id.id,
+                'location_dest_id': self.location_id.id,
+                'package_id': self.package_id.id if self.package_id else False,
+                'owner_id': self.owner_id.id if self.owner_id else False,
+                'lot_id': self.lot_id.id if self.lot_id else False,
+            })],
+        }
+        reverse_move = self.env['stock.move'].create(reverse_move_vals)
+        reverse_move._action_done()
+        return reverse_move
+
+    # =======================
+    # BUTTON METHODS - reset / cancel
     # =======================
     def action_reset_to_draft(self):
-        """
-        รีเซ็ตเอกสาร Scrap เป็นแบบร่าง
-        - สร้าง reverse stock move เพื่อโยกสินค้ากลับไปที่ location เดิม
-        - เก็บเลขเอกสารเดิมไว้ใน original_name เพื่อใช้เมื่อกดตรวจสอบใหม่
-        - เปลี่ยน state เป็น draft
-        """
+        states_with_move = ('done', 'pending_repair', 'under_repair')
+        repair_states = ('pending_repair', 'under_repair', 'repaired')
         for record in self:
-            if record.state == 'done' and record.move_id:
-                # สร้าง reverse move เพื่อโยกสินค้ากลับจาก scrap location ไป location เดิม
-                reverse_move_vals = {
-                    'name': _('Reverse: %s') % record.name,
-                    'origin': record.name,
-                    'company_id': record.company_id.id,
-                    'product_id': record.product_id.id,
-                    'product_uom': record.product_uom_id.id,
-                    'state': 'draft',
-                    'product_uom_qty': record.scrap_qty,
-                    'location_id': record.scrap_location_id.id,      # จาก scrap location
-                    'location_dest_id': record.location_id.id,       # กลับไป location เดิม
-                    'move_line_ids': [(0, 0, {
-                        'product_id': record.product_id.id,
-                        'product_uom_id': record.product_uom_id.id,
-                        'qty_done': record.scrap_qty,
-                        'location_id': record.scrap_location_id.id,
-                        'location_dest_id': record.location_id.id,
-                        'package_id': record.package_id.id if record.package_id else False,
-                        'owner_id': record.owner_id.id if record.owner_id else False,
-                        'lot_id': record.lot_id.id if record.lot_id else False,
-                    })],
-                }
-                
-                # สร้างและยืนยัน reverse move
-                reverse_move = self.env['stock.move'].create(reverse_move_vals)
-                reverse_move._action_done()
-            
-            # รีเซ็ต scrap เป็น draft และเก็บเลขเอกสารเดิมไว้
-            record.write({
+            if record.state in states_with_move and record.move_id:
+                record._create_reverse_move(_('Reverse'))
+
+            vals = {
                 'state': 'draft',
                 'move_id': False,
                 'date_done': False,
-                'original_name': record.name,  # เก็บเลขเอกสารเดิมไว้
-            })
+                'original_name': record.name,
+            }
+            # ล้างข้อมูลการซ่อมเดิมเมื่อรีเซ็ตจากสถานะใน repair workflow
+            if record.state in repair_states:
+                vals.update({
+                    'damage_type': False,
+                    'repair_by': False,
+                    'technician_name': False,
+                    'repair_start_date': False,
+                    'damaged_attachment_ids': [(5, 0, 0)],
+                    'spare_parts_used': False,
+                    'parts_cost': 0.0,
+                    'labor_cost': 0.0,
+                    'repair_end_date': False,
+                    'repaired_attachment_ids': [(5, 0, 0)],
+                    'is_stock_returned': False,
+                    'return_move_id': False,
+                    'return_date': False,
+                })
+            record.write(vals)
         return True
 
     def action_cancel(self):
-        """
-        ยกเลิกเอกสาร Scrap
-        - สร้าง reverse stock move เพื่อโยกสินค้ากลับ (ถ้า state เป็น done)
-        - เปลี่ยน state เป็น cancel
-        """
+        states_with_move = ('done', 'pending_repair', 'under_repair')
         for record in self:
-            if record.state == 'done' and record.move_id:
-                # สร้าง reverse move เพื่อโยกสินค้ากลับ
-                reverse_move_vals = {
-                    'name': _('Cancel: %s') % record.name,
-                    'origin': record.name,
-                    'company_id': record.company_id.id,
-                    'product_id': record.product_id.id,
-                    'product_uom': record.product_uom_id.id,
-                    'state': 'draft',
-                    'product_uom_qty': record.scrap_qty,
-                    'location_id': record.scrap_location_id.id,      # จาก scrap location
-                    'location_dest_id': record.location_id.id,       # กลับไป location เดิม
-                    'move_line_ids': [(0, 0, {
-                        'product_id': record.product_id.id,
-                        'product_uom_id': record.product_uom_id.id,
-                        'qty_done': record.scrap_qty,
-                        'location_id': record.scrap_location_id.id,
-                        'location_dest_id': record.location_id.id,
-                        'package_id': record.package_id.id if record.package_id else False,
-                        'owner_id': record.owner_id.id if record.owner_id else False,
-                        'lot_id': record.lot_id.id if record.lot_id else False,
-                    })],
-                }
-                
-                # สร้างและยืนยัน reverse move
-                reverse_move = self.env['stock.move'].create(reverse_move_vals)
-                reverse_move._action_done()
-            
-            # เปลี่ยน state เป็น cancel
+            if record.state in states_with_move and record.move_id:
+                record._create_reverse_move(_('Cancel'))
             record.write({
                 'state': 'cancel',
                 'move_id': False,
             })
         return True
+
+    # =======================
+    # BUTTON METHODS - repair workflow
+    # =======================
+    def action_open_repair_request_wizard(self):
+        self.ensure_one()
+        if self.state != 'pending_repair':
+            raise UserError(_('สามารถแจ้งซ่อมได้เฉพาะเอกสารสถานะ "รอดำเนินการแจ้งซ่อม" เท่านั้น'))
+        return {
+            'name': _('แจ้งซ่อม'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'npd.scrap.repair.request.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_scrap_id': self.id},
+        }
+
+    def action_open_repair_complete_wizard(self):
+        self.ensure_one()
+        if self.state != 'under_repair':
+            raise UserError(_('สามารถบันทึกซ่อมสำเร็จได้เฉพาะเอกสารสถานะ "อยู่ระหว่างการซ่อม" เท่านั้น'))
+        return {
+            'name': _('ซ่อมสำเร็จ'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'npd.scrap.repair.complete.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_scrap_id': self.id},
+        }

@@ -1,21 +1,25 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'NPD Scrap Buttons',
-    'version': '14.0.1.0.0',
-    'summary': 'Add Reset to Draft and Cancel buttons to Scrap Orders',
+    'version': '14.0.1.1.0',
+    'summary': 'Reset / Cancel / Repair workflow for Scrap Orders',
     'description': """
-        This module adds:
+        Adds to Scrap Orders:
         - Reset to Draft button
         - Cancel button
-        to the Scrap Orders form view.
+        - Repair workflow (แจ้งซ่อม / ซ่อมสำเร็จ) for reason codes flagged
+          as is_damage_repair on scrap.reason.code
     """,
     'category': 'Inventory',
     'author': 'NPD',
     'website': '',
     'license': 'LGPL-3',
-    'depends': ['stock'],
+    'depends': ['stock', 'scrap_reason_code', 'web'],
     'data': [
+        'security/ir.model.access.csv',
+        'views/scrap_reason_code_views.xml',
         'views/stock_scrap_views.xml',
+        'wizard/scrap_repair_wizard_views.xml',
     ],
     'installable': True,
     'application': False,
