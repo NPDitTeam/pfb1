@@ -110,9 +110,18 @@ class SaleOrder(models.Model):
                     node.set('modifiers', json.dumps(mods))
                     modified = True
                 else:
-                    # ไม่มีสิทธิ์ → บังคับ readonly ทั้ง attribute และ modifiers
-                    node.set('readonly', '1')
-                    mods['readonly'] = True
+                    # ไม่มีสิทธิ์ → readonly เฉพาะตอน SO ยืนยันแล้ว (state in sale/done)
+                    # ตอนเป็น QT/ใบเสนอราคา (draft/sent/cancel) ยังแก้ไขได้ปกติ
+                    # เก็บเงื่อนไข deposit_ref เดิมไว้ด้วย
+                    readonly_domain = [
+                        '|',
+                        ['deposit_ref', '!=', False],
+                        ['state', 'in', ['sale', 'done']],
+                    ]
+                    if 'readonly' in node.attrib:
+                        del node.attrib['readonly']
+                    node.set('attrs', str({'readonly': readonly_domain}))
+                    mods['readonly'] = readonly_domain
                     node.set('modifiers', json.dumps(mods))
                     modified = True
 
