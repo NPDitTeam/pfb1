@@ -2126,6 +2126,10 @@ class PayrollSalary(models.Model):
         _logger.info("[LATENESS] Holiday template year=%s found=%s holidays_count=%d holidays=%s",
                      year_int, bool(current_year_holiday_template), len(official_holidays), official_holidays)
 
+        # ✅ ส่ง resign_date ไปด้วย — PHP จะได้ไม่นับวันหลังลาออกเป็นขาดงาน
+        resign_date_str = (self.employee_id.resign_date.strftime('%Y-%m-%d')
+                           if self.employee_id.resign_date else None)
+
         payload = {
             'employee_code': self.employee_id.employee_code,
             'grace_period': self.lateness_grace_period,
@@ -2134,6 +2138,7 @@ class PayrollSalary(models.Model):
             'year': self.year,
             'cutoff_day': self.cutoff_day,
             'official_holidays': official_holidays,
+            'resign_date': resign_date_str,
         }
 
         _logger.info("Lateness API Payload: %s", json.dumps(payload, indent=2, ensure_ascii=False))

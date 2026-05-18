@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import calendar
 import logging
 import time
 from datetime import date, datetime
@@ -83,14 +84,41 @@ class PayrollPeriod(models.Model):
         # ไม่ล้าง log — เก็บประวัติการรันเดิมไว้ (จะถูก prepend ด้วย header timestamp ตอนจบ)
         self.write({'state': 'processing'})
 
+        # คำนวณ "วันเริ่มรอบ" — เพื่อให้พนักงานที่ลาออกในรอบนี้ยังได้เงินเดือนรอบสุดท้าย
+        try:
+            m = int(self.month)
+            y = int(self.year)
+        except (TypeError, ValueError):
+            m, y = fields.Date.today().month, fields.Date.today().year
+        start_day = self.cutoff_start_day or 25
+        if m == 1:
+            prev_m, prev_y = 12, y - 1
+        else:
+            prev_m, prev_y = m - 1, y
+        last_prev = calendar.monthrange(prev_y, prev_m)[1]
+        cycle_start = date(prev_y, prev_m, min(start_day, last_prev))
+
+        # ตัวกรอง: active ทุกคน + inactive ที่ resign_date อยู่ในรอบนี้ (>= วันเริ่มรอบ)
+        # → พนักงานลาออกกลางรอบยังได้เงินเดือนรอบสุดท้าย
+        #   แต่ถ้าลาออกไปก่อนรอบเริ่ม (resign_date < cycle_start) จะถูกข้าม
+        def _eligible(emp):
+            if emp.status == 'active':
+                return True
+            return bool(emp.resign_date and emp.resign_date >= cycle_start)
+
         # ถ้ามีพนักงานทดสอบ → ใช้เฉพาะคนที่เลือก, ถ้าว่าง → รันทุกคนที่เปิด Auto
         if self.test_employee_ids:
-            employees = self.test_employee_ids.filtered(lambda e: e.status == 'active')
+            employees = self.test_employee_ids.filtered(_eligible)
         else:
-            employees = self.env['employee.salary'].search([
+            candidates = self.env['employee.salary'].search([
                 ('auto_payroll', '=', True),
+                '|',
                 ('status', '=', 'active'),
+                '&',
+                ('status', '=', 'inactive'),
+                ('resign_date', '>=', cycle_start),
             ])
+            employees = candidates.filtered(_eligible)
 
         if not employees:
             self.write({
