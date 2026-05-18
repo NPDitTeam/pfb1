@@ -210,6 +210,9 @@ class EmployeeSalary(models.Model):
             'advance_payment_type': record.advance_payment_type,
             'advance_payment_limit': record.advance_payment_limit,
             'start_date': record.start_date.isoformat() if record.start_date else None,
+            # resign_date เป็นฟิลด์จาก work_security_deposit (_inherit) — ใช้ getattr กันพลาด
+            'resign_date': (getattr(record, 'resign_date', False).isoformat()
+                            if getattr(record, 'resign_date', False) else None),
             'appointment_date': record.appointment_date.isoformat() if record.appointment_date else None,
             'contract_end_date': record.contract_end_date.isoformat() if record.contract_end_date else None,
             'end_trial_date': record.end_trial_date.isoformat() if record.end_trial_date else None,
