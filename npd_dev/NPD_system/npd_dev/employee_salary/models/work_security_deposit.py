@@ -1219,15 +1219,49 @@ class EmployeeSalaryInherit(models.Model):
         res = super().write(vals)
         if 'resign_date' in vals:
             for emp in self:
-                if not emp.resign_date:
-                    continue
-                for line in emp.deposit_line_ids:
-                    if line.work_status != 'resigned' or line.resign_date != emp.resign_date:
-                        line.sudo().write({
-                            'resign_date': emp.resign_date,
-                            'work_status': 'resigned',
-                        })
+                if emp.resign_date:
+                    for line in emp.deposit_line_ids:
+                        if line.work_status != 'resigned' or line.resign_date != emp.resign_date:
+                            line.sudo().write({
+                                'resign_date': emp.resign_date,
+                                'work_status': 'resigned',
+                            })
+                # ✅ auto-trigger: recompute payroll ของพนักงานคนนี้ ตามรอบที่เกี่ยวข้อง
+                # → calculate_lateness.php จะได้ resign_date ล่าสุด ไม่นับวันหลังลาออกเป็นขาด
+                emp._recompute_payroll_for_resign()
         return res
+
+    def _recompute_payroll_for_resign(self):
+        """recompute payroll.salary ของพนักงาน หลังแก้ resign_date
+
+        Scope: เฉพาะรอบที่ "วันสิ้นรอบ >= resign_date" (รอบที่อาจมีวันหลังลาออก)
+        - resign_date มีค่า → recompute เฉพาะรอบที่เกี่ยวข้อง (เร็ว ไม่แตะรอบเก่า)
+        - resign_date ถูกล้าง (ยกเลิกลาออก) → recompute ทุกรอบ non-manual (คืนค่าให้นับขาดปกติ)
+        ข้าม payroll ที่ manual_override (เคารพการปรับมือ)
+        """
+        Payroll = self.env['payroll.salary']
+        for emp in self:
+            rdate = emp.resign_date
+            payrolls = Payroll.search([('employee_id', '=', emp.id)])
+            recomputed = 0
+            for p in payrolls:
+                if p.manual_override:
+                    continue
+                if rdate:
+                    try:
+                        py, pm = int(p.year), int(p.month)
+                        last = calendar.monthrange(py, pm)[1]
+                        cycle_end = date(py, pm, min(p.cutoff_day or 24, last))
+                    except (ValueError, TypeError):
+                        cycle_end = None
+                    # รอบที่สิ้นก่อนวันลาออก → พนักงานทำงานเต็มรอบ ไม่ต้อง recompute
+                    if cycle_end and cycle_end < rdate:
+                        continue
+                p._populate_all_lines()
+                recomputed += 1
+            _logger.info(
+                "[RESIGN-SYNC] emp=%s resign_date=%s → recompute payroll %d รายการ",
+                emp.employee_code or '-', rdate or '-', recomputed)
 
 
 class PayrollSalaryInherit(models.Model):
