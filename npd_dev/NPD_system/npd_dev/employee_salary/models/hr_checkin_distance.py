@@ -234,10 +234,13 @@ class HrCheckinDistance(models.Model):
     def action_open_map_circle(self):
         """เปิดแผนที่พร้อมวงกลมรัศมี Check-in ในแท็บใหม่"""
         self.ensure_one()
+        # ใช้ URL เต็ม (absolute) — ถ้าเป็น relative ฝั่ง JS จะเติม /th/ ให้ตาม
+        # context ภาษา → กลายเป็น /th/web/checkin_map/<id> → website ดัก 404
+        # absolute URL + namespace /web/ → browser เปิดตรง ๆ, website ไม่ lang-redirect
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url') or ''
         return {
             'type': 'ir.actions.act_url',
-            # ใช้ namespace /web/ — website ไม่ใส่ language prefix (/th/) ให้ → ไม่ redirect 404
-            'url': f'/web/checkin_map/{self.id}',
+            'url': f'{base_url}/web/checkin_map/{self.id}',
             'target': 'new',
         }
 
