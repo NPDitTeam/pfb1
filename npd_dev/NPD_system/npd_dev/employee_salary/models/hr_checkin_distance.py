@@ -232,15 +232,23 @@ class HrCheckinDistance(models.Model):
             raise UserError(f"ไม่สามารถดึงข้อมูลจาก API ได้: {e}")
 
     def action_open_map_circle(self):
-        """เปิดแผนที่พร้อมวงกลมรัศมี Check-in ในแท็บใหม่"""
+        """เปิดแผนที่พร้อมวงกลมรัศมี Check-in
+
+        เปิดหน้า PHP ภายนอกบน npdhrms.com แทน controller ของ Odoo —
+        URL ภายนอกเต็ม (https://...) browser เปิดตรง ๆ ไม่โดน website
+        ใส่ /th/ prefix → เลี่ยงปัญหา 404 ของ Odoo website routing ทั้งหมด
+        """
         self.ensure_one()
-        # ใช้ URL เต็ม (absolute) — ถ้าเป็น relative ฝั่ง JS จะเติม /th/ ให้ตาม
-        # context ภาษา → กลายเป็น /th/web/checkin_map/<id> → website ดัก 404
-        # absolute URL + namespace /web/ → browser เปิดตรง ๆ, website ไม่ lang-redirect
-        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url') or ''
+        from urllib.parse import urlencode
+        params = urlencode({
+            'lat': self.latitude or '13.7563',
+            'lng': self.longitude or '100.5018',
+            'radius': self.distance_meter or '100',
+            'branch': self.branch_id.name if self.branch_id else 'ไม่ระบุสาขา',
+        })
         return {
             'type': 'ir.actions.act_url',
-            'url': f'{base_url}/web/checkin_map/{self.id}',
+            'url': f'https://npdhrms.com/checkin_map.php?{params}',
             'target': 'new',
         }
 

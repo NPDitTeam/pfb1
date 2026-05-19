@@ -5,9 +5,11 @@ from odoo.http import request
 
 class MapController(http.Controller):
 
-    # ใช้ namespace /web/ — website module ไม่ใส่ language prefix (/th/) ให้
-    # URL ที่ขึ้นต้น /web/ จึงไม่โดน redirect → route website=False ทำงานตรง ๆ ไม่ 404
-    @http.route('/web/checkin_map/<int:record_id>', type='http', auth='user', website=False)
+    # NOTE: ปุ่มเปิดแผนที่เปลี่ยนไปใช้ PHP ภายนอก (npdhrms.com/checkin_map.php) แล้ว
+    #   เพื่อเลี่ยงปัญหา Odoo website ใส่ /th/ prefix → 404
+    # route นี้เก็บไว้เป็น fallback เฉย ๆ (ไม่มีปุ่มเรียกแล้ว) — single path กัน shadow
+    @http.route('/web/checkin_map/<int:record_id>',
+                type='http', auth='public', website=False)
     def checkin_map(self, record_id, **kwargs):
         record = request.env['hr.checkin.distance'].sudo().browse(record_id)
         if not record.exists():
