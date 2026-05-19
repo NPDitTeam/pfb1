@@ -34,10 +34,10 @@ class PayrollSalaryAllowance(models.Model):
     _inherit = 'payroll.salary'
 
     def _get_payroll_period_range(self):
-        """คืน (period_start, period_end) ตาม payroll.period ของ payroll นี้
-        Convention: period = วัน cutoff_start ของเดือนนี้ → วัน cutoff_end ของเดือนหน้า
-        ตัวอย่าง: payroll เดือน 3, cutoff=25-24 → 25/03 → 24/04
-        ตรงกับวันที่จ่ายเงิน 28 ของเดือนถัดไป (28/04 สำหรับเดือน 3)"""
+        """คืน (period_start, period_end) ตามรอบตัดเงินเดือน
+        Convention (ตรงกับ actor content / OT / lateness ทั้งระบบ):
+          period = cutoff_start ของเดือน "ก่อน" → cutoff_end ของเดือน "นี้"
+        ตัวอย่าง: payroll เดือน 5, cutoff=25-24 → 25/04 → 24/05"""
         self.ensure_one()
         if not self.month or not self.year:
             return False, False
@@ -51,13 +51,13 @@ class PayrollSalaryAllowance(models.Model):
         if self.period_id:
             cutoff_start = self.period_id.cutoff_start_day or cutoff_start
             cutoff_end = self.period_id.cutoff_end_day or cutoff_end
-        # period_start = วันที่ cutoff_start ของเดือนนี้
+        # period_end = วันที่ cutoff_end ของเดือนนี้ (month)
         last_day_curr = calendar.monthrange(year, month)[1]
-        start = date(year, month, min(cutoff_start, last_day_curr))
-        # period_end = วันที่ cutoff_end ของเดือนหน้า
-        nxt = date(year, month, 1) + relativedelta(months=1)
-        last_day_next = calendar.monthrange(nxt.year, nxt.month)[1]
-        end = date(nxt.year, nxt.month, min(cutoff_end, last_day_next))
+        end = date(year, month, min(cutoff_end, last_day_curr))
+        # period_start = วันที่ cutoff_start ของเดือนก่อน (month-1)
+        prev = date(year, month, 1) - relativedelta(months=1)
+        last_day_prev = calendar.monthrange(prev.year, prev.month)[1]
+        start = date(prev.year, prev.month, min(cutoff_start, last_day_prev))
         return start, end
 
     def _refresh_manual_time_allowance(self):

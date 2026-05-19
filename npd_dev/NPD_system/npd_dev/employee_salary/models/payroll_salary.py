@@ -780,6 +780,11 @@ class PayrollSalary(models.Model):
                 ]):
                     record._populate_all_lines()
 
+            # ข้าม sync PHP/employee ถ้า record ยังไม่ save (NewId — onchange context)
+            # มิฉะนั้น json.dumps(odoo_id=NewId) จะ crash + ไม่มีประโยชน์ที่จะ sync record ที่ยังไม่มีจริง
+            if isinstance(record.id, models.NewId):
+                continue
+
             _logger.info(
                 "[WRITE] Payroll updated for %s | Month: %s/%s | income=%s, vat=%s, sso=%s",
                 record.employee_id.firstname, record.month, record.year,
@@ -2390,9 +2395,10 @@ class PayrollSalary(models.Model):
         # บุคคลพิเศษ — config ล็อกภาษี + ปกส.
         exec_cfg = self.EXECUTIVE_TAX_CONFIG.get(self.employee_code or '')
 
-        # ประกันสังคม
+        # ประกันสังคม — ปัดเศษเป็นจำนวนเต็มบาทตามกฎ สปส.
+        #   (เศษสตางค์ ≥ 0.50 ปัดขึ้น, < 0.50 ปัดทิ้ง = round_half_up)
         sso_base = max(self.sso_min_wage, min(self.base_salary, self.sso_max_wage))
-        sso_amount = sso_base * (self.sso_rate / 100.0)
+        sso_amount = float(round_half_up(sso_base * (self.sso_rate / 100.0)))
         # บุคคลพิเศษที่ skip_sso → ไม่หักประกันสังคม
         if exec_cfg and exec_cfg.get('skip_sso'):
             sso_amount = 0.0
