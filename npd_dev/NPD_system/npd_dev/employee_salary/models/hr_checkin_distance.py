@@ -236,7 +236,8 @@ class HrCheckinDistance(models.Model):
         self.ensure_one()
         return {
             'type': 'ir.actions.act_url',
-            'url': f'/checkin_map/{self.id}',
+            # ใช้ namespace /web/ — website ไม่ใส่ language prefix (/th/) ให้ → ไม่ redirect 404
+            'url': f'/web/checkin_map/{self.id}',
             'target': 'new',
         }
 
