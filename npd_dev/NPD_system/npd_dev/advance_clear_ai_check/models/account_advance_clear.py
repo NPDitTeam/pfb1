@@ -607,6 +607,10 @@ class AccountAdvanceClearAI(models.Model):
         _all_hw2 = _has_hw2 and not rc_files_re and _skipped2
         if _all_hw2 and cash_bill_ok:
             rc_ok = True  # All files are cash bills + cash bill check passed
+        # ใบรับรองแทนใบเสร็จที่ระบบตัดสินแล้วว่าคลุมยอด = เอกสารใช้ได้
+        # (สอดคล้องกับ has_valid_substitute ใน _format_result_html)
+        if _sub_re.get('decision') in ('count_substitute', 'cover_skip'):
+            rc_ok = True
         if _skip_slip_re:
             slip_ok2 = True  # User skipped slip check
 
@@ -2248,7 +2252,11 @@ class AccountAdvanceClearAI(models.Model):
         # or slips are present (those are categorized properly via skipped_files reasons).
         # If a printed receipt is genuinely unclear, AI must include 'ไม่ชัด' in its reason
         # (caught by has_unclear).
-        has_any_receipt = bool(receipt_files) or rc.get('found', False)
+        # ใบรับรองแทนใบเสร็จ (is_receipt_substitute) ที่ระบบตัดสินแล้วว่าคลุมยอด
+        # (count_substitute/cover_skip) ถือเป็นเอกสารประกอบที่ใช้ได้ เทียบเท่าใบเสร็จ
+        # แม้ผู้ใช้จะอัปโหลดมาแค่ใบสำคัญรับเงิน ไม่มีใบเสร็จรับเงิน/ใบกำกับภาษี
+        has_valid_substitute = sub_resolution.get('decision') in ('count_substitute', 'cover_skip')
+        has_any_receipt = bool(receipt_files) or rc.get('found', False) or has_valid_substitute
         if all_are_handwritten and cash_bill_check_passed:
             # No printed receipts at all, only cash bills → pass if cash bill verified
             rc_pass = not has_unclear
@@ -2434,7 +2442,7 @@ class AccountAdvanceClearAI(models.Model):
 
         # Recompute combined when AI didn't provide it, when Python overrode r_total,
         # or when there are receipt substitutes to add
-        if r_total > 0 and (combined == 0 or _py_overrode_r_total or sub_total > 0):
+        if (r_total > 0 or cb_total > 0 or sub_total > 0) and (combined == 0 or _py_overrode_r_total or sub_total > 0):
             combined = round(r_total + cb_total + sub_total, 2)
 
         # Re-check matches with combined_total
@@ -3234,6 +3242,10 @@ class AccountAdvanceClearAI(models.Model):
         _rc_files3 = [f for f in rc_data.get('receipt_files', []) if isinstance(f, dict) and f.get('filename')]
         _all_hw3 = _has_hw3 and not _rc_files3 and _skipped3
         if _all_hw3 and cash_bill_ok:
+            rc_ok = True
+        # ใบรับรองแทนใบเสร็จที่ระบบตัดสินแล้วว่าคลุมยอด = เอกสารใช้ได้
+        # (สอดคล้องกับ has_valid_substitute ใน _format_result_html / is_pass อีก path)
+        if sub_resolution3.get('decision') in ('count_substitute', 'cover_skip'):
             rc_ok = True
         # Override slip check if user skipped it
         _skip_slip3 = any(not conds.get('check_slip', True) for conds in condition_map.values())
