@@ -3,7 +3,7 @@
 import calendar
 import logging
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from psycopg2 import IntegrityError, OperationalError
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
@@ -409,49 +409,65 @@ class PayrollPeriod(models.Model):
                     'log': (period.log or '') + '\n[CRON ERROR] %s' % str(e),
                 })
 
-        # 1.5) ถ้าวันนี้เป็นวัน cutoff (วันที่ 25) และยังไม่มีรอบเดือนถัดไป → สร้างรอบใหม่อัตโนมัติ
-        if today.day == 25:
-            current_month = today.month
-            current_year = today.year
+        # 1.5) สร้างรอบเดือนถัดไป "หลังจ่ายเงินเดือนรอบก่อนหน้า"
+        #   trigger: มี period (state=done) ที่ payment_date < today (จ่ายแล้ว)
+        #   และยังไม่มีรอบเดือนถัดไป → สร้างให้
+        #   มอง 60 วันย้อนหลัง — ครอบ cron ที่อาจหลุดบางวัน + ไม่สร้าง future ไกลเกิน
+        recent_paid = self.search([
+            ('state', '=', 'done'),
+            ('payment_date', '!=', False),
+            ('payment_date', '<', today),
+            ('payment_date', '>=', today - timedelta(days=60)),
+        ])
+        for paid in recent_paid:
+            try:
+                cur_month = int(paid.month)
+                cur_year = int(paid.year)
+            except (TypeError, ValueError):
+                continue
             # เดือนถัดไป
-            if current_month == 12:
+            if cur_month == 12:
                 next_month = 1
-                next_year = str(current_year + 1)
+                next_year = str(cur_year + 1)
             else:
-                next_month = current_month + 1
-                next_year = str(current_year)
+                next_month = cur_month + 1
+                next_year = str(cur_year)
 
             existing_next = self.search([
                 ('month', '=', next_month),
                 ('year', '=', next_year),
             ], limit=1)
+            if existing_next:
+                continue  # มีรอบถัดไปแล้ว ข้าม
 
-            if not existing_next:
-                # ดึงค่าจากรอบล่าสุดเป็นต้นแบบ
-                last_period = self.search([], order='year desc, month desc', limit=1)
-                cutoff_start = last_period.cutoff_start_day if last_period else 25
-                cutoff_end = last_period.cutoff_end_day if last_period else 24
+            cutoff_start = paid.cutoff_start_day or 25
+            cutoff_end = paid.cutoff_end_day or 24
 
-                import calendar
-                try:
-                    auto_run = date(int(next_year), next_month, cutoff_end)
-                except ValueError:
-                    last_day = calendar.monthrange(int(next_year), next_month)[1]
-                    auto_run = date(int(next_year), next_month, min(cutoff_end, last_day))
+            try:
+                auto_run = date(int(next_year), next_month, cutoff_end)
+            except ValueError:
+                last_day = calendar.monthrange(int(next_year), next_month)[1]
+                auto_run = date(int(next_year), next_month, min(cutoff_end, last_day))
 
-                # payment_date = วันที่ 28 ของเดือนรอบใหม่ (เดือนเดียวกัน)
+            # payment_date = วันที่ 28 ของเดือนรอบใหม่
+            try:
                 pay_date = date(int(next_year), next_month, 28)
+            except ValueError:
+                last_day = calendar.monthrange(int(next_year), next_month)[1]
+                pay_date = date(int(next_year), next_month, min(28, last_day))
 
-                self.create({
-                    'month': next_month,
-                    'year': next_year,
-                    'cutoff_start_day': cutoff_start,
-                    'cutoff_end_day': cutoff_end,
-                    'auto_run_date': auto_run,
-                    'payment_date': pay_date,
-                    'state': 'draft',
-                })
-                _logger.info("[CRON] สร้างรอบใหม่อัตโนมัติ %02d/%s", next_month, next_year)
+            self.create({
+                'month': next_month,
+                'year': next_year,
+                'cutoff_start_day': cutoff_start,
+                'cutoff_end_day': cutoff_end,
+                'auto_run_date': auto_run,
+                'payment_date': pay_date,
+                'state': 'draft',
+            })
+            _logger.info(
+                "[CRON] สร้างรอบใหม่ %02d/%s (หลังจ่ายเงินรอบ %s วันที่ %s)",
+                next_month, next_year, paid.name, paid.payment_date)
 
         # 2) อัพเดตข้อมูลรอบที่เสร็จแล้ว (ติดตามทุกวัน)
         # อัพเดตเฉพาะรอบของเดือนปัจจุบัน หรือรอบที่ยังไม่ผ่านวันจ่ายเงิน
