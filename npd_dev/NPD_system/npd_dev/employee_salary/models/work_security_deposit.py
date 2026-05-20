@@ -15,6 +15,35 @@ class WorkSecurityDeposit(models.Model):
     _order = 'create_date desc'
     _rec_name = 'name'
 
+    # ตำแหน่งที่ไม่ต้องเก็บเงินประกันการทำงาน (ยกเว้น: ต่างชาติ → เก็บเสมอ ไม่สน position)
+    DEPOSIT_EXCLUDED_POSITIONS = (
+        'พนง.ซ่อมบำรุง/ยกสินค้า',
+        'ไม่ระบุ',
+        'พนักงาน ยกสินค้า',
+        'พนง.คนงานพม่า/ผลิต',
+        'เจ้าหน้าที่ ขนส่ง',
+        'เจ้าหน้าที่ ดูแลการส่งเอกสารและซ่อมบำรุง',
+        'หน.จนท.กำกับการผลิต/ซ่อมบำรุงสินค้า',
+        'จนท.ซบร.ยานพาหนะและทะเบียน',
+        'เจ้าหน้าที่ ซ่อมบำรุง',
+        'กรรมการ',
+        'CEO/ปธ.กรรมการ',
+        'COO',
+        'จนท.ซ่อมบำรุงยานพาหนะและทะเบียน',
+        'จนท.ขส.ประจำสาขา',
+    )
+
+    def _filter_eligible_for_deposit(self, employees):
+        """กรองพนักงานที่ "ไม่ต้องเก็บเงินประกัน":
+        - position อยู่ใน DEPOSIT_EXCLUDED_POSITIONS → ข้าม
+        - ยกเว้น: nationality = 'ต่างชาติ' → เก็บเสมอ (ไม่สน position)
+        """
+        excluded = set(self.DEPOSIT_EXCLUDED_POSITIONS)
+        return employees.filtered(lambda e:
+            e.nationality == 'ต่างชาติ'
+            or (e.position_id.name or 'ไม่ระบุ') not in excluded
+        )
+
     name = fields.Char(string='ชื่อรายการ', compute='_compute_name', store=True)
     branch_id = fields.Many2one('hr.branch.custom', string='สาขา', required=True)
     department_ids = fields.Many2many(
@@ -193,6 +222,8 @@ class WorkSecurityDeposit(models.Model):
             ('branch_id', '=', self.branch_id.id),
             ('department_id', 'in', self.department_ids.ids),
         ], order='employee_code')
+        # ✅ กรองตำแหน่งที่ไม่ต้องเก็บเงินประกัน (ยกเว้นต่างชาติ)
+        emps = self._filter_eligible_for_deposit(emps)
         new_lines = [(5, 0, 0)]
         defaults = sorted(
             [(p.month_index, p.amount) for p in self.default_payment_ids],
@@ -475,6 +506,8 @@ class WorkSecurityDeposit(models.Model):
             ('department_id', 'in', self.department_ids.ids),
             ('id', 'not in', existing_emp_ids),
         ], order='employee_code')
+        # ✅ กรองตำแหน่งที่ไม่ต้องเก็บเงินประกัน (ยกเว้นต่างชาติ)
+        new_emps = self._filter_eligible_for_deposit(new_emps)
         if not new_emps:
             return {
                 'type': 'ir.actions.client',
