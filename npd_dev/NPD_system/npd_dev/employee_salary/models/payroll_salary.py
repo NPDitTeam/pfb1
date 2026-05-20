@@ -1128,7 +1128,26 @@ class PayrollSalary(models.Model):
                      rate, total_commission, rate, commission_amount)
         _logger.info("=" * 60)
 
-        # เซ็ตค่าลง field ค่าคอมมิชชั่นSale (ยอดที่คิด % แล้ว)
+        # prorate กรณีพนักงานลาออกในเดือนที่ทำเงินเดือน: (commission / 30) × วันที่ออก
+        # ลาออกก่อนเดือน payroll → ไม่ให้ค่าคอม (0)
+        emp = self.employee_id
+        if emp.resign_date:
+            try:
+                py = int(self.year)
+                pm = int(self.month)
+                rd = emp.resign_date
+                if rd.year < py or (rd.year == py and rd.month < pm):
+                    _logger.info("[COMMISSION SALES] ★ พนักงานลาออกก่อนเดือน %s/%s → ค่าคอม = 0", pm, py)
+                    commission_amount = 0.0
+                elif rd.year == py and rd.month == pm:
+                    original = commission_amount
+                    commission_amount = (commission_amount / 30.0) * rd.day
+                    _logger.info("[COMMISSION SALES] ★ prorate ลาออก %s: %.2f / 30 × %d = %.2f",
+                                 rd, original, rd.day, commission_amount)
+            except (TypeError, ValueError):
+                pass
+
+        # เซ็ตค่าลง field ค่าคอมมิชชั่นSale (ยอดที่คิด % แล้ว + prorate ถ้าลาออก)
         self.income_commission_sale = commission_amount
 
     def _fetch_commission_branch_data(self):
