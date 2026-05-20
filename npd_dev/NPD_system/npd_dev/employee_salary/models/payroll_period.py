@@ -342,27 +342,34 @@ class PayrollPeriod(models.Model):
         error_count = 0
 
         for payroll in self.payroll_ids:
+            # อ่าน label เป็น local "ก่อน" savepoint — ถ้า body พัง transaction aborted
+            # การอ่านฟิลด์ใน except จะพังซ้ำ (SQL fetch fail) ต้องเก็บไว้ก่อน
+            emp_first = payroll.employee_id.firstname or ''
+            emp_code = payroll.employee_code or ''
+
             if payroll.manual_override:
                 log_lines.append("[SKIP] %s (%s) - ปรับแก้ด้วยมือ ข้ามการอัพเดต" % (
-                    payroll.employee_id.firstname, payroll.employee_code))
+                    emp_first, emp_code))
                 continue
             try:
-                # recompute "เงินได้อื่นๆ" ใหม่ก่อนเพื่อรับรายการใน other.income ที่เพิ่งยืนยัน
-                payroll._compute_other_income_total()
-                # ดึง API แบบ parallel (เร็วกว่า serial ~3 เท่า)
-                payroll._parallel_fetch_all()
-                payroll._populate_all_lines()
-                # ส่งข้อมูลอัพเดตไป PHP API
-                data = payroll._prepare_data_for_php()
-                payroll._send_data_to_php_api('update', data)
+                # savepoint per iteration — ถ้า payroll คนนึงพัง rollback ได้โดยไม่กระทบคนอื่น
+                with self.env.cr.savepoint():
+                    # recompute "เงินได้อื่นๆ" ใหม่ก่อนเพื่อรับรายการใน other.income ที่เพิ่งยืนยัน
+                    payroll._compute_other_income_total()
+                    # ดึง API แบบ parallel (เร็วกว่า serial ~3 เท่า)
+                    payroll._parallel_fetch_all()
+                    payroll._populate_all_lines()
+                    # ส่งข้อมูลอัพเดตไป PHP API
+                    data = payroll._prepare_data_for_php()
+                    payroll._send_data_to_php_api('update', data)
+                    net_salary = payroll.net_salary
                 success_count += 1
                 log_lines.append("[UPDATED] %s (%s) - อัพเดตสำเร็จ | Net=%.2f" % (
-                    payroll.employee_id.firstname, payroll.employee_code, payroll.net_salary))
+                    emp_first, emp_code, net_salary))
             except Exception as e:
                 error_count += 1
-                log_lines.append("[ERROR] %s (%s) - %s" % (
-                    payroll.employee_id.firstname, payroll.employee_code, str(e)))
-                _logger.error("Refresh payroll error for %s: %s", payroll.employee_code, e)
+                log_lines.append("[ERROR] %s (%s) - %s" % (emp_first, emp_code, str(e)))
+                _logger.error("Refresh payroll error for %s: %s", emp_code, e)
 
         # ใช้เวลาตาม timezone ของ user (เช่น Asia/Bangkok = UTC+7) แทน UTC
         timestamp = fields.Datetime.context_timestamp(
