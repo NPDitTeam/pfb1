@@ -341,7 +341,16 @@ class PayrollPeriod(models.Model):
         success_count = 0
         error_count = 0
 
-        for payroll in self.payroll_ids:
+        # ถ้าตั้ง "พนักงานทดสอบ" ไว้ → refresh เฉพาะคนเหล่านั้น (ไว้ทดสอบทีละคน)
+        # เคลียร์ field นี้เมื่อต้องการรันทุกคน
+        payrolls_to_refresh = self.payroll_ids
+        if self.test_employee_ids:
+            test_emp_ids = set(self.test_employee_ids.ids)
+            payrolls_to_refresh = self.payroll_ids.filtered(
+                lambda p: p.employee_id.id in test_emp_ids)
+            log_lines.append("[TEST MODE] refresh เฉพาะพนักงานทดสอบ %d คน" % len(payrolls_to_refresh))
+
+        for payroll in payrolls_to_refresh:
             # อ่าน label เป็น local "ก่อน" savepoint — ถ้า body พัง transaction aborted
             # การอ่านฟิลด์ใน except จะพังซ้ำ (SQL fetch fail) ต้องเก็บไว้ก่อน
             emp_first = payroll.employee_id.firstname or ''
@@ -354,14 +363,17 @@ class PayrollPeriod(models.Model):
             try:
                 # savepoint per iteration — ถ้า payroll คนนึงพัง rollback ได้โดยไม่กระทบคนอื่น
                 with self.env.cr.savepoint():
+                    # _skip_payroll_write_side_effects: ดึง API + populate โดยข้าม side-effect
+                    # ของทุก field write (auto populate + ยิง PHP + sync employee) → กัน write-storm
+                    payroll_ctx = payroll.with_context(_skip_payroll_write_side_effects=True)
                     # recompute "เงินได้อื่นๆ" ใหม่ก่อนเพื่อรับรายการใน other.income ที่เพิ่งยืนยัน
-                    payroll._compute_other_income_total()
-                    # ดึง API แบบ parallel (เร็วกว่า serial ~3 เท่า)
-                    payroll._parallel_fetch_all()
-                    payroll._populate_all_lines()
-                    # ส่งข้อมูลอัพเดตไป PHP API
+                    payroll_ctx._compute_other_income_total()
+                    payroll_ctx._parallel_fetch_all()
+                    payroll_ctx._populate_all_lines()
+                    # sync ครั้งเดียวตอนจบ (PHP + employee)
                     data = payroll._prepare_data_for_php()
                     payroll._send_data_to_php_api('update', data)
+                    payroll._sync_latest_to_employee()
                     net_salary = payroll.net_salary
                 success_count += 1
                 log_lines.append("[UPDATED] %s (%s) - อัพเดตสำเร็จ | Net=%.2f" % (

@@ -716,9 +716,11 @@ class PayrollSalary(models.Model):
     def create(self, vals_list):
         records = super(PayrollSalary, self).create(vals_list)
         for record in records:
-            # ✅ ดึงข้อมูล API แบบ parallel (เร็วกว่า serial ~3 เท่า)
-            record._parallel_fetch_all()
-            record._populate_all_lines()
+            # ดึง API + populate ภายใต้ flag → ข้าม side-effect ของทุก field write
+            # (กัน write-storm) แล้ว sync PHP + employee ครั้งเดียวตอนจบ
+            rec_ctx = record.with_context(_skip_payroll_write_side_effects=True)
+            rec_ctx._parallel_fetch_all()
+            rec_ctx._populate_all_lines()
             _logger.info(
                 "[CREATE] Payroll created for %s | Month: %s/%s | income=%s, vat=%s, sso=%s",
                 record.employee_id.firstname, record.month, record.year,
@@ -732,6 +734,12 @@ class PayrollSalary(models.Model):
 
     def write(self, vals):
         res = super(PayrollSalary, self).write(vals)
+        # ระหว่าง batch/recompute (create / refresh รอบ / _populate_all_lines)
+        # จะตั้ง context นี้เพื่อข้าม side-effect ของทุก field write
+        # (auto _populate_all_lines + ยิง PHP + sync employee) → กัน write-storm
+        # ผู้เรียกจะ sync ครั้งเดียวตอนจบต่อคนเอง
+        if self.env.context.get('_skip_payroll_write_side_effects'):
+            return res
         for record in self:
             if not record.manual_override:
                 # NOTE: income_other / expense_other เป็น computed (set โดย compute) → ห้ามใส่
@@ -896,11 +904,6 @@ class PayrollSalary(models.Model):
 
             data_list = result.get('data', [])
             _logger.info("[VEHICLE BOOKING] จำนวนข้อมูลทั้งหมด: %d", len(data_list))
-
-            # ===== Log driver_name ทั้งหมดจาก API เพื่อ debug =====
-            for idx, item in enumerate(data_list):
-                _logger.info("[VEHICLE BOOKING] [%d] driver_name='%s' | booking=%s",
-                             idx, item.get('driver_name', ''), item.get('name', ''))
 
             # ===== Step 3: กรองตาม driver_name (ชื่อ + นามสกุล) =====
             found = False
@@ -2224,7 +2227,9 @@ class PayrollSalary(models.Model):
         # safety guard กัน recursion (เช่น compute → write → populate → compute → ...)
         if self.env.context.get('_in_populate_all_lines'):
             return
-        self = self.with_context(_in_populate_all_lines=True)
+        # _skip_payroll_write_side_effects: ระหว่าง populate เซ็ต ~15 field
+        # ถ้าไม่ข้าม side-effect แต่ละ field จะยิง PHP + sync employee → storm
+        self = self.with_context(_in_populate_all_lines=True, _skip_payroll_write_side_effects=True)
         emp_code = self.employee_id.employee_code if self.employee_id else '-'
         _logger.info("[POPULATE_ALL_LINES] START emp=%s month=%s year=%s id=%s",
                      emp_code, self.month, self.year, self.id)
