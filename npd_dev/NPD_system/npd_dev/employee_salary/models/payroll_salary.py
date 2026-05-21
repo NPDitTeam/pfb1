@@ -1830,12 +1830,14 @@ class PayrollSalary(models.Model):
     EXECUTIVE_EMPLOYEE_CODES = ('0022', '1343', '0203')
 
     # บุคคลพิเศษ — ล็อกภาษีต่อเดือนคงที่ + กำหนดว่าคิด ปกส. ไหม
+    #   tax_monthly=ตัวเลข → ล็อกภาษีคงที่, tax_monthly=None → คิดภาษีตามปกติ
     #   skip_sso=True  → ไม่หักประกันสังคม (sso = 0)
     #   skip_sso=False → คิด ปกส. ตามปกติ
     EXECUTIVE_TAX_CONFIG = {
         '0022': {'tax_monthly': 65367.0, 'skip_sso': True},   # ธีระพล รอดสาตร์
         '1343': {'tax_monthly': 92867.0, 'skip_sso': True},   # ฐนันท์พัสร์ ฤทธาภรณ์
         '0203': {'tax_monthly': 3758.0,  'skip_sso': False},  # จิดาภา รอดสาตร์ (ปกส. ปกติ)
+        '0539': {'tax_monthly': None,    'skip_sso': True},   # สุดคนึง รอดสาตร์ (ไม่คิด ปกส. แต่ภาษีปกติ)
     }
 
     def _prepare_ot_lines(self):
@@ -2457,8 +2459,8 @@ class PayrollSalary(models.Model):
         temp_gross_income = self.base_salary + total_ot_amount
         bonus_for_tax = (self.income_bonus or 0.0) if self.bonus_active else 0.0
         temp_tax, _ = self._calculate_tax(temp_gross_income, sso_amount, bonus_for_tax)
-        # บุคคลพิเศษ — ล็อกภาษีต่อเดือนคงที่ (ไม่คำนวณตามขั้นบันได)
-        if exec_cfg:
+        # บุคคลพิเศษ — ล็อกภาษีต่อเดือนคงที่ (เฉพาะที่กำหนด tax_monthly ไว้)
+        if exec_cfg and exec_cfg.get('tax_monthly') is not None:
             temp_tax = exec_cfg['tax_monthly']
 
         lines_to_create.append((0, 0, {
@@ -2779,7 +2781,7 @@ class PayrollSalary(models.Model):
             # ใช้ [:1] เพื่อรับ singleton — กรณีมี duplicate line
             tax_line = rec.line_ids.filtered(lambda l: l.name == 'ภาษีหัก ณ ที่จ่าย')[:1]
             exec_cfg = rec.EXECUTIVE_TAX_CONFIG.get(rec.employee_code or '')
-            if exec_cfg:  # ✅ บุคคลพิเศษ — ล็อกภาษีคงที่เสมอ
+            if exec_cfg and exec_cfg.get('tax_monthly') is not None:  # ✅ บุคคลพิเศษ — ล็อกภาษีคงที่
                 rec.tax_monthly = exec_cfg['tax_monthly']
                 rec.tax_annual = rec.tax_monthly * 12
             elif tax_line and tax_line.amount > 0:  # ✅ ใช้ค่าที่ user override
