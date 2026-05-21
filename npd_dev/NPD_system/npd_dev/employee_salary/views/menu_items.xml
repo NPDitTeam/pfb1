@@ -67,6 +67,13 @@
               action="action_commission_rate_branch_sales"
               sequence="57"/>
 
+    <!-- เมนูจัดการค่าคอม Sales สำนักงานใหญ่ -->
+    <menuitem id="sub_commission_sale_headoffice_menu"
+              name="จัดการค่าคอม Sales สำนักงานใหญ่"
+              parent="main_employee_salary_menu"
+              action="action_commission_sale_headoffice"
+              sequence="58"/>
+
     <!-- เมนูจัดการค่ารักษาพยาบาล (ดึงผ่าน PHP API จากแอป) -->
     <menuitem id="sub_medical_expense_menu"
               name="จัดการค่ารักษาพยาบาล"

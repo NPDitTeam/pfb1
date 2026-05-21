@@ -506,6 +506,7 @@ class CommissionReportAPI(http.Controller):
             SELECT
                 a.sales_contact_id,
                 a.sales_contact_name,
+                ru.employee_code AS employee_code,
                 a.branch_id,
                 a.branch_name,
                 TRUNC(COALESCE(r.rental_amount, 0)::numeric, 2) AS rental_amount,
@@ -514,6 +515,7 @@ class CommissionReportAPI(http.Controller):
                 TRUNC(COALESCE(s.shipping_cost, 0)::numeric, 2) AS shipping_cost,
                 TRUNC((COALESCE(r.rental_amount, 0) + COALESCE(p.payment_received, 0) - COALESCE(o.outstanding_debt, 0) - COALESCE(s.shipping_cost, 0))::numeric, 2) AS net_rental
             FROM all_sales a
+            LEFT JOIN res_users ru ON a.sales_contact_id = ru.id
             LEFT JOIN rental r ON a.sales_contact_id = r.sales_contact_id AND a.branch_id = r.branch_id
             LEFT JOIN outstanding o ON a.sales_contact_id = o.sales_contact_id AND a.branch_id = o.branch_id
             LEFT JOIN payment p ON a.sales_contact_id = p.sales_contact_id AND a.branch_id = p.branch_id
@@ -542,6 +544,7 @@ class CommissionReportAPI(http.Controller):
                     'date_to': str(date_to),
                     'sales_contact_id': row['sales_contact_id'],
                     'sales_contact_name': row['sales_contact_name'] or '',
+                    'employee_code': row.get('employee_code') or '',
                     'branch_id': row['branch_id'],
                     'branch_name': row['branch_name'] or '',
                     'rental_amount': float(row['rental_amount']),

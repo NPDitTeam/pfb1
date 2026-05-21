@@ -14,6 +14,7 @@ from . import commission_detail_wizard
 from . import commission_rate_config
 from . import commission_branch_config
 from . import commission_rate_branch_sales
+from . import commission_sale_headoffice
 from . import medical_expense
 from . import employee_warning
 from . import other_income

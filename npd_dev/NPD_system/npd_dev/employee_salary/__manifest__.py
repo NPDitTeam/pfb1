@@ -17,6 +17,7 @@
         'views/commission_rate_config_views.xml',
         'views/commission_branch_config_views.xml',
         'views/commission_rate_branch_sales_views.xml',
+        'views/commission_sale_headoffice_views.xml',
         'views/payroll_salary_view.xml',
         'views/payroll_holiday_view.xml',
         'views/department_views.xml',

@@ -42,6 +42,7 @@ access_commission_branch_config,commission.branch.config,model_commission_branch
 access_commission_branch_config_line,commission.branch.config.line,model_commission_branch_config_line,base.group_user,1,1,1,1
 
 access_commission_rate_branch_sales,commission.rate.branch.sales,model_commission_rate_branch_sales,base.group_user,1,1,1,1
+access_commission_sale_headoffice,commission.sale.headoffice,model_commission_sale_headoffice,base.group_user,1,1,1,1
 
 access_medical_expense_user,medical.expense.user,model_medical_expense,base.group_user,1,1,1,1
 access_medical_expense_manager,medical.expense.manager,model_medical_expense,hr.group_hr_manager,1,1,1,1

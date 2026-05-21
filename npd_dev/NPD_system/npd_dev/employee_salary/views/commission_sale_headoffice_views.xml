@@ -1,0 +1,34 @@
+<odoo>
+    <!-- Tree View -->
+    <record id="view_commission_sale_headoffice_tree" model="ir.ui.view">
+        <field name="name">commission.sale.headoffice.tree</field>
+        <field name="model">commission.sale.headoffice</field>
+        <field name="arch" type="xml">
+            <tree string="จัดการค่าคอม Sales สำนักงานใหญ่" editable="bottom">
+                <field name="employee_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_commission_sale_headoffice_form" model="ir.ui.view">
+        <field name="name">commission.sale.headoffice.form</field>
+        <field name="model">commission.sale.headoffice</field>
+        <field name="arch" type="xml">
+            <form string="จัดการค่าคอม Sales สำนักงานใหญ่">
+                <sheet>
+                    <group>
+                        <field name="employee_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_commission_sale_headoffice" model="ir.actions.act_window">
+        <field name="name">จัดการค่าคอม Sales สำนักงานใหญ่</field>
+        <field name="res_model">commission.sale.headoffice</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

@@ -2,9 +2,7 @@
 
 import requests
 import json
-import threading
 from odoo import models, fields, api, _
-from odoo import registry as odoo_registry
 from odoo.exceptions import UserError, ValidationError
 from dateutil.relativedelta import relativedelta
 import datetime
@@ -664,53 +662,21 @@ class PayrollSalary(models.Model):
     def _parallel_fetch_all(self):
         """
         ดึงข้อมูลจาก API 3 ตัว (vehicle booking, commission branch, commission sales)
-        แบบ parallel ด้วย threading — แต่ละ thread มี cursor แยก safe สำหรับ ORM
-        ใช้ใน create/write — ใช้ไม่ได้ตอน onchange (record ยังเป็น NewId)
+        แบบ serial ใน cursor เดียวกับ transaction หลัก
 
-        ลดเวลาจาก ~15-80 วิ → ~5-30 วิ (เท่า API ที่ช้าที่สุด)
+        NOTE: เดิมใช้ threading (cursor แยก + cr.commit ต่อ thread) เพื่อความเร็ว
+        แต่ไม่ปลอดภัย:
+          - แต่ละ thread set commission → trigger write() → _populate_all_lines()
+            ลบ+สร้าง line_ids ใหม่พร้อมกัน 3 thread บน record เดียว → ชนกัน/abort
+            → thread fail เงียบ ๆ (catch ภายใน) → commission ไม่ถูกเขียน
+            แต่ flow หลักยังขึ้น success → ค่า commission ค้าง stale
+          - ตอน create() row ยังไม่ commit → thread มองไม่เห็น row → fetch พลาด
+        จึงเปลี่ยนเป็น serial ให้ผลถูกต้องเสมอ (ช้ากว่าแต่เชื่อถือได้)
         """
         self.ensure_one()
-
-        # record ต้อง save แล้ว (มี id จริง) ถึงจะ parallel ได้
-        if not self.id or isinstance(self.id, models.NewId):
-            self._fetch_vehicle_booking_data()
-            self._fetch_commission_branch_data()
-            self._fetch_commission_sales_data()
-            return
-
-        db_name = self.env.cr.dbname
-        uid = self.env.uid
-        record_id = self.id
-
-        def _run_in_thread(method_name):
-            """รัน fetch method ใน cursor แยก"""
-            try:
-                with odoo_registry(db_name).cursor() as cr:
-                    env = api.Environment(cr, uid, {})
-                    rec = env['payroll.salary'].browse(record_id)
-                    getattr(rec, method_name)()
-                    cr.commit()
-                    _logger.info("[PARALLEL] %s DONE for payroll %s", method_name, record_id)
-            except Exception as e:
-                _logger.exception("[PARALLEL] %s ERROR for payroll %s: %s",
-                                  method_name, record_id, e)
-
-        methods = [
-            '_fetch_vehicle_booking_data',
-            '_fetch_commission_branch_data',
-            '_fetch_commission_sales_data',
-        ]
-        threads = []
-        for m in methods:
-            t = threading.Thread(target=_run_in_thread, args=(m,))
-            t.start()
-            threads.append(t)
-
-        for t in threads:
-            t.join(timeout=180)  # กันค้าง — timeout 3 นาที/thread
-
-        # invalidate cache เพื่อให้ main thread เห็นค่าที่ thread อื่นเขียน
-        self.invalidate_cache()
+        self._fetch_vehicle_booking_data()
+        self._fetch_commission_branch_data()
+        self._fetch_commission_sales_data()
 
 
     def _get_previous_record(self):
@@ -838,13 +804,24 @@ class PayrollSalary(models.Model):
             self._compute_expense_other_total()
             self._populate_all_lines()
 
-    def _get_sales_commission_rate(self, total_net_rental):
-        """คำนวณอัตราคอมมิชชั่น Sales ตามขั้นบันได (ดึงจากเมนูตั้งค่า)"""
-        configs = self.env['commission.rate.config'].search([], order='min_amount desc')
+    def _get_sales_commission_rate(self, total_net_rental, comm_type='sale_branch'):
+        """คำนวณอัตราคอมมิชชั่น Sales ตามขั้นบันได (ดึงจากเมนูตั้งค่า)
+        comm_type: 'sale_branch' (Sales สาขา) หรือ 'sale_headoffice' (Sales สำนักงานใหญ่)
+        — กรอง config ตามประเภท เพราะอัตราขั้นบันไดของแต่ละประเภทไม่เหมือนกัน"""
+        configs = self.env['commission.rate.config'].search(
+            [('comm_type', '=', comm_type)], order='min_amount desc')
         for config in configs:
             if total_net_rental >= config.min_amount:
                 return config.rate
         return 0.0
+
+    def _get_sale_commission_type(self):
+        """คืนประเภทค่าคอม Sale ของพนักงานคนนี้:
+        ถ้าอยู่ในรายชื่อ "จัดการค่าคอม Sales สำนักงานใหญ่" → 'sale_headoffice'
+        ไม่อยู่ → 'sale_branch'"""
+        self.ensure_one()
+        is_ho = self.env['commission.sale.headoffice'].is_headoffice_employee(self.employee_id)
+        return 'sale_headoffice' if is_ho else 'sale_branch'
 
     def _fetch_vehicle_booking_data(self):
         """
@@ -972,10 +949,12 @@ class PayrollSalary(models.Model):
         if not self.employee_id or not self.month or not self.year:
             return
 
-        # ชื่อ-นามสกุลของพนักงาน
+        # ชื่อ-นามสกุลของพนักงาน (ใช้ log เฉย ๆ)
         emp_firstname = (self.firstname or '').strip()
         emp_lastname = (self.lastname or '').strip()
         emp_fullname = (emp_firstname + ' ' + emp_lastname).strip()
+        # ✅ จับคู่ด้วย "รหัสพนักงาน" แทนชื่อ — npderp.com เก็บ employee_code ที่ res.users
+        emp_code = (self.employee_id.employee_code or '').strip()
         # ชื่อสาขา
         emp_branch_name = (self.branch_id.name or '').strip()
         # เดือน/ปี
@@ -983,8 +962,13 @@ class PayrollSalary(models.Model):
         year = str(self.year).strip()
 
         _logger.info("=" * 60)
-        _logger.info("[COMMISSION SALES] เริ่มดึงค่าคอม Sales สำหรับ: %s | สาขา: %s | เดือน: %s/%s",
-                     emp_fullname, emp_branch_name, month, year)
+        _logger.info("[COMMISSION SALES] เริ่มดึงค่าคอม Sales สำหรับ: %s (รหัส %s) | สาขา: %s | เดือน: %s/%s",
+                     emp_fullname, emp_code, emp_branch_name, month, year)
+
+        if not emp_code:
+            _logger.warning("[COMMISSION SALES] พนักงาน %s ไม่มีรหัสพนักงาน → ข้ามการดึงค่าคอม Sale", emp_fullname)
+            self.income_commission_sale = 0.0
+            return
 
         # รายชื่อ database ที่ต้องดึง
         db_list = ['NPD_Intertrading_New', 'NPD_S_Group_New_V2', 'NPD_Bangkok_New']
@@ -1052,22 +1036,23 @@ class PayrollSalary(models.Model):
                 for item in data_list:
                     api_sales_name = (item.get('sales_contact_name') or '').strip()
                     api_branch_name = (item.get('branch_name') or '').strip()
+                    api_emp_code = (item.get('employee_code') or '').strip()
 
-                    # เปรียบเทียบ ชื่อ-นามสกุล เท่านั้น (ไม่กรองสาขา เพราะ Sales ขายได้หลายสาขา)
-                    name_match = (api_sales_name == emp_fullname)
+                    # ✅ จับคู่ด้วยรหัสพนักงาน (ไม่กรองสาขา เพราะ Sales ขายได้หลายสาขา)
+                    code_match = (api_emp_code == emp_code)
 
-                    if name_match:
+                    if code_match:
                         net_rental = item.get('net_rental', 0.0)
                         db_net_rental += net_rental
                         found = True
                         _logger.info(
-                            "[COMMISSION SALES] MATCH! db=%s | sales=%s | branch=%s | net_rental=%.2f",
-                            db_name, api_sales_name, api_branch_name, net_rental
+                            "[COMMISSION SALES] MATCH! db=%s | code=%s | sales=%s | branch=%s | net_rental=%.2f",
+                            db_name, api_emp_code, api_sales_name, api_branch_name, net_rental
                         )
 
                 if not found:
-                    _logger.info("[COMMISSION SALES] ไม่พบข้อมูลที่ตรงกัน db=%s | ค้นหา: %s",
-                                 db_name, emp_fullname)
+                    _logger.info("[COMMISSION SALES] ไม่พบข้อมูลที่ตรงกัน db=%s | ค้นหารหัส: %s",
+                                 db_name, emp_code)
 
                 _logger.info("[COMMISSION SALES] ★ db=%s | net_rental รวม = %.2f", db_name, db_net_rental)
                 total_commission += db_net_rental
@@ -1108,11 +1093,12 @@ class PayrollSalary(models.Model):
                         if item_type != 'เซลล์':
                             continue
                         api_sales_name = (item.get('salesperson_name') or '').strip()
-                        if emp_fullname and emp_fullname in api_sales_name:
+                        api_emp_code = (item.get('employee_code') or '').strip()
+                        if emp_code and api_emp_code == emp_code:
                             net = item.get('net_total', 0.0)
                             total_commission += net
-                            _logger.info("[COMMISSION SALES - BANKHEAW] MATCH! sales=%s | net_total=%.2f",
-                                         api_sales_name, net)
+                            _logger.info("[COMMISSION SALES - BANKHEAW] MATCH! code=%s | sales=%s | net_total=%.2f",
+                                         api_emp_code, api_sales_name, net)
 
         except Exception as e:
             _logger.exception("[COMMISSION SALES - BANKHEAW] ERROR | %s", str(e))
@@ -1120,12 +1106,13 @@ class PayrollSalary(models.Model):
         _logger.info("=" * 60)
         _logger.info("[COMMISSION SALES] ★★★ ยอดรวม net_rental (รวม bankheaw) = %.2f", total_commission)
 
-        # คำนวณอัตราคอมมิชชั่นตามขั้นบันได
-        rate = self._get_sales_commission_rate(total_commission)
+        # คำนวณอัตราคอมมิชชั่นตามขั้นบันได — เลือกประเภทตามรายชื่อ Sales สำนักงานใหญ่
+        comm_type = self._get_sale_commission_type()
+        rate = self._get_sales_commission_rate(total_commission, comm_type)
         commission_amount = total_commission * (rate / 100.0)
 
-        _logger.info("[COMMISSION SALES] ★★★ อัตรา = %.2f%% | ค่าคอม = %.2f x %.2f%% = %.2f",
-                     rate, total_commission, rate, commission_amount)
+        _logger.info("[COMMISSION SALES] ★★★ ประเภท=%s | อัตรา = %.2f%% | ค่าคอม = %.2f x %.2f%% = %.2f",
+                     comm_type, rate, total_commission, rate, commission_amount)
         _logger.info("=" * 60)
 
         # prorate กรณีพนักงานลาออกในเดือนที่ทำเงินเดือน: (commission / 30) × วันที่ออก
@@ -1671,7 +1658,11 @@ class PayrollSalary(models.Model):
         emp_firstname = (self.firstname or '').strip()
         emp_lastname = (self.lastname or '').strip()
         emp_fullname = (emp_firstname + ' ' + emp_lastname).strip()
+        # ✅ จับคู่ด้วยรหัสพนักงาน ให้ตรงกับ _fetch_commission_sales_data
+        emp_code = (self.employee_id.employee_code or '').strip()
         emp_branch_name = (self.branch_id.name or '').strip()
+        # ประเภทค่าคอม Sale ตามรายชื่อ Sales สำนักงานใหญ่
+        comm_type = self._get_sale_commission_type()
         month = self.month
         year = str(self.year).strip()
 
@@ -1728,8 +1719,8 @@ class PayrollSalary(models.Model):
                 db_net_rental = 0.0
                 match_count = 0
                 for item in data_list:
-                    api_sales_name = (item.get('sales_contact_name') or '').strip()
-                    if api_sales_name == emp_fullname:
+                    api_emp_code = (item.get('employee_code') or '').strip()
+                    if emp_code and api_emp_code == emp_code:
                         db_net_rental += item.get('net_rental', 0.0)
                         match_count += 1
 
@@ -1781,8 +1772,8 @@ class PayrollSalary(models.Model):
                             item_type = (item.get('type') or '').strip()
                             if item_type != 'เซลล์':
                                 continue
-                            api_sales_name = (item.get('salesperson_name') or '').strip()
-                            if emp_fullname and emp_fullname in api_sales_name:
+                            api_emp_code = (item.get('employee_code') or '').strip()
+                            if emp_code and api_emp_code == emp_code:
                                 bk_net += item.get('net_total', 0.0)
                                 bk_count += 1
 
@@ -1808,8 +1799,8 @@ class PayrollSalary(models.Model):
             'total_amount': total_commission,
             'active_emp_count': 0,
             'per_person_amount': 0.0,
-            'commission_rate': self._get_sales_commission_rate(total_commission),
-            'commission_result': total_commission * (self._get_sales_commission_rate(total_commission) / 100.0),
+            'commission_rate': self._get_sales_commission_rate(total_commission, comm_type),
+            'commission_result': total_commission * (self._get_sales_commission_rate(total_commission, comm_type) / 100.0),
         })
 
         return {

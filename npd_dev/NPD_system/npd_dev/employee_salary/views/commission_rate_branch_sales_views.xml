@@ -6,6 +6,7 @@
         <field name="arch" type="xml">
             <tree string="ตั้งค่าอัตราค่าคอมสาขา/Sales" editable="bottom">
                 <field name="name"/>
+                <field name="comm_type" string="ประเภท"/>
                 <field name="branch_rate" string="ค่าคอมสาขา (%)"/>
                 <field name="sales_rate" string="ค่าคอม Sales (%)"/>
             </tree>
@@ -22,6 +23,7 @@
                     <group>
                         <group>
                             <field name="name"/>
+                            <field name="comm_type"/>
                             <field name="branch_rate" string="ค่าคอมสาขา (%)"/>
                             <field name="sales_rate" string="ค่าคอม Sales (%)"/>
                         </group>
