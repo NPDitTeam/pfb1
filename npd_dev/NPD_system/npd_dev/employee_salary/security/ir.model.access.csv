@@ -19,6 +19,7 @@ access_payroll_tax_bracket,payroll.tax.bracket,model_payroll_tax_bracket,base.gr
 access_payroll_holiday,payroll.holiday,model_payroll_holiday,base.group_user,1,1,1,1
 access_payroll_holiday_line,payroll.holiday.line,model_payroll_holiday_line,base.group_user,1,1,1,1
 access_payroll_ot_line,payroll.ot.line,model_payroll_ot_line,base.group_user,1,1,1,1
+access_payroll_deduction_line,payroll.deduction.line,model_payroll_deduction_line,base.group_user,1,1,1,1
 
 access_hr_department_custom_user,access.hr.department.custom.user,model_hr_department_custom,base.group_user,1,1,1,1
 access_hr_department_custom_manager,access.hr.department.custom.manager,model_hr_department_custom,hr.group_hr_manager,1,1,1,1
@@ -62,6 +63,7 @@ access_work_security_deposit_line_payment_user,work.security.deposit.line.paymen
 access_work_security_deposit_line_payment_manager,work.security.deposit.line.payment.manager,model_work_security_deposit_line_payment,hr.group_hr_manager,1,1,1,1
 access_work_security_deposit_default_payment_user,work.security.deposit.default.payment.user,model_work_security_deposit_default_payment,base.group_user,1,1,1,1
 access_work_security_deposit_default_payment_manager,work.security.deposit.default.payment.manager,model_work_security_deposit_default_payment,hr.group_hr_manager,1,1,1,1
+access_work_security_deposit_add_wizard,work.security.deposit.add.wizard,model_work_security_deposit_add_wizard,base.group_user,1,1,1,1
 
 access_allowance_management_user,allowance.management.user,model_allowance_management,base.group_user,1,1,1,1
 access_allowance_management_manager,allowance.management.manager,model_allowance_management,hr.group_hr_manager,1,1,1,1

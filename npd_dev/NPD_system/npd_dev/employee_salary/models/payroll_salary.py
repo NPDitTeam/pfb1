@@ -284,6 +284,13 @@ class PayrollSalary(models.Model):
     lateness_minutes = fields.Float(string='รวมเวลาขาดงาน (นาที)', readonly=True)
     missed_days = fields.Integer(string='จำนวนวันขาดงาน', readonly=True)
     missed_days_detail = fields.Text(string='รายละเอียดวันขาดงาน', readonly=True)
+    deduction_detail = fields.Text(
+        string='รายละเอียดการหัก (สาย/ขาด/ออกก่อน/ลา)', readonly=True,
+        help='แจกแจงรายการที่หักแต่ละวัน เพื่อตรวจสอบ')
+    deduction_line_ids = fields.One2many(
+        'payroll.deduction.line', 'payroll_id',
+        string='รายละเอียดการหัก (แจกแจงรายวัน)', readonly=True,
+        help='ตารางแจกแจงว่าหักอะไร เท่าไหร่ วันที่/เวลาไหน เพื่อให้ตรวจสอบง่าย')
     late_checkin_deduction = fields.Float(string='ยอดหักสาย', readonly=True)
     early_checkout_deduction = fields.Float(string='ยอดหักออกก่อนเวลา', readonly=True)
     missed_days_deduction = fields.Float(string='ยอดหักขาดงาน', readonly=True)
@@ -2128,20 +2135,154 @@ class PayrollSalary(models.Model):
                 lines.append("• %s" % d)
         return '\n'.join(lines)
 
+    def _format_deduction_detail(self, late_log, early_log, leave_log,
+                                 missed_days_log, salary_per_minute, salary_per_day):
+        """แจกแจงรายการหักแต่ละวันเป็นข้อความ ให้ HR ตรวจสอบ
+        (เฉพาะรายการที่ "หักจริง" — ลาที่ไม่หัก เช่น ลาป่วยมีใบรับรอง/ลาได้ค่าจ้าง จะไม่ขึ้น)"""
+        def _fmt_date(d):
+            try:
+                dt = datetime.datetime.strptime(d, '%Y-%m-%d').date()
+                dow = self.THAI_DOW_NAMES.get(dt.weekday(), '')
+                return "%s (%s)" % (dt.strftime('%d/%m/%Y'), dow)
+            except (ValueError, TypeError):
+                return str(d)
+
+        sections = []
+
+        # หักลา (ยอดเงินมาจาก PHP ต่อใบลา)
+        if leave_log:
+            lines = ['• ลา (หักจริง):']
+            for it in leave_log:
+                amt = round(float(it.get('deduction') or 0.0), 2)
+                lines.append("   - %s | %s | หัก %.2f" % (
+                    _fmt_date(it.get('date')), it.get('type') or '', amt))
+            sections.append('\n'.join(lines))
+
+        # หักสาย (นาที × ค่าจ้างต่อนาที)
+        if late_log:
+            lines = ['• มาสาย:']
+            for it in late_log:
+                mins = int(it.get('minutes') or 0)
+                lines.append("   - %s | %d นาที | หัก %.2f" % (
+                    _fmt_date(it.get('date')), mins, round(mins * salary_per_minute, 2)))
+            sections.append('\n'.join(lines))
+
+        # หักออกก่อนเวลา (นาที × ค่าจ้างต่อนาที)
+        if early_log:
+            lines = ['• ออกก่อนเวลา:']
+            for it in early_log:
+                mins = int(it.get('minutes') or 0)
+                lines.append("   - %s | %d นาที | หัก %.2f" % (
+                    _fmt_date(it.get('date')), mins, round(mins * salary_per_minute, 2)))
+            sections.append('\n'.join(lines))
+
+        # หักขาดงานเต็มวัน
+        if missed_days_log:
+            lines = ['• ขาดงาน (เต็มวัน):']
+            for d in missed_days_log:
+                lines.append("   - %s | หัก %.2f" % (_fmt_date(d), round(salary_per_day, 2)))
+            sections.append('\n'.join(lines))
+
+        return '\n'.join(sections)
+
+    def _build_deduction_line_vals(self, late_log, early_log, leave_log,
+                                   missed_days_log, salary_per_minute, salary_per_day):
+        """สร้าง list ของ dict สำหรับตาราง deduction_line_ids
+        (แจกแจง วันที่/วัน/ประเภท/รายละเอียด/เวลา/นาที/ยอดหัก รายบรรทัด)
+        เฉพาะรายการที่หักจริงเท่านั้น"""
+        def _day_name(d):
+            try:
+                dt = datetime.datetime.strptime(d, '%Y-%m-%d').date()
+                return self.THAI_DOW_NAMES.get(dt.weekday(), '')
+            except (ValueError, TypeError):
+                return ''
+
+        def _to_date(d):
+            try:
+                return datetime.datetime.strptime(d, '%Y-%m-%d').date()
+            except (ValueError, TypeError):
+                return False
+
+        vals = []
+
+        # ลา (ยอดหักมาจาก PHP ต่อใบลา)
+        for it in (leave_log or []):
+            d = it.get('date')
+            t_start = it.get('start')
+            t_end = it.get('end')
+            time_detail = ('%s-%s' % (t_start, t_end)) if (t_start and t_end) else ''
+            vals.append({
+                'date': _to_date(d),
+                'day_name': _day_name(d),
+                'category': 'leave',
+                'description': it.get('type') or 'ลา',
+                'time_detail': time_detail,
+                'minutes': 0.0,
+                'amount': round(float(it.get('deduction') or 0.0), 2),
+            })
+
+        # มาสาย (นาที × ค่าจ้างต่อนาที)
+        for it in (late_log or []):
+            d = it.get('date')
+            mins = int(it.get('minutes') or 0)
+            ci = it.get('checkin')
+            ss = it.get('shift_start')
+            time_detail = ('เข้า %s (กะ %s)' % (ci, ss)) if (ci and ss) else ''
+            vals.append({
+                'date': _to_date(d),
+                'day_name': _day_name(d),
+                'category': 'late',
+                'description': 'มาสาย',
+                'time_detail': time_detail,
+                'minutes': mins,
+                'amount': round(mins * salary_per_minute, 2),
+            })
+
+        # ออกก่อนเวลา (นาที × ค่าจ้างต่อนาที)
+        for it in (early_log or []):
+            d = it.get('date')
+            mins = int(it.get('minutes') or 0)
+            co = it.get('checkout')
+            se = it.get('shift_end')
+            time_detail = ('ออก %s (เลิก %s)' % (co, se)) if (co and se) else ''
+            vals.append({
+                'date': _to_date(d),
+                'day_name': _day_name(d),
+                'category': 'early',
+                'description': 'ออกก่อนเวลา',
+                'time_detail': time_detail,
+                'minutes': mins,
+                'amount': round(mins * salary_per_minute, 2),
+            })
+
+        # ขาดงานเต็มวัน
+        for d in (missed_days_log or []):
+            vals.append({
+                'date': _to_date(d),
+                'day_name': _day_name(d),
+                'category': 'absent',
+                'description': 'ขาดงานเต็มวัน',
+                'time_detail': 'ทั้งวัน',
+                'minutes': 0.0,
+                'amount': round(salary_per_day, 2),
+            })
+
+        return vals
+
     def _prepare_lateness_data(self):
         self.ensure_one()
         # ✅ ข้ามคำนวณขาดลามาสายสำหรับประธาน
         if self.employee_code and self.employee_code in self.EXECUTIVE_EMPLOYEE_CODES:
             _logger.info("[LATENESS] ข้ามคำนวณขาดลามาสายสำหรับประธาน emp=%s", self.employee_code)
-            return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], None
+            return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], [], [], [], None
         if not self.lateness_api_url or not self.employee_id:
             # คืนค่า 11 ตัวให้ครบรูปแบบ
-            return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], None
+            return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], [], [], [], None
 
         work_schedule = self.env['hr.work.schedule'].search([('employee_id', '=', self.employee_id.id)], limit=1)
         if not work_schedule:
             _logger.warning("ไม่พบข้อมูลตารางการทำงานสำหรับพนักงานนี้: %s", self.employee_id.firstname)
-            return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], {
+            return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], [], [], [], {
                 'warning': {
                     'title': _("ข้อมูลไม่ครบ"),
                     'message': _("ไม่พบข้อมูลตารางการทำงานสำหรับพนักงานนี้ กรุณาตั้งค่าในเมนู 'ตารางการทำงาน' ก่อน")
@@ -2210,19 +2351,22 @@ class PayrollSalary(models.Model):
                     api_response.get('early_checkout_deduction', 0),  # 8  (ออกก่อนเวลา แปลงเป็นนาที→เงิน)
                     api_response.get('deduction_absent_total', 0),  # 9  (รวม ขาดงาน + ออกก่อนเวลา)
                     missed_days_log,  # 10 รายการวันที่ขาดงาน (list of 'YYYY-MM-DD')
-                    None  # 11 warning
+                    debug.get('late_checkin_log') or [],   # 11 [{date, minutes}]
+                    debug.get('early_checkout_log') or [],  # 12 [{date, minutes}]
+                    debug.get('leave_log') or [],           # 13 [{date, type, deduction}]
+                    None  # 14 warning
                 )
             else:
                 warning_dict = {
                     'warning': {'title': _("API Error"), 'message': api_response.get('message', "Unknown error")}
                 }
-                return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], warning_dict
+                return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], [], [], [], warning_dict
 
         except requests.exceptions.RequestException as e:
             warning_dict = {
                 'warning': {'title': _("API Connection Error"), 'message': _("ไม่สามารถเชื่อมต่อ API ได้: %s") % e}
             }
-            return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], warning_dict
+            return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], [], [], [], warning_dict
 
     def _populate_all_lines(self):
         self.ensure_one()
@@ -2252,6 +2396,9 @@ class PayrollSalary(models.Model):
          early_checkout_deduction,  # ออกก่อนเวลา คิดเป็นเงินต่อนาที
          deduction_absent_total,  # รวมสองอันบนแล้ว
          missed_days_log,  # รายการวันที่ขาดงาน (list of 'YYYY-MM-DD')
+         late_log,   # [{date, minutes}]
+         early_log,  # [{date, minutes}]
+         leave_log,  # [{date, type, deduction}]
          lateness_warning_dict) = self._prepare_lateness_data()
 
         if not self.manual_override:
@@ -2262,7 +2409,8 @@ class PayrollSalary(models.Model):
             # ✅ แทนที่ของเดิมทุกครั้งที่คำนวณใหม่ — ถ้าไม่มีวันขาดงาน เคลียร์เป็น ''
             self.missed_days_detail = self._format_missed_days_detail(missed_days_log) if missed_days_log else ''
             self.lateness_minutes = total_lateness_minutes
-            self.leave_deduction_total = round_half_up(leave_deduction_total)
+            # หักลา: เก็บทศนิยม 2 ตำแหน่ง (ตามจริง เช่น 1 ชม. = 70.54) ไม่ปัดเต็มบาท
+            self.leave_deduction_total = round(leave_deduction_total, 2)
 
 
             # ✅ เก็บค่าแยกไว้เพื่อแสดง/ส่งต่อ (ปัดเศษด้วย round_half_up)
@@ -2306,7 +2454,7 @@ class PayrollSalary(models.Model):
             self.late_checkin_deduction = round_half_up(late_raw)
 
             self.deduction_late = self.late_checkin_deduction
-            self.deduction_leave = round_half_up(self.leave_deduction_total)
+            self.deduction_leave = round(self.leave_deduction_total, 2)
 
             # ✅ ห้ามบวก early_checkout_deduction ซ้ำอีก เพราะรวมอยู่ใน deduction_absent แล้ว
             self.lateness_deduction = (
@@ -2314,6 +2462,18 @@ class PayrollSalary(models.Model):
                     self.deduction_leave +
                     self.deduction_absent
             )
+
+            # ✅ แจกแจงรายละเอียดการหัก ให้ HR ตรวจสอบได้ว่าหักอะไรบ้างแต่ละวัน
+            self.deduction_detail = self._format_deduction_detail(
+                late_log, early_log, leave_log, missed_days_log,
+                salary_per_minute, salary_per_day)
+
+            # ✅ ตารางแจกแจงการหัก (แทนที่ของเดิมทุกครั้งที่คำนวณใหม่)
+            #    ระบุ วันที่/วัน/ประเภท/รายละเอียด/เวลา/นาที/ยอดหัก รายบรรทัด
+            detail_vals = self._build_deduction_line_vals(
+                late_log, early_log, leave_log, missed_days_log,
+                salary_per_minute, salary_per_day)
+            self.deduction_line_ids = [(5, 0, 0)] + [(0, 0, v) for v in detail_vals]
 
             _logger.info(
                 "[LATE-DEDUCTION] Emp=%s | Base=%.2f | PerDay=%.2f | AvgHours=%.2f | PerHour=%.2f | PerMinute=%.4f | "
@@ -2944,3 +3104,23 @@ class PayrollOtLine(models.Model):
                 line.rate_multiplier = 1.0
             else:
                 line.rate_multiplier = 1.0
+
+
+class PayrollDeductionLine(models.Model):
+    _name = 'payroll.deduction.line'
+    _description = 'รายละเอียดการหัก (ขาด/ลา/สาย/ออกก่อนเวลา)'
+    _order = 'date, category'
+
+    payroll_id = fields.Many2one('payroll.salary', string='Payroll', ondelete='cascade')
+    date = fields.Date(string='วันที่')
+    day_name = fields.Char(string='วัน')
+    category = fields.Selection([
+        ('late', 'มาสาย'),
+        ('early', 'ออกก่อนเวลา'),
+        ('absent', 'ขาดงาน'),
+        ('leave', 'ลา'),
+    ], string='ประเภท')
+    description = fields.Char(string='รายละเอียด')
+    time_detail = fields.Char(string='เวลา')
+    minutes = fields.Float(string='นาที')
+    amount = fields.Float(string='ยอดหัก (บาท)')

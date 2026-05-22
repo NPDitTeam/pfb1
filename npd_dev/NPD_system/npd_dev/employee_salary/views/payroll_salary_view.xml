@@ -288,6 +288,18 @@
                                 <field name="leave_deduction_total" readonly="1"/>
                                 <field name="lateness_deduction" readonly="1"/>
                             </group>
+                            <separator string="รายละเอียดการหัก (แจกแจงรายวัน)"/>
+                            <field name="deduction_line_ids" readonly="1" nolabel="1">
+                                <tree string="รายละเอียดการหัก" create="false" delete="false" edit="false">
+                                    <field name="date"/>
+                                    <field name="day_name"/>
+                                    <field name="category"/>
+                                    <field name="description"/>
+                                    <field name="time_detail"/>
+                                    <field name="minutes"/>
+                                    <field name="amount" sum="รวมยอดหัก"/>
+                                </tree>
+                            </field>
                         </page>
 
                         <!-- การตั้งค่าภาษี -->
