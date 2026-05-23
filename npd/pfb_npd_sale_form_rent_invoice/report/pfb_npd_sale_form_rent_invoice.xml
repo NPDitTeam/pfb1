@@ -263,7 +263,7 @@
                 height: 22px;
             }
         </style>
-        <t t-set="chunk_size" t-value="13"/>
+        <t t-set="chunk_size" t-value="21"/>
         <t t-set="order_lines" t-value="doc.order_line"/>
         <t t-set="total_lines" t-value="len(order_lines)"/>
         <t t-set="num_chunks" t-value="max(1, (total_lines + chunk_size - 1) // chunk_size)"/>
