@@ -29,6 +29,7 @@
         'views/other_income_view.xml',
         'views/work_security_deposit_views.xml',
         'views/allowance_management_views.xml',
+        'views/saturday_leave_config_views.xml',
         'views/menu_items.xml',
         'reports/payslip_report.xml',
         'data/payroll_cron.xml',

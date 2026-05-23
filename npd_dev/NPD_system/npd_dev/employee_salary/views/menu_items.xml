@@ -108,4 +108,11 @@
               parent="main_employee_salary_menu"
               action="action_work_security_deposit"
               sequence="80"/>
+
+    <!-- เมนูกำหนดสิทธิหยุดวันเสาร์ (เปิดเมนูแล้ว auto ดึงสาขา + ตั้งค่าเริ่มต้น) -->
+    <menuitem id="sub_saturday_leave_config_menu"
+              name="กำหนดสิทธิหยุดวันเสาร์"
+              parent="main_employee_salary_menu"
+              action="action_sync_and_open_saturday_leave_config"
+              sequence="85"/>
 </odoo>

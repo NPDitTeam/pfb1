@@ -152,13 +152,16 @@ if ($res && $res->num_rows > 0) {
         $checked_at = new DateTime($row['checked_at']);
         $dow = strtolower($checked_at->format('D')); // mon, tue, wed ...
 
-        // ✅ manual_time_log 'ลืมลงเวลา' อนุมัติแล้ว → OVERRIDE เวลาที่ใช้คำนวณ สาย/ขาด
+        // ✅ manual_time_log ประเภท "ถือว่ามาทำงานจริง" อนุมัติแล้ว → OVERRIDE เวลาที่ใช้คำนวณ สาย/ขาด
+        //    รวม: ลืมลงเวลา / ทำงานนอกสถานที่ / ระบบมีปัญหา
+        //    (ไม่รวม ค่าเบี้ยเลี้ยงออกนอกสถานที่ = OT/เบี้ยเลี้ยง เงิน ไม่ใช่เวลาทำงาน)
         //    ให้ตรงกับ calculate_lateness.php (MIN checkin / MAX checkout ของวันนั้น)
         $wd = $checked_at->format('Y-m-d');
         $qman = $mysqli->query("SELECT MIN(checkin_time) AS ci, MAX(checkout_time) AS co
                                 FROM manual_time_logs
                                 WHERE user_id={$user_id} AND work_date='{$wd}'
-                                  AND reason_type = 'ลืมลงเวลา' AND state='อนุมัติ'");
+                                  AND reason_type IN ('ลืมลงเวลา','ทำงานนอกสถานที่','ระบบมีปัญหา')
+                                  AND state='อนุมัติ'");
 
         if ($qman && ($mrow = $qman->fetch_assoc())) {
             if ($row['check_type'] === 'in'  && !empty($mrow['ci'])) {

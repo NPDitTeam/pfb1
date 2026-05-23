@@ -70,3 +70,6 @@ access_allowance_management_manager,allowance.management.manager,model_allowance
 access_allowance_management_line_user,allowance.management.line.user,model_allowance_management_line,base.group_user,1,1,1,1
 access_allowance_management_line_manager,allowance.management.line.manager,model_allowance_management_line,hr.group_hr_manager,1,1,1,1
 access_allowance_management_reject_wizard,allowance.management.reject.wizard,model_allowance_management_reject_wizard,base.group_user,1,1,1,1
+
+access_saturday_leave_config,saturday.leave.config,model_saturday_leave_config,base.group_user,1,1,1,1
+access_saturday_leave_employee,saturday.leave.employee,model_saturday_leave_employee,base.group_user,1,1,1,1

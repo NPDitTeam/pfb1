@@ -570,6 +570,41 @@ class PayrollSalary(models.Model):
             else:
                 return date(today.year, today.month + 1, 28)
 
+    def _get_prorated_salary_income(self):
+        """คืนยอด "เงินเดือน" ที่ใช้เป็นรายได้ + ส่งไป PHP (สลิป)
+        - ปกติ = base_salary เต็ม
+        - พนักงานลาออกกลางรอบ = base_salary ÷ 30 × จำนวนวัน(ปฏิทิน) ต้นรอบ→วันลาออก
+          (ลาออกวันตัดรอบ/หลัง = ทำครบรอบ → ใช้ฐานเต็ม)
+        ⚠️ ใช้เฉพาะ "บรรทัดรายได้เงินเดือน" — ประกันสังคม/ภาษี/ยอดหัก ยังคิดจาก base_salary เต็ม
+        """
+        self.ensure_one()
+        base = self.base_salary or 0.0
+        resign_date = getattr(self.employee_id, 'resign_date', False)
+        if not resign_date:
+            return base
+        try:
+            m = int(self.month)
+            y = int(self.year)
+            end_day = self.cutoff_day or 24
+            start_day = (self.period_id.cutoff_start_day if self.period_id else None) or 25
+            last_end = calendar.monthrange(y, m)[1]
+            cycle_end = date(y, m, min(end_day, last_end))
+            if m == 1:
+                prev_m, prev_y = 12, y - 1
+            else:
+                prev_m, prev_y = m - 1, y
+            last_start = calendar.monthrange(prev_y, prev_m)[1]
+            cycle_start = date(prev_y, prev_m, min(start_day, last_start))
+            if cycle_start <= resign_date < cycle_end:
+                days_worked = max(0, (resign_date - cycle_start).days + 1)
+                prorated = round(base / 30.0 * days_worked, 2)
+                _logger.info("[RESIGN PRORATE] emp=%s resign=%s days=%d base=%.2f -> %.2f",
+                             self.employee_code, resign_date, days_worked, base, prorated)
+                return prorated
+        except (TypeError, ValueError) as e:
+            _logger.warning("[RESIGN PRORATE] emp=%s: %s", self.employee_code, e)
+        return base
+
     def _prepare_data_for_php(self):
         self.ensure_one()
         # ใช้ค่าที่ compute เก็บไว้แล้ว — รวม opening balance + ใช้ total_gross ตามมาตรฐาน
@@ -583,7 +618,8 @@ class PayrollSalary(models.Model):
             'odoo_id': self.id,
             'employee_id': self.employee_id.id,
             'employee_code': self.employee_code,
-            'base_salary': self.base_salary,
+            # ✅ ส่งยอดเงินเดือนที่ prorate แล้ว (คนลาออกกลางรอบ) เพื่อให้สลิป (ดึงจาก PHP) ตรงกับ Odoo
+            'base_salary': self._get_prorated_salary_income(),
             'month': self.month,
             'year': self.year,
             'total_gross': self.total_gross,
@@ -1882,7 +1918,9 @@ class PayrollSalary(models.Model):
         # ----- ดึง OT จาก PHP API (เฉพาะ weekday/sunday — holiday จะมาจาก manual log) -----
         ot_logs = []
         if self.ot_api_url and self.employee_code:
-            params = {'employee_code': self.employee_code, 'month': self.month, 'year': self.year}
+            # ✅ ส่ง cutoff_day ไปด้วย เพื่อให้ API ใช้รอบเงินเดือน 25–24 (ไม่ใช่เดือนปฏิทิน)
+            params = {'employee_code': self.employee_code, 'month': self.month, 'year': self.year,
+                      'cutoff_day': self.cutoff_day or 24}
             _logger.info("OT API Request URL: %s", self.ot_api_url)
             _logger.info("OT API Payload (params): %s", json.dumps(params, indent=2, ensure_ascii=False))
             try:
@@ -2496,11 +2534,11 @@ class PayrollSalary(models.Model):
         # -------------------
         lines_to_create = []
 
-        # ฐานเงินเดือน
+        # ฐานเงินเดือน — prorate ให้พนักงานลาออกกลางรอบ (ดู _get_prorated_salary_income)
         lines_to_create.append((0, 0, {
             'name': 'เงินเดือน',
             'type': 'income',
-            'amount': self.base_salary
+            'amount': self._get_prorated_salary_income()
         }))
 
         # OT รวม

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View (แก้ไขในตัว) -->
+    <record id="view_saturday_leave_config_tree" model="ir.ui.view">
+        <field name="name">saturday.leave.config.tree</field>
+        <field name="model">saturday.leave.config</field>
+        <field name="arch" type="xml">
+            <tree string="กำหนดสิทธิหยุดวันเสาร์" create="false" delete="false">
+                <field name="branch_id" string="สาขา" readonly="1"/>
+                <field name="days_allowed" string="สิทธิหยุดวันเสาร์/เดือน (ครั้ง)"/>
+                <field name="employee_override_count" string="พนักงาน (คน)"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_saturday_leave_config_form" model="ir.ui.view">
+        <field name="name">saturday.leave.config.form</field>
+        <field name="model">saturday.leave.config</field>
+        <field name="arch" type="xml">
+            <form string="กำหนดสิทธิหยุดวันเสาร์">
+                <header>
+                    <button name="action_pull_employees" type="object"
+                            string="รีเฟรชพนักงานในสาขานี้" class="btn-secondary"
+                            help="ดึงพนักงานล่าสุดในสาขานี้ (ตาม employee.salary) มาแสดงเพิ่ม"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="branch_id" string="สาขา" readonly="1"/>
+                        <field name="days_allowed" string="ค่าเริ่มต้นทั้งสาขา (ครั้ง/เดือน)"/>
+                    </group>
+                    <separator string="พนักงานในสาขานี้ (แก้สิทธิหยุดวันเสาร์รายคนได้)"/>
+                    <p class="text-muted">
+                        ดึงจากข้อมูลพนักงาน (employee.salary) ตามสาขาโดยอัตโนมัติ —
+                        แก้ช่อง "สิทธิหยุดวันเสาร์/เดือน" ของแต่ละคนได้เลย
+                    </p>
+                    <field name="employee_line_ids">
+                        <tree string="พนักงานในสาขา" editable="bottom" create="false" delete="true">
+                            <field name="employee_id" string="พนักงาน" readonly="1"/>
+                            <field name="employee_code" string="รหัส" readonly="1"/>
+                            <field name="days_allowed" string="สิทธิหยุดวันเสาร์/เดือน (ครั้ง)"/>
+                        </tree>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action (แสดงผลหลัง seed) -->
+    <record id="action_saturday_leave_config" model="ir.actions.act_window">
+        <field name="name">กำหนดสิทธิหยุดวันเสาร์</field>
+        <field name="res_model">saturday.leave.config</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ยังไม่มีข้อมูลสาขา — เปิดเมนูนี้ระบบจะดึงสาขาและตั้งค่าเริ่มต้นให้อัตโนมัติ
+                (สำนักงานใหญ่ = 2 ครั้ง/เดือน, สาขาอื่น = 1 ครั้ง/เดือน)
+            </p>
+        </field>
+    </record>
+
+    <!-- Server Action: ดึงสาขาล่าสุด + seed ค่าเริ่มต้น แล้วเปิดตาราง -->
+    <record id="action_sync_and_open_saturday_leave_config" model="ir.actions.server">
+        <field name="name">กำหนดสิทธิหยุดวันเสาร์</field>
+        <field name="model_id" ref="model_saturday_leave_config"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_sync_and_open()</field>
+    </record>
+</odoo>

@@ -165,7 +165,7 @@ while ($cursor <= $end) {
         continue;
     }
 
-    // ✅ skip วันหลังลาออก — ลาออกแล้ว ไม่ใช่ขาด
+    // ✅ skip วันหลังลาออก — ไม่นับขาดงานหลังวันลาออก (ฝั่ง Odoo จะ prorate ฐานเงินเดือนตามวันที่ทำแทน)
     if ($resign_date !== null && $cursor > $resign_date) {
         $cursor->modify('+1 day');
         continue;
@@ -281,11 +281,14 @@ while ($cursor <= $end) {
         $checkin  = ($qin && $qin->num_rows)? new DateTime($qin->fetch_assoc()['checked_at']) : null;
         $checkout = ($qout&& $qout->num_rows)? new DateTime($qout->fetch_assoc()['checked_at']): null;
 
-        // ✅ manual_time_log 'ลืมลงเวลา' ที่อนุมัติแล้ว → OVERRIDE checkin_logs
+        // ✅ manual_time_log ประเภท "ถือว่ามาทำงานจริง" ที่อนุมัติแล้ว → OVERRIDE checkin_logs
+        //    รวม: ลืมลงเวลา / ทำงานนอกสถานที่ / ระบบมีปัญหา
+        //    ไม่รวม: ขอโอที, ทำงานวันหยุด, ค่าเบี้ยเลี้ยงออกนอกสถานที่ (เป็น OT/เบี้ยเลี้ยง = เงิน ไม่ใช่เวลาทำงาน)
+        //            และรายการเงินอื่น (ค่าอาหาร/ค่ารักษา/ค่าตัวนักแสดง/ไม่ระบุ)
         $qman = $mysqli->query("SELECT MIN(checkin_time) AS ci, MAX(checkout_time) AS co
                                 FROM manual_time_logs
                                 WHERE user_id='$user_id' AND work_date='$d'
-                                  AND reason_type = 'ลืมลงเวลา'
+                                  AND reason_type IN ('ลืมลงเวลา','ทำงานนอกสถานที่','ระบบมีปัญหา')
                                   AND state='อนุมัติ'");
 
         if ($qman && ($row = $qman->fetch_assoc())) {
