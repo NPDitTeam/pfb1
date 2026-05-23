@@ -203,6 +203,12 @@
                                 class="btn-secondary"
                                 attrs="{'invisible': [('state', '!=', 'draft')]}"
                                 confirm="ลบตารางเดิมแล้วสร้างใหม่ตาม default_amount/default_months ของรายการแม่?"/>
+                        <button name="action_clear_regular_schedule"
+                                string="ล้างตารางหักรายเดือน (ยังไม่หัก)"
+                                type="object"
+                                class="btn-danger"
+                                attrs="{'invisible': [('state', '!=', 'draft')]}"
+                                confirm="ลบรายการหักรายเดือนที่ยังไม่ส่งเข้า payroll ทั้งหมดของพนักงานคนนี้? (รายการที่หักแล้วจะไม่ถูกลบ) — ใช้กับพนักงานที่ไม่ต้องหักเงินประกัน"/>
                         <button name="action_transfer_to_new_deposit"
                                 string="ย้ายไป deposit ใหม่"
                                 type="object"
@@ -213,8 +219,8 @@
                                 string="ตั้งเป็นหักครบแล้ว (พนักงานเก่า)"
                                 type="object"
                                 class="btn-secondary"
-                                attrs="{'invisible': [('work_status', '!=', 'working')]}"
-                                confirm="ตั้งทุก payment ที่อยู่ในอดีตเป็น 'หักแล้ว' (สำหรับพนักงานเก่าที่หักครบไปก่อนใช้ระบบ)"/>
+                                attrs="{'invisible': [('work_status', '=', 'transferred')]}"
+                                confirm="ตั้งทุก payment ที่อยู่ในอดีตเป็น 'หักแล้ว' (สำหรับพนักงานเก่าที่หักครบไปก่อนใช้ระบบ) — กรณีลาออกแล้ว ระบบจะคืนเงินเข้าสลิปเดือนที่ลาออกให้"/>
                         <button name="action_mark_refunded_manual"
                                 string="✓ คืนแล้ว (เศษพนักงานเก่า)"
                                 type="object"
@@ -238,6 +244,8 @@
                             </group>
                             <group string="ขอบเขตการหัก">
                                 <field name="total_amount"
+                                       attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="skip_deduction"
                                        attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                 <field name="total_scheduled"/>
                                 <field name="deduction_months"/>
@@ -404,6 +412,28 @@
                         </field>
                     </page>
                 </xpath>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Wizard: เลือกพนักงานเพิ่มเข้าทำเงินประกัน -->
+        <!-- ============================================================ -->
+        <record id="view_work_security_deposit_add_wizard_form" model="ir.ui.view">
+            <field name="name">work.security.deposit.add.wizard.form</field>
+            <field name="model">work.security.deposit.add.wizard</field>
+            <field name="arch" type="xml">
+                <form string="เลือกพนักงานที่จะเพิ่ม">
+                    <field name="candidate_employee_ids" invisible="1"/>
+                    <field name="deposit_id" invisible="1"/>
+                    <p>ติ๊กเฉพาะพนักงานที่ต้องการเพิ่มเข้าทำเงินประกันการทำงาน แล้วกด "เพิ่มที่เลือก"</p>
+                    <field name="employee_ids" widget="many2many_checkboxes"
+                           domain="[('id', 'in', candidate_employee_ids)]"/>
+                    <footer>
+                        <button name="action_add_selected" string="เพิ่มที่เลือก"
+                                type="object" class="btn-primary"/>
+                        <button string="ยกเลิก" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
             </field>
         </record>
 

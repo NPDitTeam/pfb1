@@ -330,7 +330,7 @@ class WorkSecurityDeposit(models.Model):
                 key=lambda x: x[0],
             )
             for line in d.line_ids:
-                if line.payment_ids:
+                if line.payment_ids or line.skip_deduction:
                     continue
                 cmds = self._build_line_payments_from_defaults(
                     line.start_work_date, defaults,
@@ -495,30 +495,22 @@ class WorkSecurityDeposit(models.Model):
             }
         }
 
-    def action_refresh_employees(self):
-        """ดึงพนักงานใหม่ในสาขา+แผนกเดียวกัน ที่ยังไม่อยู่ใน line_ids → เพิ่มเข้าพร้อม schedule เริ่มต้น"""
+    def _get_candidate_employees(self):
+        """พนักงานใหม่ในสาขา+แผนกเดียวกัน ที่ยังไม่อยู่ใน line_ids (กรองตำแหน่งที่ไม่เก็บประกัน)"""
         self.ensure_one()
-        if not self.branch_id or not self.department_ids:
-            raise UserError("กรุณาเลือกสาขาและแผนกก่อน")
         existing_emp_ids = self.line_ids.mapped('employee_id').ids
         new_emps = self.env['employee.salary'].sudo().search([
             ('branch_id', '=', self.branch_id.id),
             ('department_id', 'in', self.department_ids.ids),
             ('id', 'not in', existing_emp_ids),
         ], order='employee_code')
-        # ✅ กรองตำแหน่งที่ไม่ต้องเก็บเงินประกัน (ยกเว้นต่างชาติ)
-        new_emps = self._filter_eligible_for_deposit(new_emps)
-        if not new_emps:
-            return {
-                'type': 'ir.actions.client',
-                'tag': 'display_notification',
-                'params': {
-                    'title': 'ดึงข้อมูลพนักงาน',
-                    'message': 'ไม่พบพนักงานใหม่ในสาขา/แผนกนี้ — รายชื่อในตารางเป็นปัจจุบันแล้ว',
-                    'type': 'info',
-                    'sticky': False,
-                }
-            }
+        return self._filter_eligible_for_deposit(new_emps)
+
+    def _add_employees_to_deposit(self, employees):
+        """เพิ่มพนักงานที่เลือกเข้า line_ids พร้อม schedule เริ่มต้น — คืนจำนวนที่เพิ่ม"""
+        self.ensure_one()
+        if not employees:
+            return 0
         defaults = sorted(
             [(p.month_index, p.amount) for p in self.default_payment_ids],
             key=lambda x: x[0],
@@ -533,8 +525,12 @@ class WorkSecurityDeposit(models.Model):
             )
         cutoff_start = self.cutoff_start_day or 25
         cutoff_end = self.cutoff_end_day or 24
+        # กันซ้ำ — ตัดคนที่อยู่ใน line_ids แล้วออก
+        existing_emp_ids = set(self.line_ids.mapped('employee_id').ids)
         new_line_cmds = []
-        for emp in new_emps:
+        for emp in employees:
+            if emp.id in existing_emp_ids:
+                continue
             start = emp.start_date or fields.Date.context_today(self)
             payment_cmds = self._build_line_payments_from_defaults(
                 start, defaults, cutoff_start, cutoff_end,
@@ -553,16 +549,39 @@ class WorkSecurityDeposit(models.Model):
                     start, regular_dates,
                 )
             new_line_cmds.append((0, 0, line_vals))
-        self.sudo().write({'line_ids': new_line_cmds})
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': 'ดึงข้อมูลพนักงาน',
-                'message': 'เพิ่มพนักงานใหม่ %d คน เข้าตารางแล้ว' % len(new_emps),
-                'type': 'success',
-                'sticky': False,
+        if new_line_cmds:
+            self.sudo().write({'line_ids': new_line_cmds})
+        return len(new_line_cmds)
+
+    def action_refresh_employees(self):
+        """ดึงพนักงานใหม่ → เปิด popup ให้เลือกว่าจะเพิ่มใครเข้าทำเงินประกัน"""
+        self.ensure_one()
+        if not self.branch_id or not self.department_ids:
+            raise UserError("กรุณาเลือกสาขาและแผนกก่อน")
+        candidates = self._get_candidate_employees()
+        if not candidates:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'ดึงข้อมูลพนักงาน',
+                    'message': 'ไม่พบพนักงานใหม่ในสาขา/แผนกนี้ — รายชื่อในตารางเป็นปัจจุบันแล้ว',
+                    'type': 'info',
+                    'sticky': False,
+                }
             }
+        wizard = self.env['work.security.deposit.add.wizard'].create({
+            'deposit_id': self.id,
+            'candidate_employee_ids': [(6, 0, candidates.ids)],
+            'employee_ids': [(6, 0, candidates.ids)],  # เลือกไว้ทั้งหมดก่อน — ติ๊กออกได้
+        })
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'เลือกพนักงานที่จะเพิ่ม',
+            'res_model': 'work.security.deposit.add.wizard',
+            'res_id': wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
         }
 
     def action_sync_to_payroll(self):
@@ -615,6 +634,10 @@ class WorkSecurityDepositLine(models.Model):
     start_work_date = fields.Date(string='วันที่เริ่มงาน', required=True)
     total_amount = fields.Float(string='จำนวนเงินที่หัก (บาท)', default=5000.0, required=True,
                                 help='จำนวนเงินรวมสูงสุดที่จะหัก ผลรวมของตารางหักรายเดือนต้องไม่เกินค่านี้')
+    skip_deduction = fields.Boolean(
+        string='ไม่หักเงินประกัน (คนนี้)', default=False,
+        help='ติ๊กเพื่อไม่หักเงินประกันสำหรับพนักงานคนนี้ — ระบบจะไม่สร้าง/เติมตารางหักรายเดือนให้ '
+             'และตอนกดยืนยัน deposit จะไม่เด้งตารางกลับมา (กันภาระคืนเงินตอนลาออก)')
 
     payment_ids = fields.One2many(
         'work.security.deposit.line.payment', 'line_id',
@@ -849,7 +872,7 @@ class WorkSecurityDepositLine(models.Model):
         """หลังสร้าง line ถ้า payment_ids ว่าง — auto-fill จาก default_payment_ids ของ deposit"""
         records = super().create(vals_list)
         for rec in records:
-            if rec.payment_ids:
+            if rec.payment_ids or rec.skip_deduction:
                 continue
             d = rec.deposit_id
             if not d or not d.default_payment_ids:
@@ -924,7 +947,24 @@ class WorkSecurityDepositLine(models.Model):
             rec.write({
                 'total_amount': d.default_amount,
                 'payment_ids': cmds,
+                'skip_deduction': False,  # สร้างตารางใหม่ = กลับมาหักปกติ
             })
+        return True
+
+    def action_clear_regular_schedule(self):
+        """ลบตารางหักรายเดือน (regular) ที่ "ยังไม่ส่งเข้า payroll" ของพนักงานคนนี้ทั้งหมด
+        ใช้กรณีพนักงานที่ไม่ต้องหักเงินประกัน → จะได้ไม่มีภาระคืนเงินตอนลาออก
+
+        ทำฝั่ง server โดยตรง เพราะในฟอร์มมี One2many 2 ตัวบน inverse เดียวกัน
+        (payment_ids + work_permit_payment_ids) ทำให้ลบทีละแถวแล้วเซฟไม่ติด
+        — รายการที่หักแล้ว (is_synced) จะไม่ถูกลบ เพื่อกันลบยอดที่หักจริงไปแล้ว"""
+        for rec in self:
+            to_del = rec.payment_ids.filtered(
+                lambda p: p.payment_type == 'regular' and not p.is_synced)
+            if to_del:
+                to_del.unlink()
+            # ติ๊ก skip ให้ → กันตอนกดยืนยัน/สร้าง deposit เด้งตารางกลับมา
+            rec.skip_deduction = True
         return True
 
     # ============================================================
@@ -1541,3 +1581,34 @@ class PayrollSalaryInherit(models.Model):
             label = ' - '.join(parts) if parts else ('Payroll #%d' % rec.id)
             result.append((rec.id, label))
         return result
+
+
+class WorkSecurityDepositAddWizard(models.TransientModel):
+    _name = 'work.security.deposit.add.wizard'
+    _description = 'เลือกพนักงานเพิ่มเข้าทำเงินประกัน'
+
+    deposit_id = fields.Many2one('work.security.deposit', string='รายการ', required=True)
+    candidate_employee_ids = fields.Many2many(
+        'employee.salary', 'wsd_add_wizard_candidate_rel',
+        string='พนักงานใหม่ทั้งหมด', readonly=True,
+        help='พนักงานใหม่ในสาขา/แผนกนี้ที่ยังไม่อยู่ในตาราง')
+    employee_ids = fields.Many2many(
+        'employee.salary', 'wsd_add_wizard_selected_rel',
+        string='เลือกพนักงานที่จะเพิ่ม',
+        help='ติ๊กเฉพาะคนที่ต้องการเพิ่มเข้าทำเงินประกันการทำงาน')
+
+    def action_add_selected(self):
+        """เพิ่มเฉพาะพนักงานที่เลือก เข้า deposit"""
+        self.ensure_one()
+        count = self.deposit_id._add_employees_to_deposit(self.employee_ids)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'เพิ่มพนักงาน',
+                'message': 'เพิ่มพนักงานเข้าตาราง %d คน' % count,
+                'type': 'success' if count else 'info',
+                'sticky': False,
+                'next': {'type': 'ir.actions.act_window_close'},
+            }
+        }

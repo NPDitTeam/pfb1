@@ -331,6 +331,31 @@ class PayrollPeriod(models.Model):
         self.ensure_one()
         self.write({'state': 'draft'})
 
+    def _get_cycle_start(self):
+        """วันเริ่มรอบ = cutoff_start_day ของเดือนก่อนหน้า (ตรงกับตัวกรองตอนสร้างเงินเดือน)"""
+        try:
+            m = int(self.month)
+            y = int(self.year)
+        except (TypeError, ValueError):
+            today = fields.Date.today()
+            m, y = today.month, today.year
+        start_day = self.cutoff_start_day or 25
+        if m == 1:
+            prev_m, prev_y = 12, y - 1
+        else:
+            prev_m, prev_y = m - 1, y
+        last_prev = calendar.monthrange(prev_y, prev_m)[1]
+        return date(prev_y, prev_m, min(start_day, last_prev))
+
+    def _is_eligible_employee(self, emp, cycle_start):
+        """พนักงานเข้าเงื่อนไขรับเงินเดือนรอบนี้ไหม (ตรงกับ action_run_auto_payroll):
+        - active = ได้เสมอ
+        - inactive = ได้เฉพาะถ้ามีวันลาออก และลาออก >= วันเริ่มรอบ (ลาออกกลางรอบ → จ่ายรอบสุดท้าย)
+        - inactive + ไม่มีวันลาออก / ลาออกก่อนรอบ → ไม่เข้าเงื่อนไข"""
+        if emp.status == 'active':
+            return True
+        return bool(emp.resign_date and emp.resign_date >= cycle_start)
+
     def action_refresh_payrolls(self):
         """อัพเดตข้อมูลเงินเดือนทุกคนในรอบนี้ (คำนวณใหม่ OT/สาย/ขาด/ลา)"""
         self.ensure_one()
@@ -340,15 +365,31 @@ class PayrollPeriod(models.Model):
         log_lines = []
         success_count = 0
         error_count = 0
+        removed_count = 0
 
         # ถ้าตั้ง "พนักงานทดสอบ" ไว้ → refresh เฉพาะคนเหล่านั้น (ไว้ทดสอบทีละคน)
         # เคลียร์ field นี้เมื่อต้องการรันทุกคน
-        payrolls_to_refresh = self.payroll_ids
+        payrolls_scope = self.payroll_ids
         if self.test_employee_ids:
             test_emp_ids = set(self.test_employee_ids.ids)
-            payrolls_to_refresh = self.payroll_ids.filtered(
+            payrolls_scope = self.payroll_ids.filtered(
                 lambda p: p.employee_id.id in test_emp_ids)
-            log_lines.append("[TEST MODE] refresh เฉพาะพนักงานทดสอบ %d คน" % len(payrolls_to_refresh))
+            log_lines.append("[TEST MODE] refresh เฉพาะพนักงานทดสอบ %d คน" % len(payrolls_scope))
+
+        # ลบรายการของพนักงานที่ "ไม่เข้าเงื่อนไขรอบนี้แล้ว" — เช่นเพิ่งแก้เป็นไม่ใช้งาน/ลาออกก่อนรอบ
+        #   (ยกเว้นคนที่ติ๊ก manual_override เพื่อกันลบรายการที่ HR ปรับมือไว้)
+        #   unlink จะ sync ลบไป PHP API ด้วย
+        cycle_start = self._get_cycle_start()
+        to_remove = payrolls_scope.filtered(
+            lambda p: not p.manual_override
+            and not self._is_eligible_employee(p.employee_id, cycle_start))
+        payrolls_to_refresh = payrolls_scope - to_remove
+        for p in to_remove:
+            log_lines.append("[REMOVED] %s (%s) - ไม่เข้าเงื่อนไขรอบนี้ (ไม่ใช้งาน/ลาออกก่อนรอบ) → ลบออก" % (
+                p.employee_id.firstname or '', p.employee_code or ''))
+        if to_remove:
+            removed_count = len(to_remove)
+            to_remove.unlink()
 
         for payroll in payrolls_to_refresh:
             # อ่าน label เป็น local "ก่อน" savepoint — ถ้า body พัง transaction aborted
@@ -386,8 +427,8 @@ class PayrollPeriod(models.Model):
         # ใช้เวลาตาม timezone ของ user (เช่น Asia/Bangkok = UTC+7) แทน UTC
         timestamp = fields.Datetime.context_timestamp(
             self, fields.Datetime.now()).strftime('%Y-%m-%d %H:%M:%S')
-        new_log = "[%s] อัพเดตข้อมูล: สำเร็จ %d, ผิดพลาด %d\n%s" % (
-            timestamp, success_count, error_count, '\n'.join(log_lines))
+        new_log = "[%s] อัพเดตข้อมูล: สำเร็จ %d, ผิดพลาด %d, ลบออก %d\n%s" % (
+            timestamp, success_count, error_count, removed_count, '\n'.join(log_lines))
         self.write({
             'log': new_log,
         })
@@ -397,7 +438,8 @@ class PayrollPeriod(models.Model):
             'tag': 'display_notification',
             'params': {
                 'title': 'อัพเดตข้อมูลเงินเดือน',
-                'message': 'อัพเดต %d รายการ, ผิดพลาด %d รายการ' % (success_count, error_count),
+                'message': 'อัพเดต %d รายการ, ผิดพลาด %d, ลบออก %d รายการ' % (
+                    success_count, error_count, removed_count),
                 'type': 'success' if error_count == 0 else 'warning',
                 'sticky': False,
             }
