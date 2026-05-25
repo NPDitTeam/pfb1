@@ -194,16 +194,21 @@ class AccountMove(models.Model):
             print(f" พบข้อมูลใน stock_picking สำหรับ Return: {picking_source.id}")
 
             # ค้นหา stock.scrap
+            # รองรับสินค้าชำรุดที่เข้า workflow ส่งซ่อม (npd_scrap_buttons) ซึ่งจะไม่อยู่สถานะ done
+            # แต่จะอยู่ที่ pending_repair / under_repair แทน
+            # ไม่รวม 'repaired' เพราะซ่อมสำเร็จแล้วจะ reverse คืนสต๊อก สินค้าออกจาก scrap location แล้ว
+            scrap_states = ['done', 'pending_repair', 'under_repair']
             stock_scrap_record = self.env['stock.scrap'].search([
                 ('picking_id', '=', picking_source.id),
                 ('reason_code_id', '=', self.reason_code_id.id),
-                ('state', '=', 'done')
+                ('state', 'in', scrap_states)
             ])
 
             if not stock_scrap_record:
                 raise UserError(
                     "❌ ไม่พบข้อมูลใน รายการแตกหักเสียหาย\n"
-                    "⚠️ โปรดตรวจสอบว่า สถานะ เป็น 'done' หรือไม่\n"
+                    "⚠️ โปรดตรวจสอบว่า สถานะ เป็น 'เสร็จสิ้น (done)', 'รอดำเนินการแจ้งซ่อม' "
+                    "หรือ 'อยู่ระหว่างการซ่อม' หรือไม่\n"
                     f"🔍 รายละเอียดเพิ่มเติม: {self.reason_code_id.name} ยังไม่ถูกสร้าง"
                 )
 
