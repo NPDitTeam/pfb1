@@ -1,7 +1,6 @@
 import base64
 import json
 import logging
-import re
 import requests
 from datetime import datetime
 
@@ -11,35 +10,6 @@ from odoo.exceptions import UserError
 _logger = logging.getLogger(__name__)
 
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
-
-# Mapping: Odoo database name → expected company info (name, aliases for matching)
-DB_COMPANY_MAP = {
-    'NPD_S_Group_New_V2': {
-        'name_th': 'บริษัท นภดล เอส กรุ๊ป จำกัด',
-        'name_en': 'NOPPADOL S GROUP CO., LTD.',
-        'keywords': ['นภดล เอส กรุ๊ป', 'นภดล เอส', 'NOPPADOL S GR', 'NOPPADOL S GROUP', 'NPD S GROUP'],
-    },
-    'NPD_Bangkok_New': {
-        'name_th': 'บริษัท นภดล กรุงเทพ จำกัด',
-        'name_en': 'NOPPADOL BANGKOK CO., LTD.',
-        'keywords': ['นภดล กรุงเทพ', 'NOPPADOL BANGKOK', 'NPD BANGKOK'],
-    },
-    'NPD_Intertrading_New': {
-        'name_th': 'บริษัท นภดล อินเตอร์เทรดดิ้ง จำกัด',
-        'name_en': 'NOPPADOL INTERTRADING CO., LTD.',
-        'keywords': ['นภดล อินเตอร์เทรดดิ้ง', 'นภดล อินเตอร์', 'NOPPADOL INTER', 'NOPPADOL INTERTRADING', 'NPD INTERTRADING'],
-    },
-    'NPD_Logistics_New': {
-        'name_th': 'บริษัท เอ็นพีดี โลจิสติกส์ จำกัด',
-        'name_en': 'NPD LOGISTICS CO., LTD.',
-        'keywords': ['เอ็นพีดี โลจิสติกส์', 'NPD LOGISTICS', 'NPD LOGISTIC'],
-    },
-    'NPD_Steeltech_New': {
-        'name_th': 'บริษัท เอ็นพีดี สตีลเทค จำกัด',
-        'name_en': 'NPD STEELTECH CO., LTD.',
-        'keywords': ['เอ็นพีดี สตีลเทค', 'NPD STEELTECH', 'NPD STEEL'],
-    },
-}
 
 
 class AccountPaymentSlipDate(models.Model):
@@ -64,12 +34,6 @@ class AccountPaymentSlipDate(models.Model):
                 "Key: advance_clear_ai_check.gemini_api_key"
             ))
         return api_key
-
-    def _get_expected_company_info(self):
-        """Get expected company info based on current database name."""
-        db_name = self.env.cr.dbname
-        company_info = DB_COMPANY_MAP.get(db_name)
-        return company_info, db_name
 
     def _get_slip_attachments(self):
         """Get image attachments from chatter (เอกสารแนบ)."""
@@ -193,67 +157,6 @@ class AccountPaymentSlipDate(models.Model):
         except Exception as e:
             raise UserError(_("Unexpected error calling Gemini API: %s") % str(e))
 
-    def _check_recipient_matches_company(self, recipient_name):
-        """Check if the recipient name from the slip matches the expected company for this DB.
-
-        Uses fuzzy/like matching: checks if any keyword from the expected company
-        appears in the recipient name (case-insensitive, ignoring spaces).
-
-        Returns: (is_match: bool, expected_company_name: str, db_name: str)
-        """
-        company_info, db_name = self._get_expected_company_info()
-
-        if not company_info:
-            # DB not in the map — skip validation, allow through
-            _logger.warning(
-                "Database '%s' not found in DB_COMPANY_MAP. Skipping recipient validation.", db_name
-            )
-            return True, db_name, db_name
-
-        expected_name = company_info.get('name_th', '')
-        recipient_upper = (recipient_name or '').upper().strip()
-        recipient_normalized = re.sub(r'\s+', ' ', recipient_upper)
-
-        # Check keywords (like matching)
-        for keyword in company_info.get('keywords', []):
-            keyword_upper = keyword.upper().strip()
-            if keyword_upper in recipient_normalized:
-                _logger.info(
-                    "Recipient match FOUND: keyword '%s' found in '%s'",
-                    keyword, recipient_name
-                )
-                return True, expected_name, db_name
-
-        # Also check full Thai and English names
-        name_th_upper = company_info.get('name_th', '').upper().strip()
-        name_en_upper = company_info.get('name_en', '').upper().strip()
-
-        if name_th_upper and name_th_upper in recipient_normalized:
-            return True, expected_name, db_name
-        if name_en_upper and name_en_upper in recipient_normalized:
-            return True, expected_name, db_name
-
-        # Also check reverse: recipient keyword in company names
-        # This handles cases like slip shows "NOPPADOL S GR" and we have "นภดล เอส กรุ๊ป"
-        # Split recipient into words and check if significant parts match
-        recipient_words = recipient_normalized.split()
-        for word in recipient_words:
-            if len(word) < 3:
-                continue
-            for keyword in company_info.get('keywords', []):
-                if word in keyword.upper():
-                    _logger.info(
-                        "Reverse match FOUND: recipient word '%s' in keyword '%s'",
-                        word, keyword
-                    )
-                    return True, expected_name, db_name
-
-        _logger.warning(
-            "Recipient match FAILED: '%s' does not match expected company '%s' (DB: %s)",
-            recipient_name, expected_name, db_name
-        )
-        return False, expected_name, db_name
-
     def _parse_slip_date(self, date_str):
         """Parse date string DD/MM/YYYY to Python date object.
 
@@ -330,24 +233,10 @@ class AccountPaymentSlipDate(models.Model):
                 "กรุณาตรวจสอบรูปสลิปอีกครั้ง"
             ) % date_str)
 
-        # Step 4: Validate recipient name against current DB company
         recipient_name = result.get('recipient_name', '')
         _logger.info("AI read recipient name: %s", recipient_name)
 
-        if recipient_name:
-            is_match, expected_name, db_name = self._check_recipient_matches_company(recipient_name)
-            if not is_match:
-                raise UserError(_(
-                    "ชื่อผู้รับเงินในสลิปไม่ตรงกับบริษัทที่ใช้งานอยู่!\n\n"
-                    "ชื่อผู้รับในสลิป: %s\n"
-                    "บริษัทที่คาดหวัง (DB: %s): %s\n\n"
-                    "กรุณาตรวจสอบว่าอัปโหลดสลิปถูกต้องหรือไม่"
-                ) % (recipient_name, db_name, expected_name))
-        else:
-            # AI couldn't read recipient name — log warning but allow
-            _logger.warning("AI could not read recipient name from slip. Skipping validation.")
-
-        # Step 5: All checks passed — update date
+        # Step 4: All checks passed — update date
         self.write({
             'date': parsed_date,
             'slip_date_extracted': date_str,
