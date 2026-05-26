@@ -6,13 +6,17 @@
         <field name="model">res.users</field>
         <field name="inherit_id" ref="base.view_users_form"/>
         <field name="arch" type="xml">
-             <xpath expr="//page[@name='access_rights']" position="inside">
-                 <group>
-
-                     <field name="bypass_branch_filter" />
-                      <field name="bypass_branch_filter_payment" />
-
-                 </group>
+             <xpath expr="//page[@name='access_rights']" position="after">
+                 <page string="สิทธิ์การมองเห็นเอกสาร" name="document_visibility_settings">
+                     <group string="แสดงทุกสาขา (สำหรับผู้ใช้ที่ไม่ใช่ Sales)">
+                         <field name="bypass_branch_filter" />
+                         <field name="bypass_branch_filter_payment" />
+                     </group>
+                     <group string="สำหรับผู้ใช้แผนก Sales">
+                         <field name="sales_view_all_invoice" />
+                         <field name="sales_view_all_payment" />
+                     </group>
+                 </page>
             </xpath>
         </field>
     </record>
