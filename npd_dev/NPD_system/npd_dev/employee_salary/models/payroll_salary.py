@@ -573,14 +573,18 @@ class PayrollSalary(models.Model):
     def _get_prorated_salary_income(self):
         """คืนยอด "เงินเดือน" ที่ใช้เป็นรายได้ + ส่งไป PHP (สลิป)
         - ปกติ = base_salary เต็ม
-        - พนักงานลาออกกลางรอบ = base_salary ÷ 30 × จำนวนวัน(ปฏิทิน) ต้นรอบ→วันลาออก
-          (ลาออกวันตัดรอบ/หลัง = ทำครบรอบ → ใช้ฐานเต็ม)
+        - ทำงานไม่ครบรอบ = base_salary ÷ 30 × จำนวนวัน(ปฏิทิน) ที่ทำงานจริงในรอบนี้
+          ขอบเขตการทำงานจริง = [max(ต้นรอบ, วันเริ่มงาน) .. min(วันตัดรอบ, วันลาออก)]
+          * เริ่มงานกลางรอบ → นับจากวันเริ่มงาน (ไม่ใช่ต้นรอบ)
+          * ลาออกกลางรอบ → นับถึงวันลาออก (ลาออกวันตัดรอบ/หลัง = ทำครบ → ใช้ฐานเต็ม)
         ⚠️ ใช้เฉพาะ "บรรทัดรายได้เงินเดือน" — ประกันสังคม/ภาษี/ยอดหัก ยังคิดจาก base_salary เต็ม
         """
         self.ensure_one()
         base = self.base_salary or 0.0
         resign_date = getattr(self.employee_id, 'resign_date', False)
-        if not resign_date:
+        start_date = getattr(self.employee_id, 'start_date', False)
+        # ไม่มีทั้งลาออกและวันเริ่มงาน → ฐานเต็ม (ทางลัด)
+        if not resign_date and not start_date:
             return base
         try:
             m = int(self.month)
@@ -595,14 +599,24 @@ class PayrollSalary(models.Model):
                 prev_m, prev_y = m - 1, y
             last_start = calendar.monthrange(prev_y, prev_m)[1]
             cycle_start = date(prev_y, prev_m, min(start_day, last_start))
-            if cycle_start <= resign_date < cycle_end:
-                days_worked = max(0, (resign_date - cycle_start).days + 1)
-                prorated = round(base / 30.0 * days_worked, 2)
-                _logger.info("[RESIGN PRORATE] emp=%s resign=%s days=%d base=%.2f -> %.2f",
-                             self.employee_code, resign_date, days_worked, base, prorated)
-                return prorated
+            # ขอบเขตการทำงานจริงในรอบนี้
+            eff_start = cycle_start
+            if start_date and start_date > cycle_start:
+                eff_start = start_date            # เริ่มงานกลางรอบ
+            eff_end = cycle_end                   # วันตัดรอบ (ทำครบ)
+            if resign_date and resign_date < cycle_end:
+                eff_end = resign_date             # ลาออกกลางรอบ
+            # ทำงานครบทั้งรอบ → ฐานเต็ม
+            if eff_start <= cycle_start and eff_end >= cycle_end:
+                return base
+            days_worked = max(0, (eff_end - eff_start).days + 1)
+            prorated = round(base / 30.0 * days_worked, 2)
+            _logger.info("[SALARY PRORATE] emp=%s start=%s resign=%s eff=[%s..%s] days=%d base=%.2f -> %.2f",
+                         self.employee_code, start_date, resign_date, eff_start, eff_end,
+                         days_worked, base, prorated)
+            return prorated
         except (TypeError, ValueError) as e:
-            _logger.warning("[RESIGN PRORATE] emp=%s: %s", self.employee_code, e)
+            _logger.warning("[SALARY PRORATE] emp=%s: %s", self.employee_code, e)
         return base
 
     def _prepare_data_for_php(self):
@@ -982,6 +996,35 @@ class PayrollSalary(models.Model):
         _logger.info("[VEHICLE BOOKING] ✅ เซ็ต income_transport=%.2f | income_allowance=%.2f สำเร็จ",
                      self.income_transport, self.income_allowance)
 
+    def _get_commission_period(self):
+        """ค่าคอมจ่ายเดือนถัดไป → payroll เดือน N ใช้ค่าคอมของ "เดือนก่อนหน้า" (N-1)
+        คืน (month:int, year:str) ของเดือนก่อนหน้า (เดือน 1 → ธันวาคม ปีก่อน)"""
+        try:
+            cur_m = int(self.month)
+            cur_y = int(str(self.year).strip())
+        except (TypeError, ValueError):
+            return self.month, str(self.year).strip()
+        if cur_m == 1:
+            return 12, str(cur_y - 1)
+        return cur_m - 1, str(cur_y)
+
+    def _bankheaw_name_match(self, salesperson_name):
+        """match รายการ bankheaw (NPD_S_Group_New_V2) กับพนักงานคนนี้ ด้วย "ชื่อ-นามสกุล"
+        (ไม่อิง employee_code เพราะรหัสในข้อมูลบ้านเขียวไม่น่าเชื่อถือ — บางคนผิด/พิมพ์รหัสไม่ตรง)
+        salesperson_name รูปแบบ "รหัส - ชื่อ นามสกุล" → ตัดรหัสนำหน้าออกแล้วเทียบชื่อ"""
+        name = (salesperson_name or '').strip()
+        if ' - ' in name:
+            name = name.split(' - ', 1)[1].strip()
+        fn = (self.firstname or '').strip()
+        ln = (self.lastname or '').strip()
+        if fn and ln:
+            return fn in name and ln in name
+        if fn:
+            return fn in name
+        if ln:
+            return ln in name
+        return False
+
     def _fetch_commission_sales_data(self):
         """
         ดึงค่าคอมมิชชั่น Sales จาก API https://npderp.com/api/commission/sales
@@ -1003,9 +1046,8 @@ class PayrollSalary(models.Model):
         emp_code = (self.employee_id.employee_code or '').strip()
         # ชื่อสาขา
         emp_branch_name = (self.branch_id.name or '').strip()
-        # เดือน/ปี
-        month = self.month
-        year = str(self.year).strip()
+        # เดือน/ปี — ใช้ "เดือนก่อนหน้า" (payroll เดือนนี้ จ่ายค่าคอมของเดือนที่แล้ว)
+        month, year = self._get_commission_period()
 
         _logger.info("=" * 60)
         _logger.info("[COMMISSION SALES] เริ่มดึงค่าคอม Sales สำหรับ: %s (รหัส %s) | สาขา: %s | เดือน: %s/%s",
@@ -1139,12 +1181,12 @@ class PayrollSalary(models.Model):
                         if item_type != 'เซลล์':
                             continue
                         api_sales_name = (item.get('salesperson_name') or '').strip()
-                        api_emp_code = (item.get('employee_code') or '').strip()
-                        if emp_code and api_emp_code == emp_code:
+                        # ✅ bankheaw: match ด้วยชื่อ-นามสกุล (ไม่อิงรหัส — รหัสบ้านเขียวไม่น่าเชื่อถือ)
+                        if self._bankheaw_name_match(api_sales_name):
                             net = item.get('net_total', 0.0)
                             total_commission += net
-                            _logger.info("[COMMISSION SALES - BANKHEAW] MATCH! code=%s | sales=%s | net_total=%.2f",
-                                         api_emp_code, api_sales_name, net)
+                            _logger.info("[COMMISSION SALES - BANKHEAW] MATCH (by name)! sales=%s | net_total=%.2f",
+                                         api_sales_name, net)
 
         except Exception as e:
             _logger.exception("[COMMISSION SALES - BANKHEAW] ERROR | %s", str(e))
@@ -1166,8 +1208,10 @@ class PayrollSalary(models.Model):
         emp = self.employee_id
         if emp.resign_date:
             try:
-                py = int(self.year)
-                pm = int(self.month)
+                # เทียบกับ "เดือนค่าคอม" (เดือนก่อน) ให้ตรงกับเดือนที่ดึงยอดมา
+                cm_month, cm_year = self._get_commission_period()
+                py = int(cm_year)
+                pm = int(cm_month)
                 rd = emp.resign_date
                 if rd.year < py or (rd.year == py and rd.month < pm):
                     _logger.info("[COMMISSION SALES] ★ พนักงานลาออกก่อนเดือน %s/%s → ค่าคอม = 0", pm, py)
@@ -1202,8 +1246,8 @@ class PayrollSalary(models.Model):
             _logger.info("[COMMISSION BRANCH] พนักงานไม่มีสาขา ข้าม")
             return
 
-        month = self.month
-        year = str(self.year).strip()
+        # ใช้ "เดือนก่อนหน้า" (payroll เดือนนี้ จ่ายค่าคอมของเดือนที่แล้ว)
+        month, year = self._get_commission_period()
 
         _logger.info("=" * 60)
         _logger.info("[COMMISSION BRANCH] เริ่มดึงค่าคอมสาขา | สาขา: %s | เดือน: %s/%s",
@@ -1436,8 +1480,10 @@ class PayrollSalary(models.Model):
         emp = self.employee_id
         if emp.resign_date:
             try:
-                py = int(self.year)
-                pm = int(self.month)
+                # เทียบกับ "เดือนค่าคอม" (เดือนก่อน) ให้ตรงกับเดือนที่ดึงยอดมา
+                cm_month, cm_year = self._get_commission_period()
+                py = int(cm_year)
+                pm = int(cm_month)
                 rd = emp.resign_date
                 if rd.year < py or (rd.year == py and rd.month < pm):
                     _logger.info("[COMMISSION BRANCH] ★ พนักงานลาออกก่อนเดือน %s/%s → ค่าคอม = 0", pm, py)
@@ -1458,8 +1504,8 @@ class PayrollSalary(models.Model):
         self.ensure_one()
 
         emp_branch_name = (self.branch_id.name or '').strip()
-        month = self.month
-        year = str(self.year).strip()
+        # ใช้ "เดือนก่อนหน้า" ให้ตรงกับยอดค่าคอมที่คิดใน payroll
+        month, year = self._get_commission_period()
         emp_fullname = ((self.firstname or '') + ' ' + (self.lastname or '')).strip()
 
         # คำนวณสัดส่วนจากตารางตั้งค่าคอมมิชชั่นสาขา (รายพนักงาน)
@@ -1709,8 +1755,8 @@ class PayrollSalary(models.Model):
         emp_branch_name = (self.branch_id.name or '').strip()
         # ประเภทค่าคอม Sale ตามรายชื่อ Sales สำนักงานใหญ่
         comm_type = self._get_sale_commission_type()
-        month = self.month
-        year = str(self.year).strip()
+        # ใช้ "เดือนก่อนหน้า" ให้ตรงกับยอดค่าคอมที่คิดใน payroll
+        month, year = self._get_commission_period()
 
         db_list = ['NPD_Intertrading_New', 'NPD_S_Group_New_V2', 'NPD_Bangkok_New']
         login_url = 'https://npderp.com/web/session/authenticate'
@@ -1818,8 +1864,9 @@ class PayrollSalary(models.Model):
                             item_type = (item.get('type') or '').strip()
                             if item_type != 'เซลล์':
                                 continue
-                            api_emp_code = (item.get('employee_code') or '').strip()
-                            if emp_code and api_emp_code == emp_code:
+                            # ✅ bankheaw: match ด้วยชื่อ-นามสกุล (ไม่อิงรหัส)
+                            api_sales_name = (item.get('salesperson_name') or '').strip()
+                            if self._bankheaw_name_match(api_sales_name):
                                 bk_net += item.get('net_total', 0.0)
                                 bk_count += 1
 
