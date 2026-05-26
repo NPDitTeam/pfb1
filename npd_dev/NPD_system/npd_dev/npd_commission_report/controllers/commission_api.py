@@ -52,6 +52,34 @@ class CommissionReportAPI(http.Controller):
             last_day = monthrange(year, month)[1]
             date_to = dt_date(year, month, last_day)
 
+            # ✅ ใช้เมธอดกลางตัวเดียวกับรายงาน (npd.commission.report) → payroll = รายงานเสมอ
+            rows = request.env['npd.commission.report'].sudo()._compute_branch_data(date_from, date_to)
+            result = []
+            for r in rows:
+                br_id = r.get('branch_id')
+                if branch_id and br_id != int(branch_id):
+                    continue
+                branch_rec = request.env['res.branch'].sudo().browse(br_id) if br_id else None
+                result.append({
+                    'date_from': str(date_from),
+                    'date_to': str(date_to),
+                    'branch_id': br_id,
+                    'branch_name': (branch_rec.name if branch_rec else '') or '',
+                    'rental_amount': float(r.get('rental_amount') or 0),
+                    'payment_received': float(r.get('payment_received') or 0),
+                    'outstanding_debt': float(r.get('outstanding_debt') or 0),
+                    'total_expense': float(r.get('total_expense') or 0),
+                    'net_rental': float(r.get('net_rental') or 0),
+                })
+            return {
+                'status': 'success',
+                'month': month,
+                'year': year,
+                'count': len(result),
+                'data': result,
+            }
+
+            # ===== [DEPRECATED] โค้ดเดิม raw SQL ปิดการใช้งานแล้ว (แทนด้วยเมธอดกลางด้านบน) =====
             # เงื่อนไข branch_id (optional)
             branch_filter_rental = ""
             branch_filter_outstanding = ""
@@ -356,6 +384,41 @@ class CommissionReportAPI(http.Controller):
             last_day = monthrange(year, month)[1]
             date_to = dt_date(year, month, last_day)
 
+            # ✅ ใช้เมธอดกลางตัวเดียวกับรายงาน (npd.commission.report.sales) → payroll = รายงานเสมอ
+            rows = request.env['npd.commission.report.sales'].sudo()._compute_sales_data(date_from, date_to)
+            result = []
+            for r in rows:
+                sc_id = r.get('sales_contact_id')
+                br_id = r.get('branch_id')
+                if sales_contact_id and sc_id != int(sales_contact_id):
+                    continue
+                if branch_id and br_id != int(branch_id):
+                    continue
+                sales_user = request.env['res.users'].sudo().browse(sc_id) if sc_id else None
+                branch_rec = request.env['res.branch'].sudo().browse(br_id) if br_id else None
+                result.append({
+                    'date_from': str(date_from),
+                    'date_to': str(date_to),
+                    'sales_contact_id': sc_id,
+                    'sales_contact_name': (sales_user.partner_id.name if sales_user else '') or '',
+                    'employee_code': (sales_user.employee_code if sales_user else '') or '',
+                    'branch_id': br_id,
+                    'branch_name': (branch_rec.name if branch_rec else '') or '',
+                    'rental_amount': float(r.get('rental_amount') or 0),
+                    'payment_received': float(r.get('payment_received') or 0),
+                    'outstanding_debt': float(r.get('outstanding_debt') or 0),
+                    'shipping_cost': float(r.get('shipping_cost') or 0),
+                    'net_rental': float(r.get('net_rental') or 0),
+                })
+            return {
+                'status': 'success',
+                'month': month,
+                'year': year,
+                'count': len(result),
+                'data': result,
+            }
+
+            # ===== [DEPRECATED] โค้ดเดิม raw SQL ปิดการใช้งานแล้ว (แทนด้วยเมธอดกลางด้านบน) =====
             # เงื่อนไข filter (optional)
             sales_filter_rental = ""
             sales_filter_outstanding = ""

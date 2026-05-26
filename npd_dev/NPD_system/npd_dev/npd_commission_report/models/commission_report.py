@@ -57,23 +57,63 @@ class CommissionReport(models.TransientModel):
 
     def action_generate_report(self):
         self.ensure_one()
-
         # ลบข้อมูลเก่า
         self.env['npd.commission.report.line'].search([]).unlink()
-
         # ดึงรายการสาขา
         if self.branch_id:
             branches = self.branch_id
         else:
             branches = self.env['res.branch'].search([])
-
         # คำนวณวันที่เริ่มต้นและสิ้นสุดจากเดือนและปีที่เลือก
         year_int = int(self.year)
         month_int = int(self.month)
         date_from = date(year_int, month_int, 1)
         last_day = monthrange(year_int, month_int)[1]
         date_to = date(year_int, month_int, last_day)
+        # ✅ ใช้เมธอดกลาง (ตัวเดียวกับ API) เพื่อให้รายงาน = payroll เสมอ
+        report_lines = self._compute_branch_data(date_from, date_to, branches)
+        if report_lines:
+            self.env['npd.commission.report.line'].create(report_lines)
+        return {
+            'name': 'รายงานค่าคอมมิชชั่น',
+            'type': 'ir.actions.act_window',
+            'res_model': 'npd.commission.report.line',
+            'view_mode': 'tree',
+            'target': 'current',
+        }
 
+    @api.model
+    def _outstanding_residual_asof(self, invoice, as_of):
+        """ยอดค้างชำระของใบแจ้งหนี้ "ณ วันที่ as_of" (ไม่รวม VAT แล้ว — หารด้วย 1.07)
+        - amount_residual ปกติเป็นยอด ณ ปัจจุบัน → ถ้าลูกค้าจ่ายทีหลังยอดจะหด
+        - การเงินคิดหนี้ค้าง ณ "วันสิ้นรอบ" จึงต้องคำนวณย้อน: เอายอดลูกหนี้ตั้งต้น
+          ลบเฉพาะเงิน/ใบลดหนี้ที่ reconcile เข้ามาโดยคู่จับคู่ลงวันที่ <= as_of
+        """
+        total_open = 0.0
+        recv_lines = invoice.line_ids.filtered(
+            lambda l: l.account_id.internal_type == 'receivable')
+        for line in recv_lines:
+            bal = (line.debit or 0.0) - (line.credit or 0.0)   # ใบขาย/เช่า → ลูกหนี้ฝั่ง debit (>0)
+            paid = 0.0
+            for pr in line.matched_credit_ids:
+                cdate = pr.credit_move_id.date
+                if cdate and cdate <= as_of:
+                    paid += pr.amount or 0.0
+            for pr in line.matched_debit_ids:
+                ddate = pr.debit_move_id.date
+                if ddate and ddate <= as_of:
+                    paid += pr.amount or 0.0
+            open_amt = bal - paid
+            if open_amt > 0:
+                total_open += open_amt
+        return total_open / 1.07
+
+    @api.model
+    def _compute_branch_data(self, date_from, date_to, branches=None):
+        """คำนวณข้อมูลค่าคอมสาขา ต่อสาขา — ใช้ร่วมกับ API /api/commission/branch
+        branches=None → ทุกสาขา. คืน list ของ dict (date_from/date_to/branch_id + ยอด + net_rental)"""
+        if branches is None:
+            branches = self.env['res.branch'].search([])
         # ค้นหาสมุดรายวัน 3 ชื่อ (ค้นหาครั้งเดียว)
         rental_journal_names = [
             'สมุดรายวันเช่า(สาขา)',
@@ -86,6 +126,11 @@ class CommissionReport(models.TransientModel):
 
         if not rental_journals:
             raise models.UserError('ไม่พบสมุดรายวัน: %s' % ', '.join(rental_journal_names))
+
+        # ✅ "ยอดเช่า" นับเฉพาะสมุดเช่า(สาขา) — ไม่รวมค่าปรับหาย/ชำรุด (ตามที่การเงินคิด)
+        #    แต่ "หนี้ค้างชำระ" ยังรวมทุกสมุด (ค่าปรับที่ยังไม่จ่าย ณ สิ้นรอบ ก็เป็นหนี้ค้าง)
+        rent_only_journal = rental_journals.filtered(lambda j: j.name == 'สมุดรายวันเช่า(สาขา)')
+        rent_only_journal_id = rent_only_journal.id if rent_only_journal else False
 
         # สร้างข้อมูลรายงาน (รวมยอดตามสาขา)
         report_lines = []
@@ -111,8 +156,14 @@ class CommissionReport(models.TransientModel):
             ])
 
             for invoice in invoices:
-                # ดึงยอดเช่า (rental_amount) จาก amount_untaxed ของ invoice
-                total_rental_amount += invoice.amount_untaxed or 0.0
+                # ดึงยอดเช่า (rental_amount) — เฉพาะสมุดเช่า(สาขา) ไม่รวมค่าปรับหาย/ชำรุด
+                if invoice.journal_id.id == rent_only_journal_id:
+                    total_rental_amount += invoice.amount_untaxed or 0.0
+
+                # ✅ หนี้ค้างชำระ (outstanding_debt) — ยอดค้าง "ณ วันสิ้นรอบ (date_to)" ตามที่การเงินคิด
+                #    ครอบคลุมทุกกรณี: ยังไม่จ่าย → ค้างเต็มใบ / จ่ายบางส่วน → ค้างที่เหลือ / จ่ายครบ(ก่อนสิ้นรอบ) → 0
+                #    (ใช้ as-of แทน amount_residual เพราะ residual เป็นยอด ณ ปัจจุบัน)
+                total_outstanding_debt += self._outstanding_residual_asof(invoice, date_to)
 
             # === DEBUG: ใบแจ้งหนี้ (Invoice) ===
             # if 'พัทยา' in (branch.name or ''):
@@ -122,29 +173,22 @@ class CommissionReport(models.TransientModel):
             #     for inv in invoices:
             #         print(f"    - {inv.name} | invoice_date: {inv.invoice_date} | amount_untaxed: {inv.amount_untaxed:.2f}")
 
-            # ดึงใบลดหนี้ (Credit Note) จากสมุดรายวันลดหนี้ขาย เพื่อลบออกจากยอดเช่า
-            # เงื่อนไข: เดือน 1 ปีปัจจุบัน → ไม่กรอง payment_state, เดือนอื่น → payment_state = 'paid'
+            # ดึงใบลดหนี้ (Credit Note) หักออกจากยอดเช่า — เงื่อนไขเดียวกับฝั่ง Sale
+            # ✅ กรองด้วย "วันที่ใบลดหนี้เอง" (invoice_date ของ credit note) ตามที่การเงินใช้
             rental_cn_journal = self.env['account.journal'].search([
                 ('name', '=', 'สมุดรายวันลดหนี้ขาย')
             ], limit=1)
 
             if rental_cn_journal:
-                cn_domain = [
+                rental_credit_notes = self.env['account.move'].search([
                     ('invoice_date', '>=', date_from),
                     ('invoice_date', '<=', date_to),
                     ('journal_id', '=', rental_cn_journal.id),
                     ('branch_id', '=', branch.id),
                     ('state', '=', 'posted'),
-                    ('move_type', 'in', ['out_refund']),
+                    ('move_type', '=', 'out_refund'),
                     ('contact_type', '=', 'branch'),
-                ]
-
-                # ถ้าไม่ใช่เดือน 1 ปีปัจจุบัน → กรองเฉพาะ payment_state = 'paid'
-                current_year = fields.Date.today().year
-                if not (month_int == 1 and year_int == current_year):
-                    cn_domain.append(('payment_state', '=', 'paid'))
-
-                rental_credit_notes = self.env['account.move'].search(cn_domain)
+                ])
 
                 for cn in rental_credit_notes:
                     total_rental_amount -= cn.amount_untaxed or 0.0
@@ -172,25 +216,8 @@ class CommissionReport(models.TransientModel):
                 #     for cn in missing_cn:
                 #         print(f"    [ขาด] {cn.name} | invoice_date: {cn.invoice_date} | amount_untaxed: {cn.amount_untaxed:.2f} | contact_type: {cn.contact_type} | payment_state: {cn.payment_state}")
 
-            # ดึงหนี้ค้างชำระ (outstanding_debt) จาก account.move
-            # - กรองตามสมุดรายวัน: เช่า(สาขา), ค่าปรับหาย, ค่าปรับชำรุด
-            # - เฉพาะสถานะ Partially Paid (partial) และ ยังไม่ชำระเงิน (not_paid)
-            # - กรองเฉพาะ contact_type = 'branch'
-            outstanding_invoices = self.env['account.move'].search([
-                ('invoice_date', '>=', date_from),
-                ('invoice_date', '<=', date_to),
-                ('journal_id', 'in', rental_journals.ids),
-                ('branch_id', '=', branch.id),
-                ('state', '=', 'posted'),
-                ('move_type', 'in', ['out_invoice']),
-                ('payment_state', 'in', ['not_paid', 'partial']),
-                ('contact_type', '=', 'branch'),
-            ])
-
-            for invoice in outstanding_invoices:
-                # ดึงยอดเงินค้างชำระ (amount_residual) และถอด VAT 7%
-                amount_residual = invoice.amount_residual or 0.0
-                total_outstanding_debt += amount_residual / 1.07
+            # หมายเหตุ: หนี้ค้างชำระ (outstanding_debt) ย้ายไปคิดในลูปใบเช่าด้านบนแล้ว
+            #   (อิง amount_residual ของใบเช่าที่ออกในเดือนนั้น — ครอบคลุมใบที่ยังไม่จ่ายเลยด้วย)
 
             # ดึงยอดรับชำระหนี้ (payment_received) จาก account.payment
             # - กรองตามสมุดรายวัน: รับชำระ, รับชำระค่าปรับหาย, รับชำระค่าปรับชำรุด
@@ -219,6 +246,9 @@ class CommissionReport(models.TransientModel):
                     payment_date = payment.date
                     # ดึง invoice ที่เชื่อมกับ payment ผ่าน reconciled_invoice_ids
                     for inv in payment.reconciled_invoice_ids:
+                        # ❌ ใบขาย (เลขขึ้นต้น 'IV' — ไม่ใช่ใบเช่า 'INV') → ไม่นับเป็นรับชำระหนี้
+                        if (inv.name or '').strip().upper().startswith('IV'):
+                            continue
                         if inv.invoice_date and payment_date:
                             # คนละเดือน: เดือนหรือปีต่างกัน
                             is_different_month = (
@@ -359,16 +389,7 @@ class CommissionReport(models.TransientModel):
                     'net_rental': 0.0,
                 })
 
-        if report_lines:
-            self.env['npd.commission.report.line'].create(report_lines)
-
-        return {
-            'name': 'รายงานค่าคอมมิชชั่น',
-            'type': 'ir.actions.act_window',
-            'res_model': 'npd.commission.report.line',
-            'view_mode': 'tree',
-            'target': 'current',
-        }
+        return report_lines
 
 
 class CommissionReportLine(models.TransientModel):

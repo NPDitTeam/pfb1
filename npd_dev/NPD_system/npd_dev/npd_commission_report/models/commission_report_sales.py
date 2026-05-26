@@ -52,17 +52,58 @@ class CommissionReportSales(models.TransientModel):
 
     def action_generate_report(self):
         self.ensure_one()
-        
         # ลบข้อมูลเก่า
         self.env['npd.commission.report.sales.line'].search([]).unlink()
-        
         # คำนวณวันที่เริ่มต้นและสิ้นสุดจากเดือนและปีที่เลือก
         year_int = int(self.year)
         month_int = int(self.month)
         date_from = date(year_int, month_int, 1)
         last_day = monthrange(year_int, month_int)[1]
         date_to = date(year_int, month_int, last_day)
-        
+        # ✅ ใช้เมธอดกลาง (ตัวเดียวกับ API) เพื่อให้รายงาน = payroll เสมอ
+        report_lines = self._compute_sales_data(date_from, date_to)
+        if report_lines:
+            self.env['npd.commission.report.sales.line'].create(report_lines)
+        return {
+            'name': 'รายงานค่าคอม Sales',
+            'type': 'ir.actions.act_window',
+            'res_model': 'npd.commission.report.sales.line',
+            'view_mode': 'tree',
+            'target': 'current',
+        }
+
+    @api.model
+    def _outstanding_residual_asof(self, invoice, as_of):
+        """ยอดค้างชำระของใบแจ้งหนี้ "ณ วันที่ as_of" (ไม่รวม VAT แล้ว — หารด้วย 1.07)
+        - amount_residual ปกติเป็นยอด ณ ปัจจุบัน → ถ้าลูกค้าจ่ายทีหลังยอดจะหด
+        - การเงินคิดหนี้ค้าง ณ "วันสิ้นรอบ" จึงต้องคำนวณย้อน: เอายอดลูกหนี้ตั้งต้น
+          ลบเฉพาะเงิน/ใบลดหนี้ที่ reconcile เข้ามาโดยคู่จับคู่ลงวันที่ <= as_of
+        """
+        total_open = 0.0
+        recv_lines = invoice.line_ids.filtered(
+            lambda l: l.account_id.internal_type == 'receivable')
+        for line in recv_lines:
+            bal = (line.debit or 0.0) - (line.credit or 0.0)   # ใบขาย/เช่า → ลูกหนี้ฝั่ง debit (>0)
+            paid = 0.0
+            # คู่จับคู่ที่ "บรรทัดนี้เป็น debit" → counterpart = ฝั่ง credit (เงินรับ/ใบลดหนี้)
+            for pr in line.matched_credit_ids:
+                cdate = pr.credit_move_id.date
+                if cdate and cdate <= as_of:
+                    paid += pr.amount or 0.0
+            # เผื่อกรณีบรรทัดนี้ไปอยู่ฝั่ง credit
+            for pr in line.matched_debit_ids:
+                ddate = pr.debit_move_id.date
+                if ddate and ddate <= as_of:
+                    paid += pr.amount or 0.0
+            open_amt = bal - paid
+            if open_amt > 0:
+                total_open += open_amt
+        return total_open / 1.07
+
+    @api.model
+    def _compute_sales_data(self, date_from, date_to):
+        """คำนวณข้อมูลค่าคอม Sales ต่อ (เซลล์, สาขา) — ใช้ร่วมกับ API /api/commission/sales
+        คืน list ของ dict: date_from/date_to/sales_contact_id/branch_id + ยอดต่าง ๆ + net_rental"""
         # ค้นหาสมุดรายวันที่ชื่อ 'สมุดรายวันเช่า(สาขา)' (ค้นหาครั้งเดียว)
         rental_journal = self.env['account.journal'].search([
             ('name', '=', 'สมุดรายวันเช่า(สาขา)')
@@ -110,47 +151,47 @@ class CommissionReportSales(models.TransientModel):
             
             # ดึงยอดเช่า (rental_amount) จาก amount_untaxed ของ invoice
             sales_data[key]['rental_amount'] += invoice.amount_untaxed or 0.0
-        
-        # ดึงหนี้ค้างชำระ (outstanding_debt) จาก account.move
-        # - เฉพาะสถานะ Partially Paid (partial) และ ยังไม่ชำระเงิน (not_paid)
-        # - กรองเฉพาะ contact_type = 'sale'
-        # - กรองเฉพาะที่มี sales_contact
-        outstanding_invoices = self.env['account.move'].search([
-            ('invoice_date', '>=', date_from),
-            ('invoice_date', '<=', date_to),
-            ('journal_id', '=', rental_journal.id),
-            ('state', '=', 'posted'),
-            ('move_type', 'in', ['out_invoice']),
-            ('payment_state', 'in', ['not_paid', 'partial']),
-            ('contact_type', '=', 'sale'),
-            ('sales_contact_id', '!=', False),
-        ])
-        
-        for invoice in outstanding_invoices:
-            # ดึง sales_contact_id
-            sales_contact_id = False
-            if invoice.sales_contact_id:
-                sales_contact_id = invoice.sales_contact_id.id
 
-            
-            # ดึง branch_id จาก invoice
-            branch_id = invoice.branch_id.id if invoice.branch_id else False
-            
-            # ใช้ key เป็น tuple ของ (sales_contact_id, branch_id)
-            key = (sales_contact_id, branch_id)
-            
-            if key not in sales_data:
-                sales_data[key] = {
-                    'rental_amount': 0.0,
-                    'payment_received': 0.0,
-                    'outstanding_debt': 0.0,
-                    'shipping_cost': 0.0,  # เพิ่มฟิลด์ค่าขนส่ง
-                }
-            
-            # ดึงยอดเงินค้างชำระ (amount_residual) และถอด VAT 7%
-            amount_residual = invoice.amount_residual or 0.0
-            sales_data[key]['outstanding_debt'] += amount_residual / 1.07
-        
+            # ✅ หนี้ค้างชำระ (outstanding_debt) — ยอดค้าง "ณ วันสิ้นรอบ (date_to)" ตามที่การเงินคิด
+            #    ครอบคลุมทุกกรณี: ยังไม่จ่าย → ค้างเต็มใบ / จ่ายบางส่วน → ค้างที่เหลือ / จ่ายครบ(ก่อนสิ้นรอบ) → 0
+            #    (ใช้ as-of แทน amount_residual เพราะ residual เป็นยอด ณ ปัจจุบัน)
+            sales_data[key]['outstanding_debt'] += self._outstanding_residual_asof(invoice, date_to)
+
+        # ✅ หัก "ใบลดหนี้ขาย" (credit note) ออกจากยอดเช่า
+        # - สมุดรายวันลดหนี้ขาย, out_refund, posted, contact_type='sale', มี sales_contact, ตามเดือน
+        # - จับคู่เซลล์ด้วย sales_contact_id (= ชื่อเซลล์คนนั้น) แล้วลบ amount_untaxed ออก
+        credit_note_journal = self.env['account.journal'].search([
+            ('name', '=', 'สมุดรายวันลดหนี้ขาย')
+        ], limit=1)
+        if credit_note_journal:
+            # ✅ กรองด้วย "วันที่ของใบลดหนี้เอง" (invoice_date ของ credit note) ตามที่การเงินใช้
+            #    เช่น เซลล์พิชชาภัสร์: 494,825.68 − 1,715.89 (ใบลดหนี้ลงวันที่ในเดือนนี้) = 493,109.79
+            credit_notes = self.env['account.move'].search([
+                ('invoice_date', '>=', date_from),
+                ('invoice_date', '<=', date_to),
+                ('journal_id', '=', credit_note_journal.id),
+                ('state', '=', 'posted'),
+                ('move_type', '=', 'out_refund'),
+                ('contact_type', '=', 'sale'),
+                ('sales_contact_id', '!=', False),
+            ])
+            for cn in credit_notes:
+                # จัดกลุ่มตามเซลล์/สาขาของใบลดหนี้ (ให้ลงตรง bucket เดียวกับยอดเช่าที่บวกไว้)
+                sales_contact_id = cn.sales_contact_id.id
+                branch_id = cn.branch_id.id if cn.branch_id else False
+                key = (sales_contact_id, branch_id)
+                if key not in sales_data:
+                    sales_data[key] = {
+                        'rental_amount': 0.0,
+                        'payment_received': 0.0,
+                        'outstanding_debt': 0.0,
+                        'shipping_cost': 0.0,
+                    }
+                sales_data[key]['rental_amount'] -= cn.amount_untaxed or 0.0
+
+        # หมายเหตุ: หนี้ค้างชำระ (outstanding_debt) ย้ายไปคิดในลูปใบเช่าด้านบนแล้ว
+        #   (อิง amount_residual ของใบเช่าที่ออกในเดือนนั้น — ครอบคลุมใบที่ยังไม่จ่ายเลยด้วย)
+
         # ดึงยอดรับชำระหนี้ (payment_received) จาก account.payment
         # - กรองตามสมุดรายวัน 'สมุดรายวันรับชำระ'
         # - กรองตามวันที่
@@ -171,6 +212,9 @@ class CommissionReportSales(models.TransientModel):
                 payment_date = payment.date
                 # ดึง sales_contact จาก invoice ที่เชื่อมกับ payment
                 for inv in payment.reconciled_invoice_ids:
+                    # ❌ ใบขาย (เลขขึ้นต้น 'IV' — ไม่ใช่ใบเช่า 'INV') → ไม่นับเป็นรับชำระหนี้
+                    if (inv.name or '').strip().upper().startswith('IV'):
+                        continue
                     if inv.invoice_date and payment_date:
                         # คนละเดือน: เดือนหรือปีต่างกัน
                         is_different_month = (
@@ -284,16 +328,7 @@ class CommissionReportSales(models.TransientModel):
                 'net_rental': truncate_decimal(net_rental, 2),
             })
         
-        if report_lines:
-            self.env['npd.commission.report.sales.line'].create(report_lines)
-        
-        return {
-            'name': 'รายงานค่าคอม Sales',
-            'type': 'ir.actions.act_window',
-            'res_model': 'npd.commission.report.sales.line',
-            'view_mode': 'tree',
-            'target': 'current',
-        }
+        return report_lines
 
 
 class CommissionReportSalesLine(models.TransientModel):
