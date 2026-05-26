@@ -239,6 +239,7 @@ class AccountMoveLine(models.Model):
         # เพิ่งกำหนด target ไว้
         target_value_by_move = {}  # {move_id: target_amount_total}
         moves_with_vat_from_total_ids = set()
+        moves_refund_ids = set()
         if self:
             all_move_ids = list(set(self.mapped('move_id').ids))
             if all_move_ids:
@@ -266,11 +267,22 @@ class AccountMoveLine(models.Model):
                 """, (tuple(all_move_ids),))
                 moves_with_vat_from_total_ids = set(
                     row[0] for row in cr.fetchall())
+                # ใบลดหนี้ (credit/debit note) — ต้องเข้า loop เสมอเพื่อ sync
+                # เครื่องหมายลบให้ account_move_tax_invoice (แถบ Tax Invoice)
+                # แม้ไม่ติ๊ก flag ใดเลย ไม่งั้นค่าจะค้างเป็นบวกตามที่ l10n สร้าง
+                # (l10n ใส่ลบเฉพาะตอนสร้างผ่าน _reverse_moves เท่านั้น)
+                cr.execute("""
+                    SELECT id FROM account_move
+                    WHERE id IN %s
+                      AND move_type IN ('out_refund', 'in_refund')
+                """, (tuple(all_move_ids),))
+                moves_refund_ids = set(row[0] for row in cr.fetchall())
         moves_with_target_ids = set(target_value_by_move.keys())
 
         if (not rounded and not baan_kheaw_resets
                 and not moves_with_target_ids
-                and not moves_with_vat_from_total_ids):
+                and not moves_with_vat_from_total_ids
+                and not moves_refund_ids):
             return
 
         moves_changed = set()
@@ -293,6 +305,10 @@ class AccountMoveLine(models.Model):
         # บังคับให้ moves ที่ติ๊ก vat_from_total เข้า loop ด้วย
         # เพื่อ override tax line + move totals = Method B
         moves_changed |= moves_with_vat_from_total_ids
+        # บังคับให้ใบลดหนี้เข้า loop เสมอ เพื่อ sync เครื่องหมายลบของ
+        # account_move_tax_invoice (แถบ Tax Invoice) — การคำนวณ tax/totals
+        # ในรอบนี้เป็น idempotent สำหรับใบที่ไม่ติ๊กอะไร (tax = total - subtotal)
+        moves_changed |= moves_refund_ids
 
         for move_id in moves_changed:
             move = self.env['account.move'].browse(move_id)
