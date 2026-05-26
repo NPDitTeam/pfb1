@@ -80,16 +80,17 @@ class SalesCommissionReport(models.Model):
             code_from_name = parts[0].strip()
             name_part = parts[1].strip() if len(parts) > 1 else ''
 
-        # 1. ค้นหาจาก x_user_id ที่ตรงกับรหัสที่แยกได้
+        # 1. ✅ ถ้าแยก "รหัส" ออกจากชื่อได้ → ใช้รหัสนั้นเป็น employee_code เลย
+        #    (ชื่อเซลล์จากต้นทางเป็นรูปแบบ "รหัส - ชื่อ" ซึ่งรหัสนี้คือรหัสพนักงานที่ถูกต้อง
+        #     ไม่อิง x_user_id เพราะบางคน x_user_id ไม่ตรงกับรหัสพนักงานจริง → ทำให้ payroll match ไม่เจอ)
         if code_from_name:
             employee = self.env['hr.employee'].sudo().search([
                 ('x_user_id', '=', code_from_name)
             ], limit=1)
-            if employee:
-                _logger.info(f"Found employee by x_user_id: {code_from_name} -> {employee.name}")
-                return employee, code_from_name
+            _logger.info(f"Bankheaw employee_code from name: {code_from_name} (employee={employee.name if employee else 'N/A'})")
+            return employee, code_from_name
 
-        # 2. ค้นหาจากชื่อ (ถ้าไม่เจอจากรหัส)
+        # 2. ค้นหาจากชื่อ (เฉพาะกรณีชื่อไม่มีรหัสนำหน้า)
         if name_part:
             # แยกชื่อ-นามสกุล
             name_parts = name_part.split()
