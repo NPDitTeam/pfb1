@@ -24,9 +24,14 @@
                            required="1"/>
                 </xpath>
                 
+                <!-- ✅ บังคับกรอก (required) account_analytic_id (บัญชีวิเคราะห์) เมื่อ check_type_show_selection = 'false' -->
+                <xpath expr="//field[@name='line_ids']/tree/field[@name='account_analytic_id']" position="attributes">
+                    <attribute name="attrs">{'required': [('parent.check_type_show_selection', '=', 'false')]}</attribute>
+                </xpath>
+
                 <!-- Add button to edit sales contact when posted -->
                 <xpath expr="//button[@name='cancel_voucher'][@states='posted']" position="after">
-                    <button name="action_edit_sales_contact" 
+                    <button name="action_edit_sales_contact"
                             string="แก้ไข Sales ที่ติดต่อ/วันที่กำหนดจ่าย"
                             type="object" 
                             class="btn-secondary"
@@ -58,10 +63,19 @@
                            required="1"/>
                 </xpath>
                 
+                <!-- ✅ บังคับกรอก (required) account_analytic_id (บัญชีวิเคราะห์) เมื่อ check_type_show_selection = 'false' -->
+                <!--    sale form เดิมไม่มี check_type_show_selection → เพิ่ม invisible เพื่อให้ parent. อ้างได้ -->
+                <xpath expr="//field[@name='line_ids']" position="before">
+                    <field name="check_type_show_selection" invisible="1"/>
+                </xpath>
+                <xpath expr="//field[@name='line_ids']/tree/field[@name='account_analytic_id']" position="attributes">
+                    <attribute name="attrs">{'required': [('parent.check_type_show_selection', '=', 'false')]}</attribute>
+                </xpath>
+
                 <!-- Add button to edit sales contact when posted -->
                 <xpath expr="//button[@name='cancel_voucher'][@states='posted']" position="after">
-                    <button name="action_edit_sales_contact" 
-                            string="แก้ไข Sales ที่ติดต่อ" 
+                    <button name="action_edit_sales_contact"
+                            string="แก้ไข Sales ที่ติดต่อ"
                             type="object" 
                             class="btn-secondary"
                             attrs="{'invisible': [('state', '!=', 'posted')]}"/>
