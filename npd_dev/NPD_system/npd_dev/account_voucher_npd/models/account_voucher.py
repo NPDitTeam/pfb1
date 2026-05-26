@@ -1,10 +1,23 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import logging
+
 from odoo import fields, models, api, _
 from odoo.addons import decimal_precision as dp
 from odoo.exceptions import UserError, ValidationError
 from datetime import datetime
+
+_logger = logging.getLogger(__name__)
+
+
+# ✅ กัน OSError [Errno 22] Invalid argument บน Windows (รัน Odoo เป็น service → stdout ใช้ไม่ได้)
+#    redirect print(...) ทั้งไฟล์ไปที่ logger.debug แทนการเขียน stdout โดยตรง (ข้อความ debug ไม่หาย/ไม่ crash)
+def print(*args, **kwargs):
+    try:
+        _logger.debug(' '.join(str(a) for a in args))
+    except Exception:
+        pass
 
 
 class AccountVoucher(models.Model):
