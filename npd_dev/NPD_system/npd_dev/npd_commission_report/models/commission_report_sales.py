@@ -189,8 +189,36 @@ class CommissionReportSales(models.TransientModel):
                     }
                 sales_data[key]['rental_amount'] -= cn.amount_untaxed or 0.0
 
-        # หมายเหตุ: หนี้ค้างชำระ (outstanding_debt) ย้ายไปคิดในลูปใบเช่าด้านบนแล้ว
-        #   (อิง amount_residual ของใบเช่าที่ออกในเดือนนั้น — ครอบคลุมใบที่ยังไม่จ่ายเลยด้วย)
+        # หมายเหตุ: หนี้ค้างชำระจากใบเช่า ย้ายไปคิดในลูปใบเช่าด้านบนแล้ว (as-of date_to)
+
+        # ✅ หนี้ค้างชำระจาก "ใบค่าปรับ" (สินค้าหาย / สินค้าชำรุด) — รวมเข้า outstanding ด้วย (ตามที่การเงินคิด)
+        #    ระบุใบค่าปรับด้วย reason_code_id (scrap.reason.code) = 'สินค้าหาย' หรือ 'สินค้าชำรุด'
+        #    คิดยอดค้าง as-of date_to เหมือนใบเช่า / ไม่รวมเข้า rental_amount (เป็นหนี้ ไม่ใช่ค่าเช่า)
+        penalty_reasons = self.env['scrap.reason.code'].search([
+            ('name', 'in', ['สินค้าหาย', 'สินค้าชำรุด'])
+        ])
+        if penalty_reasons:
+            penalty_invoices = self.env['account.move'].search([
+                ('invoice_date', '>=', date_from),
+                ('invoice_date', '<=', date_to),
+                ('state', '=', 'posted'),
+                ('move_type', '=', 'out_invoice'),
+                ('contact_type', '=', 'sale'),
+                ('sales_contact_id', '!=', False),
+                ('reason_code_id', 'in', penalty_reasons.ids),
+                ('journal_id', '!=', rental_journal.id),   # กันซ้ำกับลูปใบเช่า
+            ])
+            for pinv in penalty_invoices:
+                key = (pinv.sales_contact_id.id,
+                       pinv.branch_id.id if pinv.branch_id else False)
+                if key not in sales_data:
+                    sales_data[key] = {
+                        'rental_amount': 0.0,
+                        'payment_received': 0.0,
+                        'outstanding_debt': 0.0,
+                        'shipping_cost': 0.0,
+                    }
+                sales_data[key]['outstanding_debt'] += self._outstanding_residual_asof(pinv, date_to)
 
         # ดึงยอดรับชำระหนี้ (payment_received) จาก account.payment
         # - กรองตามสมุดรายวัน 'สมุดรายวันรับชำระ'

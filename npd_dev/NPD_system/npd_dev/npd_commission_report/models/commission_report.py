@@ -165,6 +165,25 @@ class CommissionReport(models.TransientModel):
                 #    (ใช้ as-of แทน amount_residual เพราะ residual เป็นยอด ณ ปัจจุบัน)
                 total_outstanding_debt += self._outstanding_residual_asof(invoice, date_to)
 
+            # ✅ หนี้ค้างจาก "ใบค่าปรับ" (สินค้าหาย/สินค้าชำรุด) ที่ติด reason_code แต่อยู่ "นอก" 3 สมุดข้างบน
+            #    contact_type='branch' = เป็นของสาขา (จึง group ด้วย branch_id) — กันซ้ำด้วย journal NOT IN
+            penalty_reasons = self.env['scrap.reason.code'].search([
+                ('name', 'in', ['สินค้าหาย', 'สินค้าชำรุด'])
+            ])
+            if penalty_reasons:
+                penalty_invoices = self.env['account.move'].search([
+                    ('invoice_date', '>=', date_from),
+                    ('invoice_date', '<=', date_to),
+                    ('branch_id', '=', branch.id),
+                    ('state', '=', 'posted'),
+                    ('move_type', '=', 'out_invoice'),
+                    ('contact_type', '=', 'branch'),
+                    ('reason_code_id', 'in', penalty_reasons.ids),
+                    ('journal_id', 'not in', rental_journals.ids),   # กันซ้ำกับลูปข้างบน
+                ])
+                for pinv in penalty_invoices:
+                    total_outstanding_debt += self._outstanding_residual_asof(pinv, date_to)
+
             # === DEBUG: ใบแจ้งหนี้ (Invoice) ===
             # if 'พัทยา' in (branch.name or ''):
             #     print(f"=== [ใบแจ้งหนี้] สาขา: {branch.name} ===")
