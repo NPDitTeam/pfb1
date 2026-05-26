@@ -322,6 +322,11 @@ class PayrollSalary(models.Model):
         string="ปกส.สะสมต้นรอบ", default=0.0,
         help="ใส่ยอดประกันสังคมสะสมจากระบบเก่า (ไม่รวมเดือนนี้)")
 
+    # ประเภทการโอนเงิน — ดึงจาก employee.salary (อัพเดทเมื่อกด "คำนวณใหม่")
+    transfer_type = fields.Selection(
+        related='employee_id.transfer_type', store=True, readonly=True,
+        string='ประเภทการโอนเงิน')
+
     # ❌ deprecated — ไม่ใช้แล้ว เก็บไว้กันข้อมูลเก่าหาย
     manual_override_accumulated = fields.Boolean(
         string="ปรับค่าสะสมเอง (legacy)", default=False)

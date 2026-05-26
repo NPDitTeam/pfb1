@@ -155,6 +155,12 @@ class EmployeeSalary(models.Model):
     bank_account_number = fields.Char(string='เลขที่บัญชี')
     details = fields.Text(string='รายละเอียด')
 
+    # ประเภทการโอนเงิน — โอนเข้าบัญชี (default) / รับเงินสด
+    transfer_type = fields.Selection([
+        ('transfer', 'โอนเข้าบัญชี'),
+        ('cash', 'รับเงินสด'),
+    ], string='ประเภทการโอนเงิน', default='transfer')
+
     status = fields.Selection(
         [
             ('active', 'ใช้งาน'),
