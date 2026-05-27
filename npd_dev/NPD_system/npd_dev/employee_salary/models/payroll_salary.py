@@ -990,10 +990,9 @@ class PayrollSalary(models.Model):
         exec_cfg = self.EXECUTIVE_TAX_CONFIG.get(self.employee_code or '')
         if exec_cfg and exec_cfg.get('tax_monthly') is not None:
             return (exec_cfg['tax_monthly'] or 0.0) * 12
-        monthly_income = self.base_salary + self.ot_total
         sso_m = self.sso_total or 0.0
-        bonus = (self.income_bonus or 0.0) if self.bonus_active else 0.0
-        _, auto_annual = self._calculate_tax(monthly_income, sso_m, bonus)
+        recurring, one_time = self._get_tax_income_base()
+        _, auto_annual = self._calculate_tax(recurring, sso_m, one_time)
         return auto_annual
 
     @api.onchange('manual_override_tax')
@@ -2878,9 +2877,10 @@ class PayrollSalary(models.Model):
         # ภาษี — คำนวณ inline จาก base_salary + ot + bonus (ไม่พึ่ง self.tax_monthly
         # ที่อาจ stale ใน onchange/create context)
         # ใช้ค่าที่คำนวณใหม่เสมอ — ถ้า user ต้องการล็อก ให้เปิด manual_override ทั้ง record
-        temp_gross_income = self.base_salary + total_ot_amount
-        bonus_for_tax = (self.income_bonus or 0.0) if self.bonus_active else 0.0
-        temp_tax, _ = self._calculate_tax(temp_gross_income, sso_amount, bonus_for_tax)
+        # ฐานภาษี = รายได้ประจำ (เงินเดือน+OT+เบี้ยเลี้ยง+คอม) ×12 + รายได้ครั้งเดียว (income_other) บวกครั้งเดียว
+        # ส่ง total_ot_amount (สด) แทน self.ot_total ที่อาจ stale ระหว่าง populate
+        temp_recurring, temp_one_time = self._get_tax_income_base(ot_amount=total_ot_amount)
+        temp_tax, _ = self._calculate_tax(temp_recurring, sso_amount, temp_one_time)
         # บุคคลพิเศษ — ล็อกภาษีต่อเดือนคงที่ (เฉพาะที่กำหนด tax_monthly ไว้)
         if exec_cfg and exec_cfg.get('tax_monthly') is not None:
             temp_tax = exec_cfg['tax_monthly']
@@ -3203,6 +3203,36 @@ class PayrollSalary(models.Model):
             else:
                 rec.sso_total = sum(l.amount for l in rec.line_ids if l.name == 'ประกันสังคม')
 
+    def _get_tax_income_base(self, ot_amount=None):
+        """แยกเงินได้สำหรับคำนวณภาษีออกเป็น 2 ส่วน (= total_gross รวมกัน):
+        - recurring : รายได้ "ประจำ" ต่อเดือน (เงินเดือน + OT + เบี้ยเลี้ยงประจำทุกตัว + คอมมิชชั่น)
+                      → ระบบคูณ 12 เพื่อประมาณการเงินได้ทั้งปี (วิธีหัก ณ ที่จ่าย)
+        - one_time  : รายได้ "ครั้งเดียว/ไม่ประจำ" = income_other
+                      (โบนัส + ค่าตัวนักแสดง + เงินตกหล่น + เมนูเงินได้อื่นๆ + เงินคืนประกัน)
+                      → บวกเข้าเฉพาะเดือนที่จ่าย ไม่คูณ 12 (กันภาษีพุ่งผิด)
+        ⚠️ ใช้ base_salary "เต็ม" (ไม่ prorate) เพื่อให้ฐานภาษีสม่ำเสมอทุกเดือน
+        :param ot_amount: ส่ง OT ที่เพิ่งคำนวณสด ๆ มาแทน self.ot_total ได้
+                          (ตอน _populate_all_lines ค่า self.ot_total อาจยัง stale)
+        """
+        self.ensure_one()
+        ot = (self.ot_total if ot_amount is None else ot_amount) or 0.0
+        recurring = (
+            (self.base_salary or 0.0)
+            + ot
+            + (self.income_cost_of_living or 0.0)
+            + (self.income_position_allowance or 0.0)
+            + (self.income_experience_allowance or 0.0)
+            + (self.income_professional_allowance or 0.0)
+            + (self.income_allowance or 0.0)
+            + (self.income_food or 0.0)
+            + (self.income_transport or 0.0)
+            + (self.income_fuel or 0.0)
+            + (self.income_commission or 0.0)
+            + (self.income_commission_sale or 0.0)
+        )
+        one_time = self.income_other or 0.0
+        return recurring, one_time
+
     @api.depends('total_gross', 'personal_deduction', 'child_deduction', 'expense_deduction',
                  'provident_fund_rate', 'sso_total', 'tax_bracket_ids', 'line_ids',
                  'manual_tax_amount', 'manual_override_tax',
@@ -3228,19 +3258,19 @@ class PayrollSalary(models.Model):
                 rec.tax_annual = rec.tax_monthly * 12
             else:
                 sso_amount_monthly = rec.sso_total or 0.0
-                monthly_income = rec.base_salary + rec.ot_total
-                bonus_for_tax = (rec.income_bonus or 0.0) if rec.bonus_active else 0.0
+                # ฐานภาษี = รายได้ประจำ (×12) + รายได้ครั้งเดียว/income_other (บวกครั้งเดียว)
+                recurring, one_time = rec._get_tax_income_base()
                 rec.tax_monthly, rec.tax_annual = rec._calculate_tax(
-                    monthly_income, sso_amount_monthly, bonus_for_tax)
+                    recurring, sso_amount_monthly, one_time)
 
     def _calculate_tax(self, gross_income, sso_monthly, bonus_amount=0.0):
         """คำนวณภาษีต่อเดือน + ภาษีต่อปี
 
-        :param gross_income: รายได้ต่อเดือน (base_salary + ot_total) — ระบบสมมุติได้รายเดือนนี้ × 12
+        :param gross_income: รายได้ "ประจำ" ต่อเดือน (เงินเดือน+OT+เบี้ยเลี้ยงประจำ+คอม) — ระบบคูณ 12
         :param sso_monthly:  ประกันสังคมต่อเดือน
-        :param bonus_amount: โบนัสครั้งเดียวของเดือนนี้ (ถ้ามี)
+        :param bonus_amount: รายได้ "ครั้งเดียว/ไม่ประจำ" ของเดือนนี้ (โบนัส + income_other ทั้งหมด)
                              — จะถูกรวมเข้า annual_income แบบ "one-time" (ไม่ × 12)
-                             — และภาษีส่วนเพิ่มของโบนัสจะถูกหักในเดือนที่จ่ายโบนัสเท่านั้น
+                             — และภาษีส่วนเพิ่มจะถูกหักในเดือนที่จ่ายเท่านั้น
         """
         annual_income = gross_income * 12
         # ลดหย่อน ปกส. ที่หักภาษีได้ = สูงสุด 9,000/ปี ตามกฎหมาย (เพดานฐาน 15,000 × 5% × 12)
