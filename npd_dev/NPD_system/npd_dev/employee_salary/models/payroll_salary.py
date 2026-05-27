@@ -2254,11 +2254,16 @@ class PayrollSalary(models.Model):
                     ('work_date', '>=', start_date_cycle),
                     ('work_date', '<=', end_date_cycle),
                 ])
+                # วันที่ที่มี OT จาก PHP API แล้ว (กันนับซ้ำกับบล็อกด้านบน)
+                php_ot_dates = {cmd[2]['date'] for cmd in ot_lines_to_create}
                 for ml in manual_logs:
                     if not ml.work_date or not ml.checkin_time or not ml.checkout_time:
                         continue
-                    # นับเฉพาะวันที่อยู่ใน payroll.holiday (เป็นวันหยุดนักขัตฤกษ์จริง)
-                    if ml.work_date.strftime('%Y-%m-%d') not in holidays:
+                    # ✅ ประเภทการเพิ่มเวลา 'ทำงานวันหยุด' (อนุมัติแล้ว) → ได้ OT 2 เท่าเสมอ
+                    #    ไม่จำกัดเฉพาะวันหยุดนักขัตฤกษ์ (payroll.holiday) อีกต่อไป
+                    #    ครอบคลุมวันหยุดประจำสัปดาห์ (เสาร์/อาทิตย์) ที่ขออนุมัติทำงานวันหยุดด้วย
+                    # กันนับซ้ำ: ถ้าวันนั้นมี OT จาก PHP API แล้ว ให้ข้าม
+                    if ml.work_date in php_ot_dates:
                         continue
                     try:
                         start_dt = datetime.datetime.strptime(
@@ -3253,11 +3258,63 @@ class PayrollSalary(models.Model):
                     return (taxable * (bracket.rate / 100.0)) - bracket.deduction
             return 0.0
 
-        # รวมค่าลดหย่อนเพิ่มเติม (กรอกเอง) ทุกช่อง
-        extra_deductions = sum(self[f] or 0.0 for f in self.EXTRA_DEDUCTION_FIELDS)
+        def _capped_extras(annual_inc, expense_eff):
+            """รวมค่าลดหย่อนเพิ่มเติม (กรอกเอง) หลัง "บังคับเพดานตามกฎหมายสรรพากร"
+            ป้องกันการกรอกเกินเพดาน → ระบบหักให้ไม่เกินที่กฎหมายอนุญาตเสมอ
+            :param annual_inc: เงินได้พึงประเมินทั้งปี (ใช้เป็นฐาน % ของ RMF/SSF/บำนาญ/บริจาค)
+            :param expense_eff: ค่าใช้จ่ายที่หักได้จริงปีนั้น (ใช้คำนวณฐานเงินบริจาค)
+            ใช้ closure: sso_annual, provident_fund_annual
+            """
+            inc = annual_inc or 0.0
+
+            # ── กลุ่มครอบครัว ──
+            spouse   = min(self.ded_spouse or 0.0, 60000.0)         # คู่สมรสไม่มีเงินได้ ≤ 60,000
+            parents  = min(self.ded_parents or 0.0, 120000.0)       # 30,000/คน สูงสุด 4 คน = 120,000
+            disabled = self.ded_disabled or 0.0                     # 60,000/คน ไม่จำกัดจำนวนคน
+
+            # ── กลุ่มประกัน ──
+            # ประกันสุขภาพตนเอง ≤ 25,000 และ (ชีวิต + สุขภาพตนเอง) รวมกัน ≤ 100,000
+            health_self    = min(self.ded_health_insurance or 0.0, 25000.0)
+            life_health    = min((self.ded_life_insurance or 0.0) + health_self, 100000.0)
+            parents_health = min(self.ded_parents_health_insurance or 0.0, 15000.0)  # ≤ 15,000
+            # ประกันชีวิตแบบบำนาญ ≤ 15% ของเงินได้ และ ≤ 200,000
+            pension_ins    = min(self.ded_pension_insurance or 0.0, inc * 0.15, 200000.0)
+
+            # ── กลุ่มการลงทุน/เกษียณ (เพดานรายตัว) ──
+            rmf      = min(self.ded_rmf or 0.0, inc * 0.30, 500000.0)        # RMF ≤ 30% และ ≤ 500,000
+            ssf      = min(self.ded_ssf or 0.0, inc * 0.30, 200000.0)        # SSF ≤ 30% และ ≤ 200,000
+            pf_extra = min(self.ded_pension_fund or 0.0, inc * 0.15, 500000.0)  # กองทุนสำรองฯ ≤ 15% และ ≤ 500,000
+            # เพดานรวมกลุ่มเกษียณ ≤ 500,000 (บำนาญ + RMF + SSF + กองทุนสำรองฯ กรอกเอง
+            # + กองทุนสำรองฯ ที่หักจากอัตรา % provident_fund_annual)
+            room   = max(0.0, 500000.0 - provident_fund_annual)
+            retire = min(pension_ins + rmf + ssf + pf_extra, room)
+            # ThaiESG แยกเพดานต่างหาก (ไม่นับรวม 500,000) ≤ 30% และ ≤ 300,000
+            thaiesg = min(self.ded_thaiesg or 0.0, inc * 0.30, 300000.0)
+
+            # ── กลุ่มอื่นๆ ──
+            home_loan = min(self.ded_home_loan_interest or 0.0, 100000.0)   # ดอกเบี้ยบ้าน ≤ 100,000
+            shopping  = min(self.ded_shopping or 0.0, 50000.0)              # Easy E-Receipt ≤ 50,000
+
+            # เงินบริจาค — หักได้ไม่เกิน 10% ของเงินได้ "หลังหักค่าใช้จ่าย+ลดหย่อนอื่น" (ก่อนบริจาค)
+            #   1) บริจาคการศึกษา/กีฬา/รพ.รัฐ (คูณ 2 แล้ว) ≤ 10% ของฐาน
+            #   2) บริจาคทั่วไป ≤ 10% ของฐานที่เหลือหลังหักบริจาคการศึกษาแล้ว
+            base = max(0.0, inc - expense_eff
+                       - self.personal_deduction - self.child_deduction
+                       - sso_annual - provident_fund_annual
+                       - (spouse + parents + disabled + life_health + parents_health
+                          + retire + thaiesg + home_loan + shopping))
+            edu_donation = min(self.ded_donation_education or 0.0, base * 0.10)
+            gen_donation = min(self.ded_donation or 0.0, (base - edu_donation) * 0.10)
+
+            return (spouse + parents + disabled
+                    + life_health + parents_health
+                    + retire + thaiesg
+                    + home_loan + shopping
+                    + edu_donation + gen_donation)
 
         def _annual_tax(annual_inc):
             expense_eff = min(annual_inc * 0.5, self.expense_deduction)
+            extra_deductions = _capped_extras(annual_inc, expense_eff)
             total_ded = (self.personal_deduction + self.child_deduction + extra_deductions
                          + expense_eff + sso_annual + provident_fund_annual)
             net_taxable = max(0, annual_inc - total_ded)
