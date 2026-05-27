@@ -2,7 +2,7 @@ import requests
 import json
 from odoo import models, fields, api
 from odoo.exceptions import UserError
-from datetime import date
+from datetime import date, timedelta
 
 MANUAL_API_URL = 'https://npdhrms.com/json_manual_time_logs.php'
 API_USER = 'Npd_admin'
@@ -200,14 +200,22 @@ class ManualTimeLog(models.Model):
         return branch.id
 
     @api.model
-    def sync_manual_time_logs_from_api(self):
+    def sync_manual_time_logs_from_api(self, days_back=365):
         try:
-            response = requests.get(MANUAL_API_URL, auth=(API_USER, API_PASS))
+            # ✅ PHP API กรองด้วย DATE(created_at): ถ้าไม่ส่ง param จะคืนเฉพาะ "สร้างวันนี้"
+            #    ทำให้รายการที่สร้างไว้ก่อนหน้าไม่ถูกดึงมา → ต้องส่งช่วง date_from/date_to
+            #    ดึงย้อนหลัง days_back วัน (default 365) ครอบคลุมรายการที่ยื่นไว้ก่อน
+            today = date.today()
+            params = {
+                'date_from': (today - timedelta(days=days_back)).strftime('%Y-%m-%d'),
+                'date_to': today.strftime('%Y-%m-%d'),
+            }
+            response = requests.get(MANUAL_API_URL, auth=(API_USER, API_PASS), params=params)
             response.raise_for_status()
             manual_records = json.loads(response.text)
 
             if not manual_records:
-                raise UserError('ไม่พบข้อมูลบันทึกเวลาด้วยตนเองสำหรับวันนี้จาก API')
+                raise UserError('ไม่พบข้อมูลบันทึกเวลาด้วยตนเองในช่วงที่ดึงจาก API')
 
             for record in manual_records:
                 # match ด้วย hr_id_manual_time_log (PK จาก PHP) เป็นหลัก
@@ -216,11 +224,16 @@ class ManualTimeLog(models.Model):
                 existing_record = False
                 hr_id = record.get('hr_id_manual_time_log')
                 if hr_id:
+                    # ✅ มี hr_id (PK จาก PHP) → match ด้วย hr_id เท่านั้น
+                    # ❗ ห้าม fallback ไป (user_id, work_date, checkin_time) เพราะคีย์นี้ "ไม่ unique"
+                    #    พนักงานคนเดียวมีหลายรายการในวัน/เวลาเริ่มเดียวกัน เช่น
+                    #    ทำงานนอกสถานที่ + ค่าเบี้ยเลี้ยงออกนอกสถานที่ + ลืมลงเวลา (08:00 เหมือนกัน)
+                    #    → จะเขียนทับกันเหลือแถวเดียว ทำให้บางรายการ "ไม่ถูกดึงมา"
                     existing_record = self.env['hr.manual.time.log'].search([
                         ('hr_id_manual_time_log', '=', hr_id),
                     ], limit=1)
-                # fallback (data เก่าที่ยังไม่มี hr_id) ใช้ logic เดิม
-                if not existing_record:
+                else:
+                    # fallback เฉพาะ data เก่าที่ยังไม่มี hr_id ใช้ logic เดิม
                     existing_record = self.env['hr.manual.time.log'].search([
                         ('user_id', '=', record['user_id']),
                         ('work_date', '=', record['work_date']),
