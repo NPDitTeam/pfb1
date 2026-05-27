@@ -151,6 +151,8 @@
                                     <field name="income_food"/>
                                     <field name="income_transport"/>
                                     <field name="income_fuel"/>
+                                    <field name="manual_override_income"
+                                           string="ปรับแก้ด้วยมือ (ล็อกค่าคอม ไม่ดึง API ทับ)"/>
                                     <field name="income_commission" widget="monetary"/>
                                     <button name="action_view_commission_branch_detail"
                                             type="object" string="🔍 ดูรายละเอียดค่าคอมสาขา"
@@ -306,13 +308,53 @@
                         <!-- การตั้งค่าภาษี -->
                         <page string="การตั้งค่าภาษี">
                             <group>
-                                <field name="expense_deduction"/>
-                                <field name="personal_deduction"/>
-                                <field name="provident_fund_rate"/>
-                                <field name="provident_fund_deduction_max"/>
-                                <field name="tax_monthly"/>
-
-                                <field name="accumulated_vat"/>
+                                <group string="ค่าใช้จ่าย / ลดหย่อนพื้นฐาน">
+                                    <field name="expense_deduction"/>
+                                    <field name="personal_deduction"/>
+                                    <field name="child_deduction"/>
+                                    <field name="manual_sso_annual"
+                                           string="ประกันสังคม/ปี (กรอกเอง — ว่าง=คำนวณเอง)"/>
+                                    <field name="sso_annual_used" string="ประกันสังคม/ปี (ที่ใช้ — ลดหย่อนภาษีได้สูงสุด 9,000)" readonly="1"/>
+                                    <field name="sso_total" string="ประกันสังคม/เดือน (ที่ใช้)" readonly="1"/>
+                                    <field name="provident_fund_rate"/>
+                                    <field name="provident_fund_deduction_max"/>
+                                </group>
+                                <group string="ผลการคำนวณภาษี (ระบบคำนวณอัตโนมัติจากลดหย่อน)">
+                                    <field name="manual_override_tax" string="ปรับแก้ด้วยมือ (แก้ภาษี/เดือนเอง)"/>
+                                    <field name="tax_monthly" string="ภาษีหัก ณ ที่จ่าย/เดือน (ที่ใช้)"
+                                           readonly="1"
+                                           attrs="{'invisible': [('manual_override_tax', '=', True)]}"/>
+                                    <field name="manual_tax_amount" string="ภาษีหัก ณ ที่จ่าย/เดือน (ที่ใช้)"
+                                           attrs="{'invisible': [('manual_override_tax', '=', False)]}"/>
+                                    <field name="tax_annual" string="ภาษี/ปี" readonly="1"/>
+                                    <field name="accumulated_vat"/>
+                                </group>
+                            </group>
+                            <separator string="◆ ค่าลดหย่อนเพิ่มเติม (กรอกยอดเองต่อปี — ระบบหักจากเงินได้ก่อนคำนวณภาษีให้อัตโนมัติ)"/>
+                            <group>
+                                <group string="กลุ่มครอบครัว">
+                                    <field name="ded_spouse"/>
+                                    <field name="ded_parents"/>
+                                    <field name="ded_disabled"/>
+                                </group>
+                                <group string="กลุ่มประกัน">
+                                    <field name="ded_life_insurance"/>
+                                    <field name="ded_health_insurance"/>
+                                    <field name="ded_parents_health_insurance"/>
+                                    <field name="ded_pension_insurance"/>
+                                </group>
+                                <group string="กลุ่มการลงทุน / เกษียณ">
+                                    <field name="ded_rmf"/>
+                                    <field name="ded_ssf"/>
+                                    <field name="ded_thaiesg"/>
+                                    <field name="ded_pension_fund"/>
+                                </group>
+                                <group string="กลุ่มอื่นๆ">
+                                    <field name="ded_home_loan_interest"/>
+                                    <field name="ded_donation"/>
+                                    <field name="ded_donation_education"/>
+                                    <field name="ded_shopping"/>
+                                </group>
                             </group>
                             <field name="tax_bracket_ids">
                                 <tree editable="bottom">
@@ -330,9 +372,11 @@
                             <group>
                                 <field name="sso_rate"/>
                                 <field name="sso_min_wage"/>
-
-                                <field name="sso_total"/>
-                                <field name="accumulated_social_security"/>
+                                <field name="manual_sso_annual"
+                                       string="ประกันสังคม/ปี (กรอกเอง — ว่าง=คำนวณเอง)"/>
+                                <field name="sso_annual_used" string="ประกันสังคม/ปี (ที่ใช้)" readonly="1"/>
+                                <field name="sso_total" string="ประกันสังคม/เดือน (ที่ใช้จริง)" readonly="1"/>
+                                <field name="accumulated_social_security" string="ประกันสังคมสะสม (รวมทุกเดือน)"/>
                             </group>
                         </page>
                     </notebook>

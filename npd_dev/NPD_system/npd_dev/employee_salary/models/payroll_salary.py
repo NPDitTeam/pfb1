@@ -206,6 +206,66 @@ class PayrollSalary(models.Model):
     sso_max_wage = fields.Float(string="ฐานเงินเดือนสูงสุด (ประกันสังคม)", default=17500.0)
     expense_deduction = fields.Float(string="ค่าใช้จ่าย (สูงสุด 100,000)", default=100000.0)
     personal_deduction = fields.Float(string="ค่าลดหย่อนส่วนตัว", default=60000.0)
+    child_deduction = fields.Float(
+        string="ค่าลดหย่อนบุตร", default=0.0,
+        help="ใส่ยอดรวมค่าลดหย่อนบุตรต่อปี (กรอกเอง) — บุตรคนละ 30,000 บาท/ปี "
+             "(คนที่ 2 เป็นต้นไปที่เกิดปี 2561+ ได้ 60,000) "
+             "ระบบจะหักออกจากเงินได้ก่อนคำนวณภาษี เหมือนค่าลดหย่อนส่วนตัว")
+
+    # ════════════════ ค่าลดหย่อนภาษีเพิ่มเติม (กรอกยอดเองต่อปี) ════════════════
+    # ทุกช่องด้านล่างจะถูกรวมหักออกจากเงินได้ก่อนคำนวณภาษี (ดู EXTRA_DEDUCTION_FIELDS)
+    # ── กลุ่มครอบครัว ──
+    ded_spouse = fields.Float(
+        string="คู่สมรส (ไม่มีเงินได้)", default=0.0, help="สูงสุด 60,000")
+    ded_parents = fields.Float(
+        string="อุปการะบิดามารดา", default=0.0,
+        help="คนละ 30,000 (อายุ 60 ปีขึ้นไป) สูงสุด 4 คน = 120,000")
+    ded_disabled = fields.Float(
+        string="อุปการะผู้พิการ/ทุพพลภาพ", default=0.0, help="คนละ 60,000")
+    # ── กลุ่มประกัน ──
+    ded_life_insurance = fields.Float(
+        string="เบี้ยประกันชีวิต", default=0.0,
+        help="สูงสุด 100,000 (รวมประกันสุขภาพตนเองแล้วไม่เกิน 100,000)")
+    ded_health_insurance = fields.Float(
+        string="เบี้ยประกันสุขภาพตนเอง", default=0.0,
+        help="สูงสุด 25,000 และรวมกับประกันชีวิตไม่เกิน 100,000")
+    ded_parents_health_insurance = fields.Float(
+        string="เบี้ยประกันสุขภาพบิดามารดา", default=0.0, help="สูงสุด 15,000")
+    ded_pension_insurance = fields.Float(
+        string="เบี้ยประกันชีวิตแบบบำนาญ", default=0.0,
+        help="สูงสุด 15% ของเงินได้ และไม่เกิน 200,000")
+    # ── กลุ่มการลงทุน/เกษียณ (เพดานรวมกลุ่มเกษียณ 500,000) ──
+    ded_rmf = fields.Float(
+        string="กองทุน RMF", default=0.0, help="สูงสุด 30% ของเงินได้ และไม่เกิน 500,000")
+    ded_ssf = fields.Float(
+        string="กองทุน SSF", default=0.0, help="สูงสุด 30% ของเงินได้ และไม่เกิน 200,000")
+    ded_thaiesg = fields.Float(
+        string="กองทุน ThaiESG", default=0.0, help="สูงสุด 30% ของเงินได้ และไม่เกิน 300,000")
+    ded_pension_fund = fields.Float(
+        string="กองทุนสำรองเลี้ยงชีพ/กบข./ครู (เพิ่มเติม)", default=0.0,
+        help="กรอกเพิ่มถ้าไม่ได้คิดจากอัตรา % ด้านล่าง — สูงสุด 15% และไม่เกิน 500,000")
+    # ── กลุ่มอื่นๆ ──
+    ded_home_loan_interest = fields.Float(
+        string="ดอกเบี้ยกู้ยืมซื้อที่อยู่อาศัย", default=0.0, help="สูงสุด 100,000")
+    ded_donation = fields.Float(
+        string="เงินบริจาคทั่วไป", default=0.0,
+        help="กรอกยอดที่หักได้จริง (ไม่เกิน 10% ของเงินได้หลังหักลดหย่อนอื่น)")
+    ded_donation_education = fields.Float(
+        string="เงินบริจาคการศึกษา/กีฬา/รพ.รัฐ (2 เท่า)", default=0.0,
+        help="กรอกยอดที่หักได้จริงหลังคูณ 2 แล้ว (รวมแล้วไม่เกิน 10% ของเงินได้)")
+    ded_shopping = fields.Float(
+        string="ช้อปดีมีคืน / Easy E-Receipt", default=0.0, help="สูงสุด 50,000")
+
+    # รายชื่อช่องลดหย่อนเพิ่มเติม (กรอกเอง) — ใช้รวมยอดใน _calculate_tax
+    EXTRA_DEDUCTION_FIELDS = [
+        'ded_spouse', 'ded_parents', 'ded_disabled',
+        'ded_life_insurance', 'ded_health_insurance',
+        'ded_parents_health_insurance', 'ded_pension_insurance',
+        'ded_rmf', 'ded_ssf', 'ded_thaiesg', 'ded_pension_fund',
+        'ded_home_loan_interest', 'ded_donation', 'ded_donation_education',
+        'ded_shopping',
+    ]
+
     provident_fund_rate = fields.Float(string="อัตรากองทุนสำรองเลี้ยงชีพ (%)", default=0.0)
     provident_fund_deduction_max = fields.Float(string="หักกองทุนฯ สูงสุดไม่เกิน", default=500000.0)
     tax_bracket_ids = fields.One2many('payroll.tax.bracket', 'payroll_id', string='ขั้นบันไดอัตราภาษี',
@@ -300,11 +360,15 @@ class PayrollSalary(models.Model):
 
     ot_total = fields.Float(string="ค่าล่วงเวลา (OT) รวม", compute='_compute_summary_totals', store=True)
     sso_total = fields.Float(
-        string="ประกันสังคม",
+        string="ประกันสังคม/เดือน",
         compute="_compute_sso_total",
         inverse="_inverse_sso_total",  # ✅ เพิ่ม inverse
         store=True
     )
+    # ประกันสังคมต่อปี (= ต่อเดือน × 12) — ยอดที่ใช้ลดหย่อนภาษี
+    sso_annual_used = fields.Float(
+        string="ประกันสังคม/ปี (ใช้ลดหย่อนภาษี)",
+        compute="_compute_sso_annual_used", store=True, readonly=True)
     payment_date = fields.Date(
         string="วันที่จ่ายเงิน",
         default=lambda self: self._get_default_date_28()
@@ -446,6 +510,27 @@ class PayrollSalary(models.Model):
     deduction_absent = fields.Float(string="ขาดงาน", default=0.0)
     manual_override = fields.Boolean(string="ปรับแก้ด้วยมือ", default=False)
 
+    # ✅ ปรับแก้ด้วยมือ ฝั่ง "รายได้" (แยกจากฝั่งรายจ่าย/หัก)
+    # ติ๊กแล้ว → ไม่ดึงค่าคอม (สาขา/Sale) จาก API มาทับ ยึดค่าที่กรอกเอง
+    # แต่ส่วนอื่นยังคำนวณอัตโนมัติ (line_ids ยังถูก rebuild → ค่าคอมที่กรอกไหลเข้ายอดรวม)
+    manual_override_income = fields.Boolean(string="ปรับแก้ด้วยมือ", default=False)
+
+    # ✅ ปรับแก้ด้วยมือ เฉพาะ "ภาษีหัก ณ ที่จ่าย" (แยกจากฝั่งรายจ่าย)
+    # ติ๊กแล้ว → กรอกค่าภาษีที่ช่อง manual_tax_amount → ระบบยึดค่านี้ ไม่คำนวณทับ
+    # ส่วนอื่นยังคำนวณอัตโนมัติปกติ
+    manual_override_tax = fields.Boolean(string="ปรับแก้ด้วยมือ", default=False)
+    manual_tax_amount = fields.Float(string="ภาษีหัก ณ ที่จ่าย (กรอกเอง/เดือน)", default=0.0)
+    # ช่องกรอกภาษีรายปีแบบธรรมดา (ไม่ใช่ computed) → กรอกแล้วไม่ถูกคำนวณทับ
+    manual_tax_annual = fields.Float(string="ภาษี/ปี (กรอกเอง)", default=0.0)
+
+    # ✅ ปรับแก้ด้วยมือ เฉพาะ "ประกันสังคม" (แยกจากฝั่งรายจ่าย)
+    # ติ๊กแล้ว → กรอกค่า ปกส. ที่ช่อง manual_sso_amount → ระบบยึดค่านี้ ไม่คำนวณทับ
+    # ส่วนอื่นยังคำนวณอัตโนมัติปกติ
+    manual_override_sso = fields.Boolean(string="ปรับแก้ด้วยมือ", default=False)
+    manual_sso_amount = fields.Float(string="ประกันสังคม (กรอกเอง/เดือน)", default=0.0)
+    # ช่องกรอก ปกส. รายปีแบบธรรมดา (ไม่ใช่ computed) → กรอกแล้วระบบหาร 12 เป็นรายเดือนให้
+    manual_sso_annual = fields.Float(string="ประกันสังคม/ปี (กรอกเอง)", default=0.0)
+
     # ✅ ฟิลด์ใหม่ ใช้แทน manual_override (เฉพาะ OT)
     override_ot = fields.Boolean(string="ปรับแก้ OT ด้วยมือ", default=False)
 
@@ -467,10 +552,19 @@ class PayrollSalary(models.Model):
                     'amount': rec.tax_monthly
                 })]
 
-    @api.depends('line_ids.amount', 'line_ids.name')
+    @api.depends('line_ids.amount', 'line_ids.name', 'manual_sso_amount')
     def _compute_sso_total(self):
         for rec in self:
-            rec.sso_total = sum(l.amount for l in rec.line_ids if l.name == 'ประกันสังคม')
+            if rec.manual_sso_amount and rec.manual_sso_amount > 0:
+                # กรอก ปกส. เอง → ยึดค่าที่กรอก
+                rec.sso_total = rec.manual_sso_amount
+            else:
+                rec.sso_total = sum(l.amount for l in rec.line_ids if l.name == 'ประกันสังคม')
+
+    @api.depends('sso_total')
+    def _compute_sso_annual_used(self):
+        for rec in self:
+            rec.sso_annual_used = (rec.sso_total or 0.0) * 12
 
     def _inverse_sso_total(self):
         """ ให้แก้ sso_total ได้ตรง ๆ """
@@ -812,7 +906,16 @@ class PayrollSalary(models.Model):
                     'income_fuel', 'income_commission', 'income_commission_sale',
                     'income_other_manual', 'income_bonus', 'bonus_active', 'income_missed_payment',
                     'expense_provident', 'expense_advance', 'expense_loan',
-                    'expense_ksl', 'expense_other_manual'
+                    'expense_ksl', 'expense_other_manual', 'child_deduction',
+                    'manual_override_tax', 'manual_override_sso',
+                    'manual_tax_amount', 'manual_sso_amount', 'manual_tax_annual',
+                    'manual_sso_annual',
+                    'ded_spouse', 'ded_parents', 'ded_disabled',
+                    'ded_life_insurance', 'ded_health_insurance',
+                    'ded_parents_health_insurance', 'ded_pension_insurance',
+                    'ded_rmf', 'ded_ssf', 'ded_thaiesg', 'ded_pension_fund',
+                    'ded_home_loan_interest', 'ded_donation',
+                    'ded_donation_education', 'ded_shopping'
                 ]):
                     record._populate_all_lines()
 
@@ -864,7 +967,14 @@ class PayrollSalary(models.Model):
         'income_fuel', 'income_commission', 'income_commission_sale',
         'income_other_manual', 'income_bonus', 'bonus_active', 'income_missed_payment',
         'expense_provident', 'expense_advance', 'expense_loan',
-        'expense_ksl', 'expense_other_manual'
+        'expense_ksl', 'expense_other_manual', 'child_deduction',
+        'manual_tax_amount', 'manual_sso_amount',
+        'ded_spouse', 'ded_parents', 'ded_disabled',
+        'ded_life_insurance', 'ded_health_insurance',
+        'ded_parents_health_insurance', 'ded_pension_insurance',
+        'ded_rmf', 'ded_ssf', 'ded_thaiesg', 'ded_pension_fund',
+        'ded_home_loan_interest', 'ded_donation',
+        'ded_donation_education', 'ded_shopping'
     )
     def _onchange_income_expense_fields(self):
         if self:
@@ -873,6 +983,49 @@ class PayrollSalary(models.Model):
             self._compute_other_income_total()
             self._compute_expense_other_total()
             self._populate_all_lines()
+
+    def _auto_tax_annual(self):
+        """ภาษี/ปี ที่ระบบ "ควรคำนวณได้" ตามสูตร (ไม่สนค่าที่กรอกเอง) — ใช้เติมค่าเริ่มต้น"""
+        self.ensure_one()
+        exec_cfg = self.EXECUTIVE_TAX_CONFIG.get(self.employee_code or '')
+        if exec_cfg and exec_cfg.get('tax_monthly') is not None:
+            return (exec_cfg['tax_monthly'] or 0.0) * 12
+        monthly_income = self.base_salary + self.ot_total
+        sso_m = self.sso_total or 0.0
+        bonus = (self.income_bonus or 0.0) if self.bonus_active else 0.0
+        _, auto_annual = self._calculate_tax(monthly_income, sso_m, bonus)
+        return auto_annual
+
+    @api.onchange('manual_override_tax')
+    def _onchange_manual_override_tax(self):
+        """ติ๊ก "ปรับแก้ด้วยมือ" (ภาษี) → เติมค่าภาษีที่ระบบคำนวณได้ให้เป็นค่าเริ่มต้น แล้วแก้ต่อได้
+        ⚠️ ใช้ _auto_tax_annual (สูตร) ไม่ใช่ tax_monthly เพราะตอนนี้สลับเป็นโหมดมือแล้ว
+        tax_monthly จะอ่านได้ = manual_tax_amount (= 0) ทำให้เติม 0"""
+        for rec in self:
+            if rec.manual_override_tax and not rec.manual_tax_amount:
+                rec.manual_tax_amount = rec._auto_tax_annual() / 12.0
+            rec._populate_all_lines()
+
+    def _auto_sso_amount(self):
+        """ประกันสังคมต่อเดือน ที่ระบบ "ควรคำนวณได้" ตามสูตร (ไม่สนค่าที่กรอกเอง)"""
+        self.ensure_one()
+        exec_cfg = self.EXECUTIVE_TAX_CONFIG.get(self.employee_code or '')
+        if exec_cfg and exec_cfg.get('skip_sso'):
+            return 0.0
+        sso_base = max(self.sso_min_wage, min(self.base_salary, self.sso_max_wage))
+        return float(round_half_up(sso_base * (self.sso_rate / 100.0)))
+
+    @api.onchange('manual_sso_annual')
+    def _onchange_manual_sso_annual(self):
+        """กรอก "ประกันสังคม/ปี (กรอกเอง)" — ช่องธรรมดา (ไม่ถูกคำนวณทับ)
+        - ใส่ค่า (> 0) → ตั้ง ปกส./เดือน = ปี ÷ 12 → ระบบยึดค่านี้
+        - ลบเป็น 0/ว่าง → กลับไปคำนวณอัตโนมัติ"""
+        for rec in self:
+            if rec.manual_sso_annual and rec.manual_sso_annual > 0:
+                rec.manual_sso_amount = rec.manual_sso_annual / 12.0
+            else:
+                rec.manual_sso_amount = 0.0
+            rec._populate_all_lines()
 
     def _get_sales_commission_rate(self, total_net_rental, comm_type='sale_branch'):
         """คำนวณอัตราคอมมิชชั่น Sales ตามขั้นบันได (ดึงจากเมนูตั้งค่า)
@@ -1039,6 +1192,11 @@ class PayrollSalary(models.Model):
         เรียกอัตโนมัติเมื่อเลือกพนักงาน/เปลี่ยนเดือน/ปี
         """
         self.ensure_one()
+
+        # ✅ ติ๊ก "ปรับแก้ด้วยมือ" (ฝั่งรายได้) → ยึดค่าที่กรอกเอง ไม่ดึง API มาทับ
+        if self.manual_override_income:
+            _logger.info("[COMMISSION SALES] manual_override_income=True → ข้ามการดึง API ใช้ค่าที่กรอกเอง")
+            return
 
         if not self.employee_id or not self.month or not self.year:
             return
@@ -1241,6 +1399,11 @@ class PayrollSalary(models.Model):
         → เซ็ตลง income_commission
         """
         self.ensure_one()
+
+        # ✅ ติ๊ก "ปรับแก้ด้วยมือ" (ฝั่งรายได้) → ยึดค่าที่กรอกเอง ไม่ดึง API มาทับ
+        if self.manual_override_income:
+            _logger.info("[COMMISSION BRANCH] manual_override_income=True → ข้ามการดึง API ใช้ค่าที่กรอกเอง")
+            return
 
         if not self.employee_id or not self.month or not self.year:
             return
@@ -1932,7 +2095,7 @@ class PayrollSalary(models.Model):
         '0022': {'tax_monthly': 65367.0, 'skip_sso': True},   # ธีระพล รอดสาตร์
         '1343': {'tax_monthly': 92867.0, 'skip_sso': True},   # ฐนันท์พัสร์ ฤทธาภรณ์
         '0203': {'tax_monthly': 3758.0,  'skip_sso': False},  # จิดาภา รอดสาตร์ (ปกส. ปกติ)
-        '0539': {'tax_monthly': None,    'skip_sso': True},   # สุดคนึง รอดสาตร์ (ไม่คิด ปกส. แต่ภาษีปกติ)
+        # 0539 สุดคนึง รอดสาตร์ — เอาออกจากบุคคลพิเศษ คิดภาษี + ปกส. ตามปกติ
     }
 
     def _prepare_ot_lines(self):
@@ -2688,6 +2851,10 @@ class PayrollSalary(models.Model):
         # บุคคลพิเศษที่ skip_sso → ไม่หักประกันสังคม
         if exec_cfg and exec_cfg.get('skip_sso'):
             sso_amount = 0.0
+        # ✅ กรอก "ประกันสังคม (กรอกเอง)" > 0 → ยึดค่านี้เลย ไม่คำนวณทับ
+        elif self.manual_sso_amount and self.manual_sso_amount > 0:
+            sso_amount = self.manual_sso_amount
+            _logger.info("[SSO] manual_sso_amount=%.2f → ใช้ค่าที่กรอกเอง", sso_amount)
         lines_to_create.append((0, 0, {
             'name': 'ประกันสังคม',
             'type': 'deduction',
@@ -2712,6 +2879,10 @@ class PayrollSalary(models.Model):
         # บุคคลพิเศษ — ล็อกภาษีต่อเดือนคงที่ (เฉพาะที่กำหนด tax_monthly ไว้)
         if exec_cfg and exec_cfg.get('tax_monthly') is not None:
             temp_tax = exec_cfg['tax_monthly']
+        # ✅ ติ๊ก "ปรับแก้ด้วยมือ" → ใช้ค่าที่กรอกในช่องภาษี/เดือน ไม่คำนวณทับ
+        elif self.manual_override_tax:
+            temp_tax = self.manual_tax_amount
+            _logger.info("[TAX] manual_override_tax=True → ใช้ค่าที่กรอกเอง = %.2f", temp_tax)
 
         lines_to_create.append((0, 0, {
             'name': 'ภาษีหัก ณ ที่จ่าย',
@@ -3022,10 +3193,20 @@ class PayrollSalary(models.Model):
     def _compute_summary_totals(self):
         for rec in self:
             rec.ot_total = rec.ot_total_weekday + rec.ot_total_holiday + rec.ot_total_sunday
-            rec.sso_total = sum(l.amount for l in rec.line_ids if l.name == 'ประกันสังคม')
+            if rec.manual_sso_amount and rec.manual_sso_amount > 0:
+                rec.sso_total = rec.manual_sso_amount
+            else:
+                rec.sso_total = sum(l.amount for l in rec.line_ids if l.name == 'ประกันสังคม')
 
-    @api.depends('total_gross', 'personal_deduction', 'expense_deduction',
-                 'provident_fund_rate', 'sso_total', 'tax_bracket_ids', 'line_ids')
+    @api.depends('total_gross', 'personal_deduction', 'child_deduction', 'expense_deduction',
+                 'provident_fund_rate', 'sso_total', 'tax_bracket_ids', 'line_ids',
+                 'manual_tax_amount', 'manual_override_tax',
+                 'ded_spouse', 'ded_parents', 'ded_disabled',
+                 'ded_life_insurance', 'ded_health_insurance',
+                 'ded_parents_health_insurance', 'ded_pension_insurance',
+                 'ded_rmf', 'ded_ssf', 'ded_thaiesg', 'ded_pension_fund',
+                 'ded_home_loan_interest', 'ded_donation', 'ded_donation_education',
+                 'ded_shopping')
     def _compute_tax(self):
         for rec in self:
             # ใช้ [:1] เพื่อรับ singleton — กรณีมี duplicate line
@@ -3034,7 +3215,10 @@ class PayrollSalary(models.Model):
             if exec_cfg and exec_cfg.get('tax_monthly') is not None:  # ✅ บุคคลพิเศษ — ล็อกภาษีคงที่
                 rec.tax_monthly = exec_cfg['tax_monthly']
                 rec.tax_annual = rec.tax_monthly * 12
-            elif tax_line and tax_line.amount > 0:  # ✅ ใช้ค่าที่ user override
+            elif rec.manual_override_tax:  # ✅ ติ๊กปรับแก้ด้วยมือ → ยึดค่าที่กรอก
+                rec.tax_monthly = rec.manual_tax_amount
+                rec.tax_annual = rec.manual_tax_amount * 12
+            elif tax_line and tax_line.amount > 0:  # ✅ ใช้ค่าที่ user override (แก้ใน line ตรงๆ)
                 rec.tax_monthly = tax_line.amount
                 rec.tax_annual = rec.tax_monthly * 12
             else:
@@ -3054,6 +3238,8 @@ class PayrollSalary(models.Model):
                              — และภาษีส่วนเพิ่มของโบนัสจะถูกหักในเดือนที่จ่ายโบนัสเท่านั้น
         """
         annual_income = gross_income * 12
+        # ลดหย่อน ปกส. ที่หักภาษีได้ = สูงสุด 9,000/ปี ตามกฎหมาย (เพดานฐาน 15,000 × 5% × 12)
+        # แม้ระบบหัก ปกส. จากเงินเดือนจริงปีละ 10,500 (ฐาน 17,500) แต่ลดหย่อนภาษีได้แค่ 9,000
         sso_annual = min(sso_monthly * 12, 9000)
 
         provident_fund_annual = 0
@@ -3067,9 +3253,13 @@ class PayrollSalary(models.Model):
                     return (taxable * (bracket.rate / 100.0)) - bracket.deduction
             return 0.0
 
+        # รวมค่าลดหย่อนเพิ่มเติม (กรอกเอง) ทุกช่อง
+        extra_deductions = sum(self[f] or 0.0 for f in self.EXTRA_DEDUCTION_FIELDS)
+
         def _annual_tax(annual_inc):
             expense_eff = min(annual_inc * 0.5, self.expense_deduction)
-            total_ded = self.personal_deduction + expense_eff + sso_annual + provident_fund_annual
+            total_ded = (self.personal_deduction + self.child_deduction + extra_deductions
+                         + expense_eff + sso_annual + provident_fund_annual)
             net_taxable = max(0, annual_inc - total_ded)
             return _bracket_tax(net_taxable)
 
