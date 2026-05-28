@@ -11,6 +11,8 @@
         'security/ir.model.access.csv',
         'views/commission_report_views.xml',
         'views/commission_report_sales_views.xml',
+        'views/salary_branch_report_views.xml',
+        'data/salary_branch_report_cron.xml',
     ],
     'license': 'LGPL-3',
     'installable': True,

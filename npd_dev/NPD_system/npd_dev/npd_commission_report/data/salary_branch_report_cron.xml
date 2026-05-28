@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    หมายเหตุสำหรับผู้ดูแลระบบ:
+    cron นี้รัน "ทุกวัน" รีเฟรช snapshot ของเดือนปัจจุบัน
+    หากต้องการเปลี่ยนเวลาที่รัน (เช่นอยากให้รันตี 3 แทน)
+    >>> ห้ามแก้ที่ไฟล์นี้ <<< เพราะ noupdate="1" ใช้ตอน install เท่านั้น
+
+    ให้ไปแก้ที่ Odoo UI:
+        Settings → Technical → Automation → Scheduled Actions
+        ค้นหา: "รีเฟรชรายได้รวมตามสาขา (รายวัน)"
+        แก้ field "Next Execution Date" เป็นวัน+เวลาที่ต้องการ
+        Save → Odoo จะรันเวลานี้ทุกวันต่อจากนั้น
+-->
+<odoo>
+    <data noupdate="1">
+        <record id="ir_cron_salary_branch_report_refresh" model="ir.cron">
+            <field name="name">รีเฟรชรายได้รวมตามสาขา (รายวัน)</field>
+            <field name="model_id" ref="model_npd_salary_branch_report"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_refresh_current_month()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active">True</field>
+        </record>
+    </data>
+</odoo>

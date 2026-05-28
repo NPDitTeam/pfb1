@@ -3,3 +3,5 @@ access_npd_commission_report,npd.commission.report,model_npd_commission_report,a
 access_npd_commission_report_line,npd.commission.report.line,model_npd_commission_report_line,account.group_account_user,1,1,1,1
 access_npd_commission_report_sales,npd.commission.report.sales,model_npd_commission_report_sales,account.group_account_user,1,1,1,1
 access_npd_commission_report_sales_line,npd.commission.report.sales.line,model_npd_commission_report_sales_line,account.group_account_user,1,1,1,1
+access_npd_salary_branch_report,npd.salary.branch.report,model_npd_salary_branch_report,account.group_account_user,1,1,1,1
+access_npd_salary_branch_report_line,npd.salary.branch.report.line,model_npd_salary_branch_report_line,account.group_account_user,1,1,1,1

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Form (Wizard) — เลือกเดือน/ปี -->
+        <record id="view_npd_salary_branch_report_form" model="ir.ui.view">
+            <field name="name">npd.salary.branch.report.form</field>
+            <field name="model">npd.salary.branch.report</field>
+            <field name="arch" type="xml">
+                <form string="รายได้รวมตามสาขา">
+                    <group>
+                        <group>
+                            <field name="month"/>
+                            <field name="year"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert" style="margin-top: 12px;">
+                        <strong>หมายเหตุ:</strong>
+                        รายงานนี้ดึงข้อมูลจากฐานข้อมูล <code>HRMS</code> โดยตรง
+                        (กรณีใช้คนละ DB) — รายได้รวม = <code>total_gross − ค่าคอมมิชชั่นสาขา − ค่าคอมมิชชั่น Sale</code><br/>
+                        ระบบจะรีเฟรชเดือนปัจจุบัน <strong>อัตโนมัติทุกวัน</strong> ผ่าน cron
+                        — หรือกดปุ่ม "รีเฟรช" บนตารางเพื่ออัพเดททันที<br/>
+                        เปลี่ยนชื่อ DB ต้นทางได้ที่ Settings → Technical → System Parameters →
+                        <code>npd.salary_report.source_db</code>
+                    </div>
+                    <footer>
+                        <button name="action_generate_report" string="ดูรายงาน" type="object" class="btn-primary"/>
+                        <button string="ยกเลิก" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Tree (ผลลัพธ์) — มีปุ่มรีเฟรชใน header -->
+        <record id="view_npd_salary_branch_report_line_tree" model="ir.ui.view">
+            <field name="name">npd.salary.branch.report.line.tree</field>
+            <field name="model">npd.salary.branch.report.line</field>
+            <field name="arch" type="xml">
+                <tree string="รายได้รวมตามสาขา" create="false" edit="false" delete="false">
+                    <header>
+                        <button name="action_refresh_current_month" type="object"
+                                string="🔄 รีเฟรชเดือนปัจจุบัน" class="btn-primary"
+                                help="ดึงข้อมูลล่าสุดจาก HRMS สำหรับเดือน/ปีปัจจุบัน"/>
+                        <button name="action_refresh_this_period" type="object"
+                                string="รีเฟรช snapshot นี้" class="btn-secondary"
+                                help="รีเฟรชเฉพาะเดือน/ปีของแถวที่เลือก (เลือกแถวก่อนแล้วกด)"/>
+                        <button name="action_open_wizard" type="object"
+                                string="เลือกเดือนอื่น"
+                                help="เปิด wizard เพื่อสร้าง snapshot ของเดือน/ปีอื่น"/>
+                    </header>
+                    <field name="year"/>
+                    <field name="month"/>
+                    <field name="branch_name"/>
+                    <field name="employee_count" sum="รวมพนักงาน"/>
+                    <field name="total_income" sum="รวมรายได้"/>
+                    <field name="last_refresh"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Search -->
+        <record id="view_npd_salary_branch_report_line_search" model="ir.ui.view">
+            <field name="name">npd.salary.branch.report.line.search</field>
+            <field name="model">npd.salary.branch.report.line</field>
+            <field name="arch" type="xml">
+                <search string="ค้นหา">
+                    <field name="branch_name"/>
+                    <field name="month"/>
+                    <field name="year"/>
+                    <separator/>
+                    <filter string="ปีนี้" name="filter_this_year" domain="[('year', '=', str(context_today().year))]"/>
+                    <filter string="เดือนนี้" name="filter_this_month"
+                            domain="[('month', '=', context_today().month), ('year', '=', str(context_today().year))]"/>
+                    <group expand="0" string="จัดกลุ่มตาม">
+                        <filter string="ปี" name="group_by_year" context="{'group_by': 'year'}"/>
+                        <filter string="เดือน" name="group_by_month" context="{'group_by': 'month'}"/>
+                        <filter string="สาขา" name="group_by_branch" context="{'group_by': 'branch_name'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Action: เปิด wizard -->
+        <record id="action_npd_salary_branch_report" model="ir.actions.act_window">
+            <field name="name">รายได้รวมตามสาขา</field>
+            <field name="res_model">npd.salary.branch.report</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <!-- Action: ดู snapshot ทั้งหมด (เปิดตาราง snapshot ตรงๆ ไม่ผ่าน wizard) -->
+        <record id="action_npd_salary_branch_report_lines" model="ir.actions.act_window">
+            <field name="name">รายได้รวมตามสาขา (ดูประวัติทั้งหมด)</field>
+            <field name="res_model">npd.salary.branch.report.line</field>
+            <field name="view_mode">tree</field>
+            <field name="target">current</field>
+            <field name="context">{'search_default_filter_this_month': 1}</field>
+        </record>
+
+        <!-- Menu: เมนูเดียว เปิดตาราง snapshot (default filter เดือนนี้)
+             ปุ่ม "เลือกเดือนอื่น" บน header ตารางจะเรียก wizard ขึ้นมาให้ -->
+        <menuitem id="menu_npd_salary_branch_report_lines"
+                  name="รายได้รวมตามสาขา"
+                  action="action_npd_salary_branch_report_lines"
+                  parent="account.menu_finance_reports"
+                  sequence="997"/>
+
+    </data>
+</odoo>
