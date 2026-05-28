@@ -380,6 +380,39 @@ class CommissionReport(models.TransientModel):
             for line in voucher_lines:
                 total_expense += line.price_subtotal or 0.0
 
+            # ✅ ดึง JV จากสมุดรายวันทั่วไป (account_move ที่เลขขึ้นต้นด้วย 'JV-')
+            #    เงื่อนไข: state='posted' (ลงบันทึกแล้ว) + branch ตรง + วันที่ลงบัญชี (date) อยู่ในเดือน/ปีรอบนี้
+            #    ยอด = SUM(debit) ของบรรทัดทั้งหมดในใบ (= ขนาดของรายการสมุดบัญชี เพราะ debit = credit ในแต่ละใบ)
+            jv_moves = self.env['account.move'].search([
+                ('name', '=like', 'JV-%'),
+                ('branch_id', '=', branch.id),
+                ('date', '>=', date_from),
+                ('date', '<=', date_to),
+                ('state', '=', 'posted'),
+            ])
+            jv_expense = 0.0
+            for mv in jv_moves:
+                for line in mv.line_ids:
+                    if line.debit and line.debit > 0:
+                        jv_expense += line.debit
+            total_expense += jv_expense
+
+            # ✅ บวกค่าจ้างพนักงาน (จากรายงาน "รายได้รวมตามสาขา") เข้าไปใน total_expense
+            #    เงื่อนไข: เฉพาะสาขาที่ total_expense > 0 อยู่แล้ว (= สาขาที่ดำเนินการในเดือนนั้น)
+            #    เทียบจาก (branch_name, month, year) ของ date_to
+            #    หมายเหตุ: ต้องรีเฟรชรายงาน "รายได้รวมตามสาขา" ของเดือนนั้นก่อน
+            #             ถ้ายังไม่เคยรีเฟรช → salary_total = 0 (ไม่กระทบ)
+            if total_expense > 0:
+                salary_lines = self.env['npd.salary.branch.report.line'].sudo().search([
+                    ('branch_name', '=', branch.name),
+                    ('month', '=', date_to.month),
+                    ('year', '=', str(date_to.year)),
+                ])
+                if salary_lines:
+                    salary_total = sum(salary_lines.mapped('total_income'))
+                    if salary_total > 0:
+                        total_expense += salary_total
+
             # คำนวณยอดเช่าสุทธิ (net_rental)
             net_rental = total_rental_amount + total_payment_received - total_outstanding_debt - total_expense
 
