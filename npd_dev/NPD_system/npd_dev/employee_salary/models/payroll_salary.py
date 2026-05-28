@@ -1048,9 +1048,15 @@ class PayrollSalary(models.Model):
     def _fetch_vehicle_booking_data(self):
         """
         ดึงค่าเที่ยว (travel_expenses) และค่าเบี้ยเลี้ยง (daily_allowance)
-        จาก API https://npd-solution.com/api/vehicle-booking
-        กรองจาก ชื่อ+นามสกุล (driver_name), เดือน, ปี
+        จาก API https://npd-solution.com/api/vehicle-booking (DB: NPD_Logistics)
+        เงื่อนไข:
+          - state = 'done' (เสร็จสิ้น) — ฝั่ง API บังคับ
+          - driver_id.name = firstname + lastname (จับคู่ฝั่ง Python)
+          - planned_start_date_t อยู่ใน "รอบตัดเงินเดือน" (25 เดือนก่อน ถึง 24 เดือนนี้)
         → เซ็ตลง income_transport และ income_allowance
+
+        หมายเหตุ: API กรอง planned_start_date_t เป็น calendar month (1-31)
+        ดังนั้นต้องเรียก API 2 รอบ (เดือน N-1 และ N) แล้วกรองช่วงรอบตัดในฝั่ง Python
         """
         self.ensure_one()
 
@@ -1058,17 +1064,32 @@ class PayrollSalary(models.Model):
             return
 
         import re
+        from datetime import datetime as _dt
         emp_firstname = (self.firstname or '').strip()
         emp_lastname = (self.lastname or '').strip()
         # normalize ช่องว่างหลายตัวให้เหลือ 1 ตัว เพื่อเปรียบเทียบ
         emp_fullname = re.sub(r'\s+', ' ', (emp_firstname + ' ' + emp_lastname).strip())
 
-        month = self.month
-        year = str(self.year).strip()
+        # ✅ คำนวณ "รอบตัดเงินเดือน" — ตรงกับวิธีของ _get_prorated_salary_income
+        try:
+            m = int(self.month)
+            y = int(self.year)
+        except (TypeError, ValueError):
+            return
+        end_day = self.cutoff_day or 24
+        start_day = (self.period_id.cutoff_start_day if self.period_id else None) or 25
+        last_end = calendar.monthrange(y, m)[1]
+        cycle_end = date(y, m, min(end_day, last_end))
+        if m == 1:
+            prev_m, prev_y = 12, y - 1
+        else:
+            prev_m, prev_y = m - 1, y
+        last_start = calendar.monthrange(prev_y, prev_m)[1]
+        cycle_start = date(prev_y, prev_m, min(start_day, last_start))
 
         _logger.info("=" * 60)
-        _logger.info("[VEHICLE BOOKING] เริ่มดึงข้อมูลค่าเที่ยว/เบี้ยเลี้ยง สำหรับ: '%s' | เดือน: %s/%s",
-                     emp_fullname, month, year)
+        _logger.info("[VEHICLE BOOKING] เริ่มดึงค่าเที่ยว/เบี้ยเลี้ยง driver='%s' | รอบตัด=[%s..%s]",
+                     emp_fullname, cycle_start, cycle_end)
 
         login_url = 'https://npd-solution.com/web/session/authenticate'
         api_url = 'https://npd-solution.com/api/vehicle-booking'
@@ -1078,17 +1099,14 @@ class PayrollSalary(models.Model):
 
         total_travel_expenses = 0.0
         total_daily_allowance = 0.0
+        all_data = []  # รวมทุก booking จาก 2 เดือน
 
         try:
             # ===== Step 1: Login =====
             session = requests.Session()
             login_payload = {
                 "jsonrpc": "2.0",
-                "params": {
-                    "db": login_db,
-                    "login": login_user,
-                    "password": login_pass
-                }
+                "params": {"db": login_db, "login": login_user, "password": login_pass}
             }
             login_resp = session.post(login_url, json=login_payload, timeout=30, verify=False)
             login_data = login_resp.json()
@@ -1099,51 +1117,60 @@ class PayrollSalary(models.Model):
 
             _logger.info("[VEHICLE BOOKING] Login OK db=%s", login_db)
 
-            # ===== Step 2: ดึงข้อมูล vehicle.booking =====
-            api_payload = {
-                "jsonrpc": "2.0",
-                "method": "call",
-                "params": {
-                    "month": month,
-                    "year": int(year)
+            # ===== Step 2: เรียก API 2 รอบ (เดือน N-1 และ N) =====
+            # — API กรอง planned_start_date_t เป็น calendar month จึงต้องดึง 2 เดือนคลุมรอบตัด
+            # — limit สูง (10000) เพื่อไม่ให้ pagination ตัดข้อมูลออก
+            for q_month, q_year in [(prev_m, prev_y), (m, y)]:
+                api_payload = {
+                    "jsonrpc": "2.0",
+                    "method": "call",
+                    "params": {"month": q_month, "year": int(q_year), "limit": 10000},
                 }
-            }
-            api_resp = session.post(api_url, json=api_payload, timeout=60, verify=False)
-            api_data = api_resp.json()
+                api_resp = session.post(api_url, json=api_payload, timeout=60, verify=False)
+                api_data = api_resp.json()
+                result = api_data.get('result', {})
+                if result.get('status') != 'success':
+                    _logger.warning("[VEHICLE BOOKING] API FAILED month=%s year=%s | result=%s",
+                                    q_month, q_year, result)
+                    continue
+                data_list = result.get('data', [])
+                _logger.info("[VEHICLE BOOKING] ดึงเดือน %s/%s: %d รายการ", q_month, q_year, len(data_list))
+                all_data.extend(data_list)
 
-            result = api_data.get('result', {})
-            if result.get('status') != 'success':
-                _logger.warning("[VEHICLE BOOKING] API FAILED | result=%s", result)
-                return
-
-            data_list = result.get('data', [])
-            _logger.info("[VEHICLE BOOKING] จำนวนข้อมูลทั้งหมด: %d", len(data_list))
-
-            # ===== Step 3: กรองตาม driver_name (ชื่อ + นามสกุล) =====
+            # ===== Step 3: กรองตามชื่อคนขับ + ช่วงรอบตัด (planned_start_date_t) =====
             found = False
-            for item in data_list:
-                # normalize ช่องว่างหลายตัวให้เหลือ 1 ตัว ทั้ง 2 ฝั่ง
+            for item in all_data:
                 api_driver_name = re.sub(r'\s+', ' ', (item.get('driver_name') or '').strip())
-
-                if api_driver_name == emp_fullname:
-                    travel_exp = item.get('travel_expenses', 0.0) or 0.0
-                    daily_allow = item.get('daily_allowance', 0.0) or 0.0
-                    total_travel_expenses += travel_exp
-                    total_daily_allowance += daily_allow
-                    found = True
-                    _logger.info(
-                        "[VEHICLE BOOKING] MATCH! driver=%s | booking=%s | travel=%.2f | allowance=%.2f",
-                        api_driver_name, item.get('name', ''), travel_exp, daily_allow
-                    )
+                if api_driver_name != emp_fullname:
+                    continue
+                # ตรวจ planned_start_date_t ว่าอยู่ในรอบตัดไหม
+                planned_str = item.get('planned_start_date_t')
+                if not planned_str:
+                    continue
+                try:
+                    planned_d = _dt.strptime(planned_str, '%Y-%m-%d %H:%M:%S').date()
+                except (ValueError, TypeError):
+                    continue
+                if not (cycle_start <= planned_d <= cycle_end):
+                    continue
+                travel_exp = item.get('travel_expenses', 0.0) or 0.0
+                daily_allow = item.get('daily_allowance', 0.0) or 0.0
+                total_travel_expenses += travel_exp
+                total_daily_allowance += daily_allow
+                found = True
+                _logger.info(
+                    "[VEHICLE BOOKING] MATCH! driver=%s | booking=%s | date=%s | travel=%.2f | allowance=%.2f",
+                    api_driver_name, item.get('name', ''), planned_d, travel_exp, daily_allow,
+                )
 
             if not found:
-                _logger.info("[VEHICLE BOOKING] ไม่พบข้อมูลที่ตรงกัน | ค้นหา: '%s'", emp_fullname)
+                _logger.info("[VEHICLE BOOKING] ไม่พบข้อมูลในรอบตัด | driver='%s'", emp_fullname)
 
         except Exception as e:
             _logger.exception("[VEHICLE BOOKING] ERROR | %s", str(e))
             return
 
-        _logger.info("[VEHICLE BOOKING] ★★★ รวม travel_expenses=%.2f | daily_allowance=%.2f",
+        _logger.info("[VEHICLE BOOKING] ★★★ รวม (ในรอบตัด) travel=%.2f | allowance=%.2f",
                      total_travel_expenses, total_daily_allowance)
 
         # ===== เซ็ตค่าลง field =====
@@ -1184,8 +1211,9 @@ class PayrollSalary(models.Model):
 
     def _fetch_commission_sales_data(self):
         """
-        ดึงค่าคอมมิชชั่น Sales จาก API https://npderp.com/api/commission/sales
-        ทั้ง 3 db: NPD_Intertrading_New, NPD_S_Group_New_V2, NPD_Bangkok_New
+        ดึงค่าคอมมิชชั่น Sales จาก DB ปลายทางผ่าน psycopg2 (cross_db.commission.query)
+        DB list ดูที่ System Parameter 'npd.commission.cross_db_list'
+        (default: NPD_Intertrading_New, NPD_S_Group_New_V2, NPD_Bangkok_New)
         กรองจาก ชื่อ-นามสกุล, สาขา, เดือน/ปี
         รวม net_rental ทั้ง 3 db → เซ็ตลง income_commission_sale
         เรียกอัตโนมัติเมื่อเลือกพนักงาน/เปลี่ยนเดือน/ปี
@@ -1220,138 +1248,65 @@ class PayrollSalary(models.Model):
             self.income_commission_sale = 0.0
             return
 
-        # รายชื่อ database ที่ต้องดึง
-        db_list = ['NPD_Intertrading_New', 'NPD_S_Group_New_V2', 'NPD_Bangkok_New']
-        login_url = 'https://npderp.com/web/session/authenticate'
-        commission_url = 'https://npderp.com/api/commission/sales'
-        login_user = 'Npd_admin'
-        login_pass = '1234'
+        # ✅ ดึงค่าคอม Sales ผ่าน psycopg2 ตรง (แทน HTTP API เดิม) — DB list ปรับผ่าน System Parameter ได้
+        Helper = self.env['cross_db.commission.query']
+        db_list = Helper.get_db_list()
+        year_int = int(year)
+        month_int = int(month)
+        last_day = calendar.monthrange(year_int, month_int)[1]
+        date_from = date(year_int, month_int, 1)
+        date_to = date(year_int, month_int, last_day)
 
         total_commission = 0.0
-
         for db_name in db_list:
-            try:
-                # ===== Step 1: Login =====
-                session = requests.Session()
-                login_payload = {
-                    "jsonrpc": "2.0",
-                    "params": {
-                        "db": db_name,
-                        "login": login_user,
-                        "password": login_pass
-                    }
-                }
-                login_resp = session.post(login_url, json=login_payload, timeout=30)
-                login_data = login_resp.json()
-
-                if login_data.get('error'):
-                    _logger.warning("[COMMISSION SALES] Login FAILED db=%s | error=%s", db_name, login_data['error'])
-                    continue
-
-                _logger.info("[COMMISSION SALES] Login OK db=%s", db_name)
-
-                # ===== Step 2: ดึงข้อมูลค่าคอม =====
-                commission_payload = {
-                    "jsonrpc": "2.0",
-                    "method": "call",
-                    "params": {
-                        "month": month,
-                        "year": int(year)
-                    }
-                }
-                comm_resp = session.post(commission_url, json=commission_payload, timeout=60)
-                comm_data = comm_resp.json()
-
-                result = comm_data.get('result', {})
-                if result.get('status') != 'success':
-                    _logger.warning("[COMMISSION SALES] API FAILED db=%s | result=%s", db_name, result)
-                    continue
-
-                data_list = result.get('data', [])
-                _logger.info("[COMMISSION SALES] db=%s | จำนวนข้อมูลทั้งหมด: %d", db_name, len(data_list))
-
-                # ===== Log รายชื่อทั้งหมดจาก API เพื่อ debug =====
-                for idx, item in enumerate(data_list):
-                    _logger.info(
-                        "[COMMISSION SALES] db=%s | [%d] sales_contact_name='%s' | branch_name='%s' | net_rental=%.2f",
-                        db_name, idx,
-                        item.get('sales_contact_name', ''),
-                        item.get('branch_name', ''),
-                        item.get('net_rental', 0.0)
-                    )
-
-                # ===== Step 3: กรองข้อมูล (แค่ชื่อ รวมทุกสาขาของ Sales คนนั้น) =====
-                db_net_rental = 0.0
-                found = False
-                for item in data_list:
-                    api_sales_name = (item.get('sales_contact_name') or '').strip()
-                    api_branch_name = (item.get('branch_name') or '').strip()
-                    api_emp_code = (item.get('employee_code') or '').strip()
-
-                    # ✅ จับคู่ด้วยรหัสพนักงาน (ไม่กรองสาขา เพราะ Sales ขายได้หลายสาขา)
-                    code_match = (api_emp_code == emp_code)
-
-                    if code_match:
-                        net_rental = item.get('net_rental', 0.0)
-                        db_net_rental += net_rental
-                        found = True
-                        _logger.info(
-                            "[COMMISSION SALES] MATCH! db=%s | code=%s | sales=%s | branch=%s | net_rental=%.2f",
-                            db_name, api_emp_code, api_sales_name, api_branch_name, net_rental
-                        )
-
-                if not found:
-                    _logger.info("[COMMISSION SALES] ไม่พบข้อมูลที่ตรงกัน db=%s | ค้นหารหัส: %s",
-                                 db_name, emp_code)
-
-                _logger.info("[COMMISSION SALES] ★ db=%s | net_rental รวม = %.2f", db_name, db_net_rental)
-                total_commission += db_net_rental
-
-            except Exception as e:
-                _logger.exception("[COMMISSION SALES] ERROR db=%s | %s", db_name, str(e))
+            rows, err = Helper.query_sales(db_name, date_from, date_to)
+            if err:
+                _logger.warning("[COMMISSION SALES] db=%s | %s", db_name, err)
                 continue
+            _logger.info("[COMMISSION SALES] db=%s | ดึงได้ %d รายการ", db_name, len(rows))
+            db_net_rental = 0.0
+            found = False
+            for item in rows:
+                api_emp_code = (item.get('employee_code') or '').strip()
+                # ✅ จับคู่ด้วยรหัสพนักงาน (ไม่กรองสาขา เพราะ Sales ขายได้หลายสาขา)
+                if api_emp_code == emp_code:
+                    net_rental = item.get('net_rental') or 0.0
+                    db_net_rental += net_rental
+                    found = True
+                    _logger.info(
+                        "[COMMISSION SALES] MATCH! db=%s | code=%s | sales=%s | branch=%s | net_rental=%.2f",
+                        db_name, api_emp_code,
+                        (item.get('sales_contact_name') or '').strip(),
+                        (item.get('branch_name') or '').strip(), net_rental,
+                    )
+            if not found:
+                _logger.info("[COMMISSION SALES] ไม่พบข้อมูลที่ตรงกัน db=%s | ค้นหารหัส: %s",
+                             db_name, emp_code)
+            _logger.info("[COMMISSION SALES] ★ db=%s | net_rental รวม = %.2f", db_name, db_net_rental)
+            total_commission += db_net_rental
 
-        _logger.info("[COMMISSION SALES] ★★★ ยอดรวม net_rental ทั้ง 3 db = %.2f", total_commission)
+        _logger.info("[COMMISSION SALES] ★★★ ยอดรวม net_rental ทั้ง %d db = %.2f",
+                     len(db_list), total_commission)
 
-        # ===== ดึงยอด bankheaw (เฉพาะ NPD_S_Group_New_V2, type=เซลล์, กรองชื่อ) =====
-        bankheaw_url = 'https://npderp.com/api/commission/bankheaw'
-        bankheaw_db = 'NPD_S_Group_New_V2'
-
-        try:
-            session = requests.Session()
-            login_payload = {
-                "jsonrpc": "2.0",
-                "params": {"db": bankheaw_db, "login": login_user, "password": login_pass}
-            }
-            login_resp = session.post(login_url, json=login_payload, timeout=30)
-            login_data = login_resp.json()
-
-            if not login_data.get('error'):
-                bk_payload = {
-                    "jsonrpc": "2.0", "method": "call",
-                    "params": {"month": month, "year": int(year)}
-                }
-                bk_resp = session.post(bankheaw_url, json=bk_payload, timeout=60)
-                bk_data = bk_resp.json()
-
-                result_bk = bk_data.get('result', {})
-                if result_bk.get('status') == 'success':
-                    for item in result_bk.get('data', []):
-                        if item.get('sort_order', 0) != 0:
-                            continue
-                        item_type = (item.get('type') or '').strip()
-                        if item_type != 'เซลล์':
-                            continue
-                        api_sales_name = (item.get('salesperson_name') or '').strip()
-                        # ✅ bankheaw: match ด้วยชื่อ-นามสกุล (ไม่อิงรหัส — รหัสบ้านเขียวไม่น่าเชื่อถือ)
-                        if self._bankheaw_name_match(api_sales_name):
-                            net = item.get('net_total', 0.0)
-                            total_commission += net
-                            _logger.info("[COMMISSION SALES - BANKHEAW] MATCH (by name)! sales=%s | net_total=%.2f",
-                                         api_sales_name, net)
-
-        except Exception as e:
-            _logger.exception("[COMMISSION SALES - BANKHEAW] ERROR | %s", str(e))
+        # ===== Bankheaw (เฉพาะ DB ที่มีตาราง npd_sales_commission_report, type=เซลล์, กรองชื่อ) =====
+        bankheaw_db = Helper.get_bankheaw_db()
+        rows_bk, err_bk = Helper.query_bankheaw(bankheaw_db, month_int, year_int)
+        if err_bk:
+            _logger.warning("[COMMISSION SALES - BANKHEAW] db=%s | %s", bankheaw_db, err_bk)
+        else:
+            for item in rows_bk:
+                if item.get('sort_order', 0) != 0:
+                    continue
+                item_type = (item.get('type') or '').strip()
+                if item_type != 'เซลล์':
+                    continue
+                api_sales_name = (item.get('salesperson_name') or '').strip()
+                # ✅ bankheaw: match ด้วยชื่อ-นามสกุล (ไม่อิงรหัส)
+                if self._bankheaw_name_match(api_sales_name):
+                    net = item.get('net_total') or 0.0
+                    total_commission += net
+                    _logger.info("[COMMISSION SALES - BANKHEAW] MATCH (by name)! sales=%s | net_total=%.2f",
+                                 api_sales_name, net)
 
         _logger.info("=" * 60)
         _logger.info("[COMMISSION SALES] ★★★ ยอดรวม net_rental (รวม bankheaw) = %.2f", total_commission)
@@ -1391,8 +1346,9 @@ class PayrollSalary(models.Model):
 
     def _fetch_commission_branch_data(self):
         """
-        ดึงค่าคอมมิชชั่นสาขา จาก API https://npderp.com/api/commission/branch
-        ทั้ง 3 db: NPD_Intertrading_New, NPD_S_Group_New_V2, NPD_Bangkok_New
+        ดึงค่าคอมมิชชั่นสาขา จาก DB ปลายทางผ่าน psycopg2 (cross_db.commission.query)
+        DB list ดูที่ System Parameter 'npd.commission.cross_db_list'
+        (default: NPD_Intertrading_New, NPD_S_Group_New_V2, NPD_Bangkok_New)
         กรองจาก ชื่อสาขา, เดือน/ปี
         รวม net_rental ทั้ง 3 db แล้ว หารด้วยจำนวนพนักงาน active ในสาขาเดียวกัน
         → เซ็ตลง income_commission
@@ -1442,175 +1398,78 @@ class PayrollSalary(models.Model):
             self.income_commission = 0.0
             return
 
-        # รายชื่อ database ที่ต้องดึง
-        db_list = ['NPD_Intertrading_New', 'NPD_S_Group_New_V2', 'NPD_Bangkok_New']
-        login_url = 'https://npderp.com/web/session/authenticate'
-        commission_url = 'https://npderp.com/api/commission/branch'
-        login_user = 'Npd_admin'
-        login_pass = '1234'
+        # ✅ ดึงค่าคอมสาขา + Sales (ของสาขานี้) + bankheaw ผ่าน psycopg2 ตรง (แทน HTTP API เดิม)
+        Helper = self.env['cross_db.commission.query']
+        db_list = Helper.get_db_list()
+        year_int = int(year)
+        month_int = int(month)
+        last_day = calendar.monthrange(year_int, month_int)[1]
+        date_from = date(year_int, month_int, 1)
+        date_to = date(year_int, month_int, last_day)
 
+        # ===== ยอดสาขา (กรองตามชื่อสาขา) =====
         total_net_rental = 0.0
-
+        total_sql_expense = 0.0   # SQL total_expense (vendor+advance+voucher) — ใช้เช็คเงื่อนไข > 0 ก่อนบวก salary
         for db_name in db_list:
-            try:
-                # ===== Step 1: Login =====
-                session = requests.Session()
-                login_payload = {
-                    "jsonrpc": "2.0",
-                    "params": {
-                        "db": db_name,
-                        "login": login_user,
-                        "password": login_pass
-                    }
-                }
-                login_resp = session.post(login_url, json=login_payload, timeout=30)
-                login_data = login_resp.json()
-
-                if login_data.get('error'):
-                    _logger.warning("[COMMISSION BRANCH] Login FAILED db=%s | error=%s", db_name, login_data['error'])
-                    continue
-
-                _logger.info("[COMMISSION BRANCH] Login OK db=%s", db_name)
-
-                # ===== Step 2: ดึงข้อมูลค่าคอมสาขา =====
-                commission_payload = {
-                    "jsonrpc": "2.0",
-                    "method": "call",
-                    "params": {
-                        "month": month,
-                        "year": int(year)
-                    }
-                }
-                comm_resp = session.post(commission_url, json=commission_payload, timeout=60)
-                comm_data = comm_resp.json()
-
-                result = comm_data.get('result', {})
-                if result.get('status') != 'success':
-                    _logger.warning("[COMMISSION BRANCH] API FAILED db=%s | result=%s", db_name, result)
-                    continue
-
-                data_list = result.get('data', [])
-                _logger.info("[COMMISSION BRANCH] db=%s | จำนวนข้อมูลทั้งหมด: %d", db_name, len(data_list))
-
-                # ===== Log รายชื่อทั้งหมดจาก API =====
-                for idx, item in enumerate(data_list):
-                    _logger.info(
-                        "[COMMISSION BRANCH] db=%s | [%d] branch_name='%s' | net_rental=%.2f",
-                        db_name, idx,
-                        item.get('branch_name', ''),
-                        item.get('net_rental', 0.0)
-                    )
-
-                # ===== Step 3: กรองจากชื่อสาขา =====
-                db_net_rental = 0.0
-                found = False
-                for item in data_list:
-                    api_branch_name = (item.get('branch_name') or '').strip()
-
-                    if api_branch_name == emp_branch_name:
-                        net_rental = item.get('net_rental', 0.0)
-                        db_net_rental += net_rental
-                        found = True
-                        _logger.info(
-                            "[COMMISSION BRANCH] MATCH! db=%s | branch=%s | net_rental=%.2f",
-                            db_name, api_branch_name, net_rental
-                        )
-
-                if not found:
-                    _logger.info("[COMMISSION BRANCH] ไม่พบสาขาที่ตรงกัน db=%s | ค้นหา: %s",
-                                 db_name, emp_branch_name)
-
-                _logger.info("[COMMISSION BRANCH] ★ db=%s | net_rental รวม = %.2f", db_name, db_net_rental)
-                total_net_rental += db_net_rental
-
-            except Exception as e:
-                _logger.exception("[COMMISSION BRANCH] ERROR db=%s | %s", db_name, str(e))
+            rows, err = Helper.query_branch(db_name, date_from, date_to)
+            if err:
+                _logger.warning("[COMMISSION BRANCH] db=%s | %s", db_name, err)
                 continue
+            _logger.info("[COMMISSION BRANCH] db=%s | ดึงได้ %d รายการ", db_name, len(rows))
+            db_net_rental = 0.0
+            found = False
+            for item in rows:
+                api_branch_name = (item.get('branch_name') or '').strip()
+                if api_branch_name == emp_branch_name:
+                    net_rental = item.get('net_rental') or 0.0
+                    db_net_rental += net_rental
+                    total_sql_expense += item.get('total_expense') or 0.0
+                    found = True
+                    _logger.info("[COMMISSION BRANCH] MATCH! db=%s | branch=%s | net_rental=%.2f",
+                                 db_name, api_branch_name, net_rental)
+            if not found:
+                _logger.info("[COMMISSION BRANCH] ไม่พบสาขาที่ตรงกัน db=%s | ค้นหา: %s",
+                             db_name, emp_branch_name)
+            _logger.info("[COMMISSION BRANCH] ★ db=%s | net_rental รวม = %.2f", db_name, db_net_rental)
+            total_net_rental += db_net_rental
 
-        _logger.info("[COMMISSION BRANCH] ★ net_rental สาขา รวมทั้ง 3 db = %.2f", total_net_rental)
+        _logger.info("[COMMISSION BRANCH] ★ net_rental สาขา รวมทั้ง %d db = %.2f",
+                     len(db_list), total_net_rental)
 
-        # ===== ดึงยอด Sales จาก API กรองตามสาขา + เดือน/ปี =====
-        sales_commission_url = 'https://npderp.com/api/commission/sales'
+        # ===== ยอด Sales (กรองตามสาขาเดียวกัน) =====
         sales_total_net_rental = 0.0
-
         for db_name in db_list:
-            try:
-                session = requests.Session()
-                login_payload = {
-                    "jsonrpc": "2.0",
-                    "params": {"db": db_name, "login": login_user, "password": login_pass}
-                }
-                login_resp = session.post(login_url, json=login_payload, timeout=30)
-                login_data = login_resp.json()
-
-                if login_data.get('error'):
-                    continue
-
-                commission_payload = {
-                    "jsonrpc": "2.0", "method": "call",
-                    "params": {"month": month, "year": int(year)}
-                }
-                sales_resp = session.post(sales_commission_url, json=commission_payload, timeout=60)
-                sales_data = sales_resp.json()
-
-                if sales_data.get('error'):
-                    continue
-
-                result_sales = sales_data.get('result', {})
-                if result_sales.get('status') != 'success':
-                    continue
-
-                for item in result_sales.get('data', []):
-                    api_branch = (item.get('branch_name') or '').strip()
-                    if api_branch == emp_branch_name:
-                        sales_total_net_rental += item.get('net_rental', 0.0)
-
-            except Exception as e:
-                _logger.exception("[COMMISSION BRANCH - SALES] ERROR db=%s | %s", db_name, str(e))
+            rows, err = Helper.query_sales(db_name, date_from, date_to)
+            if err:
                 continue
+            for item in rows:
+                api_branch = (item.get('branch_name') or '').strip()
+                if api_branch == emp_branch_name:
+                    sales_total_net_rental += item.get('net_rental') or 0.0
 
-        _logger.info("[COMMISSION BRANCH] ★ net_rental Sales (สาขา %s) รวมทั้ง 3 db = %.2f",
-                     emp_branch_name, sales_total_net_rental)
+        _logger.info("[COMMISSION BRANCH] ★ net_rental Sales (สาขา %s) รวมทั้ง %d db = %.2f",
+                     emp_branch_name, len(db_list), sales_total_net_rental)
 
-        # ===== ดึงยอด bankheaw จาก API (เฉพาะ NPD_S_Group_New_V2) =====
-        bankheaw_url = 'https://npderp.com/api/commission/bankheaw'
-        bankheaw_db = 'NPD_S_Group_New_V2'
+        # ===== Bankheaw (สาขา + เซลล์ ของสาขานี้) =====
+        bankheaw_db = Helper.get_bankheaw_db()
         bankheaw_branch_net = 0.0
         bankheaw_sales_net = 0.0
-
-        try:
-            session = requests.Session()
-            login_payload = {
-                "jsonrpc": "2.0",
-                "params": {"db": bankheaw_db, "login": login_user, "password": login_pass}
-            }
-            login_resp = session.post(login_url, json=login_payload, timeout=30)
-            login_data = login_resp.json()
-
-            if not login_data.get('error'):
-                bk_payload = {
-                    "jsonrpc": "2.0", "method": "call",
-                    "params": {"month": month, "year": int(year)}
-                }
-                bk_resp = session.post(bankheaw_url, json=bk_payload, timeout=60)
-                bk_data = bk_resp.json()
-
-                result_bk = bk_data.get('result', {})
-                if result_bk.get('status') == 'success':
-                    for item in result_bk.get('data', []):
-                        if item.get('sort_order', 0) != 0:
-                            continue
-                        api_branch = (item.get('branch_name') or '').strip()
-                        if api_branch == emp_branch_name:
-                            item_type = (item.get('type') or '').strip()
-                            net = item.get('net_total', 0.0)
-                            if item_type == 'สาขา':
-                                bankheaw_branch_net += net
-                            elif item_type == 'เซลล์':
-                                bankheaw_sales_net += net
-
-        except Exception as e:
-            _logger.exception("[COMMISSION BRANCH - BANKHEAW] ERROR | %s", str(e))
+        rows_bk, err_bk = Helper.query_bankheaw(bankheaw_db, month_int, year_int)
+        if err_bk:
+            _logger.warning("[COMMISSION BRANCH - BANKHEAW] db=%s | %s", bankheaw_db, err_bk)
+        else:
+            for item in rows_bk:
+                if item.get('sort_order', 0) != 0:
+                    continue
+                api_branch = (item.get('branch_name') or '').strip()
+                if api_branch != emp_branch_name:
+                    continue
+                item_type = (item.get('type') or '').strip()
+                net = item.get('net_total') or 0.0
+                if item_type == 'สาขา':
+                    bankheaw_branch_net += net
+                elif item_type == 'เซลล์':
+                    bankheaw_sales_net += net
 
         _logger.info("[COMMISSION BRANCH] ★ bankheaw สาขา = %.2f | bankheaw เซลล์ = %.2f",
                      bankheaw_branch_net, bankheaw_sales_net)
@@ -1620,6 +1479,45 @@ class PayrollSalary(models.Model):
 
         _logger.info("[COMMISSION BRANCH] ★ net_rental สาขา (รวม bankheaw) = %.2f", total_net_rental)
         _logger.info("[COMMISSION BRANCH] ★ net_rental Sales (รวม bankheaw) = %.2f", sales_total_net_rental)
+
+        # ===== JV expense (สมุดทั่วไป) — รวมเข้า total_expense ให้ตรงกับรายงานค่าคอมสาขา =====
+        jv_expense_total = 0.0
+        for db_name in db_list:
+            rows_jv, err_jv = Helper.query_jv(db_name, date_from, date_to)
+            if err_jv:
+                _logger.warning("[COMMISSION BRANCH - JV] db=%s | %s", db_name, err_jv)
+                continue
+            for item in rows_jv:
+                if (item.get('branch_name') or '').strip() == emp_branch_name:
+                    jv_expense_total += item.get('jv_expense') or 0.0
+
+        _logger.info("[COMMISSION BRANCH] ★ JV expense (สาขา %s) รวมทั้ง %d db = %.2f",
+                     emp_branch_name, len(db_list), jv_expense_total)
+
+        # ===== salary expense — จาก payroll.salary ใน HRMS (local) ของสาขานี้ในเดือน/ปีค่าคอม =====
+        #   เงื่อนไข: เฉพาะถ้า total_expense (vendor+advance+voucher+JV) > 0 (เหมือนรายงาน)
+        salary_expense_total = 0.0
+        combined_expense = total_sql_expense + jv_expense_total
+        if combined_expense > 0:
+            salary_payrolls = self.env['payroll.salary'].sudo().search([
+                ('branch_id', '=', self.branch_id.id),
+                ('month', '=', month),
+                ('year', '=', str(year)),
+                ('active', '=', True),
+            ])
+            for p in salary_payrolls:
+                salary_expense_total += (
+                    (p.total_gross or 0.0)
+                    - (p.income_commission or 0.0)
+                    - (p.income_commission_sale or 0.0)
+                )
+
+        _logger.info("[COMMISSION BRANCH] ★ salary expense (สาขา %s) = %.2f (เงื่อนไข combined_expense=%.2f)",
+                     emp_branch_name, salary_expense_total, combined_expense)
+
+        # หัก JV + salary จาก net_rental ของสาขา (ให้ตรงกับ _compute_branch_data ของรายงาน)
+        total_net_rental -= (jv_expense_total + salary_expense_total)
+        _logger.info("[COMMISSION BRANCH] ★ net_rental สาขา (หลังหัก JV+salary) = %.2f", total_net_rental)
 
         # ===== ดึงอัตราค่าคอมจากตั้งค่า =====
         rate_model = self.env['commission.rate.branch.sales']
@@ -1689,186 +1587,145 @@ class PayrollSalary(models.Model):
             total_ratio = config_model.get_total_ratio_for_branch(self.branch_id.id)
             my_ratio = config_model.get_ratio_for_employee(self.branch_id.id, self.employee_id.id)
 
-        db_list = ['NPD_Intertrading_New', 'NPD_S_Group_New_V2', 'NPD_Bangkok_New']
-        login_url = 'https://npderp.com/web/session/authenticate'
-        commission_url = 'https://npderp.com/api/commission/branch'
-        login_user = 'Npd_admin'
-        login_pass = '1234'
+        # ✅ ดึงผ่าน psycopg2 ตรง (แทน HTTP API เดิม) — DB list ปรับผ่าน System Parameter ได้
+        Helper = self.env['cross_db.commission.query']
+        db_list = Helper.get_db_list()
+        year_int = int(year)
+        month_int = int(month)
+        last_day = calendar.monthrange(year_int, month_int)[1]
+        date_from = date(year_int, month_int, 1)
+        date_to = date(year_int, month_int, last_day)
 
+        # ===== Pass 1: เก็บข้อมูลต่อ DB (net_rental, sql_expense, JV) =====
+        per_db = []
+        for db_name in db_list:
+            entry = {'db_name': db_name, 'net_rental': 0.0, 'match_count': 0,
+                     'sql_expense': 0.0, 'jv': 0.0, 'err': ''}
+            rows, err = Helper.query_branch(db_name, date_from, date_to)
+            if err:
+                entry['err'] = err
+            else:
+                for item in rows:
+                    if (item.get('branch_name') or '').strip() == emp_branch_name:
+                        entry['net_rental'] += item.get('net_rental') or 0.0
+                        entry['sql_expense'] += item.get('total_expense') or 0.0
+                        entry['match_count'] += 1
+                # JV expense ของสาขานี้ใน DB นี้
+                rows_jv, err_jv = Helper.query_jv(db_name, date_from, date_to)
+                if err_jv:
+                    _logger.warning("[COMMISSION BRANCH DETAIL - JV] db=%s | %s", db_name, err_jv)
+                else:
+                    for item in rows_jv:
+                        if (item.get('branch_name') or '').strip() == emp_branch_name:
+                            entry['jv'] += item.get('jv_expense') or 0.0
+            per_db.append(entry)
+
+        # ===== Salary expense (รายสาขา) — เฉพาะถ้า combined_expense > 0 (เหมือนรายงาน) =====
+        combined_expense = sum(d['sql_expense'] + d['jv'] for d in per_db)
+        salary_expense_total = 0.0
+        salary_count = 0
+        if combined_expense > 0:
+            salary_payrolls = self.env['payroll.salary'].sudo().search([
+                ('branch_id', '=', self.branch_id.id),
+                ('month', '=', month),
+                ('year', '=', str(year)),
+                ('active', '=', True),
+            ])
+            salary_count = len(salary_payrolls)
+            for p in salary_payrolls:
+                salary_expense_total += (
+                    (p.total_gross or 0.0)
+                    - (p.income_commission or 0.0)
+                    - (p.income_commission_sale or 0.0)
+                )
+
+        # หา primary DB (DB แรกที่สาขามี match) → salary หักจาก DB นี้ทั้งก้อน
+        primary_idx = next((i for i, d in enumerate(per_db) if d['match_count'] > 0), None)
+
+        # ===== Pass 2: สร้าง per-DB lines โดยรวม JV + salary เข้าไปในแถวเลย =====
+        # (ยอดในแถว = sql_net_rental − jv_ของ_DB − salary [ถ้าเป็น primary])
         lines = []
         total_net_rental = 0.0
+        for i, d in enumerate(per_db):
+            adjusted = d['net_rental'] - d['jv']
+            if i == primary_idx:
+                adjusted -= salary_expense_total
+            if d['err']:
+                status = 'Error: %s' % d['err'][:60]
+            elif d['match_count'] > 0:
+                status = 'สำเร็จ'
+            else:
+                status = 'ไม่พบข้อมูลที่ตรงกัน'
+            lines.append((0, 0, {
+                'db_name': d['db_name'],
+                'status': status,
+                'match_count': d['match_count'],
+                'net_rental': adjusted,
+            }))
+            total_net_rental += adjusted
+        _logger.info(
+            "[COMMISSION BRANCH DETAIL] รวมต่อ DB: JV/DB + salary (%.2f, %d คน) ถูกหักเข้าใน row primary แล้ว",
+            salary_expense_total, salary_count,
+        )
 
-        for db_name in db_list:
-            line_vals = {'db_name': db_name, 'status': '', 'match_count': 0, 'net_rental': 0.0}
-            try:
-                session = requests.Session()
-                login_payload = {
-                    "jsonrpc": "2.0",
-                    "params": {"db": db_name, "login": login_user, "password": login_pass}
-                }
-                login_resp = session.post(login_url, json=login_payload, timeout=30)
-                login_data = login_resp.json()
-
-                if login_data.get('error'):
-                    line_vals['status'] = 'Login Failed'
-                    lines.append((0, 0, line_vals))
-                    continue
-
-                commission_payload = {
-                    "jsonrpc": "2.0", "method": "call",
-                    "params": {"month": month, "year": int(year)}
-                }
-                comm_resp = session.post(commission_url, json=commission_payload, timeout=60)
-                comm_data = comm_resp.json()
-
-                # ดัก error จาก Odoo (เช่น permission error)
-                if comm_data.get('error'):
-                    err_msg = comm_data['error'].get('data', {}).get('message', '') or comm_data['error'].get('message', '')
-                    if 'not allowed' in err_msg or 'Access' in err_msg:
-                        line_vals['status'] = 'ไม่พบข้อมูล / ไม่มีสิทธิ์เข้าถึง'
-                    else:
-                        line_vals['status'] = 'Error: %s' % err_msg[:60]
-                    lines.append((0, 0, line_vals))
-                    continue
-
-                result = comm_data.get('result', {})
-
-                if result.get('status') != 'success':
-                    line_vals['status'] = 'ไม่สามารถดึงข้อมูลได้'
-                    lines.append((0, 0, line_vals))
-                    continue
-
-                data_list = result.get('data', [])
-                db_net_rental = 0.0
-                match_count = 0
-                for item in data_list:
-                    api_branch = (item.get('branch_name') or '').strip()
-                    if api_branch == emp_branch_name:
-                        db_net_rental += item.get('net_rental', 0.0)
-                        match_count += 1
-
-                line_vals['net_rental'] = db_net_rental
-                line_vals['match_count'] = match_count
-                line_vals['status'] = 'สำเร็จ' if match_count > 0 else 'ไม่พบข้อมูลที่ตรงกัน'
-                total_net_rental += db_net_rental
-
-            except Exception as e:
-                line_vals['status'] = 'Error: %s' % str(e)[:80]
-
-            lines.append((0, 0, line_vals))
-
-        # ===== ดึงยอด Sales จาก API กรองตามสาขา + เดือน/ปี =====
-        sales_commission_url = 'https://npderp.com/api/commission/sales'
+        # ===== ยอด Sales (กรองตามสาขาเดียวกัน) =====
         sales_lines = []
         sales_total_net_rental = 0.0
-
         for db_name in db_list:
-            try:
-                session = requests.Session()
-                login_payload = {
-                    "jsonrpc": "2.0",
-                    "params": {"db": db_name, "login": login_user, "password": login_pass}
-                }
-                login_resp = session.post(login_url, json=login_payload, timeout=30)
-                login_data = login_resp.json()
-
-                if login_data.get('error'):
-                    continue
-
-                commission_payload = {
-                    "jsonrpc": "2.0", "method": "call",
-                    "params": {"month": month, "year": int(year)}
-                }
-                sales_resp = session.post(sales_commission_url, json=commission_payload, timeout=60)
-                sales_data = sales_resp.json()
-
-                if sales_data.get('error'):
-                    continue
-
-                result_sales = sales_data.get('result', {})
-                if result_sales.get('status') != 'success':
-                    continue
-
-                data_list_sales = result_sales.get('data', [])
-
-                # กรองเฉพาะสาขาเดียวกัน
-                for item in data_list_sales:
-                    api_branch = (item.get('branch_name') or '').strip()
-                    if api_branch == emp_branch_name:
-                        net_rental_sales = item.get('net_rental', 0.0)
-                        sales_total_net_rental += net_rental_sales
-                        sales_lines.append((0, 0, {
-                            'db_name': db_name,
-                            'sales_contact_name': item.get('sales_contact_name', ''),
-                            'branch_name': api_branch,
-                            'rental_amount': item.get('rental_amount', 0.0),
-                            'payment_received': item.get('payment_received', 0.0),
-                            'outstanding_debt': item.get('outstanding_debt', 0.0),
-                            'shipping_cost': item.get('shipping_cost', 0.0),
-                            'net_rental': net_rental_sales,
-                        }))
-
-            except Exception as e:
-                _logger.exception("[COMMISSION BRANCH DETAIL - SALES] ERROR db=%s | %s", db_name, str(e))
+            rows, err = Helper.query_sales(db_name, date_from, date_to)
+            if err:
+                _logger.warning("[COMMISSION BRANCH DETAIL - SALES] db=%s | %s", db_name, err)
                 continue
+            for item in rows:
+                api_branch = (item.get('branch_name') or '').strip()
+                if api_branch == emp_branch_name:
+                    net_rental_sales = item.get('net_rental') or 0.0
+                    sales_total_net_rental += net_rental_sales
+                    sales_lines.append((0, 0, {
+                        'db_name': db_name,
+                        'sales_contact_name': item.get('sales_contact_name') or '',
+                        'branch_name': api_branch,
+                        'rental_amount': item.get('rental_amount') or 0.0,
+                        'payment_received': item.get('payment_received') or 0.0,
+                        'outstanding_debt': item.get('outstanding_debt') or 0.0,
+                        'shipping_cost': item.get('shipping_cost') or 0.0,
+                        'net_rental': net_rental_sales,
+                    }))
 
-        # ===== ดึงยอด bankheaw จาก API (เฉพาะ NPD_S_Group_New_V2) =====
-        bankheaw_url = 'https://npderp.com/api/commission/bankheaw'
-        bankheaw_db = 'NPD_S_Group_New_V2'
-
-        try:
-            session = requests.Session()
-            login_payload = {
-                "jsonrpc": "2.0",
-                "params": {"db": bankheaw_db, "login": login_user, "password": login_pass}
-            }
-            login_resp = session.post(login_url, json=login_payload, timeout=30)
-            login_data = login_resp.json()
-
-            if not login_data.get('error'):
-                bk_payload = {
-                    "jsonrpc": "2.0", "method": "call",
-                    "params": {"month": month, "year": int(year)}
-                }
-                bk_resp = session.post(bankheaw_url, json=bk_payload, timeout=60)
-                bk_data = bk_resp.json()
-
-                result_bk = bk_data.get('result', {})
-                if result_bk.get('status') == 'success':
-                    for item in result_bk.get('data', []):
-                        if item.get('sort_order', 0) != 0:
-                            continue
-                        api_branch = (item.get('branch_name') or '').strip()
-                        if api_branch == emp_branch_name:
-                            item_type = (item.get('type') or '').strip()
-                            net = item.get('net_total', 0.0)
-
-                            if item_type == 'สาขา':
-                                # type=สาขา → เพิ่มใน detail_line_ids (ยอดสาขา)
-                                lines.append((0, 0, {
-                                    'db_name': bankheaw_db + ' (bankheaw)',
-                                    'status': 'สำเร็จ',
-                                    'match_count': 1,
-                                    'net_rental': net,
-                                }))
-                                total_net_rental += net
-
-                            elif item_type == 'เซลล์':
-                                # type=เซลล์ → เพิ่มใน sales_line_ids (ยอด Sales)
-                                sales_lines.append((0, 0, {
-                                    'db_name': bankheaw_db + ' (bankheaw)',
-                                    'sales_contact_name': item.get('salesperson_name', ''),
-                                    'branch_name': api_branch,
-                                    'rental_amount': item.get('total_rent_revenue', 0.0),
-                                    'payment_received': item.get('total_paid', 0.0),
-                                    'outstanding_debt': item.get('net_outstanding', 0.0),
-                                    'shipping_cost': 0.0,
-                                    'net_rental': net,
-                                }))
-                                sales_total_net_rental += net
-
-        except Exception as e:
-            _logger.exception("[COMMISSION BRANCH DETAIL - BANKHEAW] ERROR | %s", str(e))
+        # ===== Bankheaw (สาขา → detail_lines, เซลล์ → sales_lines) =====
+        bankheaw_db = Helper.get_bankheaw_db()
+        rows_bk, err_bk = Helper.query_bankheaw(bankheaw_db, month_int, year_int)
+        if err_bk:
+            _logger.warning("[COMMISSION BRANCH DETAIL - BANKHEAW] db=%s | %s", bankheaw_db, err_bk)
+        else:
+            for item in rows_bk:
+                if item.get('sort_order', 0) != 0:
+                    continue
+                api_branch = (item.get('branch_name') or '').strip()
+                if api_branch != emp_branch_name:
+                    continue
+                item_type = (item.get('type') or '').strip()
+                net = item.get('net_total') or 0.0
+                if item_type == 'สาขา':
+                    lines.append((0, 0, {
+                        'db_name': bankheaw_db + ' (bankheaw)',
+                        'status': 'สำเร็จ',
+                        'match_count': 1,
+                        'net_rental': net,
+                    }))
+                    total_net_rental += net
+                elif item_type == 'เซลล์':
+                    sales_lines.append((0, 0, {
+                        'db_name': bankheaw_db + ' (bankheaw)',
+                        'sales_contact_name': item.get('salesperson_name') or '',
+                        'branch_name': api_branch,
+                        'rental_amount': item.get('total_rent_revenue') or 0.0,
+                        'payment_received': item.get('total_paid') or 0.0,
+                        'outstanding_debt': item.get('net_outstanding') or 0.0,
+                        'shipping_cost': 0.0,
+                        'net_rental': net,
+                    }))
+                    sales_total_net_rental += net
 
         # ===== ดึงอัตราค่าคอมจากตั้งค่า =====
         rate_model = self.env['commission.rate.branch.sales']
@@ -1925,128 +1782,61 @@ class PayrollSalary(models.Model):
         # ใช้ "เดือนก่อนหน้า" ให้ตรงกับยอดค่าคอมที่คิดใน payroll
         month, year = self._get_commission_period()
 
-        db_list = ['NPD_Intertrading_New', 'NPD_S_Group_New_V2', 'NPD_Bangkok_New']
-        login_url = 'https://npderp.com/web/session/authenticate'
-        commission_url = 'https://npderp.com/api/commission/sales'
-        login_user = 'Npd_admin'
-        login_pass = '1234'
+        # ✅ ดึงผ่าน psycopg2 ตรง (แทน HTTP API เดิม) — DB list ปรับผ่าน System Parameter ได้
+        Helper = self.env['cross_db.commission.query']
+        db_list = Helper.get_db_list()
+        year_int = int(year)
+        month_int = int(month)
+        last_day = calendar.monthrange(year_int, month_int)[1]
+        date_from = date(year_int, month_int, 1)
+        date_to = date(year_int, month_int, last_day)
 
         lines = []
         total_commission = 0.0
-
         for db_name in db_list:
             line_vals = {'db_name': db_name, 'status': '', 'match_count': 0, 'net_rental': 0.0}
-            try:
-                session = requests.Session()
-                login_payload = {
-                    "jsonrpc": "2.0",
-                    "params": {"db": db_name, "login": login_user, "password": login_pass}
-                }
-                login_resp = session.post(login_url, json=login_payload, timeout=30)
-                login_data = login_resp.json()
-
-                if login_data.get('error'):
-                    line_vals['status'] = 'Login Failed'
-                    lines.append((0, 0, line_vals))
-                    continue
-
-                commission_payload = {
-                    "jsonrpc": "2.0", "method": "call",
-                    "params": {"month": month, "year": int(year)}
-                }
-                comm_resp = session.post(commission_url, json=commission_payload, timeout=60)
-                comm_data = comm_resp.json()
-
-                # ดัก error จาก Odoo (เช่น permission error)
-                if comm_data.get('error'):
-                    err_msg = comm_data['error'].get('data', {}).get('message', '') or comm_data['error'].get('message', '')
-                    if 'not allowed' in err_msg or 'Access' in err_msg:
-                        line_vals['status'] = 'ไม่พบข้อมูล / ไม่มีสิทธิ์เข้าถึง'
-                    else:
-                        line_vals['status'] = 'Error: %s' % err_msg[:60]
-                    lines.append((0, 0, line_vals))
-                    continue
-
-                result = comm_data.get('result', {})
-
-                if result.get('status') != 'success':
-                    line_vals['status'] = 'ไม่สามารถดึงข้อมูลได้'
-                    lines.append((0, 0, line_vals))
-                    continue
-
-                data_list = result.get('data', [])
-                db_net_rental = 0.0
-                match_count = 0
-                for item in data_list:
-                    api_emp_code = (item.get('employee_code') or '').strip()
-                    if emp_code and api_emp_code == emp_code:
-                        db_net_rental += item.get('net_rental', 0.0)
-                        match_count += 1
-
-                line_vals['net_rental'] = db_net_rental
-                line_vals['match_count'] = match_count
-                line_vals['status'] = 'สำเร็จ' if match_count > 0 else 'ไม่พบข้อมูลที่ตรงกัน'
-                total_commission += db_net_rental
-
-            except Exception as e:
-                line_vals['status'] = 'Error: %s' % str(e)[:80]
-
+            rows, err = Helper.query_sales(db_name, date_from, date_to)
+            if err:
+                line_vals['status'] = 'Error: %s' % err[:60]
+                lines.append((0, 0, line_vals))
+                continue
+            db_net_rental = 0.0
+            match_count = 0
+            for item in rows:
+                api_emp_code = (item.get('employee_code') or '').strip()
+                if emp_code and api_emp_code == emp_code:
+                    db_net_rental += item.get('net_rental') or 0.0
+                    match_count += 1
+            line_vals['net_rental'] = db_net_rental
+            line_vals['match_count'] = match_count
+            line_vals['status'] = 'สำเร็จ' if match_count > 0 else 'ไม่พบข้อมูลที่ตรงกัน'
+            total_commission += db_net_rental
             lines.append((0, 0, line_vals))
 
-        # ===== ดึงยอด bankheaw (เฉพาะ NPD_S_Group_New_V2, type=เซลล์, กรองชื่อ) =====
-        bankheaw_url = 'https://npderp.com/api/commission/bankheaw'
-        bankheaw_db = 'NPD_S_Group_New_V2'
+        # ===== Bankheaw (type=เซลล์, match ด้วยชื่อ-นามสกุล) =====
+        bankheaw_db = Helper.get_bankheaw_db()
         bk_line_vals = {'db_name': bankheaw_db + ' (bankheaw)', 'status': '', 'match_count': 0, 'net_rental': 0.0}
-
-        try:
-            session = requests.Session()
-            login_payload = {
-                "jsonrpc": "2.0",
-                "params": {"db": bankheaw_db, "login": login_user, "password": login_pass}
-            }
-            login_resp = session.post(login_url, json=login_payload, timeout=30)
-            login_data = login_resp.json()
-
-            if login_data.get('error'):
-                bk_line_vals['status'] = 'Login Failed'
-            else:
-                bk_payload = {
-                    "jsonrpc": "2.0", "method": "call",
-                    "params": {"month": month, "year": int(year)}
-                }
-                bk_resp = session.post(bankheaw_url, json=bk_payload, timeout=60)
-                bk_data = bk_resp.json()
-
-                if bk_data.get('error'):
-                    err_msg = bk_data['error'].get('data', {}).get('message', '') or bk_data['error'].get('message', '')
-                    bk_line_vals['status'] = 'Error: %s' % err_msg[:60]
-                else:
-                    result_bk = bk_data.get('result', {})
-                    if result_bk.get('status') == 'success':
-                        bk_net = 0.0
-                        bk_count = 0
-                        for item in result_bk.get('data', []):
-                            if item.get('sort_order', 0) != 0:
-                                continue
-                            item_type = (item.get('type') or '').strip()
-                            if item_type != 'เซลล์':
-                                continue
-                            # ✅ bankheaw: match ด้วยชื่อ-นามสกุล (ไม่อิงรหัส)
-                            api_sales_name = (item.get('salesperson_name') or '').strip()
-                            if self._bankheaw_name_match(api_sales_name):
-                                bk_net += item.get('net_total', 0.0)
-                                bk_count += 1
-
-                        bk_line_vals['net_rental'] = bk_net
-                        bk_line_vals['match_count'] = bk_count
-                        bk_line_vals['status'] = 'สำเร็จ' if bk_count > 0 else 'ไม่พบข้อมูลที่ตรงกัน'
-                        total_commission += bk_net
-                    else:
-                        bk_line_vals['status'] = 'ไม่สามารถดึงข้อมูลได้'
-
-        except Exception as e:
-            bk_line_vals['status'] = 'Error: %s' % str(e)[:80]
-
+        rows_bk, err_bk = Helper.query_bankheaw(bankheaw_db, month_int, year_int)
+        if err_bk:
+            bk_line_vals['status'] = 'Error: %s' % err_bk[:60]
+        else:
+            bk_net = 0.0
+            bk_count = 0
+            for item in rows_bk:
+                if item.get('sort_order', 0) != 0:
+                    continue
+                item_type = (item.get('type') or '').strip()
+                if item_type != 'เซลล์':
+                    continue
+                # ✅ bankheaw: match ด้วยชื่อ-นามสกุล (ไม่อิงรหัส)
+                api_sales_name = (item.get('salesperson_name') or '').strip()
+                if self._bankheaw_name_match(api_sales_name):
+                    bk_net += item.get('net_total') or 0.0
+                    bk_count += 1
+            bk_line_vals['net_rental'] = bk_net
+            bk_line_vals['match_count'] = bk_count
+            bk_line_vals['status'] = 'สำเร็จ' if bk_count > 0 else 'ไม่พบข้อมูลที่ตรงกัน'
+            total_commission += bk_net
         lines.append((0, 0, bk_line_vals))
 
         wizard = self.env['commission.detail.wizard'].create({
@@ -2073,6 +1863,18 @@ class PayrollSalary(models.Model):
         }
 
     def unlink(self):
+        # ✅ ล็อก: ห้ามลบรายการเงินเดือนที่ "เลยวันที่จ่ายเงิน" แล้ว (กันลบข้อมูลที่จ่ายไปแล้ว)
+        #    ยกเว้นเรียกผ่าน context force_unlink_paid=True (ใช้ใน auto-cleanup ของระบบ)
+        if not self.env.context.get('force_unlink_paid'):
+            today = fields.Date.today()
+            for record in self:
+                if record.payment_date and today > record.payment_date:
+                    raise UserError(
+                        "ไม่สามารถลบรายการเงินเดือนของ %s (%s) ได้ "
+                        "เนื่องจากเลยวันที่จ่ายเงิน (%s) แล้ว"
+                        % (record.firstname or (record.employee_id.firstname if record.employee_id else '') or '',
+                           record.employee_code or '',
+                           record.payment_date.strftime('%d/%m/%Y')))
         for record in self:
             data = {'odoo_id': record.id}
             self._send_data_to_php_api('delete', data)
