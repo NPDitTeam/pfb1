@@ -46,6 +46,44 @@ class PayrollPeriod(models.Model):
     error_count = fields.Integer(string="ผิดพลาด", readonly=True)
     log = fields.Text(string="บันทึก Log")
 
+    @api.model
+    def default_get(self, fields_list):
+        """ตอนกด "สร้าง" รอบใหม่ → default เดือน/ปี เป็น "เดือนถัดไปจากรอบล่าสุด"
+        แทนเดือนปัจจุบัน (today) เพื่อให้กดสร้างต่อเนื่องได้โดยไม่ต้องแก้เดือนเอง
+        - ไม่มีรอบเก่าเลย → ใช้ default เดิม (เดือน/ปี ปัจจุบัน)
+        - สืบทอดวันตัดรอบ + คำนวณวันจ่าย/วันรัน Auto จากรอบล่าสุดให้ด้วย
+        """
+        res = super().default_get(fields_list)
+        latest = self.search([], order='year desc, month desc', limit=1)
+        if not latest:
+            return res
+        try:
+            cur_m = int(latest.month)
+            cur_y = int(latest.year)
+        except (TypeError, ValueError):
+            return res
+        # เดือนถัดไป
+        if cur_m == 12:
+            next_m, next_y = 1, cur_y + 1
+        else:
+            next_m, next_y = cur_m + 1, cur_y
+        cutoff_start = latest.cutoff_start_day or 25
+        cutoff_end = latest.cutoff_end_day or 24
+        last_day = calendar.monthrange(next_y, next_m)[1]
+        if 'month' in fields_list:
+            res['month'] = next_m
+        if 'year' in fields_list:
+            res['year'] = str(next_y)
+        if 'cutoff_start_day' in fields_list:
+            res['cutoff_start_day'] = cutoff_start
+        if 'cutoff_end_day' in fields_list:
+            res['cutoff_end_day'] = cutoff_end
+        if 'auto_run_date' in fields_list:
+            res['auto_run_date'] = date(next_y, next_m, min(cutoff_end, last_day))
+        if 'payment_date' in fields_list:
+            res['payment_date'] = date(next_y, next_m, min(28, last_day))
+        return res
+
     @api.depends('month', 'year')
     def _compute_name(self):
         for rec in self:
@@ -389,7 +427,8 @@ class PayrollPeriod(models.Model):
                 p.employee_id.firstname or '', p.employee_code or ''))
         if to_remove:
             removed_count = len(to_remove)
-            to_remove.unlink()
+            # auto-cleanup ของระบบ → bypass การล็อก "ห้ามลบหลังวันจ่ายเงิน"
+            to_remove.with_context(force_unlink_paid=True).unlink()
 
         for payroll in payrolls_to_refresh:
             # อ่าน label เป็น local "ก่อน" savepoint — ถ้า body พัง transaction aborted
