@@ -1862,6 +1862,25 @@ class AccountAdvanceClearAI(models.Model):
             return 0.0
         return sum(d['final_amount'] for d in details)
 
+    def _python_sum_receipt_total(self, result):
+        u"""รวมยอด receipt_files แบบ Python (deposit_slip ใช้ fee, ที่เหลือใช้ amount).
+        เชื่อถือได้กว่า AI's receipt_total ซึ่งอาจรวมเลขผิดเวลามีใบเสร็จหลายใบ.
+        ใช้ร่วมกันใน _format_result_html และ action_ai_verify เพื่อกัน divergence
+        ระหว่าง icon ของ Section 2 (display) กับการตัดสิน is_pass/overall_pass.
+        """
+        files = result.get('receipt_check', {}).get('receipt_files', []) or []
+        total = 0.0
+        for f in files:
+            if not isinstance(f, dict):
+                continue
+            if (f.get('type') or '') == 'deposit_slip':
+                v = f.get('fee', 0)
+            else:
+                v = f.get('amount', 0)
+            if isinstance(v, (int, float)):
+                total += v
+        return round(total, 2)
+
     def _check_cash_bill_match_detail(self, tolerance=1.0):
         u"""ตรวจบิลเงินสด (เงื่อนไขใหม่):
         จับคู่ amount ของ cash_bill_ids แต่ละรายการ กับ price_unit ใน clear_ids
@@ -2042,8 +2061,12 @@ class AccountAdvanceClearAI(models.Model):
 
         # Re-evaluate amount check: if cash bill passed, add registered_total to receipt_total
         ac_data = result.get('amount_check', {})
-        py_receipt_total = ac_data.get('receipt_total', 0)
-        py_receipt_total = py_receipt_total if isinstance(py_receipt_total, (int, float)) else 0
+        # ใช้ Python sum (เชื่อถือได้กว่า AI's receipt_total ที่อาจสรุปเลขผิดเวลามีหลายใบ)
+        # — สอดคล้องกับ display r_total ใน Section 2 (fallback AI ถ้า Python sum = 0)
+        py_receipt_total = self._python_sum_receipt_total(result)
+        if py_receipt_total == 0:
+            _ai_rt = ac_data.get('receipt_total', 0)
+            py_receipt_total = _ai_rt if isinstance(_ai_rt, (int, float)) else 0
         py_system_total = ac_data.get('system_total', 0)
         py_system_total = py_system_total if isinstance(py_system_total, (int, float)) else 0
         # WHT adjustment: if WHT > 0, use Untaxed + Tax instead of Total
@@ -3095,8 +3118,11 @@ class AccountAdvanceClearAI(models.Model):
         _cb_match3 = self._check_cash_bill_match_detail()
         cash_bill_ok = (not cbc.get('required', False)) or _cb_match3['pass']
         ac_data = result.get('amount_check', {})
-        r_total = ac_data.get('receipt_total', 0)
-        r_total = r_total if isinstance(r_total, (int, float)) else 0
+        # ใช้ Python sum (เชื่อถือได้กว่า AI's receipt_total) — สอดคล้องกับ display Section 2
+        r_total = self._python_sum_receipt_total(result)
+        if r_total == 0:
+            _ai_rt3 = ac_data.get('receipt_total', 0)
+            r_total = _ai_rt3 if isinstance(_ai_rt3, (int, float)) else 0
         s_total = ac_data.get('system_total', 0)
         s_total = s_total if isinstance(s_total, (int, float)) else 0
         # WHT adjustment: if WHT > 0, use Untaxed + Tax instead of Total
