@@ -288,6 +288,17 @@ class MedicalExpense(models.Model):
             _logger.error("Failed to sync medical expense to PHP (ID=%s): %s", self.php_id, e)
             raise UserError("ไม่สามารถอัพเดทสถานะไป PHP ได้: %s" % e)
 
+    # ============================================================
+    # ห้ามลบรายการที่อนุมัติแล้ว
+    # ============================================================
+    def unlink(self):
+        for rec in self:
+            if rec.state == 'อนุมัติ':
+                raise UserError(
+                    "ไม่สามารถลบรายการค่ารักษาพยาบาลของ %s ได้ "
+                    "เนื่องจากอนุมัติแล้ว" % (rec.username or rec.employee_code or ''))
+        return super(MedicalExpense, self).unlink()
+
 
 class MedicalExpenseRejectWizard(models.TransientModel):
     _name = 'medical.expense.reject.wizard'
