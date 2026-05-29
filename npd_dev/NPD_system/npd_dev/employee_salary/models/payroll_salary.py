@@ -1051,7 +1051,7 @@ class PayrollSalary(models.Model):
         จาก API https://npd-solution.com/api/vehicle-booking (DB: NPD_Logistics)
         เงื่อนไข:
           - state = 'done' (เสร็จสิ้น) — ฝั่ง API บังคับ
-          - driver_id.name = firstname + lastname (จับคู่ฝั่ง Python)
+          - driver_id.employee_code = self.employee_id.employee_code (จับคู่ด้วยรหัสพนักงาน HR)
           - planned_start_date_t อยู่ใน "รอบตัดเงินเดือน" (25 เดือนก่อน ถึง 24 เดือนนี้)
         → เซ็ตลง income_transport และ income_allowance
 
@@ -1063,12 +1063,13 @@ class PayrollSalary(models.Model):
         if not self.employee_id or not self.month or not self.year:
             return
 
-        import re
         from datetime import datetime as _dt
-        emp_firstname = (self.firstname or '').strip()
-        emp_lastname = (self.lastname or '').strip()
-        # normalize ช่องว่างหลายตัวให้เหลือ 1 ตัว เพื่อเปรียบเทียบ
-        emp_fullname = re.sub(r'\s+', ' ', (emp_firstname + ' ' + emp_lastname).strip())
+        # ✅ match ด้วยรหัสพนักงาน HR — แม่นกว่าชื่อ (กันชื่อสะกดต่าง/มีคำนำหน้า)
+        emp_code = (self.employee_id.employee_code or '').strip()
+        emp_fullname = ((self.firstname or '') + ' ' + (self.lastname or '')).strip()
+        if not emp_code:
+            _logger.warning("[VEHICLE BOOKING] พนักงาน %s ไม่มี employee_code → ข้าม", emp_fullname)
+            return
 
         # ✅ คำนวณ "รอบตัดเงินเดือน" — ตรงกับวิธีของ _get_prorated_salary_income
         try:
@@ -1088,8 +1089,8 @@ class PayrollSalary(models.Model):
         cycle_start = date(prev_y, prev_m, min(start_day, last_start))
 
         _logger.info("=" * 60)
-        _logger.info("[VEHICLE BOOKING] เริ่มดึงค่าเที่ยว/เบี้ยเลี้ยง driver='%s' | รอบตัด=[%s..%s]",
-                     emp_fullname, cycle_start, cycle_end)
+        _logger.info("[VEHICLE BOOKING] เริ่มดึงค่าเที่ยว/เบี้ยเลี้ยง driver='%s' (code=%s) | รอบตัด=[%s..%s]",
+                     emp_fullname, emp_code, cycle_start, cycle_end)
 
         login_url = 'https://npd-solution.com/web/session/authenticate'
         api_url = 'https://npd-solution.com/api/vehicle-booking'
@@ -1137,38 +1138,14 @@ class PayrollSalary(models.Model):
                 _logger.info("[VEHICLE BOOKING] ดึงเดือน %s/%s: %d รายการ", q_month, q_year, len(data_list))
                 all_data.extend(data_list)
 
-            # ===== Step 3: กรองตามชื่อคนขับ + ช่วงรอบตัด (planned_start_date_t) =====
-            # ลำดับการ match (หลังตัดคำนำหน้า + normalize space):
-            #   1) เท่ากันเป๊ะ
-            #   2) firstname AND lastname ทั้งคู่อยู่ใน api_name (รองรับชื่อกลาง / สะกดต่างเล็กน้อย)
-            # — ตัดคำนำหน้าไทยออกก่อน (รองรับ "นาย อุทัย เอี่ยมดี" / "อุทัย เอี่ยมดี" / "นางสาว สมหญิง")
-            #   สั่งจากยาวสุดไปสั้นสุด ป้องกัน "นาง" ตัด "นางสาว" ผิด
-            THAI_PREFIXES = (
-                'นางสาว', 'น.ส.', 'นส.', 'น.ส', 'นส',
-                'ด.ช.', 'ด.ญ.', 'ดช.', 'ดญ.',
-                'ผศ.', 'รศ.', 'ดร.',
-                'นาย', 'นาง', 'ดร', 'ศ.', 'คุณ',
-            )
+            # ===== Step 3: กรองด้วย employee_code + ช่วงรอบตัด (planned_start_date_t) =====
+            # ✅ match ด้วยรหัสพนักงาน HR — แม่นกว่าชื่อมาก (ไม่ต้องห่วง ชื่อสะกดต่าง/มีคำนำหน้า)
+            # ฝั่ง Odoo 18 API ส่ง 'employee_code' จาก driver_id.employee_code
             found = False
             for item in all_data:
-                api_raw = (item.get('driver_name') or '').strip()
-                # ตัดคำนำหน้าไทยออก
-                api_clean = api_raw
-                for _prefix in THAI_PREFIXES:
-                    if api_clean.startswith(_prefix):
-                        api_clean = api_clean[len(_prefix):].strip()
-                        break
-                api_clean = re.sub(r'\s+', ' ', api_clean)
-                # match แบบยืดหยุ่น
-                is_match = (
-                    api_clean == emp_fullname
-                    or (emp_firstname and emp_lastname
-                        and emp_firstname in api_clean and emp_lastname in api_clean)
-                )
-                if not is_match:
+                api_emp_code = (item.get('employee_code') or '').strip()
+                if not api_emp_code or api_emp_code != emp_code:
                     continue
-                # ใช้ api_clean เป็นชื่อสำหรับ log
-                api_driver_name = api_clean
                 # ตรวจ planned_start_date_t (วันเวลาออกเดินทางจริง) ว่าอยู่ในรอบตัดไหม
                 planned_str = item.get('planned_start_date_t')
                 if not planned_str:
@@ -1185,12 +1162,14 @@ class PayrollSalary(models.Model):
                 total_daily_allowance += daily_allow
                 found = True
                 _logger.info(
-                    "[VEHICLE BOOKING] MATCH! driver=%s | booking=%s | date=%s | travel=%.2f | allowance=%.2f",
-                    api_driver_name, item.get('name', ''), planned_d, travel_exp, daily_allow,
+                    "[VEHICLE BOOKING] MATCH! code=%s | driver_name=%s | booking=%s | date=%s | travel=%.2f | allowance=%.2f",
+                    api_emp_code, item.get('driver_name', ''), item.get('name', ''),
+                    planned_d, travel_exp, daily_allow,
                 )
 
             if not found:
-                _logger.info("[VEHICLE BOOKING] ไม่พบข้อมูลในรอบตัด | driver='%s'", emp_fullname)
+                _logger.info("[VEHICLE BOOKING] ไม่พบข้อมูลในรอบตัด | code='%s' driver='%s'",
+                             emp_code, emp_fullname)
 
         except Exception as e:
             _logger.exception("[VEHICLE BOOKING] ERROR | %s", str(e))
