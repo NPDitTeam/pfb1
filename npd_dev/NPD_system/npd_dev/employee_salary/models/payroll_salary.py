@@ -1138,12 +1138,38 @@ class PayrollSalary(models.Model):
                 all_data.extend(data_list)
 
             # ===== Step 3: กรองตามชื่อคนขับ + ช่วงรอบตัด (planned_start_date_t) =====
+            # ลำดับการ match (หลังตัดคำนำหน้า + normalize space):
+            #   1) เท่ากันเป๊ะ
+            #   2) firstname AND lastname ทั้งคู่อยู่ใน api_name (รองรับชื่อกลาง / สะกดต่างเล็กน้อย)
+            # — ตัดคำนำหน้าไทยออกก่อน (รองรับ "นาย อุทัย เอี่ยมดี" / "อุทัย เอี่ยมดี" / "นางสาว สมหญิง")
+            #   สั่งจากยาวสุดไปสั้นสุด ป้องกัน "นาง" ตัด "นางสาว" ผิด
+            THAI_PREFIXES = (
+                'นางสาว', 'น.ส.', 'นส.', 'น.ส', 'นส',
+                'ด.ช.', 'ด.ญ.', 'ดช.', 'ดญ.',
+                'ผศ.', 'รศ.', 'ดร.',
+                'นาย', 'นาง', 'ดร', 'ศ.', 'คุณ',
+            )
             found = False
             for item in all_data:
-                api_driver_name = re.sub(r'\s+', ' ', (item.get('driver_name') or '').strip())
-                if api_driver_name != emp_fullname:
+                api_raw = (item.get('driver_name') or '').strip()
+                # ตัดคำนำหน้าไทยออก
+                api_clean = api_raw
+                for _prefix in THAI_PREFIXES:
+                    if api_clean.startswith(_prefix):
+                        api_clean = api_clean[len(_prefix):].strip()
+                        break
+                api_clean = re.sub(r'\s+', ' ', api_clean)
+                # match แบบยืดหยุ่น
+                is_match = (
+                    api_clean == emp_fullname
+                    or (emp_firstname and emp_lastname
+                        and emp_firstname in api_clean and emp_lastname in api_clean)
+                )
+                if not is_match:
                     continue
-                # ตรวจ planned_start_date_t ว่าอยู่ในรอบตัดไหม
+                # ใช้ api_clean เป็นชื่อสำหรับ log
+                api_driver_name = api_clean
+                # ตรวจ planned_start_date_t (วันเวลาออกเดินทางจริง) ว่าอยู่ในรอบตัดไหม
                 planned_str = item.get('planned_start_date_t')
                 if not planned_str:
                     continue
