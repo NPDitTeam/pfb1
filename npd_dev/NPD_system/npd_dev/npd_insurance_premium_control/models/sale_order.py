@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import ast
 import json
 import logging
 from lxml import etree
@@ -6,6 +7,19 @@ from lxml import etree
 from odoo import api, models, SUPERUSER_ID
 
 _logger = logging.getLogger(__name__)
+
+
+def _parse_attrs(attrs_str):
+    """Parse attrs string ที่อาจเป็น Python-literal หรือ JSON-style ก็ได้"""
+    if not attrs_str:
+        return None
+    try:
+        return ast.literal_eval(attrs_str)
+    except Exception:
+        try:
+            return json.loads(attrs_str)
+        except Exception:
+            return None
 
 
 class SaleOrder(models.Model):
@@ -20,8 +34,6 @@ class SaleOrder(models.Model):
     def _compute_amount_insurance(self):
         super()._compute_amount_insurance()
         for order in self:
-            if order.deposit_ref:
-                continue
             if order.pfb_required_insurance_premium:
                 order.pfb_amount = order.pfb_required_insurance_premium
                 order.pfb_amount_c = order.pfb_amount
@@ -32,7 +44,7 @@ class SaleOrder(models.Model):
             and 'pfb_dis_amount_insurance' not in vals
         ):
             required = vals.get('pfb_required_insurance_premium') or 0.0
-            if required and len(self) == 1 and not self.deposit_ref:
+            if required and len(self) == 1:
                 new_dis = (self.pfb_amount_insurance or 0.0) - required
                 if new_dis < 0:
                     new_dis = 0.0
@@ -83,47 +95,48 @@ class SaleOrder(models.Model):
                 or getattr(user, 'allow_edit_insurance_premium', False)
             )
 
-            nodes = doc.xpath("//field[@name='pfb_required_insurance_premium']")
-            for node in nodes:
-                # อ่าน modifiers ที่ Odoo computed มาแล้ว
-                mods_str = node.get('modifiers')
-                mods = json.loads(mods_str) if mods_str else {}
+            # field ที่มี attrs readonly อิง deposit_ref ใน XML ต้นทาง
+            target_fields = [
+                'pfb_required_insurance_premium',
+                'pfb_dis_amount_insurance',
+            ]
 
-                if allowed:
-                    # มีสิทธิ์ → ลบ readonly ออกจากทั้ง attribute และ modifiers
-                    if 'readonly' in node.attrib:
-                        del node.attrib['readonly']
-                    if 'attrs' in node.attrib:
-                        # parse attrs และลบ readonly ในนั้น
-                        try:
-                            attrs = eval(node.get('attrs'))
+            for fname in target_fields:
+                nodes = doc.xpath("//field[@name=$name]", name=fname)
+                for node in nodes:
+                    mods_str = node.get('modifiers')
+                    mods = json.loads(mods_str) if mods_str else {}
+
+                    if allowed:
+                        # มีสิทธิ์ → ลบ readonly ออกทุกระดับ
+                        if 'readonly' in node.attrib:
+                            del node.attrib['readonly']
+                        if 'attrs' in node.attrib:
+                            attrs = _parse_attrs(node.get('attrs'))
                             if isinstance(attrs, dict) and 'readonly' in attrs:
                                 del attrs['readonly']
                                 if attrs:
                                     node.set('attrs', str(attrs))
                                 else:
                                     del node.attrib['attrs']
-                        except Exception:
-                            pass
-                    if 'readonly' in mods:
-                        del mods['readonly']
-                    node.set('modifiers', json.dumps(mods))
-                    modified = True
-                else:
-                    # ไม่มีสิทธิ์ → readonly เฉพาะตอน SO ยืนยันแล้ว (state in sale/done)
-                    # ตอนเป็น QT/ใบเสนอราคา (draft/sent/cancel) ยังแก้ไขได้ปกติ
-                    # เก็บเงื่อนไข deposit_ref เดิมไว้ด้วย
-                    readonly_domain = [
-                        '|',
-                        ['deposit_ref', '!=', False],
-                        ['state', 'in', ['sale', 'done']],
-                    ]
-                    if 'readonly' in node.attrib:
-                        del node.attrib['readonly']
-                    node.set('attrs', str({'readonly': readonly_domain}))
-                    mods['readonly'] = readonly_domain
-                    node.set('modifiers', json.dumps(mods))
-                    modified = True
+                        if 'readonly' in mods:
+                            del mods['readonly']
+                        node.set('modifiers', json.dumps(mods))
+                        modified = True
+                    elif fname == 'pfb_required_insurance_premium':
+                        # ไม่มีสิทธิ์ → readonly เฉพาะตอน SO ยืนยันแล้ว (state in sale/done)
+                        # ตอนเป็น QT/ใบเสนอราคา (draft/sent/cancel) ยังแก้ไขได้ปกติ
+                        readonly_domain = [
+                            '|',
+                            ['deposit_ref', '!=', False],
+                            ['state', 'in', ['sale', 'done']],
+                        ]
+                        if 'readonly' in node.attrib:
+                            del node.attrib['readonly']
+                        node.set('attrs', str({'readonly': readonly_domain}))
+                        mods['readonly'] = readonly_domain
+                        node.set('modifiers', json.dumps(mods))
+                        modified = True
 
             if modified:
                 res['arch'] = etree.tostring(doc, encoding='unicode')
