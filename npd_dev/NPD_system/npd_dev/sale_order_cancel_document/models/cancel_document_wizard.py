@@ -7,6 +7,25 @@ import pytz
 _logger = logging.getLogger(__name__)
 
 
+def _payment_label(pay):
+    """สร้าง label ของ payment สำหรับแสดง/log
+    - ถ้า posted แล้วและมี name → ใช้ name
+    - ถ้ายังเป็น draft (name=False) → แสดงข้อมูลพอให้รู้ว่าคือใบไหน
+    """
+    if pay and pay.name:
+        return pay.name
+    partner = ''
+    try:
+        partner = (pay.partner_id.name or '') if pay.partner_id else ''
+    except Exception:
+        partner = ''
+    try:
+        amt = pay.amount or 0.0
+    except Exception:
+        amt = 0.0
+    return '[ฉบับร่าง #%s %s %.2f บาท]' % (pay.id, partner, amt)
+
+
 class SaleOrderInheritCancelDoc(models.Model):
     _inherit = 'sale.order'
 
@@ -96,8 +115,10 @@ class SaleOrderInheritCancelDoc(models.Model):
             PaymentInvoice = self.env['account.payment.invoice'].sudo()
             pi_lines = PaymentInvoice.search([('invoice_id', 'in', self.invoice_ids.ids)])
             for pi in pi_lines:
-                if pi.payment_id and pi.payment_id.state != 'cancel' and pi.payment_id.name not in pay_inv_list:
-                    pay_inv_list.append(pi.payment_id.name)
+                if pi.payment_id and pi.payment_id.state != 'cancel':
+                    label = _payment_label(pi.payment_id)
+                    if label and label not in pay_inv_list:
+                        pay_inv_list.append(label)
         payment_invoice_names = ', '.join(pay_inv_list) or '-'
 
         # เลข Payment เงินประกัน
@@ -113,8 +134,10 @@ class SaleOrderInheritCancelDoc(models.Model):
                 PaymentInvoice = self.env['account.payment.invoice'].sudo()
                 pi_lines = PaymentInvoice.search([('invoice_id', 'in', self.rent_check.ids)])
                 for pi in pi_lines:
-                    if pi.payment_id and pi.payment_id.state != 'cancel' and pi.payment_id.name not in pay_ins_list:
-                        pay_ins_list.append(pi.payment_id.name)
+                    if pi.payment_id and pi.payment_id.state != 'cancel':
+                        label = _payment_label(pi.payment_id)
+                        if label and label not in pay_ins_list:
+                            pay_ins_list.append(label)
         payment_insurance_names = ', '.join(pay_ins_list) or '-'
 
         # เลข Debit Note - กรองทั้ง invoice_ids, rent_check (Insurance), และ credit note ออก
@@ -163,8 +186,10 @@ class SaleOrderInheritCancelDoc(models.Model):
             PaymentInvoice = self.env['account.payment.invoice'].sudo()
             pi_lines = PaymentInvoice.search([('invoice_id', 'in', debit_notes.ids)])
             for pi in pi_lines:
-                if pi.payment_id and pi.payment_id.state != 'cancel' and pi.payment_id.name not in dn_pay_names_list:
-                    dn_pay_names_list.append(pi.payment_id.name)
+                if pi.payment_id and pi.payment_id.state != 'cancel':
+                    label = _payment_label(pi.payment_id)
+                    if label and label not in dn_pay_names_list:
+                        dn_pay_names_list.append(label)
         dn_payment_names = ', '.join(dn_pay_names_list) or '-'
 
         return {
@@ -762,22 +787,32 @@ class SaleOrderCancelDocumentWizard(models.TransientModel):
                             found_pay_inv |= pi.payment_id
 
                 for pay in found_pay_inv:
+                    pay_label = _payment_label(pay)
                     try:
                         self.env.cr.execute("SAVEPOINT cancel_payinv_op")
                         payment_move = pay.move_id
-                        if pay.state == 'posted':
-                            reconciled_lines = payment_move.line_ids.filtered(lambda l: l.account_id.reconcile and l.reconciled)
-                            if reconciled_lines:
-                                reconciled_lines.remove_move_reconcile()
-                            payment_move.mapped('line_ids.analytic_line_ids').unlink()
-                            payment_move.write({'state': 'draft', 'is_move_sent': False})
-                        payment_move.write({'auto_post': False, 'state': 'cancel'})
+                        if pay.state == 'draft':
+                            # Payment ฉบับร่าง: ยังไม่ใช่เอกสารทางบัญชี → set state เป็น cancel โดยตรง
+                            if payment_move and payment_move.state != 'cancel':
+                                payment_move.write({'auto_post': False, 'state': 'cancel'})
+                            try:
+                                pay.sudo().write({'state': 'cancel'})
+                            except Exception:
+                                pass
+                        else:
+                            if pay.state == 'posted':
+                                reconciled_lines = payment_move.line_ids.filtered(lambda l: l.account_id.reconcile and l.reconciled)
+                                if reconciled_lines:
+                                    reconciled_lines.remove_move_reconcile()
+                                payment_move.mapped('line_ids.analytic_line_ids').unlink()
+                                payment_move.write({'state': 'draft', 'is_move_sent': False})
+                            payment_move.write({'auto_post': False, 'state': 'cancel'})
                         self.env.cr.execute("RELEASE SAVEPOINT cancel_payinv_op")
-                        messages.append("ยกเลิกใบรับชำระใบแจ้งหนี้ %s เรียบร้อย" % (pay.name or str(pay.id)))
+                        messages.append("ยกเลิกใบรับชำระใบแจ้งหนี้ %s เรียบร้อย" % pay_label)
                         log_model.sudo().create({
                             'sale_order_id': self.sale_id.id,
                             'document_type': 'payment_invoice',
-                            'document_name': pay.name or str(pay.id),
+                            'document_name': pay_label,
                             'reason': self.reason_payment_invoice,
                             'cancelled_by': self.env.user.id,
                             'cancelled_date': fields.Datetime.now(),
@@ -788,7 +823,7 @@ class SaleOrderCancelDocumentWizard(models.TransientModel):
                             self.env.cr.execute("ROLLBACK TO SAVEPOINT cancel_payinv_op")
                         except Exception:
                             pass
-                        messages.append("ไม่สามารถยกเลิกใบรับชำระใบแจ้งหนี้ %s: %s" % (pay.name or str(pay.id), str(e)))
+                        messages.append("ไม่สามารถยกเลิกใบรับชำระใบแจ้งหนี้ %s: %s" % (pay_label, str(e)))
 
             # ---- 6b. ยกเลิกใบรับชำระเงินประกัน ----
             if self.cancel_payment_insurance:
@@ -807,22 +842,32 @@ class SaleOrderCancelDocumentWizard(models.TransientModel):
                                 found_pay_ins |= pi.payment_id
 
                 for pay in found_pay_ins:
+                    pay_label = _payment_label(pay)
                     try:
                         self.env.cr.execute("SAVEPOINT cancel_payins_op")
                         payment_move = pay.move_id
-                        if pay.state == 'posted':
-                            reconciled_lines = payment_move.line_ids.filtered(lambda l: l.account_id.reconcile and l.reconciled)
-                            if reconciled_lines:
-                                reconciled_lines.remove_move_reconcile()
-                            payment_move.mapped('line_ids.analytic_line_ids').unlink()
-                            payment_move.write({'state': 'draft', 'is_move_sent': False})
-                        payment_move.write({'auto_post': False, 'state': 'cancel'})
+                        if pay.state == 'draft':
+                            # Payment ฉบับร่าง: ยังไม่ใช่เอกสารทางบัญชี → set state เป็น cancel โดยตรง
+                            if payment_move and payment_move.state != 'cancel':
+                                payment_move.write({'auto_post': False, 'state': 'cancel'})
+                            try:
+                                pay.sudo().write({'state': 'cancel'})
+                            except Exception:
+                                pass
+                        else:
+                            if pay.state == 'posted':
+                                reconciled_lines = payment_move.line_ids.filtered(lambda l: l.account_id.reconcile and l.reconciled)
+                                if reconciled_lines:
+                                    reconciled_lines.remove_move_reconcile()
+                                payment_move.mapped('line_ids.analytic_line_ids').unlink()
+                                payment_move.write({'state': 'draft', 'is_move_sent': False})
+                            payment_move.write({'auto_post': False, 'state': 'cancel'})
                         self.env.cr.execute("RELEASE SAVEPOINT cancel_payins_op")
-                        messages.append("ยกเลิกใบรับชำระเงินประกัน %s เรียบร้อย" % (pay.name or str(pay.id)))
+                        messages.append("ยกเลิกใบรับชำระเงินประกัน %s เรียบร้อย" % pay_label)
                         log_model.sudo().create({
                             'sale_order_id': self.sale_id.id,
                             'document_type': 'payment_insurance',
-                            'document_name': pay.name or str(pay.id),
+                            'document_name': pay_label,
                             'reason': self.reason_payment_insurance,
                             'cancelled_by': self.env.user.id,
                             'cancelled_date': fields.Datetime.now(),
@@ -833,7 +878,7 @@ class SaleOrderCancelDocumentWizard(models.TransientModel):
                             self.env.cr.execute("ROLLBACK TO SAVEPOINT cancel_payins_op")
                         except Exception:
                             pass
-                        messages.append("ไม่สามารถยกเลิกใบรับชำระเงินประกัน %s: %s" % (pay.name or str(pay.id), str(e)))
+                        messages.append("ไม่สามารถยกเลิกใบรับชำระเงินประกัน %s: %s" % (pay_label, str(e)))
 
             # ---- 7. ยกเลิก Debit Note ----
             if self.cancel_debit_note:
@@ -908,25 +953,35 @@ class SaleOrderCancelDocumentWizard(models.TransientModel):
                             dn_payments |= pi.payment_id
 
                     for pay in dn_payments:
+                        pay_label = _payment_label(pay)
                         try:
                             self.env.cr.execute("SAVEPOINT cancel_dnpay_op")
                             payment_move = pay.move_id
-                            if pay.state == 'posted':
-                                reconciled_lines = payment_move.line_ids.filtered(
-                                    lambda l: l.account_id.reconcile and l.reconciled
-                                )
-                                if reconciled_lines:
-                                    reconciled_lines.remove_move_reconcile()
-                                payment_move.mapped('line_ids.analytic_line_ids').unlink()
-                                payment_move.write({'state': 'draft', 'is_move_sent': False})
-                            payment_move.write({'auto_post': False, 'state': 'cancel'})
+                            if pay.state == 'draft':
+                                # Payment ฉบับร่าง: ยังไม่ใช่เอกสารทางบัญชี → set state เป็น cancel โดยตรง
+                                if payment_move and payment_move.state != 'cancel':
+                                    payment_move.write({'auto_post': False, 'state': 'cancel'})
+                                try:
+                                    pay.sudo().write({'state': 'cancel'})
+                                except Exception:
+                                    pass
+                            else:
+                                if pay.state == 'posted':
+                                    reconciled_lines = payment_move.line_ids.filtered(
+                                        lambda l: l.account_id.reconcile and l.reconciled
+                                    )
+                                    if reconciled_lines:
+                                        reconciled_lines.remove_move_reconcile()
+                                    payment_move.mapped('line_ids.analytic_line_ids').unlink()
+                                    payment_move.write({'state': 'draft', 'is_move_sent': False})
+                                payment_move.write({'auto_post': False, 'state': 'cancel'})
                             self.env.cr.execute("RELEASE SAVEPOINT cancel_dnpay_op")
-                            messages.append("ยกเลิกใบรับชำระ Debit Note %s เรียบร้อย" % (pay.name or str(pay.id)))
+                            messages.append("ยกเลิกใบรับชำระ Debit Note %s เรียบร้อย" % pay_label)
 
                             log_model.sudo().create({
                                 'sale_order_id': self.sale_id.id,
                                 'document_type': 'debit_note_payment',
-                                'document_name': pay.name or str(pay.id),
+                                'document_name': pay_label,
                                 'reason': self.reason_debit_note,
                                 'cancelled_by': self.env.user.id,
                                 'cancelled_date': fields.Datetime.now(),
