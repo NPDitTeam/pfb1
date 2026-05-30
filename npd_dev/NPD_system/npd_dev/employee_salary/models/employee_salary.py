@@ -344,7 +344,10 @@ class EmployeeSalary(models.Model):
 
                 api_response = response.json()
                 if api_response.get('status') == 'success':
-                    record.write({'device_id': False})
+                    # ✅ skip_api_sync: API call แรกส่ง device_id='' ไปแล้ว
+                    # ไม่ต้องให้ write() trigger _sync_to_api รอบ 2 (จะส่ง full payload
+                    # ซึ่ง field Boolean บางตัว MySQL strict mode reject ค่าว่าง)
+                    record.with_context(skip_api_sync=True).write({'device_id': False})
                     return {
                         'type': 'ir.actions.client',
                         'tag': 'display_notification',
@@ -390,7 +393,11 @@ class EmployeeSalary(models.Model):
 
     def write(self, vals):
         res = super(EmployeeSalary, self).write(vals)
-        if res and not set(vals.keys()).issubset(self.SKIP_API_FIELDS):
+        # ✅ skip_api_sync context: ใช้เมื่อ API call ภายนอกจัดการ sync เองแล้ว
+        # (เช่น reset_device_id) — ป้องกัน sync ซ้ำซ้อน
+        if (res
+                and not self.env.context.get('skip_api_sync')
+                and not set(vals.keys()).issubset(self.SKIP_API_FIELDS)):
             self._sync_to_api('update', values=vals)
         return res
 
