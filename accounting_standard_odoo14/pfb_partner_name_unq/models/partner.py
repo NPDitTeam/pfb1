@@ -1,6 +1,6 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html)
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError,ValidationError
+from odoo.exceptions import ValidationError
 
 
 class ResPartner(models.Model):
@@ -10,16 +10,18 @@ class ResPartner(models.Model):
     def _check_partner_name(self):
         Partner = self.env["res.partner"]
         for rec in self:
-            partner_id = Partner.search(
+            if not rec.name:
+                continue
+            duplicate = Partner.search(
                 [
                     ("name", "=", rec.name),
-                ]
+                    ("id", "!=", rec.id),
+                    ("parent_id", "=", False),
+                ],
+                limit=1,
             )
-            if len(partner_id) > 1:
-                raise UserError(
-                    _(
-                        "{} Partner name already.".format(
-                            rec.name
-                        )
-                    )
+            if duplicate:
+                raise ValidationError(
+                    _("ชื่อคู่ค้า '%s' มีอยู่แล้ว (ID %s)")
+                    % (rec.name, duplicate.id)
                 )
