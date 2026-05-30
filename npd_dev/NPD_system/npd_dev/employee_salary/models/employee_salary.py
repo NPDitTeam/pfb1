@@ -254,6 +254,15 @@ class EmployeeSalary(models.Model):
         for f in not_null_str_fields:
             if vals.get(f) is None:
                 vals[f] = ''
+
+        # ✅ Coerce Boolean → int (0/1) — MySQL strict mode reject ค่าว่าง/false
+        # บน TINYINT column (เช่น users.allow_offsite_time → SQLSTATE 22007)
+        # auto-detect จาก model metadata เพื่อไม่ต้อง maintain list มือ
+        model_fields = type(record)._fields
+        for k in list(vals.keys()):
+            field = model_fields.get(k)
+            if field is not None and field.type == 'boolean':
+                vals[k] = 1 if vals[k] else 0
         return vals
 
     def _get_position_by_name(self, name):
