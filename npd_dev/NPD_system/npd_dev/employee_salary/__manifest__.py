@@ -33,6 +33,7 @@
         'views/menu_items.xml',
         'reports/payslip_report.xml',
         'data/payroll_cron.xml',
+        'data/leave_entitlement_cron.xml',
         'data/commission_rate_data.xml',
     ],
     'installable': True,

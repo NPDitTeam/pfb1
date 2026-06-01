@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    หมายเหตุสำหรับผู้ดูแลระบบ:
+    หากต้องการเปลี่ยน "เวลา" ที่ cron นี้รันทุกวัน
+    >>> ห้ามแก้ที่ไฟล์นี้ <<< เพราะ noupdate="1" ใช้ได้แค่ตอน install ใหม่เท่านั้น
+
+    ให้ไปแก้ที่ Odoo UI:
+        Settings → Technical → Automation → Scheduled Actions
+        ค้นหา: "อัพเดทสิทธิ์การลา Auto (รายวัน)"
+        แก้ field "Next Execution Date" เป็นวัน+เวลาที่ต้องการ → Save
+-->
+<odoo>
+    <data noupdate="1">
+        <record id="ir_cron_update_leave_entitlement" model="ir.cron">
+            <field name="name">อัพเดทสิทธิ์การลา Auto (รายวัน)</field>
+            <field name="model_id" ref="model_hr_leave_type_custom"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_update_leave_entitlements()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active">True</field>
+            <!-- รันรอบแรก ตี 2 เวลาไทย = 19:00 UTC (UTC+7) แล้วรันทุกวันเวลานี้ -->
+            <field name="nextcall">2026-06-01 19:00:00</field>
+        </record>
+    </data>
+</odoo>
