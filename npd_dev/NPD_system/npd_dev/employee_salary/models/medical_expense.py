@@ -15,6 +15,9 @@ class MedicalExpense(models.Model):
     _order = 'created_at desc'
     _rec_name = 'username'
 
+    # วงเงินค่ารักษาพยาบาลสูงสุดต่อพนักงานต่อปี (บาท)
+    MEDICAL_ANNUAL_LIMIT = 10000.0
+
     php_id = fields.Integer(string='PHP ID', readonly=True, index=True)
     employee_id = fields.Many2one('employee.salary', string='พนักงาน', required=True)
     employee_code = fields.Char(related='employee_id.employee_code', string='รหัสพนักงาน', store=True, readonly=True)
@@ -42,6 +45,49 @@ class MedicalExpense(models.Model):
     reason = fields.Text(string='เหตุผลจากผู้อนุมัติ')
     created_at = fields.Datetime(string='วันที่ส่งคำขอ', default=fields.Datetime.now, readonly=True)
     approved_at = fields.Datetime(string='วันที่อนุมัติ', readonly=True)
+
+    # ปีที่นับวงเงิน — อิงจากปีของ "วันที่ทำงาน" (เก็บไว้เพื่อใช้ค้นหา/จัดกลุ่ม)
+    expense_year = fields.Integer(string='ปี', compute='_compute_expense_year',
+                                  store=True, readonly=True)
+    # วงเงินต่อปี (โชว์บนฟอร์ม)
+    annual_limit = fields.Float(string='วงเงินต่อปี (บาท)',
+                                compute='_compute_remaining_amount')
+    # ยอดที่ "อนุมัติแล้ว" สะสมในปีนี้ของพนักงานคนนี้
+    annual_approved_amount = fields.Float(string='อนุมัติแล้วปีนี้ (บาท)',
+                                          compute='_compute_remaining_amount')
+    # จำนวนเงินคงเหลือที่ขอได้ (นับเฉพาะสถานะอนุมัติ) — แสดงคงเหลือล่าสุด
+    remaining_amount = fields.Float(string='จำนวนเงินคงเหลือที่ขอได้ (บาท)',
+                                    compute='_compute_remaining_amount')
+
+    @api.depends('work_date')
+    def _compute_expense_year(self):
+        for rec in self:
+            d = rec.work_date or fields.Date.context_today(rec)
+            rec.expense_year = d.year
+
+    @api.depends('employee_id', 'expense_year', 'state', 'amount')
+    def _compute_remaining_amount(self):
+        """คงเหลือล่าสุด = วงเงินต่อปี − ผลรวมยอดที่ 'อนุมัติแล้ว' ทั้งหมดของพนักงานคนนี้
+        ในปีเดียวกัน (นับเฉพาะ state = 'อนุมัติ' เท่านั้น — รออนุมัติ/ไม่อนุมัติ/ยกเลิก ไม่นับ)
+
+        แสดงยอดคงเหลือ "ปัจจุบันจริง" ทุกใบของพนักงาน/ปีเดียวกันจะเห็นค่าเท่ากัน
+        → พออนุมัติเพิ่ม คงเหลือจะลดลงตามทันที
+        """
+        for rec in self:
+            limit = rec.MEDICAL_ANNUAL_LIMIT
+            rec.annual_limit = limit
+            if not rec.employee_id:
+                rec.annual_approved_amount = 0.0
+                rec.remaining_amount = limit
+                continue
+            year = rec.expense_year or fields.Date.context_today(rec).year
+            used = sum(self.sudo().search([
+                ('employee_id', '=', rec.employee_id.id),
+                ('state', '=', 'อนุมัติ'),
+                ('expense_year', '=', year),
+            ]).mapped('amount'))
+            rec.annual_approved_amount = used
+            rec.remaining_amount = limit - used
 
     @api.constrains('php_id')
     def _check_unique_php_id(self):
@@ -81,6 +127,25 @@ class MedicalExpense(models.Model):
         for rec in self:
             if rec.state != 'รออนุมัติ':
                 raise UserError("สามารถอนุมัติได้เฉพาะคำขอที่สถานะ 'รออนุมัติ' เท่านั้น")
+
+            # ✅ เช็ควงเงินค่ารักษาพยาบาลต่อปี — อนุมัติไม่ได้ถ้าเกินวงเงินคงเหลือ
+            #    นับเฉพาะใบที่ 'อนุมัติ' แล้วในปีเดียวกันของพนักงานคนนี้
+            year = rec.expense_year or fields.Date.context_today(rec).year
+            used = sum(self.sudo().search([
+                ('employee_id', '=', rec.employee_id.id),
+                ('state', '=', 'อนุมัติ'),
+                ('expense_year', '=', year),
+            ]).mapped('amount'))
+            remaining = rec.MEDICAL_ANNUAL_LIMIT - used
+            if rec.amount > remaining:
+                raise UserError(
+                    f"ไม่สามารถอนุมัติได้ — เกินวงเงินค่ารักษาพยาบาลประจำปี {year}\n\n"
+                    f"• วงเงินต่อปี: {rec.MEDICAL_ANNUAL_LIMIT:,.2f} บาท\n"
+                    f"• อนุมัติไปแล้วปีนี้: {used:,.2f} บาท\n"
+                    f"• คงเหลือที่ขอได้: {remaining:,.2f} บาท\n"
+                    f"• คำขอนี้: {rec.amount:,.2f} บาท"
+                )
+
             rec._sync_state_to_php('approve')
             rec.sudo().write({
                 'state': 'อนุมัติ',

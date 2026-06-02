@@ -311,7 +311,13 @@ while ($cursor <= $end) {
                 }
                 $lateMin = max(0, (int)floor(round($lateRaw, 6)));
             }
-            if ($lateMin > $grace_period) {
+
+            // ✅ พนักงานใหม่ "วันแรก" (วันที่กำลังคำนวณ == วันเริ่มงาน)
+            //    → ข้ามการนับ "สายเข้างาน" อย่างเดียว เพราะวันแรกอาจกำลังสอนการลงเวลาเข้า
+            //    (ออกก่อนเวลา / ขาดงาน / ลา ยังคิดตามปกติเหมือนเดิม)
+            $is_first_workday = ($start_work !== null && $d === $start_work->format('Y-m-d'));
+
+            if (!$is_first_workday && $lateMin > $grace_period) {
                 $total_lateness += $lateMin;
                 $total_late_in  += $lateMin;
                 $late_log[] = [

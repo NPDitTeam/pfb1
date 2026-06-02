@@ -64,7 +64,7 @@ function floatHourToTime($v) {
 // หา user_id จาก users
 // ==========================
 $resUser = $mysqli->query("
-    SELECT id, employee_code, username, firstname, lastname
+    SELECT id, employee_code, username, firstname, lastname, start_date
     FROM users
     WHERE employee_code='{$employee_code}'
     LIMIT 1
@@ -78,6 +78,17 @@ if (!$resUser || !$resUser->num_rows) {
 $userRow = $resUser->fetch_assoc();
 $user_id   = (int)$userRow['id'];
 $fullname  = trim($userRow['firstname']." ".$userRow['lastname']);
+
+// ✅ วันที่เริ่มงาน (จากตาราง users) — ใช้ข้าม "สายเข้างาน" ในวันแรกของพนักงานใหม่
+//    (ให้ตรงกับ calculate_lateness.php)
+$start_work = null;
+if (!empty($userRow['start_date']) && $userRow['start_date'] !== '0000-00-00') {
+    try {
+        $start_work = (new DateTime($userRow['start_date']))->setTime(0, 0, 0);
+    } catch (Exception $e) {
+        $start_work = null;
+    }
+}
 
 
 // ==========================
@@ -187,7 +198,12 @@ if ($res && $res->num_rows > 0) {
 
                 $grace_min = isset($_GET['lateness_grace_period']) ? (int)$_GET['lateness_grace_period'] : 0;
 
-                if ($row['check_type'] === "in") {
+                // ✅ พนักงานใหม่ "วันแรก" (วันที่ลงเวลา == วันเริ่มงาน)
+                //    → ข้ามการแสดงสถานะ "สาย" อย่างเดียว (ให้ตรงกับ calculate_lateness.php)
+                //    ออกก่อนเวลา/ขาด/ลา ยังแสดงตามปกติ
+                $is_first_workday = ($start_work !== null && $wd === $start_work->format('Y-m-d'));
+
+                if ($row['check_type'] === "in" && !$is_first_workday) {
                     // มาสาย = เวลาเข้าเกิน shift_start + grace
                     $limit = clone $shift_start_dt;
                     $limit->modify("+{$grace_min} minutes");

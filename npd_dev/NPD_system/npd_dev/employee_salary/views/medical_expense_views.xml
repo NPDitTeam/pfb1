@@ -22,6 +22,7 @@
                     <field name="position"/>
                     <field name="work_date"/>
                     <field name="amount" sum="รวมจำนวนเงิน"/>
+                    <field name="remaining_amount"/>
                     <field name="user_note"/>
                     <field name="state"/>
                     <field name="created_at"/>
@@ -82,6 +83,16 @@
                                 <field name="amount"
                                        attrs="{'readonly': [('state', '!=', 'รออนุมัติ')]}"/>
                                 <field name="created_at"/>
+                            </group>
+                        </group>
+                        <group string="วงเงินค่ารักษาพยาบาลประจำปี">
+                            <group>
+                                <field name="expense_year"/>
+                                <field name="annual_limit"/>
+                                <field name="annual_approved_amount"/>
+                            </group>
+                            <group>
+                                <field name="remaining_amount"/>
                             </group>
                         </group>
                         <group>

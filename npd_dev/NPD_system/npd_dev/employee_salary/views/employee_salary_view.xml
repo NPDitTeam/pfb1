@@ -12,7 +12,7 @@
                     <sheet>
                         <group>
                             <group>
-                                <field name="employee_code" required="1"/>
+                                <field name="employee_code" placeholder="สร้างอัตโนมัติเมื่อบันทึก"/>
                                 <field name="fingerprint_id"/>
                                 <field name="pin" required="1"/>
                                 <field name="allow_offsite_time"/>

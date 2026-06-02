@@ -5,6 +5,7 @@ from odoo import models, fields, api
 import logging
 from odoo.exceptions import UserError
 from datetime import date
+import calendar
 
 _logger = logging.getLogger(__name__)
 
@@ -22,6 +23,9 @@ class EmployeeSalary(models.Model):
         ('employee_code_uniq', 'unique(employee_code)', 'ไม่สามารถเพิ่มข้อมูลพนักงานซ้ำได้!')
     ]
 
+    # เลขเริ่มต้นของรหัสพนักงานที่สร้างอัตโนมัติ
+    START_EMPLOYEE_CODE = 1352
+
     HRMS_COMPANY = [
         ("นภดลเอสกรุ๊ปจำกัด", "นภดลเอสกรุ๊ปจำกัด"),
         ("เอ็นพีดีสตีลเทคจำกัด", "เอ็นพีดีสตีลเทคจำกัด"),
@@ -30,7 +34,8 @@ class EmployeeSalary(models.Model):
         ("นภดลอินเตอร์เทรดดิ้งจำกัด", "นภดลอินเตอร์เทรดดิ้งจำกัด"),
     ]
 
-    employee_code = fields.Char(string='รหัสพนักงาน')
+    employee_code = fields.Char(string='รหัสพนักงาน', readonly=True, copy=False,
+                                help='สร้างอัตโนมัติเริ่มที่ 1352 (แก้ไขไม่ได้)')
     fingerprint_id = fields.Char(string='รหัสลายนิ้วมือ')
     pin = fields.Char(string='PIN 6 หลัก')
     prefix_th = fields.Selection([('นาย', 'นาย'), ('นางสาว', 'นางสาว'), ('นาง', 'นาง')], string='คำนำหน้าชื่อ')
@@ -93,6 +98,59 @@ class EmployeeSalary(models.Model):
         [('คิดตามฐานเงินเดือนจริงที่ได้รับ', 'คิดตามฐานเงินเดือนจริงที่ได้รับ')], string='เงื่อนไขประกันสังคม')
     social_security_fixed_amount = fields.Float(string='ค่าคงที่ของประกันสังคม')
     social_security_start_date = fields.Date(string='เงื่อนไขที่เริ่มคำนวณประกันสังคม')
+
+    @api.model
+    def _cron_deactivate_resigned_employees(self):
+        """อัพเดทสถานะพนักงานที่ลาออกแล้วให้เป็น 'ไม่ใช้งาน' อัตโนมัติ (รันทุกเที่ยงคืน)
+
+        เงื่อนไข (ต้องครบทั้งหมด):
+          1) สถานะการใช้งานยังเป็น 'ใช้งาน' (active)
+          2) มีวันที่ลาออก (resign_date)
+          3) วันที่ลาออก "ก่อน" วันเริ่มรอบเงินเดือนปัจจุบัน (cycle_start)
+             → แปลว่ารอบเงินเดือนสุดท้ายของพนักงานคนนั้นถูกตัดจ่ายไปแล้ว → ปิดสถานะ
+
+        รอบเงินเดือนอิงเดือนปัจจุบัน:
+          เช่น เดือนนี้ (มิ.ย.) รอบ = 25 พ.ค. (เดือนที่แล้ว) ถึง 24 มิ.ย. (เดือนนี้)
+          → cycle_start = วันที่ 25 ของ "เดือนที่แล้ว"
+
+        สอดคล้องกับตัวกรอง _eligible ใน payroll.period: คนที่ resign_date < cycle_start
+        จะไม่ถูกสร้างเงินเดือนรอบนี้อยู่แล้ว → cron นี้แค่ปิดสถานะให้ตรงกัน
+        """
+        today = fields.Date.context_today(self)
+
+        # วันเริ่มรอบ (cutoff_start_day) — ดึงจากรอบล่าสุด ถ้าไม่มีใช้ค่า default 25
+        cutoff_start_day = 25
+        period = self.env['payroll.period'].search(
+            [], order='year desc, month desc', limit=1)
+        if period and period.cutoff_start_day:
+            cutoff_start_day = int(period.cutoff_start_day)
+
+        # วันเริ่มรอบปัจจุบัน = วันที่ cutoff_start_day ของ "เดือนที่แล้ว"
+        if today.month == 1:
+            py, pm = today.year - 1, 12
+        else:
+            py, pm = today.year, today.month - 1
+        last_day_prev = calendar.monthrange(py, pm)[1]
+        cycle_start = date(py, pm, min(cutoff_start_day, last_day_prev))
+
+        employees = self.search([
+            ('status', '=', 'active'),
+            ('resign_date', '!=', False),
+            ('resign_date', '<', cycle_start),
+        ])
+        if employees:
+            employees.write({'status': 'inactive'})
+            _logger.info(
+                "[CRON-DEACTIVATE] ปิดสถานะพนักงานลาออก %d คน "
+                "(cycle_start=%s): %s",
+                len(employees), cycle_start,
+                ", ".join("%s(%s)" % (e.firstname or '', e.employee_code or '')
+                          for e in employees))
+        else:
+            _logger.info(
+                "[CRON-DEACTIVATE] ไม่มีพนักงานลาออกที่ต้องปิดสถานะ "
+                "(cycle_start=%s)", cycle_start)
+        return True
 
     @api.onchange('salary')
     def _onchange_salary_set_sso(self):
@@ -395,7 +453,53 @@ class EmployeeSalary(models.Model):
                     _logger.error(f"❌ Error fetching device_id for {rec.employee_code}: {e}")
 
     @api.model
+    def _generate_employee_code(self):
+        """สร้างรหัสพนักงานอัตโนมัติ — หาเลขว่างตัวแรกตั้งแต่ START_EMPLOYEE_CODE (1352)
+
+        - ดึงรหัสที่เป็น "ตัวเลข" ทั้งหมดที่มีอยู่ (รวม record ที่ถูก archive ด้วย
+          active_test=False เพราะ SQL unique constraint ก็ยัง enforce กับ archived)
+        - ไล่จาก 1352 ขึ้นไป เจอเลขที่ "ซ้ำ" ให้ข้ามไปเลขถัดไป
+          → คนต่อไปก็จะได้เลขที่ต่อจากเลขที่ข้ามมาแล้วโดยอัตโนมัติ
+        """
+        existing = set()
+        for row in self.with_context(active_test=False).search_read(
+                [('employee_code', '!=', False)], ['employee_code']):
+            code = (row['employee_code'] or '').strip()
+            if code.isdigit():
+                existing.add(int(code))
+        n = self.START_EMPLOYEE_CODE
+        while n in existing:
+            n += 1
+        return str(n)
+
+    @api.model
+    def _is_employee_code_taken(self, code):
+        """เช็คว่ารหัสนี้ถูกใช้ไปแล้วหรือยัง (รวม record ที่ถูก archive)"""
+        if not code:
+            return False
+        return bool(self.with_context(active_test=False).search_count(
+            [('employee_code', '=', code)]))
+
+    @api.model
+    def default_get(self, fields_list):
+        """โชว์ "รหัสตัวอย่าง (เลขถัดไป)" ทันทีที่กดสร้าง — ให้ผู้ใช้เห็นรหัสบนฟอร์ม New
+        (ค่าจริงจะถูกยืนยัน/แก้ใหม่อีกครั้งตอน create ถ้าเลขนี้ถูกใช้ไปก่อน)
+        """
+        res = super(EmployeeSalary, self).default_get(fields_list)
+        if 'employee_code' in fields_list and not res.get('employee_code'):
+            res['employee_code'] = self._generate_employee_code()
+        return res
+
+    @api.model
     def create(self, vals):
+        # ✅ สร้างรหัสพนักงานอัตโนมัติ
+        #    - ไม่ได้ส่ง employee_code มา (เผื่อกรณี import บางทาง) → gen ใหม่
+        #    - ส่งมาแต่ "ถูกใช้ไปแล้ว" (เช่น รหัสตัวอย่างจาก default_get ถูกคนอื่น
+        #      สร้างแทรกไปก่อน เพราะเปิดฟอร์มค้างไว้) → gen ใหม่ให้เป็นเลขว่างถัดไป
+        #    flow import จาก PHP จะส่งรหัสที่ "ยังไม่มี" มา → คงไว้ตามเดิม ไม่ถูก override
+        code = (vals.get('employee_code') or '').strip()
+        if not code or self._is_employee_code_taken(code):
+            vals['employee_code'] = self._generate_employee_code()
         record = super(EmployeeSalary, self).create(vals)
         record._sync_to_api('create')
         return record

@@ -34,6 +34,7 @@
         'reports/payslip_report.xml',
         'data/payroll_cron.xml',
         'data/leave_entitlement_cron.xml',
+        'data/deactivate_resigned_cron.xml',
         'data/commission_rate_data.xml',
     ],
     'installable': True,

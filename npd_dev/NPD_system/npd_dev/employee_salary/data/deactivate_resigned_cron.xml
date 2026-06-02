@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    หมายเหตุสำหรับผู้ดูแลระบบ:
+    Scheduled Action นี้จะรัน "ทุกวันตอนเที่ยงคืน" เพื่อปิดสถานะพนักงานที่ลาออกแล้ว
+    (สถานะ 'ใช้งาน' + มีวันที่ลาออก + วันที่ลาออกก่อนวันเริ่มรอบเงินเดือนปัจจุบัน)
+    → อัพเดทสถานะเป็น 'ไม่ใช้งาน' อัตโนมัติ
+
+    หากต้องการเปลี่ยน "เวลา" ที่รันทุกวัน:
+    >>> ห้ามแก้ที่ไฟล์นี้ <<< (noupdate="1" ใช้ได้แค่ตอน install ใหม่)
+    ให้ไปแก้ที่ Odoo UI:
+        Settings → Technical → Automation → Scheduled Actions
+        ค้นหา: "ปิดสถานะพนักงานลาออก (รายวัน)"
+        แก้ field "Next Execution Date" เป็นวัน+เวลาที่ต้องการ (เช่น 2026-06-03 00:00:00)
+        Save
+-->
+<odoo>
+    <data noupdate="1">
+        <record id="ir_cron_deactivate_resigned" model="ir.cron">
+            <field name="name">ปิดสถานะพนักงานลาออก (รายวัน)</field>
+            <field name="model_id" ref="model_employee_salary"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_deactivate_resigned_employees()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active">True</field>
+            <field name="nextcall" eval="(DateTime.now().replace(hour=0, minute=0, second=0) + timedelta(days=1))"/>
+        </record>
+    </data>
+</odoo>

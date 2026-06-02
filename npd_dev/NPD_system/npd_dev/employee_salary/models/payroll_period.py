@@ -136,13 +136,15 @@ class PayrollPeriod(models.Model):
         last_prev = calendar.monthrange(prev_y, prev_m)[1]
         cycle_start = date(prev_y, prev_m, min(start_day, last_prev))
 
-        # ตัวกรอง: active ทุกคน + inactive ที่ resign_date อยู่ในรอบนี้ (>= วันเริ่มรอบ)
-        # → พนักงานลาออกกลางรอบยังได้เงินเดือนรอบสุดท้าย
-        #   แต่ถ้าลาออกไปก่อนรอบเริ่ม (resign_date < cycle_start) จะถูกข้าม
+        # ตัวกรอง: ให้ resign_date มีอำนาจตัดสินก่อน status
+        # → ลาออกก่อนรอบเริ่ม (resign_date < cycle_start) = ลาออกไปแล้ว → ข้ามเสมอ
+        #   แม้ status ยังเป็น 'active' (กรณีลืมปรับสถานะหลังลาออก)
+        # → ลาออกกลางรอบ (resign_date >= cycle_start) → ยังได้เงินเดือนรอบสุดท้าย
+        # → ไม่มี resign_date → ขึ้นกับสถานะ active ตามปกติ
         def _eligible(emp):
-            if emp.status == 'active':
-                return True
-            return bool(emp.resign_date and emp.resign_date >= cycle_start)
+            if emp.resign_date:
+                return emp.resign_date >= cycle_start
+            return emp.status == 'active'
 
         # ถ้ามีพนักงานทดสอบ → ใช้เฉพาะคนที่เลือก, ถ้าว่าง → รันทุกคนที่เปิด Auto
         if self.test_employee_ids:
