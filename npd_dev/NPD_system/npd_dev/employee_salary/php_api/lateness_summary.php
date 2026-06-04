@@ -9,6 +9,8 @@ $mysqli = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if ($mysqli->connect_error) {
     die("DB connection failed: " . $mysqli->connect_error);
 }
+// ✅ ตั้ง charset ของ connection เป็น UTF-8 ไม่งั้นข้อมูลไทยจาก DB จะกลายเป็น "????"
+$mysqli->set_charset('utf8mb4');
 
 header("Content-Type: text/html; charset=utf-8");
 
