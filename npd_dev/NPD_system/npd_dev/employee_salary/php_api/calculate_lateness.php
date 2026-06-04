@@ -10,6 +10,9 @@ $mysqli = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if ($mysqli->connect_error) {
     die(json_encode(['status'=>'error','message'=>'DB connection failed: '.$mysqli->connect_error]));
 }
+// ✅ ตั้ง charset ของ connection เป็น UTF-8 ไม่งั้นเงื่อนไขภาษาไทยใน WHERE (state='อนุมัติ',
+//    leave_type, reason_type) จะ match ไม่ติด → ใบลา/บันทึกเวลาที่อนุมัติถูกมองข้าม → นับขาดงานผิด
+$mysqli->set_charset('utf8mb4');
 
 $input = file_get_contents('php://input');
 $data  = json_decode($input, true);
