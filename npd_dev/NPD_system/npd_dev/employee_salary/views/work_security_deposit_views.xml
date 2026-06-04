@@ -299,6 +299,14 @@
                                 <field name="payroll_id" readonly="1"
                                        attrs="{'invisible': [('is_synced', '=', False)]}"/>
                                 <field name="payment_type" invisible="1"/>
+                                <button name="action_mark_deducted" type="object"
+                                        icon="fa-check-square-o" class="text-success"
+                                        title="ทำเครื่องหมายหักแล้ว (หักไปแล้วนอกระบบ)"
+                                        attrs="{'invisible': [('is_synced', '=', True)]}"/>
+                                <button name="action_unmark_deducted" type="object"
+                                        icon="fa-undo" class="text-muted"
+                                        title="ยกเลิกหักแล้ว (เฉพาะแถวที่ยังไม่ผ่าน payroll จริง)"
+                                        attrs="{'invisible': ['|', ('is_synced', '=', False), ('payroll_id', '!=', False)]}"/>
                             </tree>
                         </field>
                         <separator string="ตารางหักค่า Work Permit"

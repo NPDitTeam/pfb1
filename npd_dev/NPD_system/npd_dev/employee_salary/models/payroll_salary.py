@@ -2766,7 +2766,8 @@ class PayrollSalary(models.Model):
             rec.total_deduction = sum(l.amount for l in rec.line_ids if l.type == 'deduction')
             rec.net_salary = rec.total_gross - rec.total_deduction
 
-    @api.depends('employee_id', 'payment_date', 'actor_content_total',
+    @api.depends('employee_id', 'payment_date', 'month', 'year', 'cutoff_day', 'period_id',
+                 'actor_content_total',
                  'income_bonus', 'bonus_active', 'income_missed_payment',
                  'income_other_manual', 'income_deposit_refund_total')
     def _compute_other_income_total(self):
@@ -2776,19 +2777,21 @@ class PayrollSalary(models.Model):
         """
         for rec in self:
             total = 0.0
-            if rec.employee_id and rec.payment_date:
-                pd = rec.payment_date
-                start_month = pd.replace(day=1)
-                last_day = calendar.monthrange(pd.year, pd.month)[1]
-                end_month = pd.replace(day=last_day)
-
-                lines = self.env['other.income.line'].search([
-                    ('employee_id', '=', rec.employee_id.id),
-                    ('state', '=', 'confirmed'),
-                    ('payment_date', '>=', start_month),
-                    ('payment_date', '<=', end_month),
-                ])
-                total = sum(l.amount for l in lines)
+            if rec.employee_id:
+                # ✅ เงินได้อื่นๆ ยึด 'รอบตัด 25–24' ของรอบทำเงินเดือน (ไม่ใช่เดือนปฏิทินของวันจ่าย)
+                cyc_start, cyc_end = rec._security_deposit_cycle_window()
+                if (not cyc_start or not cyc_end) and rec.payment_date:
+                    pd = rec.payment_date
+                    cyc_start = pd.replace(day=1)
+                    cyc_end = pd.replace(day=calendar.monthrange(pd.year, pd.month)[1])
+                if cyc_start and cyc_end:
+                    lines = self.env['other.income.line'].search([
+                        ('employee_id', '=', rec.employee_id.id),
+                        ('state', '=', 'confirmed'),
+                        ('payment_date', '>=', cyc_start),
+                        ('payment_date', '<=', cyc_end),
+                    ])
+                    total = sum(l.amount for l in lines)
             # บวก: actor + bonus (ถ้าติ๊ก) + missed + manual + deposit refund (พนักงานลาออก)
             other_income_lines_total = total
             actor_val = rec.actor_content_total or 0.0
@@ -2804,6 +2807,31 @@ class PayrollSalary(models.Model):
                 "[INCOME_OTHER] emp=%s | lines=%.2f actor=%.2f bonus=%.2f missed=%.2f manual=%.2f refund=%.2f → total=%.2f",
                 emp_code, other_income_lines_total, actor_val, bonus_val, missed_val, manual_val, refund_val, total
             )
+
+    def _security_deposit_cycle_window(self):
+        """ช่วง 'รอบตัดเงินเดือน' (cutoff cycle) ของ payroll นี้ = (วันเริ่ม, วันสิ้นสุด)
+        start_day (วันเริ่มรอบ ปกติ 25 ของเดือนก่อน) → end_day (วันตัดรอบ ปกติ 24 ของเดือนนี้)
+
+        ใช้ให้การหักเงินประกัน 'ตามรอบ 25–24' ตรงกับ payroll period — ไม่ใช่เดือนปฏิทิน
+        เพราะ payment_date ที่ตกวันที่ 25–สิ้นเดือน ต้องเข้ารอบของเดือนถัดไป
+        คืน (None, None) ถ้า month/year ไม่ถูกต้อง"""
+        self.ensure_one()
+        try:
+            m = int(self.month)
+            y = int(self.year)
+        except (ValueError, TypeError):
+            return (None, None)
+        end_day = self.cutoff_day or 24
+        start_day = (self.period_id.cutoff_start_day if self.period_id else None) or 25
+        last_end = calendar.monthrange(y, m)[1]
+        end_date = date(y, m, min(end_day, last_end))
+        if m == 1:
+            prev_m, prev_y = 12, y - 1
+        else:
+            prev_m, prev_y = m - 1, y
+        last_start = calendar.monthrange(prev_y, prev_m)[1]
+        start_date = date(prev_y, prev_m, min(start_day, last_start))
+        return (start_date, end_date)
 
     @api.depends('employee_id', 'month', 'year')
     def _compute_deposit_amounts(self):
@@ -2828,15 +2856,20 @@ class PayrollSalary(models.Model):
                     last_day = calendar.monthrange(y, m)[1]
                     start_d = date(y, m, 1)
                     end_d = date(y, m, last_day)
+                    # ✅ หักเงินประกันใช้ 'รอบตัด 25–24' (cutoff cycle) ไม่ใช่เดือนปฏิทิน
+                    #    → payment_date ที่ตกวันที่ 25–สิ้นเดือน เข้ารอบถัดไปถูกต้อง
+                    cyc_start, cyc_end = rec._security_deposit_cycle_window()
+                    if not cyc_start or not cyc_end:
+                        cyc_start, cyc_end = start_d, end_d
 
                     all_payments = Payment.search([
                         ('line_id.employee_id', '=', rec.employee_id.id),
                         ('line_id.deposit_id.state', '=', 'confirmed'),
-                        ('payment_date', '>=', start_d),
-                        ('payment_date', '<=', end_d),
+                        ('payment_date', '>=', cyc_start),
+                        ('payment_date', '<=', cyc_end),
                     ])
-                    _logger.info("[DEPOSIT_COMPUTE] emp=%s | range=%s..%s | all_payments=%d",
-                                 emp_code, start_d, end_d, len(all_payments))
+                    _logger.info("[DEPOSIT_COMPUTE] emp=%s | cycle=%s..%s | all_payments=%d",
+                                 emp_code, cyc_start, cyc_end, len(all_payments))
 
                     regular_payments = all_payments.filtered(lambda p: p.payment_type == 'regular')
                     extra_payments = all_payments.filtered(lambda p: p.payment_type != 'regular')
@@ -2846,16 +2879,17 @@ class PayrollSalary(models.Model):
                                        and p.payment_date > p.line_id.resign_date)
                     )
 
+                    # ✅ คืนเงินประกัน: ลาออกตกรอบตัดไหน คืนรอบนั้น (ใช้ cutoff cycle เหมือนการหัก)
                     refund_lines = DepositLine.search([
                         ('employee_id', '=', rec.employee_id.id),
                         ('deposit_id.state', '=', 'confirmed'),
                         ('work_status', '=', 'resigned'),
-                        ('resign_date', '>=', start_d),
-                        ('resign_date', '<=', end_d),
+                        ('resign_date', '>=', cyc_start),
+                        ('resign_date', '<=', cyc_end),
                         ('manual_refunded', '=', False),  # ★ ข้าม line ที่ mark คืนเองแล้ว
                     ])
-                    _logger.info("[DEPOSIT_COMPUTE] emp=%s | refund_lines=%d (resigned in %s..%s, ไม่รวม manual_refunded)",
-                                 emp_code, len(refund_lines), start_d, end_d)
+                    _logger.info("[DEPOSIT_COMPUTE] emp=%s | refund_lines=%d (resigned in cycle %s..%s, ไม่รวม manual_refunded)",
+                                 emp_code, len(refund_lines), cyc_start, cyc_end)
                 except (ValueError, TypeError) as e:
                     _logger.warning("[DEPOSIT_COMPUTE] error emp=%s: %s", emp_code, e)
 
@@ -2895,19 +2929,21 @@ class PayrollSalary(models.Model):
         except KeyError:
             pass
         for rec in self:
-            # other.income.line — ตามเดือน/ปีของ payment_date
+            # other.income.line — ยึด 'รอบตัด 25–24' ให้ตรงกับ _compute_other_income_total
             other_lines = self.env['other.income.line']
-            if rec.employee_id and rec.payment_date:
-                pd = rec.payment_date
-                start_month = pd.replace(day=1)
-                last_day = calendar.monthrange(pd.year, pd.month)[1]
-                end_month = pd.replace(day=last_day)
-                other_lines = self.env['other.income.line'].search([
-                    ('employee_id', '=', rec.employee_id.id),
-                    ('state', '=', 'confirmed'),
-                    ('payment_date', '>=', start_month),
-                    ('payment_date', '<=', end_month),
-                ])
+            if rec.employee_id:
+                cyc_start, cyc_end = rec._security_deposit_cycle_window()
+                if (not cyc_start or not cyc_end) and rec.payment_date:
+                    pd = rec.payment_date
+                    cyc_start = pd.replace(day=1)
+                    cyc_end = pd.replace(day=calendar.monthrange(pd.year, pd.month)[1])
+                if cyc_start and cyc_end:
+                    other_lines = self.env['other.income.line'].search([
+                        ('employee_id', '=', rec.employee_id.id),
+                        ('state', '=', 'confirmed'),
+                        ('payment_date', '>=', cyc_start),
+                        ('payment_date', '<=', cyc_end),
+                    ])
             rec.other_income_breakdown_ids = other_lines
 
             # hr.manual.time.log — actor content ตามรอบตัด

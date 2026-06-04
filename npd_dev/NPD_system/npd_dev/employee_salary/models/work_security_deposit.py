@@ -1213,6 +1213,39 @@ class WorkSecurityDepositLinePayment(models.Model):
                     "จำนวนเงินที่หักของแต่ละเดือนต้องมากกว่า 0 (สำหรับ 'หักรายเดือน')"
                 )
 
+    # ============================================================
+    # ติ๊ก/ยกเลิก "หักแล้ว" รายแถว (สำหรับยอดที่หักไปแล้วนอกระบบทำเงินเดือน)
+    # ============================================================
+    def action_mark_deducted(self):
+        """ทำเครื่องหมาย "หักแล้ว" เฉพาะแถวนี้ — ใช้กับยอดที่หักจากพนักงานไปแล้ว
+        "นอกระบบ" (เช่น หักสด/หักก่อนเริ่มใช้ระบบทำเงินเดือน)
+
+        ต่างจากปุ่ม "ตั้งเป็นหักครบแล้ว (พนักงานเก่า)" ที่ mark ทุกแถว <= วันนี้แบบเหมารวม:
+        ปุ่มนี้ mark ทีละแถวที่เลือก จึงเว้นแถวที่ยังต้องให้ payroll หักจริงไว้ได้
+        (is_synced=True, payroll_id ว่าง = เศษ/นอกระบบ → นับรวมตอนคืนเงินลาออก แต่ไม่ผูก payroll)
+        """
+        for rec in self:
+            if not rec.is_synced:
+                rec.write({'is_synced': True})
+        self.mapped('line_id')._compute_resign_info()
+        return True
+
+    def action_unmark_deducted(self):
+        """ยกเลิกเครื่องหมาย "หักแล้ว" เฉพาะแถวนี้ — เฉพาะแถวที่ยังไม่ผูก payroll จริง
+        (กันยกเลิกยอดที่หักผ่านการทำเงินเดือนไปแล้ว — ต้องไปแก้ที่หน้า payroll แทน)"""
+        for rec in self:
+            if rec.payroll_id:
+                raise UserError(
+                    "แถววันที่ %s ถูกหักผ่านการทำเงินเดือนแล้ว (%s) — "
+                    "ไม่สามารถยกเลิกที่นี่ได้ กรุณาแก้ที่หน้าทำเงินเดือน" % (
+                        rec.payment_date and rec.payment_date.strftime('%d/%m/%Y') or '-',
+                        rec.payroll_id.display_name,
+                    ))
+            if rec.is_synced:
+                rec.write({'is_synced': False})
+        self.mapped('line_id')._compute_resign_info()
+        return True
+
 
 
 class WorkSecurityDepositDefaultPayment(models.Model):
@@ -1360,19 +1393,21 @@ class PayrollSalaryInherit(models.Model):
                 ('employee_id', '=', rec.employee_id.id),
                 ('deposit_id.state', '=', 'confirmed'),
             ])
+            # ✅ ใช้ 'รอบตัด 25–24' ให้ตรงกับการคำนวณยอดหัก ใน _compute_deposit_amounts
+            cyc_start, cyc_end = rec._security_deposit_cycle_window()
             locked = False
             for line in lines:
-                # ครอบคลุมเดือน/ปีนี้ ถ้ามี payment_date ในเดือนนั้น หรือเป็นเดือน resign
+                # ครอบคลุมรอบนี้ ถ้ามี payment_date ในรอบ หรือ resign ตกในรอบ (cutoff cycle)
                 if (line.work_status == 'resigned' and line.resign_date
-                        and line.resign_date.year == int(rec.year)
-                        and line.resign_date.month == int(rec.month)):
+                        and cyc_start and cyc_end
+                        and cyc_start <= line.resign_date <= cyc_end):
                     locked = True
                     break
-                for p in line.payment_ids:
-                    if (p.payment_date and p.payment_date.year == int(rec.year)
-                            and p.payment_date.month == int(rec.month)):
-                        locked = True
-                        break
+                if cyc_start and cyc_end:
+                    for p in line.payment_ids:
+                        if p.payment_date and cyc_start <= p.payment_date <= cyc_end:
+                            locked = True
+                            break
                 if locked:
                     break
             rec.expense_insurance_locked = locked
@@ -1388,7 +1423,10 @@ class PayrollSalaryInherit(models.Model):
             _logger.info("[DEPOSIT_HOOK] Run for payroll emp=%s month=%s year=%s",
                          rec.employee_id.employee_code, rec.month, rec.year)
 
-            # 1) ตรวจ "เดือนที่ออกจากงาน" — ถ้าตรงกับ payroll นี้ → คืนเงินที่หักไปแล้วทั้งหมด
+            # ✅ ใช้ 'รอบตัด 25–24' (cutoff cycle) ทั้งการคืนเงินและหัก work_permit
+            cyc_start, cyc_end = rec._security_deposit_cycle_window()
+
+            # 1) ตรวจ "ลาออกในรอบนี้" — ถ้าตกในรอบตัดของ payroll นี้ → คืนเงินที่หักไปแล้วทั้งหมด
             resigned_lines = DepositLine.search([
                 ('employee_id', '=', rec.employee_id.id),
                 ('deposit_id.state', '=', 'confirmed'),
@@ -1396,8 +1434,8 @@ class PayrollSalaryInherit(models.Model):
                 ('resign_date', '!=', False),
             ])
             resigned_in_period = resigned_lines.filtered(
-                lambda l: l.resign_date.year == int(rec.year)
-                          and l.resign_date.month == int(rec.month)
+                lambda l: cyc_start and cyc_end
+                          and cyc_start <= l.resign_date <= cyc_end
             )
             if resigned_in_period:
                 # 1) คืนเฉพาะ regular ที่ synced แล้ว
@@ -1414,8 +1452,7 @@ class PayrollSalaryInherit(models.Model):
                 for line in resigned_in_period:
                     wp = line.work_permit_payment_ids.filtered(
                         lambda p: p.payment_date
-                                  and p.payment_date.year == int(rec.year)
-                                  and p.payment_date.month == int(rec.month)
+                                  and cyc_start <= p.payment_date <= cyc_end
                     )
                     if line.resign_date:
                         wp = wp.filtered(lambda p: p.payment_date <= line.resign_date)
@@ -1445,7 +1482,7 @@ class PayrollSalaryInherit(models.Model):
                         lines_to_update.write({'refund_payroll_id': rec.id})
                 continue
 
-            # 2) หักปกติของเดือนนี้
+            # 2) หักปกติของรอบนี้ (ใช้ cutoff cycle เหมือน _compute_deposit_amounts)
             payments = Payment.search([
                 ('line_id.employee_id', '=', rec.employee_id.id),
                 ('line_id.deposit_id.state', '=', 'confirmed'),
@@ -1457,8 +1494,8 @@ class PayrollSalaryInherit(models.Model):
                 if (line.work_status == 'resigned' and line.resign_date
                         and p.payment_date and p.payment_date > line.resign_date):
                     continue
-                if (p.payment_date and p.payment_date.year == int(rec.year)
-                        and p.payment_date.month == int(rec.month)):
+                if (p.payment_date and cyc_start and cyc_end
+                        and cyc_start <= p.payment_date <= cyc_end):
                     total += p.amount
                     matched |= p
             if total and abs((rec.expense_insurance or 0.0) - total) > 0.005:
@@ -1511,12 +1548,16 @@ class PayrollSalaryInherit(models.Model):
             except (ValueError, TypeError):
                 continue
 
-            # mark payments ที่ตกในเดือนนี้ → is_synced + payroll_id
+            # mark payments ที่ตกในรอบนี้ → is_synced + payroll_id
+            # ✅ ใช้ 'รอบตัด 25–24' (cutoff cycle) ให้ตรงกับการคำนวณยอดหัก ใน _compute_deposit_amounts
+            cyc_start, cyc_end = rec._security_deposit_cycle_window()
+            if not cyc_start or not cyc_end:
+                cyc_start, cyc_end = start_d, end_d
             payments_in_month = Payment.search([
                 ('line_id.employee_id', '=', rec.employee_id.id),
                 ('line_id.deposit_id.state', '=', 'confirmed'),
-                ('payment_date', '>=', start_d),
-                ('payment_date', '<=', end_d),
+                ('payment_date', '>=', cyc_start),
+                ('payment_date', '<=', cyc_end),
             ])
             payments_in_month = payments_in_month.filtered(
                 lambda p: not (p.line_id.work_status == 'resigned' and p.line_id.resign_date
@@ -1528,14 +1569,14 @@ class PayrollSalaryInherit(models.Model):
             if to_sync:
                 to_sync.write({'is_synced': True, 'payroll_id': rec.id})
 
-            # mark refund_payroll_id ของ lines ที่ลาออกในเดือนนี้
+            # mark refund_payroll_id ของ lines ที่ลาออกในรอบนี้ (ใช้ cutoff cycle เหมือนการหัก)
             # ★ ข้าม line ที่ mark manual_refunded แล้ว
             resigned_lines = DepositLine.search([
                 ('employee_id', '=', rec.employee_id.id),
                 ('deposit_id.state', '=', 'confirmed'),
                 ('work_status', '=', 'resigned'),
-                ('resign_date', '>=', start_d),
-                ('resign_date', '<=', end_d),
+                ('resign_date', '>=', cyc_start),
+                ('resign_date', '<=', cyc_end),
                 ('manual_refunded', '=', False),
             ])
             lines_to_update = resigned_lines.filtered(
