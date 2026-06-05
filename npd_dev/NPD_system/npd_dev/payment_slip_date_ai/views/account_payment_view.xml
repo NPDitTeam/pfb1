@@ -8,19 +8,19 @@
             <field name="priority">999</field>
             <field name="arch" type="xml">
 
-                <!-- Add invisible field for slip_date_extracted in sheet -->
+                <!-- Add invisible fields for slip extraction tracking in sheet -->
                 <xpath expr="//sheet//field[@name='id']" position="after">
                     <field name="slip_date_extracted" invisible="1"/>
+                    <field name="slip_date_checked" invisible="1"/>
                 </xpath>
 
-                <!-- Add button in form header, visible only in draft state -->
+                <!-- Add button in form header, visible in all states -->
                 <xpath expr="//header/button[@name='action_post']" position="before">
                     <button name="action_extract_slip_date"
                             string="ใช้วันที่จากสลิป"
                             type="object"
                             class="oe_highlight"
-                            icon="fa-calendar-check-o"
-                            attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                            icon="fa-calendar-check-o"/>
                 </xpath>
 
             </field>

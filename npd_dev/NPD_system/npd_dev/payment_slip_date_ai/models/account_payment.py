@@ -22,6 +22,14 @@ class AccountPaymentSlipDate(models.Model):
         help='วันที่ที่ AI อ่านได้จากสลิปการโอนเงิน',
     )
 
+    slip_date_checked = fields.Boolean(
+        string='ตรวจสอบวันที่จากสลิปแล้ว',
+        default=False,
+        readonly=True,
+        copy=False,
+        help='ต้องกดปุ่ม "ใช้วันที่จากสลิป" ก่อน จึงจะยืนยันเอกสารได้',
+    )
+
     def _get_gemini_api_key(self):
         """Get Gemini API key from system parameters (shared with advance_clear_ai_check)."""
         api_key = self.env['ir.config_parameter'].sudo().get_param(
@@ -192,12 +200,31 @@ class AccountPaymentSlipDate(models.Model):
 
         return None
 
+    def action_post(self):
+        """Block confirmation unless the slip date has been extracted/checked first.
+
+        The user MUST press the "ใช้วันที่จากสลิป" button (which runs
+        action_extract_slip_date and sets slip_date_checked=True) before the
+        payment can be posted/confirmed.
+        """
+        for payment in self:
+            if not payment.slip_date_checked:
+                raise UserError(_(
+                    "กรุณากดปุ่ม \"ใช้วันที่จากสลิป\" เพื่อตรวจสอบวันที่จากสลิปก่อน\n"
+                    "จึงจะสามารถยืนยันเอกสารได้"
+                ))
+        return super(AccountPaymentSlipDate, self).action_post()
+
+    def action_draft(self):
+        """Reset the slip check flag so the button must be pressed again
+        before the payment can be confirmed once more."""
+        res = super(AccountPaymentSlipDate, self).action_draft()
+        self.write({'slip_date_checked': False})
+        return res
+
     def action_extract_slip_date(self):
         """Main action: extract date from payment slip using AI and verify recipient."""
         self.ensure_one()
-
-        if self.state != 'draft':
-            raise UserError(_("สามารถใช้ฟังก์ชันนี้ได้เฉพาะเอกสารที่อยู่ในสถานะฉบับร่างเท่านั้น"))
 
         # Step 1: Get image attachments
         attachments = self._get_slip_attachments()
@@ -236,11 +263,23 @@ class AccountPaymentSlipDate(models.Model):
         recipient_name = result.get('recipient_name', '')
         _logger.info("AI read recipient name: %s", recipient_name)
 
-        # Step 4: All checks passed — update date
-        self.write({
-            'date': parsed_date,
+        # Step 4: All checks passed — mark as checked.
+        # Only overwrite the payment date while still in draft. Once the payment
+        # is posted, its date is locked to the posted journal entries and writing
+        # it would raise "You cannot delete an item linked to a posted entry".
+        vals = {
             'slip_date_extracted': date_str,
-        })
+            'slip_date_checked': True,
+        }
+        if self.state == 'draft':
+            vals['date'] = parsed_date
+            message = _('อ่านวันที่จากสลิปสำเร็จ: %s (ผู้รับ: %s)') % (date_str, recipient_name or '-')
+        else:
+            message = _(
+                'อ่านวันที่จากสลิปได้: %s (ผู้รับ: %s)\n'
+                'เอกสารถูกลงบันทึกแล้ว จึงไม่เปลี่ยนวันที่ในเอกสาร'
+            ) % (date_str, recipient_name or '-')
+        self.write(vals)
 
         # Return success notification
         return {
@@ -248,7 +287,7 @@ class AccountPaymentSlipDate(models.Model):
             'tag': 'display_notification',
             'params': {
                 'title': _('สำเร็จ'),
-                'message': _('อ่านวันที่จากสลิปสำเร็จ: %s (ผู้รับ: %s)') % (date_str, recipient_name or '-'),
+                'message': message,
                 'type': 'success',
                 'sticky': False,
                 'next': {'type': 'ir.actions.client', 'tag': 'reload'},
