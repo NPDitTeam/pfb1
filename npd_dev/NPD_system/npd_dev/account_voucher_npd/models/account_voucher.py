@@ -892,8 +892,9 @@ class AccountVoucher(models.Model):
             payment = self.env['account.payment'].create(payment_vals)
 
             try:
-                # Post payment
-                payment.action_post()
+                # Post payment — ข้ามการตรวจสลิป (payment_slip_date_ai) เพราะเป็น
+                # การหักยอดจากเงินประกันในระบบ ไม่ใช่การโอนเงินจริงที่มีสลิป
+                payment.with_context(skip_slip_date_check=True).action_post()
                 payment.voucher_source_id = self.id
                 created_payments |= payment
 

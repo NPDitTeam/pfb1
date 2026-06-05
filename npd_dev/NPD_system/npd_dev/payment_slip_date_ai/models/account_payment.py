@@ -206,13 +206,19 @@ class AccountPaymentSlipDate(models.Model):
         The user MUST press the "ใช้วันที่จากสลิป" button (which runs
         action_extract_slip_date and sets slip_date_checked=True) before the
         payment can be posted/confirmed.
+
+        Callers that auto-create+post payments programmatically (เช่นโมดูล
+        account_voucher_npd ฟังก์ชันคืนเงินประกันค่าเช่า) สามารถข้ามการตรวจ
+        ได้โดยส่ง context `skip_slip_date_check=True` เนื่องจากกรณีเหล่านี้
+        ไม่มีสลิปแยกให้ AI อ่าน (เกิดจากการหักยอดในระบบ ไม่ใช่การโอนเงินจริง)
         """
-        for payment in self:
-            if not payment.slip_date_checked:
-                raise UserError(_(
-                    "กรุณากดปุ่ม \"ใช้วันที่จากสลิป\" เพื่อตรวจสอบวันที่จากสลิปก่อน\n"
-                    "จึงจะสามารถยืนยันเอกสารได้"
-                ))
+        if not self.env.context.get('skip_slip_date_check'):
+            for payment in self:
+                if not payment.slip_date_checked:
+                    raise UserError(_(
+                        "กรุณากดปุ่ม \"ใช้วันที่จากสลิป\" เพื่อตรวจสอบวันที่จากสลิปก่อน\n"
+                        "จึงจะสามารถยืนยันเอกสารได้"
+                    ))
         return super(AccountPaymentSlipDate, self).action_post()
 
     def action_draft(self):
