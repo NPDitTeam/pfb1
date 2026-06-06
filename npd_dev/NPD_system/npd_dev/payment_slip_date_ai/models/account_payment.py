@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import re
 import requests
 from datetime import datetime
 
@@ -105,13 +106,24 @@ class AccountPaymentSlipDate(models.Model):
             "1. หาวันที่ทำรายการ (Transaction Date) จากเอกสาร\n"
             "2. ถ้ามีหลายวันที่ ให้เลือกตามลำดับความสำคัญ:\n"
             "   (ก) 'วันที่ทำรายการ' หรือ 'Transaction Date' — ใช้ค่านี้เป็นอันดับแรกเสมอ\n"
-            "   (ข) ถ้าไม่มี (ก) ค่อยใช้ 'วันที่' / 'Date' ทั่วไป\n"
+            "   (ข) ถ้าไม่มี (ก) ใช้ 'Received Date' หรือวันที่ใต้หัวข้อ 'Transfer Completed' "
+            "(สลิป KBIZ/K BANK)\n"
+            "   (ค) ถ้าไม่มี (ก)(ข) ค่อยใช้ 'วันที่' / 'Date' ทั่วไป\n"
             "   *** ห้ามใช้ 'วันที่รายการมีผล / Value Date' หรือ 'อัปเดตล่าสุด / Last Updated' "
             "หรือ 'วันที่พิมพ์ / Print Date' ***\n"
-            "3. ถ้าเป็นปี พ.ศ. (Buddhist Era) ให้แปลงเป็น ค.ศ. (CE) โดยลบ 543\n"
+            "3. แปลงรูปแบบวันที่ให้เป็น DD/MM/YYYY (ปี 4 หลัก) เสมอก่อนตอบกลับ:\n"
+            "   - ถ้าเดือนเป็นชื่อภาษาอังกฤษย่อ (Jan/Feb/.../Dec) → แปลงเป็นเลข 01-12\n"
+            "     เช่น '1 Jun 26' → ใช้เดือน 06\n"
+            "   - ถ้าปีบนสลิปเป็น 2 หลัก (เช่น '26', '69') → ขยายเป็น 4 หลัก ตามกฎนี้:\n"
+            "     * ลอง 2000+YY ก่อน — ถ้าเป็นปีปัจจุบันหรืออดีต (ไม่เกินปีปัจจุบัน+1) ใช้ค่านี้\n"
+            "       ตัวอย่าง (ปัจจุบัน ค.ศ. 2026): '26' → 2026 (ค.ศ.)\n"
+            "     * ถ้า 2000+YY เป็นอนาคต แปลว่าเป็นปี พ.ศ. ใช้ (2500+YY)-543\n"
+            "       ตัวอย่าง: '69' → 2569 พ.ศ. → 2026 ค.ศ. (เพราะ 2069 เป็นอนาคต)\n"
+            "   - ถ้าปี 4 หลัก ≥ 2500 → เป็น พ.ศ. ลบ 543 เป็น ค.ศ.\n"
             "4. หาชื่อผู้รับเงิน (To / ไปยัง / ผู้รับ / Recipient) ให้ดึงชื่อเต็มทั้งภาษาไทยและอังกฤษ\n"
             "   - สำหรับ Payment Advice / ใบแจ้งการชำระเงิน: ผู้รับเงินอาจอยู่ในส่วน "
             "'รายละเอียดผู้รับเงิน / Recipient Details / Beneficiary' หรือ 'เรียน'\n"
+            "   - สำหรับสลิป KBIZ/K BANK: ผู้รับอยู่ในส่วน 'To' หรือบล็อกสีม่วงล่าง 'From' \n"
             "5. ตอบกลับเป็น JSON format เท่านั้น\n\n"
             "ตอบกลับ JSON:\n"
             "{\n"
@@ -172,37 +184,72 @@ class AccountPaymentSlipDate(models.Model):
         except Exception as e:
             raise UserError(_("Unexpected error calling Gemini API: %s") % str(e))
 
-    def _parse_slip_date(self, date_str):
-        """Parse date string DD/MM/YYYY to Python date object.
+    _MONTH_NAME_MAP = {
+        'january': '01', 'february': '02', 'march': '03', 'april': '04',
+        'may': '05', 'june': '06', 'july': '07', 'august': '08',
+        'september': '09', 'october': '10', 'november': '11', 'december': '12',
+        'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04',
+        'jun': '06', 'jul': '07', 'aug': '08', 'sep': '09', 'sept': '09',
+        'oct': '10', 'nov': '11', 'dec': '12',
+    }
 
-        Also handles:
-        - DD-MM-YYYY
-        - YYYY-MM-DD
-        - Buddhist Era years (> 2500)
+    def _resolve_year(self, y):
+        """แปลงค่าปีที่อ่านได้ให้เป็น ค.ศ. (4 หลัก).
+
+        - ปี 4 หลัก ≥ 2500 → พ.ศ. ลบ 543
+        - ปี 2 หลัก (< 100) → ลอง 2000+YY ก่อน ถ้าเป็นอนาคต (เกินปีปัจจุบัน+1)
+          ตีเป็น พ.ศ. 25YY แล้วแปลงเป็น ค.ศ. ((2500+YY)-543 = 1957+YY)
+        """
+        if y < 100:
+            current = datetime.now().year
+            ce_guess = 2000 + y
+            if ce_guess <= current + 1:
+                return ce_guess
+            return 1957 + y  # เทียบเท่า (2500+y) - 543
+        if y > 2500:
+            return y - 543
+        return y
+
+    def _parse_slip_date(self, date_str):
+        u"""Parse date string to a Python date object.
+
+        รองรับรูปแบบ:
+        - DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD
+        - DD/MM/YY, DD-MM-YY (ปี 2 หลัก auto-detect ค.ศ./พ.ศ.)
+        - DD MMM YYYY / DD-MMM-YYYY / DD MMM YY / DD-MMM-YY
+          (เดือนเป็นชื่อภาษาอังกฤษย่อ เช่น "1 Jun 2026", "1 Jun 26")
+        - ปี พ.ศ. 4 หลัก (≥ 2500) → ลบ 543
+        - ปี พ.ศ. 2 หลัก (เช่น "69") → auto-detect เป็น 2569 พ.ศ. = 2026 ค.ศ.
         """
         if not date_str:
             return None
-
         date_str = date_str.strip()
 
-        # Try DD/MM/YYYY or DD-MM-YYYY
-        for fmt in ['%d/%m/%Y', '%d-%m-%Y']:
-            try:
-                dt = datetime.strptime(date_str, fmt)
-                # Check if Buddhist Era (year > 2500)
-                if dt.year > 2500:
-                    dt = dt.replace(year=dt.year - 543)
-                return dt.date()
-            except ValueError:
-                continue
+        # Normalize English month name/abbrev → 2-digit number
+        s = date_str.lower()
+        for name, num in self._MONTH_NAME_MAP.items():
+            s = re.sub(r'\b' + name + r'\b', num, s, count=1)
+        # Collapse separators (space/dash/slash) → single '/'
+        s = re.sub(r'[\s/\-]+', '/', s).strip('/')
 
-        # Try YYYY-MM-DD
+        parts = s.split('/')
+        if len(parts) != 3:
+            return None
+
+        # Try day-first (Thai/European): DD/MM/Y*
         try:
-            dt = datetime.strptime(date_str, '%Y-%m-%d')
-            if dt.year > 2500:
-                dt = dt.replace(year=dt.year - 543)
-            return dt.date()
-        except ValueError:
+            d, m, y = int(parts[0]), int(parts[1]), int(parts[2])
+            if 1 <= d <= 31 and 1 <= m <= 12:
+                return datetime(self._resolve_year(y), m, d).date()
+        except (ValueError, OverflowError):
+            pass
+
+        # Try ISO order: YYYY/MM/DD
+        try:
+            y, m, d = int(parts[0]), int(parts[1]), int(parts[2])
+            if y >= 100 and 1 <= m <= 12 and 1 <= d <= 31:
+                return datetime(self._resolve_year(y), m, d).date()
+        except (ValueError, OverflowError):
             pass
 
         return None
