@@ -179,11 +179,9 @@ class AccountMoveLine(models.Model):
                 "UPDATE account_move_line SET lost_item_amount = %s WHERE id = %s",
                 (new_subtotal, line.id),
             )
-        if 'price_total_full' in line._fields:
-            cr.execute(
-                "UPDATE account_move_line SET price_total_full = %s WHERE id = %s",
-                (new_total, line.id),
-            )
+        # หมายเหตุ: price_total_full (ยอดเต็มก่อนหักส่วนลด = price_unit × quantity)
+        # ไม่ sync ที่นี่ — ทำใน _npd_sync_full_amount_fields ซึ่งรันทุกครั้ง
+        # อิสระจาก flag/logic (เดิม bug เขียน new_total ยอดหลังลดทับ)
 
     def _npd_compute_baan_kheaw_reset(self):
         """คำนวณ price_subtotal/total ผ่านสูตร Odoo default สำหรับ line ที่ติ๊ก
@@ -213,6 +211,62 @@ class AccountMoveLine(models.Model):
             result[line.id] = (new_subtotal, new_total)
         return result
 
+    def _npd_sync_full_amount_fields(self):
+        """Sync ฟิลด์ 'ยอดเต็มก่อนหักส่วนลด' ให้ถูกต้องเสมอ ทุก save/post
+
+            price_total_full (line)        = price_unit × quantity
+            amount_price_total_full (move) = SUM(price_unit × quantity)
+
+        ฟิลด์คู่นี้นิยามโดย bi_sale_purchase_discount_with_tax และ "ไม่ขึ้น"
+        กับ Method A/B / baan_kheaw / target เลย — เป็นยอดเต็มก่อนหักส่วนลด
+        และภาษีล้วนๆ จึงต้อง sync ทุกครั้งที่ _npd_force_round_sql ถูกเรียก
+        (รวมถึงเคส early-return ที่ไม่ติ๊กอะไร) ไม่งั้นค่าที่เคยถูกเขียนผิด
+        ตอนยังติ๊กอยู่จะค้าง — พอปลดติ๊กแล้ว save ก็ไม่หาย
+        """
+        move_line_model = self.env['account.move.line']
+        if 'price_total_full' not in move_line_model._fields:
+            return
+        move_ids = list(set(self.mapped('move_id').ids))
+        if not move_ids:
+            return
+        cr = self.env.cr
+        # line: price_total_full = price_unit × quantity (ตรงตามนิยาม vendor)
+        cr.execute(
+            """
+            UPDATE account_move_line
+            SET price_total_full = price_unit * quantity
+            WHERE move_id IN %s
+            """,
+            (tuple(move_ids),),
+        )
+        move_model = self.env['account.move']
+        if 'amount_price_total_full' in move_model._fields:
+            # move: amount_price_total_full = SUM(price_total_full) ของบรรทัด
+            # ในแท็บใบแจ้งหนี้ (ข้าม tax line / receivable ที่ exclude)
+            cr.execute(
+                """
+                UPDATE account_move m
+                SET amount_price_total_full = COALESCE(sub.total, 0)
+                FROM (
+                    SELECT move_id,
+                           SUM(price_unit * quantity) AS total
+                    FROM account_move_line
+                    WHERE move_id IN %s
+                      AND (exclude_from_invoice_tab = FALSE
+                           OR exclude_from_invoice_tab IS NULL)
+                    GROUP BY move_id
+                ) sub
+                WHERE m.id = sub.move_id
+                """,
+                (tuple(move_ids),),
+            )
+        # invalidate cache ของฟิลด์ที่เพิ่งเขียน เพราะเคส early-return จะ
+        # return ก่อนถึง self.env.cache.invalidate() ท้ายฟังก์ชัน
+        self.invalidate_cache(['price_total_full'])
+        if 'amount_price_total_full' in move_model._fields:
+            move_model.browse(move_ids).invalidate_cache(
+                ['amount_price_total_full'])
+
     def _npd_force_round_sql(self):
         # === Flush pending ORM writes ก่อน SQL reads ===
         # บังคับให้ ORM เขียน target_amount_total / line.balance ฯลฯ ที่อาจ
@@ -226,7 +280,13 @@ class AccountMoveLine(models.Model):
         self.env['account.move.line'].flush([
             'price_subtotal', 'price_total', 'debit', 'credit',
             'balance', 'amount_currency', 'amount_residual',
+            'price_unit', 'quantity',
         ])
+
+        # Sync ยอดเต็มก่อนหักส่วนลด (price_total_full / amount_price_total_full)
+        # ต้องอยู่ "ก่อน" early-return เพื่อให้ทุกเคส — ทั้งติ๊กและปลดติ๊ก —
+        # re-sync ค่าให้ถูกเสมอ (ฟิลด์นี้อิสระจาก flag ทั้งหมด)
+        self._npd_sync_full_amount_fields()
 
         rounded = self._npd_compute_method_a()
         baan_kheaw_resets = self._npd_compute_baan_kheaw_reset()
@@ -575,11 +635,8 @@ class AccountMoveLine(models.Model):
                     "UPDATE account_move SET amount_price_subtotal_without_discount = %s WHERE id = %s",
                     (untaxed, move_id),
                 )
-            if 'amount_price_total_full' in move._fields:
-                cr.execute(
-                    "UPDATE account_move SET amount_price_total_full = %s WHERE id = %s",
-                    (total, move_id),
-                )
+            # amount_price_total_full sync แยกใน _npd_sync_full_amount_fields
+            # (รันทุกครั้ง อิสระจาก moves_changed/flag)
             if 'discount_amt_line' in move._fields:
                 cr.execute(
                     "UPDATE account_move SET discount_amt_line = 0 WHERE id = %s",
