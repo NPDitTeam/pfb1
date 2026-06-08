@@ -22,7 +22,7 @@
                             <field name="has_any_skip" invisible="1"/>
                             <field name="image_preview" string=" " widget="html"/>
                             <field name="filename" string="ชื่อไฟล์"/>
-                            <field name="check_amount" string="ตรวจยอดเงิน" widget="boolean_toggle"/>
+                            <field name="check_amount" invisible="1"/>
                             <field name="check_amount_combined" string="ยอดรวมบิล" widget="boolean_toggle"/>
                             <field name="check_vat" string="ตรวจ VAT" widget="boolean_toggle"/>
                             <field name="check_company" string="ตรวจชื่อบริษัท" widget="boolean_toggle"/>
