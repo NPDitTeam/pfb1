@@ -197,7 +197,7 @@ shipping AS (
     FROM account_voucher av
     JOIN account_voucher_line avl ON avl.voucher_id = av.id
     CROSS JOIN params p
-    WHERE av.state = 'posted'
+    WHERE av.state IN ('posted', 'transferred')
       AND avl.sales_contact_id IS NOT NULL
       AND av.date IS NOT NULL
       AND EXTRACT(YEAR FROM av.date)::int >= p.min_year

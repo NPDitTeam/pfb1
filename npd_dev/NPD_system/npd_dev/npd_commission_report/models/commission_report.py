@@ -373,7 +373,7 @@ class CommissionReport(models.TransientModel):
             voucher_lines = self.env['account.voucher.line'].search([
                 ('payment_date', '>=', date_from),
                 ('payment_date', '<=', date_to),
-                ('voucher_id.state', '=', 'posted'),
+                ('voucher_id.state', 'in', ['posted', 'transferred']),
                 ('account_analytic_id.branch_id', '=', branch.id)
             ])
 

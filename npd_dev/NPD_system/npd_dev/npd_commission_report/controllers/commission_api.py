@@ -242,7 +242,7 @@ class CommissionReportAPI(http.Controller):
                     JOIN account_voucher_line avl ON avl.voucher_id = av.id
                     JOIN account_analytic_account aaa ON avl.account_analytic_id = aaa.id
                     JOIN res_branch rb ON aaa.branch_id = rb.id
-                    WHERE av.state = 'posted'
+                    WHERE av.state IN ('posted', 'transferred')
                         /* แก้ไขตรงนี้ให้ใช้ payment_date ของ account_voucher_line แทน date ของ account_voucher */
                         AND avl.payment_date >= %(date_from)s
                         AND avl.payment_date <= %(date_to)s
@@ -549,7 +549,7 @@ class CommissionReportAPI(http.Controller):
                 LEFT JOIN res_users ru ON avl.sales_contact_id = ru.id
                 LEFT JOIN res_partner rp ON ru.partner_id = rp.id
                 LEFT JOIN res_branch rb ON av.branch_id = rb.id
-                WHERE av.state = 'posted'
+                WHERE av.state IN ('posted', 'transferred')
                     AND av.date >= %(date_from)s
                     AND av.date <= %(date_to)s
                     AND avl.sales_contact_id IS NOT NULL

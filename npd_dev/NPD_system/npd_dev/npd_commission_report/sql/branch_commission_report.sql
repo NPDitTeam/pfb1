@@ -252,7 +252,7 @@ voucher_expense AS (
     JOIN account_voucher_line avl ON avl.voucher_id = av.id
     JOIN account_analytic_account aaa ON avl.account_analytic_id = aaa.id
     CROSS JOIN params p
-    WHERE av.state = 'posted'
+    WHERE av.state IN ('posted', 'transferred')
       AND aaa.branch_id IS NOT NULL
       AND avl.payment_date IS NOT NULL
       AND EXTRACT(YEAR FROM avl.payment_date)::int >= p.min_year
