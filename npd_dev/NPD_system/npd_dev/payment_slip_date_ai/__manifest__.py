@@ -9,6 +9,7 @@
     'depends': ['base', 'account', 'account_payment_invoice'],
     'data': [
         'views/account_payment_view.xml',
+        'views/res_users_view.xml',
     ],
     'installable': True,
     'auto_install': False,

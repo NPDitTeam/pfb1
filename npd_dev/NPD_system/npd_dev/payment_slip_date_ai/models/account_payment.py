@@ -269,7 +269,13 @@ class AccountPaymentSlipDate(models.Model):
         Payment Method ที่ไม่มีสลิปจริง (ไม่ใช่การโอนเงิน) ก็ข้ามการตรวจอัตโนมัติ:
         - ประเภท 'cash' (เงินสด)
         - ชื่อ 'หักเงินประกันค่าเช่า' (หักจากเงินประกัน — ไม่มีสลิป)
+
+        นอกจากนี้ ผู้ใช้ที่มีสิทธิ์ allow_skip_slip_date_check (ตั้งที่หน้า User)
+        สามารถ post ได้เลย ใช้เป็น escape hatch กรณี AI อ่านสลิปไม่ได้
         """
+        # สิทธิ์ระดับผู้ใช้: ข้ามการตรวจทั้งหมด
+        if self.env.user.allow_skip_slip_date_check:
+            return super(AccountPaymentSlipDate, self).action_post()
         if not self.env.context.get('skip_slip_date_check'):
             for payment in self:
                 pm = payment.payment_method_one_id
