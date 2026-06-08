@@ -414,6 +414,7 @@ class StockCutConfirmWizard(models.TransientModel):
 
     def _branch_mapping(self):
         return {
+            'สำนักงานใหญ่': '01',
             'โคราช-บายพาส': '02', 'อุดรธานี': '04', 'ขอนแก่น-โลตัส': '05', 'ชะอำ': '06',
             'ศาลายา': '07', 'ภูเก็ต': '08', 'อุบลราชธานี': '09', 'สุรินทร์': '12',
             'มหาสารคาม': '13', 'พัทยา': '15', 'อยุธยา': '16', 'ปลวกแดง': '17',
@@ -799,7 +800,6 @@ class StockCutConfirmWizard(models.TransientModel):
                   AND master_stockactual.branchid = %s
                   AND master_productprice.branchid = %s
                   AND master_productname.pdn_id IN ({in_clause})
-                  AND master_branch.branch_id <> '01'
                 ORDER BY master_productname.pdn_id
             """
 
