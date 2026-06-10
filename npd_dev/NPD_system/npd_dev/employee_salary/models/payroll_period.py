@@ -407,6 +407,18 @@ class PayrollPeriod(models.Model):
         error_count = 0
         removed_count = 0
 
+        # ✅ รีเฟรช salary snapshot ใน DB ปลายทางก่อนคิดค่าคอม (ครั้งเดียวต่อรอบ)
+        #    กันค่าคอมใช้ salary เก่า เมื่อเพิ่งแก้ gross/เพิ่มพนักงานใหม่
+        #    งวด = "งวดค่าคอม" (เดือนก่อนหน้า) ที่ SQL_BRANCH อ่าน snapshot
+        try:
+            cm_month, cm_year = self.payroll_ids[0]._get_commission_period()
+            snap_res = self.env['cross_db.commission.query'].push_salary_snapshot(cm_month, cm_year)
+            log_lines.append("[SNAPSHOT] รีเฟรช salary snapshot งวดค่าคอม %s/%s → %s" % (
+                cm_month, cm_year, snap_res))
+        except Exception as e:
+            log_lines.append("[SNAPSHOT] รีเฟรช snapshot ล้มเหลว (ข้ามไปคิดค่าคอมต่อ): %s" % str(e)[:150])
+            _logger.exception("[REFRESH-PAYROLL] push salary snapshot failed: %s", e)
+
         # ถ้าตั้ง "พนักงานทดสอบ" ไว้ → refresh เฉพาะคนเหล่านั้น (ไว้ทดสอบทีละคน)
         # เคลียร์ field นี้เมื่อต้องการรันทุกคน
         payrolls_scope = self.payroll_ids

@@ -554,6 +554,96 @@ class CrossDbCommissionQuery(models.AbstractModel):
             'npd.commission.bankheaw_db', default='NPD_S_Group_New_V2')
 
     # ============================================================
+    # Push salary snapshot จาก HRMS → DB ปลายทาง (ก่อนคิดค่าคอม)
+    # ============================================================
+    @api.model
+    def push_salary_snapshot(self, month, year):
+        """รีเฟรช salary snapshot ของ (month, year) ในทุก DB ปลายทาง
+        - aggregate salary ต่อสาขาจาก payroll_salary บน HRMS (local) กรอง company
+          ตาม param npd.salary_report.company ของ DB ปลายทางแต่ละตัว
+        - เขียนทับ (DELETE + INSERT) ตาราง npd_salary_branch_report_line ของงวดนั้น
+        ใช้ก่อนคิดค่าคอม เพื่อให้ salary expense ใน SQL_BRANCH สดเสมอ
+        คืน dict {db_name: สถานะ} — ไม่ throw (กันไม่ให้ flow ทำเงินเดือนล้ม)
+        """
+        month = int(month)
+        year = str(year)
+        results = {}
+        for db_name in self.get_db_list():
+            try:
+                # 1) อ่าน company param ของ DB ปลายทาง
+                comp_rows, err = self._run_query(
+                    db_name,
+                    "SELECT value FROM ir_config_parameter WHERE key = %(k)s",
+                    {'k': 'npd.salary_report.company'},
+                )
+                if err:
+                    results[db_name] = 'param FAIL: %s' % err
+                    continue
+                company = ''
+                if comp_rows and comp_rows[0].get('value'):
+                    company = (comp_rows[0]['value'] or '').strip()
+
+                # 2) aggregate salary บน HRMS (local) — กรอง company ถ้าตั้งไว้
+                params = [month, year]
+                company_clause = ''
+                if company:
+                    company_clause = 'AND es.company = %s'
+                    params.append(company)
+                self.env.cr.execute("""
+                    SELECT COALESCE(b.name, '(ไม่ระบุสาขา)') AS branch_name,
+                           COUNT(DISTINCT ps.employee_id) AS employee_count,
+                           COALESCE(SUM(
+                               COALESCE(ps.total_gross, 0)
+                               - COALESCE(ps.income_commission, 0)
+                               - COALESCE(ps.income_commission_sale, 0)
+                           ), 0) AS total_income
+                    FROM payroll_salary ps
+                    LEFT JOIN employee_salary es ON es.id = ps.employee_id
+                    LEFT JOIN hr_branch_custom b ON b.id = ps.branch_id
+                    WHERE ps.month = %s
+                      AND ps.year = %s
+                      AND COALESCE(ps.active, TRUE) = TRUE
+                      {company_clause}
+                    GROUP BY b.id, b.name
+                """.format(company_clause=company_clause), params)
+                rows = self.env.cr.dictfetchall()
+
+                # 3) เขียนทับ snapshot ใน DB ปลายทาง (DELETE + INSERT) ใน transaction เดียว
+                conn = self._connect(db_name)
+                try:
+                    with conn.cursor() as cur:
+                        cur.execute(
+                            "DELETE FROM npd_salary_branch_report_line "
+                            "WHERE month = %s AND year = %s",
+                            (month, year),
+                        )
+                        for r in rows:
+                            cur.execute("""
+                                INSERT INTO npd_salary_branch_report_line
+                                    (month, year, branch_name, employee_count, total_income,
+                                     last_refresh, create_date, write_date)
+                                VALUES (%s, %s, %s, %s, %s, now(), now(), now())
+                            """, (
+                                month, year,
+                                r['branch_name'],
+                                int(r['employee_count'] or 0),
+                                float(r['total_income'] or 0.0),
+                            ))
+                    conn.commit()
+                    results[db_name] = 'OK (%d สาขา)' % len(rows)
+                except psycopg2.Error as e:
+                    conn.rollback()
+                    results[db_name] = 'write FAIL: %s' % str(e).strip()[:150]
+                    _logger.warning("[PUSH-SNAPSHOT][%s] write fail: %s", db_name, e)
+                finally:
+                    conn.close()
+            except Exception as e:
+                results[db_name] = 'ERROR: %s' % str(e)[:150]
+                _logger.exception("[PUSH-SNAPSHOT][%s] %s", db_name, e)
+        _logger.info("[PUSH-SNAPSHOT] month=%s year=%s → %s", month, year, results)
+        return results
+
+    # ============================================================
     # Connection
     # ============================================================
     @api.model

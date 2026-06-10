@@ -3181,6 +3181,23 @@ class PayrollSalary(models.Model):
         return True
 
     def action_recalculate_all(self):
+        # ✅ รีเฟรช salary snapshot ใน DB ปลายทางก่อนคิดค่าคอม (กัน salary เก่า)
+        #    push ครั้งเดียวต่อ "งวดค่าคอม" ที่พบใน records ที่เลือก
+        Helper = self.env['cross_db.commission.query']
+        pushed = set()
+        for rec in self:
+            try:
+                period = rec._get_commission_period()
+            except Exception:
+                continue
+            if period in pushed:
+                continue
+            pushed.add(period)
+            try:
+                Helper.push_salary_snapshot(period[0], period[1])
+            except Exception as e:
+                _logger.warning("[RECALC] push salary snapshot %s ล้มเหลว (ข้าม): %s", period, e)
+
         for rec in self:
             rec._onchange_employee_id()
         return True
