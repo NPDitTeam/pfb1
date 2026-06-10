@@ -1197,6 +1197,23 @@ class PayrollSalary(models.Model):
             return 12, str(cur_y - 1)
         return cur_m - 1, str(cur_y)
 
+    def _bankheaw_active(self, month, year):
+        """bankheaw (NPD_S_Group_New_V2) ใช้เฉพาะงวด <= 5/2026 เท่านั้น
+        ตั้งแต่งวด 6/2026 เป็นต้นไป → ข้าม bankheaw ไปเลย (ไม่ดึง/ไม่แสดง)
+        ปรับงวดสุดท้ายได้ที่ System Parameter npd.commission.bankheaw_until (รูปแบบ 'YYYY-MM', default 2026-05)
+        """
+        param = self.env['ir.config_parameter'].sudo().get_param(
+            'npd.commission.bankheaw_until', default='2026-05')
+        try:
+            ly, lm = param.split('-')
+            last = (int(ly), int(lm))
+        except Exception:
+            last = (2026, 5)
+        try:
+            return (int(year), int(month)) <= last
+        except (TypeError, ValueError):
+            return True
+
     def _bankheaw_name_match(self, salesperson_name):
         """match รายการ bankheaw (NPD_S_Group_New_V2) กับพนักงานคนนี้ ด้วย "ชื่อ-นามสกุล"
         (ไม่อิง employee_code เพราะรหัสในข้อมูลบ้านเขียวไม่น่าเชื่อถือ — บางคนผิด/พิมพ์รหัสไม่ตรง)
@@ -1295,7 +1312,11 @@ class PayrollSalary(models.Model):
 
         # ===== Bankheaw (เฉพาะ DB ที่มีตาราง npd_sales_commission_report, type=เซลล์, กรองชื่อ) =====
         bankheaw_db = Helper.get_bankheaw_db()
-        rows_bk, err_bk = Helper.query_bankheaw(bankheaw_db, month_int, year_int)
+        if self._bankheaw_active(month_int, year_int):
+            rows_bk, err_bk = Helper.query_bankheaw(bankheaw_db, month_int, year_int)
+        else:
+            rows_bk, err_bk = [], ''
+            _logger.info("[COMMISSION SALES - BANKHEAW] ข้าม bankheaw งวด %s/%s (>= cutoff)", month_int, year_int)
         if err_bk:
             _logger.warning("[COMMISSION SALES - BANKHEAW] db=%s | %s", bankheaw_db, err_bk)
         else:
@@ -1459,7 +1480,11 @@ class PayrollSalary(models.Model):
         bankheaw_db = Helper.get_bankheaw_db()
         bankheaw_branch_net = 0.0
         bankheaw_sales_net = 0.0
-        rows_bk, err_bk = Helper.query_bankheaw(bankheaw_db, month_int, year_int)
+        if self._bankheaw_active(month_int, year_int):
+            rows_bk, err_bk = Helper.query_bankheaw(bankheaw_db, month_int, year_int)
+        else:
+            rows_bk, err_bk = [], ''
+            _logger.info("[COMMISSION BRANCH - BANKHEAW] ข้าม bankheaw งวด %s/%s (>= cutoff)", month_int, year_int)
         if err_bk:
             _logger.warning("[COMMISSION BRANCH - BANKHEAW] db=%s | %s", bankheaw_db, err_bk)
         else:
@@ -1699,7 +1724,11 @@ class PayrollSalary(models.Model):
 
         # ===== Bankheaw (สาขา → detail_lines, เซลล์ → sales_lines) =====
         bankheaw_db = Helper.get_bankheaw_db()
-        rows_bk, err_bk = Helper.query_bankheaw(bankheaw_db, month_int, year_int)
+        if self._bankheaw_active(month_int, year_int):
+            rows_bk, err_bk = Helper.query_bankheaw(bankheaw_db, month_int, year_int)
+        else:
+            rows_bk, err_bk = [], ''
+            _logger.info("[COMMISSION BRANCH DETAIL - BANKHEAW] ข้าม bankheaw งวด %s/%s (>= cutoff)", month_int, year_int)
         if err_bk:
             _logger.warning("[COMMISSION BRANCH DETAIL - BANKHEAW] db=%s | %s", bankheaw_db, err_bk)
         else:
@@ -1819,30 +1848,32 @@ class PayrollSalary(models.Model):
             lines.append((0, 0, line_vals))
 
         # ===== Bankheaw (type=เซลล์, match ด้วยชื่อ-นามสกุล) =====
-        bankheaw_db = Helper.get_bankheaw_db()
-        bk_line_vals = {'db_name': bankheaw_db + ' (bankheaw)', 'status': '', 'match_count': 0, 'net_rental': 0.0}
-        rows_bk, err_bk = Helper.query_bankheaw(bankheaw_db, month_int, year_int)
-        if err_bk:
-            bk_line_vals['status'] = 'Error: %s' % err_bk[:60]
-        else:
-            bk_net = 0.0
-            bk_count = 0
-            for item in rows_bk:
-                if item.get('sort_order', 0) != 0:
-                    continue
-                item_type = (item.get('type') or '').strip()
-                if item_type != 'เซลล์':
-                    continue
-                # ✅ bankheaw: match ด้วยชื่อ-นามสกุล (ไม่อิงรหัส)
-                api_sales_name = (item.get('salesperson_name') or '').strip()
-                if self._bankheaw_name_match(api_sales_name):
-                    bk_net += item.get('net_total') or 0.0
-                    bk_count += 1
-            bk_line_vals['net_rental'] = bk_net
-            bk_line_vals['match_count'] = bk_count
-            bk_line_vals['status'] = 'สำเร็จ' if bk_count > 0 else 'ไม่พบข้อมูลที่ตรงกัน'
-            total_commission += bk_net
-        lines.append((0, 0, bk_line_vals))
+        # ตั้งแต่งวด 6/2026 เป็นต้นไป → ข้าม bankheaw ไปเลย (ไม่ดึง/ไม่แสดงแถวนี้)
+        if self._bankheaw_active(month_int, year_int):
+            bankheaw_db = Helper.get_bankheaw_db()
+            bk_line_vals = {'db_name': bankheaw_db + ' (bankheaw)', 'status': '', 'match_count': 0, 'net_rental': 0.0}
+            rows_bk, err_bk = Helper.query_bankheaw(bankheaw_db, month_int, year_int)
+            if err_bk:
+                bk_line_vals['status'] = 'Error: %s' % err_bk[:60]
+            else:
+                bk_net = 0.0
+                bk_count = 0
+                for item in rows_bk:
+                    if item.get('sort_order', 0) != 0:
+                        continue
+                    item_type = (item.get('type') or '').strip()
+                    if item_type != 'เซลล์':
+                        continue
+                    # ✅ bankheaw: match ด้วยชื่อ-นามสกุล (ไม่อิงรหัส)
+                    api_sales_name = (item.get('salesperson_name') or '').strip()
+                    if self._bankheaw_name_match(api_sales_name):
+                        bk_net += item.get('net_total') or 0.0
+                        bk_count += 1
+                bk_line_vals['net_rental'] = bk_net
+                bk_line_vals['match_count'] = bk_count
+                bk_line_vals['status'] = 'สำเร็จ' if bk_count > 0 else 'ไม่พบข้อมูลที่ตรงกัน'
+                total_commission += bk_net
+            lines.append((0, 0, bk_line_vals))
 
         wizard = self.env['commission.detail.wizard'].create({
             'commission_type': 'sale',
