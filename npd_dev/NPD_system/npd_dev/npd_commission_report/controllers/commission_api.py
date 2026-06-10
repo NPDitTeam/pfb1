@@ -237,7 +237,7 @@ class CommissionReportAPI(http.Controller):
                     SELECT
                         aaa.branch_id AS branch_id,
                         rb.name AS branch_name,
-                        SUM(avl.price_subtotal) AS voucher_expense
+                        SUM(avl.price_subtotal * 1.07) AS voucher_expense
                     FROM account_voucher av
                     JOIN account_voucher_line avl ON avl.voucher_id = av.id
                     JOIN account_analytic_account aaa ON avl.account_analytic_id = aaa.id

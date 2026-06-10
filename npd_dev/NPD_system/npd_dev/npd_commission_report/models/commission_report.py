@@ -378,7 +378,8 @@ class CommissionReport(models.TransientModel):
             ])
 
             for line in voucher_lines:
-                total_expense += line.price_subtotal or 0.0
+                # บวก VAT 7% เข้ากับยอดที่ดึงจาก voucher.line
+                total_expense += (line.price_subtotal or 0.0) * 1.07
 
             # ✅ ดึง JV จากสมุดรายวันทั่วไป (account_move ที่เลขขึ้นต้นด้วย 'JV-')
             #    เงื่อนไข: state='posted' (ลงบันทึกแล้ว) + branch ตรง + วันที่ลงบัญชี (date) อยู่ในเดือน/ปีรอบนี้

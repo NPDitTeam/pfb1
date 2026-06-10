@@ -247,7 +247,7 @@ voucher_expense AS (
         EXTRACT(YEAR FROM avl.payment_date)::int AS year,
         EXTRACT(MONTH FROM avl.payment_date)::int AS month,
         aaa.branch_id AS branch_id,
-        SUM(avl.price_subtotal) AS voucher_amount
+        SUM(avl.price_subtotal * 1.07) AS voucher_amount
     FROM account_voucher av
     JOIN account_voucher_line avl ON avl.voucher_id = av.id
     JOIN account_analytic_account aaa ON avl.account_analytic_id = aaa.id
