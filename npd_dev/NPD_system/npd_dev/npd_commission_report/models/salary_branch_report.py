@@ -11,7 +11,7 @@ DB ทั้งหมดอยู่บน PostgreSQL เซิร์ฟเว�
 โครงสร้าง:
 - npd.salary.branch.report       — TransientModel (wizard เลือกเดือน/ปี)
 - npd.salary.branch.report.line  — Model (snapshot ผลลัพธ์, เก็บถาวร)
-- ir.cron รายวัน                  — auto-refresh "เดือนปัจจุบัน" ทุกวัน
+- ir.cron รายวัน                  — auto-refresh "เดือนปัจจุบัน + ย้อนหลัง 1 เดือน" ทุกวัน
 """
 import logging
 import psycopg2
@@ -89,14 +89,26 @@ class SalaryByBranchReport(models.TransientModel):
 
     @api.model
     def cron_refresh_current_month(self):
-        """Cron รายวัน — รีเฟรช snapshot ของ "เดือนปัจจุบัน" """
+        """Cron รายวัน — รีเฟรช snapshot ของ "เดือนปัจจุบัน" และ "ย้อนหลัง 1 เดือน"
+        รองรับกรณีปิดงวดเงินเดือนของเดือนก่อนในช่วงต้นเดือนถัดไป
+        (ชื่อ method คงเดิมเพื่อไม่ต้องแก้ ir.cron record)
+        """
         today = fields.Date.today()
-        try:
-            self.refresh_for(today.month, str(today.year))
-            _logger.info("[SALARY-BRANCH-REPORT][CRON] รีเฟรชเดือน %d/%s สำเร็จ", today.month, today.year)
-        except Exception as e:
-            _logger.exception("[SALARY-BRANCH-REPORT][CRON] รีเฟรชล้มเหลว: %s", e)
-            # ไม่ raise ใน cron — แค่ log เพื่อไม่ให้ cron crash ทั้งระบบ
+        # (เดือนปัจจุบัน, ย้อนหลัง 1 เดือน) — จัดการข้ามปีให้ถูกต้อง
+        periods = [(today.month, today.year)]
+        if today.month == 1:
+            periods.append((12, today.year - 1))
+        else:
+            periods.append((today.month - 1, today.year))
+
+        for m, y in periods:
+            try:
+                self.refresh_for(m, str(y))
+                _logger.info("[SALARY-BRANCH-REPORT][CRON] รีเฟรชเดือน %d/%s สำเร็จ", m, y)
+            except Exception as e:
+                # ไม่ raise ใน cron — แค่ log เพื่อไม่ให้ cron crash ทั้งระบบ
+                # เดือนหนึ่งล้มเหลวก็ยังพยายามรีเฟรชอีกเดือนต่อ
+                _logger.exception("[SALARY-BRANCH-REPORT][CRON] รีเฟรชเดือน %d/%s ล้มเหลว: %s", m, y, e)
 
     # ============================================================
     # Cross-DB query ไปยัง HRMS
@@ -107,12 +119,24 @@ class SalaryByBranchReport(models.TransientModel):
         return self.env['ir.config_parameter'].sudo().get_param(
             'npd.salary_report.source_db', default='HRMS')
 
+    @api.model
+    def _get_report_company(self):
+        """ชื่อบริษัทที่ DB นี้ต้องกรอง (= ค่าใน employee.salary.company)
+        ตั้งค่าต่อ DB ที่ System Parameter: npd.salary_report.company
+        เช่น DB NPD_Bangkok_New ตั้งเป็น 'นภดลกรุงเทพจำกัด'
+        ถ้าเว้นว่าง → ไม่กรองบริษัท (รวมทุกบริษัทใน HRMS เหมือนเดิม)
+        """
+        company = self.env['ir.config_parameter'].sudo().get_param(
+            'npd.salary_report.company', default='')
+        return (company or '').strip()
+
     def _fetch_salary_from_source_db(self, month, year):
         """เปิด connection แยก ไป DB ต้นทาง (HRMS) → query payroll_salary
         คืน list[dict]: branch_name, employee_count, total_income
                        (= total_gross − คอมมิชชั่นสาขา − คอมมิชชั่น Sale)
         """
         source_db = self._get_source_db_name()
+        company = self._get_report_company()
         conn_params = {
             'dbname': source_db,
             'user': config.get('db_user') or 'odoo',
@@ -122,8 +146,12 @@ class SalaryByBranchReport(models.TransientModel):
         }
         conn_params = {k: v for k, v in conn_params.items() if v not in (None, '', False)}
 
-        _logger.info("[SALARY-BRANCH-REPORT] เชื่อม DB ต้นทาง '%s' (host=%s) month=%s year=%s",
-                     source_db, conn_params.get('host', '-'), month, year)
+        _logger.info("[SALARY-BRANCH-REPORT] เชื่อม DB ต้นทาง '%s' (host=%s) month=%s year=%s company=%s",
+                     source_db, conn_params.get('host', '-'), month, year, company or '(ทุกบริษัท)')
+        if not company:
+            _logger.warning("[SALARY-BRANCH-REPORT] ไม่ได้ตั้ง System Parameter "
+                            "'npd.salary_report.company' → ดึง salary รวมทุกบริษัท "
+                            "(ยอดอาจพองเพราะรวมบริษัทอื่นในสาขาเดียวกัน)")
 
         try:
             conn = psycopg2.connect(**conn_params)
@@ -134,6 +162,14 @@ class SalaryByBranchReport(models.TransientModel):
                 "1. ชื่อ DB ที่ System Parameter 'npd.salary_report.source_db' (ปัจจุบัน: %s)\n"
                 "2. PostgreSQL user/password ใน Odoo config ต้องมีสิทธิ์เข้า DB นั้น"
                 % (source_db, str(e).strip(), source_db))
+
+        # กรองบริษัทตาม System Parameter (ถ้าตั้งไว้) — payroll_salary ไม่มี company
+        # ตรงๆ ต้อง JOIN employee_salary แล้วเทียบ es.company
+        params = [month, str(year)]
+        company_clause = ""
+        if company:
+            company_clause = "AND es.company = %s"
+            params.append(company)
 
         try:
             with conn.cursor() as cur:
@@ -147,20 +183,22 @@ class SalaryByBranchReport(models.TransientModel):
                             - COALESCE(ps.income_commission_sale, 0)
                         ), 0) AS total_income
                     FROM payroll_salary ps
+                    LEFT JOIN employee_salary es ON es.id = ps.employee_id
                     LEFT JOIN hr_branch_custom b ON b.id = ps.branch_id
                     WHERE ps.month = %s
                       AND ps.year  = %s
                       AND COALESCE(ps.active, TRUE) = TRUE
+                      {company_clause}
                     GROUP BY b.id, b.name
                     ORDER BY COALESCE(b.name, 'zzz_ไม่ระบุ')
-                """, (month, str(year)))
+                """.format(company_clause=company_clause), params)
                 fetched = cur.fetchall()
         except psycopg2.Error as e:
             conn.close()
             raise UserError(
                 "Query ฐานข้อมูล '%s' ผิดพลาด: %s\n\n"
-                "อาจเกิดจากตาราง payroll_salary / hr_branch_custom ไม่มีใน DB นั้น "
-                "(DB ต้นทางต้องติดตั้งโมดูล employee_salary)"
+                "อาจเกิดจากตาราง payroll_salary / employee_salary / hr_branch_custom "
+                "ไม่มีใน DB นั้น (DB ต้นทางต้องติดตั้งโมดูล employee_salary)"
                 % (source_db, str(e).strip()))
         finally:
             conn.close()
