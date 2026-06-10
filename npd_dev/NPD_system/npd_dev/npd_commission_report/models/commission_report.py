@@ -366,20 +366,19 @@ class CommissionReport(models.TransientModel):
             #                         total_expense += line.price_subtotal or 0.0
 
 
-            # ดึงจาก account.voucher.line โดยตรง
-            # - กรองจาก payment_date ในแต่ละบรรทัดแทนวันที่หัวเอกสาร
-            # - กรองเฉพาะเอกสารที่ state = 'posted'
-            # - กรองตาม branch_id ของ account_analytic_id
-            voucher_lines = self.env['account.voucher.line'].search([
-                ('payment_date', '>=', date_from),
-                ('payment_date', '<=', date_to),
-                ('voucher_id.state', 'in', ['posted', 'transferred']),
-                ('account_analytic_id.branch_id', '=', branch.id)
+            # ดึงจาก account.voucher (หัวเอกสาร) โดยตรง
+            # - กรองตาม branch_id ของหัวเอกสาร + วันที่ออกบิล (date)
+            # - state ตามเดิม (posted/transferred)
+            # - ยอด = amount (รวม VAT แล้ว) ไม่ต้องบวก VAT เพิ่ม
+            vouchers = self.env['account.voucher'].search([
+                ('date', '>=', date_from),
+                ('date', '<=', date_to),
+                ('state', 'in', ['posted', 'transferred']),
+                ('branch_id', '=', branch.id),
             ])
 
-            for line in voucher_lines:
-                # บวก VAT 7% เข้ากับยอดที่ดึงจาก voucher.line
-                total_expense += (line.price_subtotal or 0.0) * 1.07
+            for voucher in vouchers:
+                total_expense += voucher.amount or 0.0
 
             # ✅ ดึง JV จากสมุดรายวันทั่วไป (account_move ที่เลขขึ้นต้นด้วย 'JV-')
             #    เงื่อนไข: state='posted' (ลงบันทึกแล้ว) + branch ตรง + วันที่ลงบัญชี (date) อยู่ในเดือน/ปีรอบนี้

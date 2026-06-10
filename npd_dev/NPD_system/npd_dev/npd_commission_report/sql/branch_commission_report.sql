@@ -241,21 +241,19 @@ advance_expense AS (
     GROUP BY 1, 2, 3
 ),
 
--- 6c) Voucher expense (กรองด้วย payment_date ในบรรทัด)
+-- 6c) Voucher expense (ดึงจาก account.voucher หัวเอกสาร: branch_id + amount รวม VAT)
 voucher_expense AS (
     SELECT
-        EXTRACT(YEAR FROM avl.payment_date)::int AS year,
-        EXTRACT(MONTH FROM avl.payment_date)::int AS month,
-        aaa.branch_id AS branch_id,
-        SUM(avl.price_subtotal * 1.07) AS voucher_amount
+        EXTRACT(YEAR FROM av.date)::int AS year,
+        EXTRACT(MONTH FROM av.date)::int AS month,
+        av.branch_id AS branch_id,
+        SUM(av.amount) AS voucher_amount
     FROM account_voucher av
-    JOIN account_voucher_line avl ON avl.voucher_id = av.id
-    JOIN account_analytic_account aaa ON avl.account_analytic_id = aaa.id
     CROSS JOIN params p
     WHERE av.state IN ('posted', 'transferred')
-      AND aaa.branch_id IS NOT NULL
-      AND avl.payment_date IS NOT NULL
-      AND EXTRACT(YEAR FROM avl.payment_date)::int >= p.min_year
+      AND av.branch_id IS NOT NULL
+      AND av.date IS NOT NULL
+      AND EXTRACT(YEAR FROM av.date)::int >= p.min_year
     GROUP BY 1, 2, 3
 ),
 

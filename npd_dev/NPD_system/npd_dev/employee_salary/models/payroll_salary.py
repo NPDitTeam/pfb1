@@ -1510,44 +1510,11 @@ class PayrollSalary(models.Model):
         _logger.info("[COMMISSION BRANCH] ★ net_rental สาขา (รวม bankheaw) = %.2f", total_net_rental)
         _logger.info("[COMMISSION BRANCH] ★ net_rental Sales (รวม bankheaw) = %.2f", sales_total_net_rental)
 
-        # ===== JV expense (สมุดทั่วไป) — รวมเข้า total_expense ให้ตรงกับรายงานค่าคอมสาขา =====
-        jv_expense_total = 0.0
-        for db_name in db_list:
-            rows_jv, err_jv = Helper.query_jv(db_name, date_from, date_to)
-            if err_jv:
-                _logger.warning("[COMMISSION BRANCH - JV] db=%s | %s", db_name, err_jv)
-                continue
-            for item in rows_jv:
-                if (item.get('branch_name') or '').strip() == emp_branch_name:
-                    jv_expense_total += item.get('jv_expense') or 0.0
-
-        _logger.info("[COMMISSION BRANCH] ★ JV expense (สาขา %s) รวมทั้ง %d db = %.2f",
-                     emp_branch_name, len(db_list), jv_expense_total)
-
-        # ===== salary expense — จาก payroll.salary ใน HRMS (local) ของสาขานี้ในเดือน/ปีค่าคอม =====
-        #   เงื่อนไข: เฉพาะถ้า total_expense (vendor+advance+voucher+JV) > 0 (เหมือนรายงาน)
-        salary_expense_total = 0.0
-        combined_expense = total_sql_expense + jv_expense_total
-        if combined_expense > 0:
-            salary_payrolls = self.env['payroll.salary'].sudo().search([
-                ('branch_id', '=', self.branch_id.id),
-                ('month', '=', month),
-                ('year', '=', str(year)),
-                ('active', '=', True),
-            ])
-            for p in salary_payrolls:
-                salary_expense_total += (
-                    (p.total_gross or 0.0)
-                    - (p.income_commission or 0.0)
-                    - (p.income_commission_sale or 0.0)
-                )
-
-        _logger.info("[COMMISSION BRANCH] ★ salary expense (สาขา %s) = %.2f (เงื่อนไข combined_expense=%.2f)",
-                     emp_branch_name, salary_expense_total, combined_expense)
-
-        # หัก JV + salary จาก net_rental ของสาขา (ให้ตรงกับ _compute_branch_data ของรายงาน)
-        total_net_rental -= (jv_expense_total + salary_expense_total)
-        _logger.info("[COMMISSION BRANCH] ★ net_rental สาขา (หลังหัก JV+salary) = %.2f", total_net_rental)
+        # ===== JV + salary รวมอยู่ใน net_rental ต่อ DB แล้ว (SQL_BRANCH) — ไม่ต้องหักซ้ำ =====
+        # SQL_BRANCH คำนวณ total_expense = vendor+advance+voucher+JV+salary (จาก snapshot
+        # ต่อ DB ที่กรอง company แล้ว) ตรงกับ _compute_branch_data ของรายงานเป๊ะ
+        _logger.info("[COMMISSION BRANCH] ★ net_rental สาขา (รวม JV+salary ใน SQL_BRANCH แล้ว) = %.2f",
+                     total_net_rental)
 
         # ===== ดึงอัตราค่าคอมจากตั้งค่า =====
         rate_model = self.env['commission.rate.branch.sales']
@@ -1626,77 +1593,29 @@ class PayrollSalary(models.Model):
         date_from = date(year_int, month_int, 1)
         date_to = date(year_int, month_int, last_day)
 
-        # ===== Pass 1: เก็บข้อมูลต่อ DB (net_rental, sql_expense, JV) =====
-        per_db = []
+        # ===== ยอดต่อ DB — query_branch net_rental รวม JV + salary มาแล้วในตัว =====
+        # (SQL_BRANCH คำนวณ total_expense = vendor+advance+voucher+JV+salary เหมือนรายงาน)
+        lines = []
+        total_net_rental = 0.0
         for db_name in db_list:
-            entry = {'db_name': db_name, 'net_rental': 0.0, 'match_count': 0,
-                     'sql_expense': 0.0, 'jv': 0.0, 'err': ''}
+            entry_net = 0.0
+            match_count = 0
             rows, err = Helper.query_branch(db_name, date_from, date_to)
             if err:
-                entry['err'] = err
+                status = 'Error: %s' % err[:60]
             else:
                 for item in rows:
                     if (item.get('branch_name') or '').strip() == emp_branch_name:
-                        entry['net_rental'] += item.get('net_rental') or 0.0
-                        entry['sql_expense'] += item.get('total_expense') or 0.0
-                        entry['match_count'] += 1
-                # JV expense ของสาขานี้ใน DB นี้
-                rows_jv, err_jv = Helper.query_jv(db_name, date_from, date_to)
-                if err_jv:
-                    _logger.warning("[COMMISSION BRANCH DETAIL - JV] db=%s | %s", db_name, err_jv)
-                else:
-                    for item in rows_jv:
-                        if (item.get('branch_name') or '').strip() == emp_branch_name:
-                            entry['jv'] += item.get('jv_expense') or 0.0
-            per_db.append(entry)
-
-        # ===== Salary expense (รายสาขา) — เฉพาะถ้า combined_expense > 0 (เหมือนรายงาน) =====
-        combined_expense = sum(d['sql_expense'] + d['jv'] for d in per_db)
-        salary_expense_total = 0.0
-        salary_count = 0
-        if combined_expense > 0:
-            salary_payrolls = self.env['payroll.salary'].sudo().search([
-                ('branch_id', '=', self.branch_id.id),
-                ('month', '=', month),
-                ('year', '=', str(year)),
-                ('active', '=', True),
-            ])
-            salary_count = len(salary_payrolls)
-            for p in salary_payrolls:
-                salary_expense_total += (
-                    (p.total_gross or 0.0)
-                    - (p.income_commission or 0.0)
-                    - (p.income_commission_sale or 0.0)
-                )
-
-        # หา primary DB (DB แรกที่สาขามี match) → salary หักจาก DB นี้ทั้งก้อน
-        primary_idx = next((i for i, d in enumerate(per_db) if d['match_count'] > 0), None)
-
-        # ===== Pass 2: สร้าง per-DB lines โดยรวม JV + salary เข้าไปในแถวเลย =====
-        # (ยอดในแถว = sql_net_rental − jv_ของ_DB − salary [ถ้าเป็น primary])
-        lines = []
-        total_net_rental = 0.0
-        for i, d in enumerate(per_db):
-            adjusted = d['net_rental'] - d['jv']
-            if i == primary_idx:
-                adjusted -= salary_expense_total
-            if d['err']:
-                status = 'Error: %s' % d['err'][:60]
-            elif d['match_count'] > 0:
-                status = 'สำเร็จ'
-            else:
-                status = 'ไม่พบข้อมูลที่ตรงกัน'
+                        entry_net += item.get('net_rental') or 0.0
+                        match_count += 1
+                status = 'สำเร็จ' if match_count > 0 else 'ไม่พบข้อมูลที่ตรงกัน'
             lines.append((0, 0, {
-                'db_name': d['db_name'],
+                'db_name': db_name,
                 'status': status,
-                'match_count': d['match_count'],
-                'net_rental': adjusted,
+                'match_count': match_count,
+                'net_rental': entry_net,
             }))
-            total_net_rental += adjusted
-        _logger.info(
-            "[COMMISSION BRANCH DETAIL] รวมต่อ DB: JV/DB + salary (%.2f, %d คน) ถูกหักเข้าใน row primary แล้ว",
-            salary_expense_total, salary_count,
-        )
+            total_net_rental += entry_net
 
         # ===== ยอด Sales (กรองตามสาขาเดียวกัน) =====
         sales_lines = []

@@ -183,19 +183,18 @@ advance_clear_expense AS (
     GROUP BY aaa.branch_id, rb.name
 ),
 voucher_expense AS (
+    -- ดึงจาก account.voucher (หัวเอกสาร): branch_id ของหัวเอกสาร + amount (รวม VAT)
     SELECT
-        aaa.branch_id AS branch_id,
+        av.branch_id AS branch_id,
         rb.name AS branch_name,
-        SUM(avl.price_subtotal * 1.07) AS voucher_expense
+        SUM(av.amount) AS voucher_expense
     FROM account_voucher av
-    JOIN account_voucher_line avl ON avl.voucher_id = av.id
-    JOIN account_analytic_account aaa ON avl.account_analytic_id = aaa.id
-    JOIN res_branch rb ON aaa.branch_id = rb.id
+    JOIN res_branch rb ON rb.id = av.branch_id
     WHERE av.state IN ('posted', 'transferred')
-        AND avl.payment_date >= %(date_from)s
-        AND avl.payment_date <= %(date_to)s
-        AND aaa.branch_id IS NOT NULL
-    GROUP BY aaa.branch_id, rb.name
+        AND av.date >= %(date_from)s
+        AND av.date <= %(date_to)s
+        AND av.branch_id IS NOT NULL
+    GROUP BY av.branch_id, rb.name
 ),
 credit_note_expense AS (
     -- ✅ ไม่ filter payment_state — ตรงกับ ORM ของ _compute_branch_data
@@ -215,6 +214,31 @@ credit_note_expense AS (
         AND am.invoice_date <= %(date_to)s
     GROUP BY rb.id, rb.name
 ),
+jv_expense AS (
+    -- JV (สมุดทั่วไป name ขึ้นต้น JV- , state=posted) SUM(debit) — ตรงกับรายงาน
+    SELECT am.branch_id AS branch_id, rb.name AS branch_name,
+           COALESCE(SUM(aml.debit), 0) AS jv_expense
+    FROM account_move am
+    JOIN account_move_line aml ON aml.move_id = am.id
+    JOIN res_branch rb ON rb.id = am.branch_id
+    WHERE am.state = 'posted'
+        AND am.name LIKE 'JV-%%'
+        AND am.date >= %(date_from)s
+        AND am.date <= %(date_to)s
+        AND aml.debit > 0
+    GROUP BY am.branch_id, rb.name
+),
+salary_expense AS (
+    -- salary จาก snapshot npd_salary_branch_report_line (กรอง company แล้วต่อ DB)
+    -- เดือน/ปี derive จาก date_from
+    SELECT rb.id AS branch_id, rb.name AS branch_name,
+           COALESCE(SUM(s.total_income), 0) AS salary_expense
+    FROM npd_salary_branch_report_line s
+    JOIN res_branch rb ON rb.name = s.branch_name
+    WHERE s.month = EXTRACT(MONTH FROM %(date_from)s::date)::int
+        AND s.year = EXTRACT(YEAR FROM %(date_from)s::date)::text
+    GROUP BY rb.id, rb.name
+),
 all_branches AS (
     SELECT DISTINCT branch_id, branch_name FROM (
         SELECT branch_id, branch_name FROM rental WHERE branch_id IS NOT NULL
@@ -224,6 +248,8 @@ all_branches AS (
         UNION ALL SELECT branch_id, branch_name FROM advance_clear_expense WHERE branch_id IS NOT NULL
         UNION ALL SELECT branch_id, branch_name FROM voucher_expense WHERE branch_id IS NOT NULL
         UNION ALL SELECT branch_id, branch_name FROM credit_note_expense WHERE branch_id IS NOT NULL
+        UNION ALL SELECT branch_id, branch_name FROM jv_expense WHERE branch_id IS NOT NULL
+        UNION ALL SELECT branch_id, branch_name FROM salary_expense WHERE branch_id IS NOT NULL
     ) sub
 )
 SELECT
@@ -232,12 +258,24 @@ SELECT
     TRUNC((COALESCE(r.rental_amount, 0) - COALESCE(cn.credit_note_amount, 0))::numeric, 2) AS rental_amount,
     TRUNC(COALESCE(p.payment_received, 0)::numeric, 2) AS payment_received,
     TRUNC(COALESCE(o.outstanding_debt, 0)::numeric, 2) AS outstanding_debt,
-    TRUNC((COALESCE(vb.vendor_expense, 0) + COALESCE(ac.advance_expense, 0) + COALESCE(v.voucher_expense, 0))::numeric, 2) AS total_expense,
+    TRUNC((
+        COALESCE(vb.vendor_expense, 0) + COALESCE(ac.advance_expense, 0)
+        + COALESCE(v.voucher_expense, 0) + COALESCE(jv.jv_expense, 0)
+        + CASE WHEN (COALESCE(vb.vendor_expense, 0) + COALESCE(ac.advance_expense, 0)
+                     + COALESCE(v.voucher_expense, 0) + COALESCE(jv.jv_expense, 0)) > 0
+               THEN COALESCE(sal.salary_expense, 0) ELSE 0 END
+    )::numeric, 2) AS total_expense,
     TRUNC((
         (COALESCE(r.rental_amount, 0) - COALESCE(cn.credit_note_amount, 0))
         + COALESCE(p.payment_received, 0)
         - COALESCE(o.outstanding_debt, 0)
-        - (COALESCE(vb.vendor_expense, 0) + COALESCE(ac.advance_expense, 0) + COALESCE(v.voucher_expense, 0))
+        - (
+            COALESCE(vb.vendor_expense, 0) + COALESCE(ac.advance_expense, 0)
+            + COALESCE(v.voucher_expense, 0) + COALESCE(jv.jv_expense, 0)
+            + CASE WHEN (COALESCE(vb.vendor_expense, 0) + COALESCE(ac.advance_expense, 0)
+                         + COALESCE(v.voucher_expense, 0) + COALESCE(jv.jv_expense, 0)) > 0
+                   THEN COALESCE(sal.salary_expense, 0) ELSE 0 END
+        )
     )::numeric, 2) AS net_rental
 FROM all_branches ab
 LEFT JOIN rental r ON ab.branch_id = r.branch_id
@@ -247,6 +285,8 @@ LEFT JOIN vendor_bills_expense vb ON ab.branch_id = vb.branch_id
 LEFT JOIN advance_clear_expense ac ON ab.branch_id = ac.branch_id
 LEFT JOIN voucher_expense v ON ab.branch_id = v.branch_id
 LEFT JOIN credit_note_expense cn ON ab.branch_id = cn.branch_id
+LEFT JOIN jv_expense jv ON ab.branch_id = jv.branch_id
+LEFT JOIN salary_expense sal ON ab.branch_id = sal.branch_id
 WHERE ab.branch_name IS NOT NULL
 ORDER BY ab.branch_id
 """

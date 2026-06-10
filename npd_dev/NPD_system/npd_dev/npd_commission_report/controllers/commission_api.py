@@ -100,7 +100,7 @@ class CommissionReportAPI(http.Controller):
                 branch_filter_payment = "AND rb.id = %(branch_id)s"
                 branch_filter_vendor = "AND bill.branch_id = %(branch_id)s"
                 branch_filter_advance = "AND aaa.branch_id = %(branch_id)s"
-                branch_filter_voucher = "AND aaa.branch_id = %(branch_id)s"
+                branch_filter_voucher = "AND av.branch_id = %(branch_id)s"
                 branch_filter_credit_note = "AND am.branch_id = %(branch_id)s"
                 sql_params['branch_id'] = branch_id
 
@@ -234,21 +234,20 @@ class CommissionReportAPI(http.Controller):
                     GROUP BY aaa.branch_id, rb.name
                 ),
                 voucher_expense AS (
+                    -- ดึงจาก account.voucher (หัวเอกสาร) ตรง ๆ: กรอง branch_id ของหัวเอกสาร
+                    -- ยอด = av.amount (รวม VAT แล้ว) / วันที่ใช้ av.date (วันที่ออกบิล)
                     SELECT
-                        aaa.branch_id AS branch_id,
+                        av.branch_id AS branch_id,
                         rb.name AS branch_name,
-                        SUM(avl.price_subtotal * 1.07) AS voucher_expense
+                        SUM(av.amount) AS voucher_expense
                     FROM account_voucher av
-                    JOIN account_voucher_line avl ON avl.voucher_id = av.id
-                    JOIN account_analytic_account aaa ON avl.account_analytic_id = aaa.id
-                    JOIN res_branch rb ON aaa.branch_id = rb.id
+                    JOIN res_branch rb ON rb.id = av.branch_id
                     WHERE av.state IN ('posted', 'transferred')
-                        /* แก้ไขตรงนี้ให้ใช้ payment_date ของ account_voucher_line แทน date ของ account_voucher */
-                        AND avl.payment_date >= %(date_from)s
-                        AND avl.payment_date <= %(date_to)s
-                        AND aaa.branch_id IS NOT NULL
+                        AND av.date >= %(date_from)s
+                        AND av.date <= %(date_to)s
+                        AND av.branch_id IS NOT NULL
                         {branch_filter_voucher}
-                    GROUP BY aaa.branch_id, rb.name
+                    GROUP BY av.branch_id, rb.name
                 ),
                 credit_note_expense AS (
                     SELECT
