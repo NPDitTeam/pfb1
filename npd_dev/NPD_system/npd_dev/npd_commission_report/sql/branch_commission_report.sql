@@ -251,6 +251,8 @@ voucher_expense AS (
     FROM account_voucher av
     CROSS JOIN params p
     WHERE av.state IN ('posted', 'transferred')
+      AND av.voucher_type = 'purchase'
+      AND av.check_show IS NOT TRUE
       AND av.branch_id IS NOT NULL
       AND av.date IS NOT NULL
       AND EXTRACT(YEAR FROM av.date)::int >= p.min_year

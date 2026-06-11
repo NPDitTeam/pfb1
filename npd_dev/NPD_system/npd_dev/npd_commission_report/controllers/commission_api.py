@@ -243,6 +243,8 @@ class CommissionReportAPI(http.Controller):
                     FROM account_voucher av
                     JOIN res_branch rb ON rb.id = av.branch_id
                     WHERE av.state IN ('posted', 'transferred')
+                        AND av.voucher_type = 'purchase'
+                        AND av.check_show IS NOT TRUE
                         AND av.date >= %(date_from)s
                         AND av.date <= %(date_to)s
                         AND av.branch_id IS NOT NULL

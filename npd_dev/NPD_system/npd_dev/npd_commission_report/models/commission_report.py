@@ -375,6 +375,8 @@ class CommissionReport(models.TransientModel):
                 ('date', '<=', date_to),
                 ('state', 'in', ['posted', 'transferred']),
                 ('branch_id', '=', branch.id),
+                ('voucher_type', '=', 'purchase'),   # เฉพาะใบจ่าย (ค่าใช้จ่าย) ไม่เอาใบรับเงิน
+                ('check_show', '=', False),           # เฉพาะใบที่นับ (ตรงกับที่การเงินเห็นในหน้า voucher)
             ])
 
             for voucher in vouchers:
