@@ -340,7 +340,7 @@
                 </t>
 
                 <t t-set="returned_product_ids_count" t-value="len([l for l in doc.sale_id.order_line if l.price_subtotal >= 0 and l.product_id.id in doc.move_ids_without_package.mapped('product_id').ids])"/>
-<t t-set="empty_rows" t-value="29 - returned_product_ids_count if returned_product_ids_count &lt; 29 else 0"/>
+<t t-set="empty_rows" t-value="24 - returned_product_ids_count if returned_product_ids_count &lt; 24 else 0"/>
 
                 <t t-foreach="range(empty_rows)" t-as="i">
     <tr>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_npd_rounding" model="ir.ui.view">
+        <field name="name">sale.order.form.npd.rounding</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="x_round_enabled" invisible="1"/>
+                <button name="action_open_rounding_wizard" type="object"
+                        string="ปัดเศษยอดรวม" class="btn-secondary"/>
+                <button name="action_clear_rounding" type="object"
+                        string="ยกเลิกปัดเศษ" class="btn-secondary"
+                        attrs="{'invisible': [('x_round_enabled', '=', False)]}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
