@@ -1189,6 +1189,13 @@ class AccountVoucher(models.Model):
                 amount_total_so = _to_float(related_picking.sale_id.amount_total if related_picking.sale_id else 0.0)
                 daily_cost = round((amount_total_so + total_rental_discount) / total_days, 2) if total_days > 0 else 0.0
                 value_16 = daily_cost * (actual_days - total_days)
+
+                # กรณีพิเศษ: ถ้าจำนวนวัน "ส่วนต่าง" (วันคืนนับจากวันสิ้นสุด) เท่ากับจำนวนวันเช่าเริ่มต้นพอดี
+                # ให้ใช้ "ค่าเช่าสินค้าเริ่มต้น" (amount_total_so + total_rental_discount) มาเป็น value_16
+                # เพื่อเลี่ยงเศษที่ถูกปัดจาก daily_cost (เช่น เช่า 5 วัน + ส่วนต่าง 5 วัน -> 1,285.71 แทน 1,285.70)
+                # ถ้าไม่เข้าเงื่อนไขนี้ ใช้การคำนวณแบบเดิม
+                if total_days > 0 and (actual_days - total_days) == total_days:
+                    value_16 = amount_total_so + total_rental_discount
             else:
                 value_16 = 0.0
 

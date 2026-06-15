@@ -140,6 +140,13 @@ class MonthlyPenaltyReportWizard(models.TransientModel):
                     # คำนวณค่าเช่าส่วนต่าง (value_16 ใน XML)
                     value_16 = rental_per_day * (days_used - billed_days)
 
+                    # กรณีพิเศษ: ถ้าจำนวนวัน "ส่วนต่าง" (วันคืนนับจากวันสิ้นสุด) เท่ากับจำนวนวันเช่าเริ่มต้นพอดี
+                    # ให้ใช้ "ค่าเช่าสินค้าเริ่มต้น" (so.amount_total + so.total_rental_discount) มาเป็น value_16
+                    # เพื่อเลี่ยงเศษที่ถูกปัดจาก rental_per_day (เช่น เช่า 5 วัน + ส่วนต่าง 5 วัน -> 1,285.71 แทน 1,285.70)
+                    # ถ้าไม่เข้าเงื่อนไขนี้ ใช้การคำนวณแบบเดิม
+                    if billed_days > 0 and (days_used - billed_days) == billed_days:
+                        value_16 = so.amount_total + so.total_rental_discount
+
                     if not so.deposit_ref:
                         # บิลที่ไม่ต่ออายุ (deposit_count == 0)
 

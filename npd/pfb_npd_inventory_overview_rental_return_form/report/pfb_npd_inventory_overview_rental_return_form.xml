@@ -548,6 +548,14 @@
                         <t t-set="value_16"
                            t-value="rental_per_day * (days_used - billed_days)"/>
 
+                        <!-- กรณีพิเศษ: ถ้าจำนวนวัน "ส่วนต่าง" (วันคืนนับจากวันสิ้นสุด) เท่ากับจำนวนวันเช่าเริ่มต้นพอดี
+                             ให้ใช้ "ค่าเช่าสินค้าเริ่มต้น" (amount_total + total_rental_discount) มาเป็นค่าเก็บค่าเช่าส่วนต่าง
+                             เพื่อเลี่ยงเศษที่ถูกปัดจาก rental_per_day (เช่น เช่า 5 วัน + ส่วนต่าง 5 วัน -> 1,285.71 แทน 1,285.70)
+                             ถ้าไม่เข้าเงื่อนไขนี้ ใช้การคำนวณแบบเดิม -->
+                        <t t-if="billed_days &gt; 0 and (days_used - billed_days) == billed_days">
+                            <t t-set="value_16" t-value="doc.sale_id.amount_total + doc.sale_id.total_rental_discount"/>
+                        </t>
+
                         <t t-set="value_18" t-value="value_16 - value_17"/>
 
                         <table width="100%" style="border-collapse: collapse;">
