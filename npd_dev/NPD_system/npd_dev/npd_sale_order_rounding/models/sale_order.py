@@ -28,6 +28,7 @@ class SaleOrder(models.Model):
                  'x_round_enabled', 'x_round_step', 'x_round_method')
     def _amount_all(self):
         # ให้ Odoo คำนวณยอดปกติก่อน แล้วค่อยปัดเศษทับ
+        # (เป็น best-effort กรณีรายการสินค้าเปลี่ยนแล้ว recompute ถูก trigger)
         super(SaleOrder, self)._amount_all()
         for order in self:
             if order.x_round_enabled and order.x_round_step:
@@ -41,6 +42,53 @@ class SaleOrder(models.Model):
                 # ส่วนต่างจากการปัดถูกดูดเข้า amount_tax (amount_untaxed คงเดิม)
                 order.amount_total = target
                 order.amount_tax = order.amount_tax + diff
+
+    def _npd_base_amounts(self):
+        """ยอดฐานจริงก่อนปัดเศษ คำนวณจากรายการสินค้าโดยตรง
+        (กัน drift เวลาปัดซ้ำ เพราะไม่อ่านจากยอดที่ถูกปัดไว้แล้ว)."""
+        self.ensure_one()
+        untaxed = sum(self.order_line.mapped('price_subtotal'))
+        tax = sum(self.order_line.mapped('price_tax'))
+        return untaxed, tax
+
+    def _apply_total_rounding(self):
+        """เขียนยอดที่ปัดเศษแล้วลง amount_total / amount_tax โดยตรง
+
+        ในระบบนี้มีโมดูล custom override _amount_all ทับ ทำให้ @api.depends
+        ของเราไม่ทริกเกอร์ recompute เมื่อเปลี่ยนค่า x_round_* — จึงต้องเขียน
+        ยอดลงตรงๆ เหมือนวิธี SQL เดิม ส่วนต่างจากการปัดดูดเข้า amount_tax
+        (amount_untaxed คงเดิมตามรายการสินค้า)
+        """
+        # เคลียร์ recompute ของ amount ที่ค้างอยู่ (จากการ write x_round_*) ให้ลง DB
+        # ก่อน ไม่งั้น flush ตอนจบ request จะคำนวณ amount ใหม่มาเขียนทับค่า SQL ของเรา
+        self.flush(['amount_untaxed', 'amount_tax', 'amount_total'])
+        for order in self:
+            untaxed, tax = order._npd_base_amounts()
+            base_total = untaxed + tax
+            if order.x_round_enabled and order.x_round_step:
+                method = ROUND_METHOD_MAP.get(order.x_round_method, 'HALF-UP')
+                target = float_round(
+                    base_total,
+                    precision_rounding=order.x_round_step,
+                    rounding_method=method,
+                )
+                new_tax = float_round(tax + (target - base_total), precision_digits=2)
+                new_total = target
+            else:
+                # ปิดการปัด -> คืนยอดฐานจริง
+                new_tax = float_round(tax, precision_digits=2)
+                new_total = base_total
+            new_untaxed = float_round(untaxed, precision_digits=2)
+            # เขียนลง DB ตรงๆ ด้วย SQL (วิธีที่พิสูจน์แล้วว่าได้ผล) แทนการ write()
+            # ลง stored computed field ซึ่ง ORM อาจเมิน
+            order.env.cr.execute(
+                "UPDATE sale_order "
+                "SET amount_untaxed=%s, amount_tax=%s, amount_total=%s "
+                "WHERE id=%s",
+                (new_untaxed, new_tax, new_total, order.id),
+            )
+        self.invalidate_cache(
+            ['amount_untaxed', 'amount_tax', 'amount_total'], self.ids)
 
     def action_open_rounding_wizard(self):
         self.ensure_one()
@@ -61,4 +109,5 @@ class SaleOrder(models.Model):
     def action_clear_rounding(self):
         for order in self:
             order.write({'x_round_enabled': False, 'x_round_step': 0.0})
+            order._apply_total_rounding()
         return True

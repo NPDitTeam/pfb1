@@ -64,4 +64,9 @@ class SaleOrderRoundingWizard(models.TransientModel):
             'x_round_step': step,
             'x_round_method': self.method,
         })
-        return {'type': 'ir.actions.act_window_close'}
+        # เขียนยอดที่ปัดแล้วลงตรงๆ (ไม่พึ่ง recompute เพราะ trigger อาจไม่ทำงาน)
+        self.order_id._apply_total_rounding()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'reload',
+        }
