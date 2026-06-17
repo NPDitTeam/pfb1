@@ -436,7 +436,7 @@ shipping AS (
     LEFT JOIN res_users ru ON avl.sales_contact_id = ru.id
     LEFT JOIN res_partner rp ON ru.partner_id = rp.id
     LEFT JOIN res_branch rb ON av.branch_id = rb.id
-    WHERE av.state = 'posted'
+    WHERE av.state IN ('posted', 'transferred')
         AND av.date >= %(date_from)s
         AND av.date <= %(date_to)s
         AND avl.sales_contact_id IS NOT NULL

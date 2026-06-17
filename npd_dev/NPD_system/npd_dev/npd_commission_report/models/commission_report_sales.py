@@ -316,11 +316,11 @@ class CommissionReportSales(models.TransientModel):
                 branch_obj = self.env['res.branch'].browse(branch_id)
                 branch_name = branch_obj.name or ''
             
-            # ค้นหา voucher
+            # ค้นหา voucher — account.voucher นับทั้ง posted + transferred (โอนแล้ว)
             vouchers = self.env['account.voucher'].sudo().search([
                 ('date', '>=', date_from),
                 ('date', '<=', date_to),
-                ('state', '=', 'posted'),
+                ('state', 'in', ['posted', 'transferred']),
             ])
             
             if vouchers:
