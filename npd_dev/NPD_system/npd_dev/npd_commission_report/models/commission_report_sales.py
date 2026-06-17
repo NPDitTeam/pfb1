@@ -117,7 +117,7 @@ class CommissionReportSales(models.TransientModel):
         # - กรองตามวันที่
         # - กรองเฉพาะ contact_type = 'sale'
         # - กรองเฉพาะที่มี sales_contact
-        invoices = self.env['account.move'].search([
+        invoices = self.env['account.move'].sudo().search([
             ('invoice_date', '>=', date_from),
             ('invoice_date', '<=', date_to),
             ('journal_id', '=', rental_journal.id),
@@ -166,7 +166,7 @@ class CommissionReportSales(models.TransientModel):
         if credit_note_journal:
             # ✅ กรองด้วย "วันที่ของใบลดหนี้เอง" (invoice_date ของ credit note) ตามที่การเงินใช้
             #    เช่น เซลล์พิชชาภัสร์: 494,825.68 − 1,715.89 (ใบลดหนี้ลงวันที่ในเดือนนี้) = 493,109.79
-            credit_notes = self.env['account.move'].search([
+            credit_notes = self.env['account.move'].sudo().search([
                 ('invoice_date', '>=', date_from),
                 ('invoice_date', '<=', date_to),
                 ('journal_id', '=', credit_note_journal.id),
@@ -198,7 +198,7 @@ class CommissionReportSales(models.TransientModel):
             ('name', 'in', ['สินค้าหาย', 'สินค้าชำรุด'])
         ])
         if penalty_reasons:
-            penalty_invoices = self.env['account.move'].search([
+            penalty_invoices = self.env['account.move'].sudo().search([
                 ('invoice_date', '>=', date_from),
                 ('invoice_date', '<=', date_to),
                 ('state', '=', 'posted'),
@@ -221,16 +221,21 @@ class CommissionReportSales(models.TransientModel):
                 sales_data[key]['outstanding_debt'] += self._outstanding_residual_asof(pinv, date_to)
 
         # ดึงยอดรับชำระหนี้ (payment_received) จาก account.payment
-        # - กรองตามสมุดรายวัน 'สมุดรายวันรับชำระ'
+        # - กรองตามสมุดรายวัน: รับชำระ, รับชำระค่าปรับหาย, รับชำระค่าปรับชำรุด
         # - กรองตามวันที่
         # - เงื่อนไข: date ของ payment ต้องคนละเดือนกับ invoice_date และ date > invoice_date
-        payment_journal = self.env['account.journal'].search([
-            ('name', '=', 'สมุดรายวันรับชำระ')
-        ], limit=1)
-        
-        if payment_journal:
-            payments = self.env['account.payment'].search([
-                ('journal_id', '=', payment_journal.id),
+        payment_journal_names = [
+            'สมุดรายวันรับชำระ',
+            'สมุดรายวันรับชำระค่าปรับหาย',
+            'สมุดรายวันรับชำระค่าปรับชำรุด',
+        ]
+        payment_journals = self.env['account.journal'].search([
+            ('name', 'in', payment_journal_names)
+        ])
+
+        if payment_journals:
+            payments = self.env['account.payment'].sudo().search([
+                ('journal_id', 'in', payment_journals.ids),
                 ('state', '=', 'posted'),
                 ('date', '>=', date_from),
                 ('date', '<=', date_to),
@@ -280,6 +285,46 @@ class CommissionReportSales(models.TransientModel):
                                 
                                 sales_data[key]['payment_received'] += (payment.amount or 0.0) / 1.07
                             break  # นับ payment นี้ครั้งเดียว
+
+            # ✅ "ถัง" (deferred) — ใบแจ้งหนี้ออกหลังวันรับชำระ (เดือน/ปีใบ > เดือน/ปีจ่าย)
+            #    "เดือนที่จ่าย" จะไม่นับ (Case บนกรองออกด้วย is_date_greater)
+            #    แต่เก็บตกมารับรู้ใน "เดือนของใบแจ้งหนี้" แทน:
+            #    ไล่จากใบแจ้งหนี้ขาย (sale) ในเดือนนี้ → payment ที่ reconcile กันแต่จ่ายก่อนเดือนนี้
+            deferred_invoices = self.env['account.move'].sudo().search([
+                ('invoice_date', '>=', date_from),
+                ('invoice_date', '<=', date_to),
+                ('state', '=', 'posted'),
+                ('move_type', '=', 'out_invoice'),
+                ('contact_type', '=', 'sale'),
+                ('sales_contact_id', '!=', False),
+            ])
+            counted_deferred_payment_ids = set()
+            for inv in deferred_invoices:
+                if (inv.name or '').strip().upper().startswith('IV'):
+                    continue
+                sales_contact_id = inv.sales_contact_id.id if inv.sales_contact_id else False
+                if not sales_contact_id:
+                    continue
+                branch_id = inv.branch_id.id if inv.branch_id else False
+                key = (sales_contact_id, branch_id)
+                for pay in inv._get_reconciled_payments():
+                    if pay.id in counted_deferred_payment_ids:
+                        continue
+                    # เฉพาะ payment ในสมุดรับชำระ, posted, จ่าย "ก่อน" เดือนรายงาน
+                    if (pay.journal_id.id not in payment_journals.ids
+                            or pay.state != 'posted'
+                            or not pay.date
+                            or pay.date >= date_from):
+                        continue
+                    counted_deferred_payment_ids.add(pay.id)
+                    if key not in sales_data:
+                        sales_data[key] = {
+                            'rental_amount': 0.0,
+                            'payment_received': 0.0,
+                            'outstanding_debt': 0.0,
+                            'shipping_cost': 0.0,
+                        }
+                    sales_data[key]['payment_received'] += (pay.amount or 0.0) / 1.07
         
         # ดึงค่าขนส่งจาก account.voucher
         # - กรองตาม ชื่อ sales_contact_id และ สาขา ใน voucher.line_ids
@@ -300,7 +345,7 @@ class CommissionReportSales(models.TransientModel):
                 branch_name = branch_obj.name or ''
             
             # ค้นหา voucher
-            vouchers = self.env['account.voucher'].search([
+            vouchers = self.env['account.voucher'].sudo().search([
                 ('date', '>=', date_from),
                 ('date', '<=', date_to),
                 ('state', '=', 'posted'),

@@ -119,13 +119,14 @@ payment AS (
         LEFT JOIN account_move inv ON aml2.move_id = inv.id AND inv.move_type = 'out_invoice'
         WHERE aj.name IN ('สมุดรายวันรับชำระ', 'สมุดรายวันรับชำระค่าปรับหาย', 'สมุดรายวันรับชำระค่าปรับชำรุด')
             AND am.state = 'posted'
-            AND am.date >= %(date_from)s
             AND am.date <= %(date_to)s
+            AND inv.invoice_date <= %(date_to)s
             AND inv.invoice_date IS NOT NULL
             AND inv.contact_type = 'branch'
             AND (EXTRACT(MONTH FROM am.date) != EXTRACT(MONTH FROM inv.invoice_date)
                  OR EXTRACT(YEAR FROM am.date) != EXTRACT(YEAR FROM inv.invoice_date))
-            AND am.date > inv.invoice_date
+            -- รับรู้ในเดือนรายงาน = เดือนที่มากกว่า (เดือนจ่าย, เดือนใบแจ้งหนี้) — รองรับ "ถัง"
+            AND date_trunc('month', GREATEST(am.date, inv.invoice_date)) = date_trunc('month', %(date_from)s::date)
     ) sub
     GROUP BY sub.branch_id, sub.branch_name
 ),
@@ -411,16 +412,17 @@ payment AS (
         LEFT JOIN res_branch rb ON inv.branch_id = rb.id
         LEFT JOIN res_users ru ON inv.sales_contact_id = ru.id
         LEFT JOIN res_partner rp ON ru.partner_id = rp.id
-        WHERE aj.name = 'สมุดรายวันรับชำระ'
+        WHERE aj.name IN ('สมุดรายวันรับชำระ', 'สมุดรายวันรับชำระค่าปรับหาย', 'สมุดรายวันรับชำระค่าปรับชำรุด')
             AND am.state = 'posted'
-            AND am.date >= %(date_from)s
             AND am.date <= %(date_to)s
+            AND inv.invoice_date <= %(date_to)s
             AND inv.invoice_date IS NOT NULL
             AND inv.contact_type = 'sale'
             AND inv.sales_contact_id IS NOT NULL
             AND (EXTRACT(MONTH FROM am.date) != EXTRACT(MONTH FROM inv.invoice_date)
                  OR EXTRACT(YEAR FROM am.date) != EXTRACT(YEAR FROM inv.invoice_date))
-            AND am.date > inv.invoice_date
+            -- รับรู้ในเดือนรายงาน = เดือนที่มากกว่า (เดือนจ่าย, เดือนใบแจ้งหนี้) — รองรับ "ถัง"
+            AND date_trunc('month', GREATEST(am.date, inv.invoice_date)) = date_trunc('month', %(date_from)s::date)
     ) sub
     GROUP BY sub.sales_contact_id, sub.sales_contact_name, sub.branch_id, sub.branch_name
 ),

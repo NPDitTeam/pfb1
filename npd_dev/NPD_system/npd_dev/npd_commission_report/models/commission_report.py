@@ -145,7 +145,7 @@ class CommissionReport(models.TransientModel):
             # - กรองตามสาขา
             # - กรองตามวันที่
             # - กรองเฉพาะ contact_type = 'branch'
-            invoices = self.env['account.move'].search([
+            invoices = self.env['account.move'].sudo().search([
                 ('invoice_date', '>=', date_from),
                 ('invoice_date', '<=', date_to),
                 ('journal_id', 'in', rental_journals.ids),
@@ -171,7 +171,7 @@ class CommissionReport(models.TransientModel):
                 ('name', 'in', ['สินค้าหาย', 'สินค้าชำรุด'])
             ])
             if penalty_reasons:
-                penalty_invoices = self.env['account.move'].search([
+                penalty_invoices = self.env['account.move'].sudo().search([
                     ('invoice_date', '>=', date_from),
                     ('invoice_date', '<=', date_to),
                     ('branch_id', '=', branch.id),
@@ -199,7 +199,7 @@ class CommissionReport(models.TransientModel):
             ], limit=1)
 
             if rental_cn_journal:
-                rental_credit_notes = self.env['account.move'].search([
+                rental_credit_notes = self.env['account.move'].sudo().search([
                     ('invoice_date', '>=', date_from),
                     ('invoice_date', '<=', date_to),
                     ('journal_id', '=', rental_cn_journal.id),
@@ -222,7 +222,7 @@ class CommissionReport(models.TransientModel):
                 #         print(f"    - {cn.name} | invoice_date: {cn.invoice_date} | amount_untaxed: {cn.amount_untaxed:.2f} | payment_state: {cn.payment_state}")
                 #
                 #     # === DEBUG: เช็ค CN ทั้งหมดของสาขานี้ (ไม่กรอง contact_type) ===
-                #     all_cn = self.env['account.move'].search([
+                #     all_cn = self.env['account.move'].sudo().search([
                 #         ('invoice_date', '>=', date_from),
                 #         ('invoice_date', '<=', date_to),
                 #         ('journal_id', '=', rental_cn_journal.id),
@@ -253,7 +253,7 @@ class CommissionReport(models.TransientModel):
             ])
 
             if payment_journals:
-                payments = self.env['account.payment'].search([
+                payments = self.env['account.payment'].sudo().search([
                     ('journal_id', 'in', payment_journals.ids),
                     ('state', '=', 'posted'),
                     ('date', '>=', date_from),
@@ -285,11 +285,39 @@ class CommissionReport(models.TransientModel):
                                     total_payment_received += payment_amount / 1.07
                                 break  # นับ payment นี้ครั้งเดียว
 
+                # ✅ "ถัง" (deferred) — ใบแจ้งหนี้ออกหลังวันรับชำระ (เดือน/ปีใบ > เดือน/ปีจ่าย)
+                #    เคสนี้ "เดือนที่จ่าย" จะไม่นับ (Case A ข้างบนกรองออกด้วย is_date_greater)
+                #    แต่เก็บตกมารับรู้ใน "เดือนของใบแจ้งหนี้" แทน:
+                #    ไล่จากใบแจ้งหนี้สาขาในเดือนนี้ → payment ที่ reconcile กันแต่จ่ายก่อนเดือนนี้
+                deferred_invoices = self.env['account.move'].sudo().search([
+                    ('invoice_date', '>=', date_from),
+                    ('invoice_date', '<=', date_to),
+                    ('state', '=', 'posted'),
+                    ('move_type', '=', 'out_invoice'),
+                    ('contact_type', '=', 'branch'),
+                    ('branch_id', '=', branch.id),
+                ])
+                counted_deferred_payment_ids = set()
+                for inv in deferred_invoices:
+                    if (inv.name or '').strip().upper().startswith('IV'):
+                        continue
+                    for pay in inv._get_reconciled_payments():
+                        if pay.id in counted_deferred_payment_ids:
+                            continue
+                        # เฉพาะ payment ในสมุดรับชำระ, posted, จ่าย "ก่อน" เดือนรายงาน
+                        if (pay.journal_id.id not in payment_journals.ids
+                                or pay.state != 'posted'
+                                or not pay.date
+                                or pay.date >= date_from):
+                            continue
+                        counted_deferred_payment_ids.add(pay.id)
+                        total_payment_received += (pay.amount or 0.0) / 1.07
+
             # ดึงรายจ่ายรวม (total_expense) จาก Vendor Bills
             total_expense = 0.0
 
             # ===== ดึงจาก Vendor Bills =====
-            vendor_bills = self.env['account.move'].search([
+            vendor_bills = self.env['account.move'].sudo().search([
                 ('invoice_date', '>=', date_from),
                 ('invoice_date', '<=', date_to),
                 ('state', '=', 'posted'),
@@ -317,7 +345,10 @@ class CommissionReport(models.TransientModel):
             # ดึงจาก account.advance.clear
             # - กรองจาก account_analytic_id.name ของแต่ละ line
             # - ดึงค่าจาก Amount (price_subtotal) ในรายการ
-            advance_clears = self.env['account.advance.clear'].search([
+            # ✅ sudo() เพื่อข้าม record rule "Advance Clear: HQ sees all / Branch sees own"
+            #    รายงานรวมสาขาต้องเห็น advance ครบทุกสาขา ไม่ขึ้นกับสิทธิ์ของผู้ gen รายงาน
+            #    (ไม่งั้นยอดรายจ่ายเปลี่ยนตามคนกดสร้าง — advance ของสาขาที่ไม่มีสิทธิ์จะหาย)
+            advance_clears = self.env['account.advance.clear'].sudo().search([
                 ('doc_date', '>=', date_from),
                 ('doc_date', '<=', date_to),
                 ('state', '=', 'post'),
@@ -349,7 +380,7 @@ class CommissionReport(models.TransientModel):
             # # ดึงจาก account.voucher
             # # - กรองจาก account.voucher.line.account_analytic_id.name แบบ LIKE กับชื่อสาขา
             # # - ดึงค่าจาก price_subtotal ในแต่ละ line
-            # vouchers = self.env['account.voucher'].search([
+            # vouchers = self.env['account.voucher'].sudo().search([
             #     ('date', '>=', date_from),
             #     ('date', '<=', date_to),
             #     ('state', '=', 'posted'),
@@ -370,7 +401,7 @@ class CommissionReport(models.TransientModel):
             # - กรองตาม branch_id ของหัวเอกสาร + วันที่ออกบิล (date)
             # - state ตามเดิม (posted/transferred)
             # - ยอด = amount (รวม VAT แล้ว) ไม่ต้องบวก VAT เพิ่ม
-            vouchers = self.env['account.voucher'].search([
+            vouchers = self.env['account.voucher'].sudo().search([
                 ('date', '>=', date_from),
                 ('date', '<=', date_to),
                 ('state', 'in', ['posted', 'transferred']),
@@ -385,7 +416,7 @@ class CommissionReport(models.TransientModel):
             # ✅ ดึง JV จากสมุดรายวันทั่วไป (account_move ที่เลขขึ้นต้นด้วย 'JV-')
             #    เงื่อนไข: state='posted' (ลงบันทึกแล้ว) + branch ตรง + วันที่ลงบัญชี (date) อยู่ในเดือน/ปีรอบนี้
             #    ยอด = SUM(debit) ของบรรทัดทั้งหมดในใบ (= ขนาดของรายการสมุดบัญชี เพราะ debit = credit ในแต่ละใบ)
-            jv_moves = self.env['account.move'].search([
+            jv_moves = self.env['account.move'].sudo().search([
                 ('name', '=like', 'JV-%'),
                 ('branch_id', '=', branch.id),
                 ('date', '>=', date_from),
