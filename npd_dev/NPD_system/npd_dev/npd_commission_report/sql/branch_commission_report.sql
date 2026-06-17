@@ -162,12 +162,11 @@ payment AS (
     FROM (
         SELECT DISTINCT
             ap.id AS payment_id,
-            -- รับรู้ใน "เดือนที่มากกว่า" ระหว่างเดือนจ่ายกับเดือนใบแจ้งหนี้
-            -- (ถัง: ถ้าใบแจ้งหนี้ออกหลังวันจ่าย → เลื่อนไปรับรู้เดือนของใบแจ้งหนี้)
-            EXTRACT(YEAR  FROM GREATEST(date_trunc('month', am.date), date_trunc('month', inv.invoice_date)))::int AS year,
-            EXTRACT(MONTH FROM GREATEST(date_trunc('month', am.date), date_trunc('month', inv.invoice_date)))::int AS month,
+            EXTRACT(YEAR FROM am.date)::int AS year,
+            EXTRACT(MONTH FROM am.date)::int AS month,
             rb.id AS branch_id,
-            ap.amount / 1.07 AS payment_amount
+            -- ค่าปรับชำรุด ไม่ถอด VAT (ใช้ยอดเต็ม) / สมุดอื่นถอด VAT 7%
+            CASE WHEN aj.name = 'สมุดรายวันรับชำระค่าปรับชำรุด' THEN ap.amount ELSE ap.amount / 1.07 END AS payment_amount
         FROM account_payment ap
         JOIN account_move am ON ap.move_id = am.id
         JOIN account_journal aj ON am.journal_id = aj.id
@@ -185,7 +184,8 @@ payment AS (
           AND inv.invoice_date IS NOT NULL AND inv.contact_type = 'branch'
           AND (EXTRACT(MONTH FROM am.date) != EXTRACT(MONTH FROM inv.invoice_date)
                OR EXTRACT(YEAR FROM am.date) != EXTRACT(YEAR FROM inv.invoice_date))
-          AND EXTRACT(YEAR FROM GREATEST(date_trunc('month', am.date), date_trunc('month', inv.invoice_date)))::int >= p.min_year
+          AND am.date > inv.invoice_date
+          AND EXTRACT(YEAR FROM am.date)::int >= p.min_year
     ) sub
     GROUP BY sub.year, sub.month, sub.branch_id
 ),

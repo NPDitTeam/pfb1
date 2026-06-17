@@ -281,37 +281,13 @@ class CommissionReport(models.TransientModel):
                             if is_different_month and is_date_greater:
                                 if hasattr(inv, 'contact_type') and inv.contact_type == 'branch':
                                     # ถอด VAT 7% จากยอดรับชำระ
+                                    # ยกเว้น "สมุดรายวันค่าปรับชำรุด" → ไม่ถอด VAT (ใช้ยอดเต็ม)
                                     payment_amount = payment.amount or 0.0
-                                    total_payment_received += payment_amount / 1.07
+                                    if payment.journal_id.name == 'สมุดรายวันรับชำระค่าปรับชำรุด':
+                                        total_payment_received += payment_amount
+                                    else:
+                                        total_payment_received += payment_amount / 1.07
                                 break  # นับ payment นี้ครั้งเดียว
-
-                # ✅ "ถัง" (deferred) — ใบแจ้งหนี้ออกหลังวันรับชำระ (เดือน/ปีใบ > เดือน/ปีจ่าย)
-                #    เคสนี้ "เดือนที่จ่าย" จะไม่นับ (Case A ข้างบนกรองออกด้วย is_date_greater)
-                #    แต่เก็บตกมารับรู้ใน "เดือนของใบแจ้งหนี้" แทน:
-                #    ไล่จากใบแจ้งหนี้สาขาในเดือนนี้ → payment ที่ reconcile กันแต่จ่ายก่อนเดือนนี้
-                deferred_invoices = self.env['account.move'].sudo().search([
-                    ('invoice_date', '>=', date_from),
-                    ('invoice_date', '<=', date_to),
-                    ('state', '=', 'posted'),
-                    ('move_type', '=', 'out_invoice'),
-                    ('contact_type', '=', 'branch'),
-                    ('branch_id', '=', branch.id),
-                ])
-                counted_deferred_payment_ids = set()
-                for inv in deferred_invoices:
-                    if (inv.name or '').strip().upper().startswith('IV'):
-                        continue
-                    for pay in inv._get_reconciled_payments():
-                        if pay.id in counted_deferred_payment_ids:
-                            continue
-                        # เฉพาะ payment ในสมุดรับชำระ, posted, จ่าย "ก่อน" เดือนรายงาน
-                        if (pay.journal_id.id not in payment_journals.ids
-                                or pay.state != 'posted'
-                                or not pay.date
-                                or pay.date >= date_from):
-                            continue
-                        counted_deferred_payment_ids.add(pay.id)
-                        total_payment_received += (pay.amount or 0.0) / 1.07
 
             # ดึงรายจ่ายรวม (total_expense) จาก Vendor Bills
             total_expense = 0.0

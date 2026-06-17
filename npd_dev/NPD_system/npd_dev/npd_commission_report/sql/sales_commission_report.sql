@@ -88,7 +88,7 @@ outstanding AS (
         JOIN account_journal aj ON am.journal_id = aj.id
         JOIN account_move_line aml ON aml.move_id = am.id
         JOIN account_account aa ON aa.id = aml.account_id
-        WHERE aj.name = 'สมุดรายวันเช่า(สาขา)'
+        WHERE aj.name IN ('สมุดรายวันเช่า(สาขา)', 'สมุดรายวันค่าปรับหาย', 'สมุดรายวันค่าปรับชำรุด')
           AND am.state = 'posted' AND am.move_type = 'out_invoice'
           AND am.contact_type = 'sale'
           AND am.sales_contact_id IS NOT NULL
@@ -126,7 +126,7 @@ penalty_outstanding AS (
         JOIN account_move_line aml ON aml.move_id = am.id
         JOIN account_account aa ON aa.id = aml.account_id
         JOIN scrap_reason_code src ON src.id = am.reason_code_id
-        WHERE aj.name != 'สมุดรายวันเช่า(สาขา)'
+        WHERE aj.name NOT IN ('สมุดรายวันเช่า(สาขา)', 'สมุดรายวันค่าปรับหาย', 'สมุดรายวันค่าปรับชำรุด')
           AND am.state = 'posted' AND am.move_type = 'out_invoice'
           AND am.contact_type = 'sale'
           AND am.sales_contact_id IS NOT NULL
@@ -157,13 +157,12 @@ payment AS (
     FROM (
         SELECT DISTINCT
             ap.id AS payment_id,
-            -- รับรู้ใน "เดือนที่มากกว่า" ระหว่างเดือนจ่ายกับเดือนใบแจ้งหนี้
-            -- (ถัง: ถ้าใบแจ้งหนี้ออกหลังวันจ่าย → เลื่อนไปรับรู้เดือนของใบแจ้งหนี้)
-            EXTRACT(YEAR  FROM GREATEST(date_trunc('month', am.date), date_trunc('month', inv.invoice_date)))::int AS year,
-            EXTRACT(MONTH FROM GREATEST(date_trunc('month', am.date), date_trunc('month', inv.invoice_date)))::int AS month,
+            EXTRACT(YEAR FROM am.date)::int AS year,
+            EXTRACT(MONTH FROM am.date)::int AS month,
             inv.sales_contact_id,
             inv.branch_id,
-            ap.amount / 1.07 AS payment_amount
+            -- ค่าปรับชำรุด ไม่ถอด VAT (ใช้ยอดเต็ม) / สมุดอื่นถอด VAT 7%
+            CASE WHEN aj.name = 'สมุดรายวันรับชำระค่าปรับชำรุด' THEN ap.amount ELSE ap.amount / 1.07 END AS payment_amount
         FROM account_payment ap
         JOIN account_move am ON ap.move_id = am.id
         JOIN account_journal aj ON am.journal_id = aj.id
@@ -182,7 +181,8 @@ payment AS (
           AND inv.sales_contact_id IS NOT NULL
           AND (EXTRACT(MONTH FROM am.date) != EXTRACT(MONTH FROM inv.invoice_date)
                OR EXTRACT(YEAR FROM am.date) != EXTRACT(YEAR FROM inv.invoice_date))
-          AND EXTRACT(YEAR FROM GREATEST(date_trunc('month', am.date), date_trunc('month', inv.invoice_date)))::int >= p.min_year
+          AND am.date > inv.invoice_date
+          AND EXTRACT(YEAR FROM am.date)::int >= p.min_year
     ) sub
     GROUP BY sub.year, sub.month, sub.sales_contact_id, sub.branch_id
 ),

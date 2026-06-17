@@ -158,7 +158,7 @@ class CommissionReportAPI(http.Controller):
                             ap.id AS payment_id,
                             rb.id AS branch_id,
                             rb.name AS branch_name,
-                            ap.amount / 1.07 AS payment_amount
+                            CASE WHEN aj.name = 'สมุดรายวันรับชำระค่าปรับชำรุด' THEN ap.amount ELSE ap.amount / 1.07 END AS payment_amount
                         FROM account_payment ap
                         LEFT JOIN account_move am ON ap.move_id = am.id
                         LEFT JOIN account_journal aj ON am.journal_id = aj.id
@@ -169,14 +169,13 @@ class CommissionReportAPI(http.Controller):
                         LEFT JOIN account_move inv ON aml2.move_id = inv.id AND inv.move_type = 'out_invoice'
                         WHERE aj.name IN ('สมุดรายวันรับชำระ', 'สมุดรายวันรับชำระค่าปรับหาย', 'สมุดรายวันรับชำระค่าปรับชำรุด')
                             AND am.state = 'posted'
+                            AND am.date >= %(date_from)s
                             AND am.date <= %(date_to)s
-                            AND inv.invoice_date <= %(date_to)s
                             AND inv.invoice_date IS NOT NULL
                             AND inv.contact_type = 'branch'
                             AND (EXTRACT(MONTH FROM am.date) != EXTRACT(MONTH FROM inv.invoice_date)
                                  OR EXTRACT(YEAR FROM am.date) != EXTRACT(YEAR FROM inv.invoice_date))
-                            -- รับรู้ในเดือนรายงาน = เดือนที่มากกว่า (เดือนจ่าย, เดือนใบแจ้งหนี้) — รองรับ "ถัง"
-                            AND date_trunc('month', GREATEST(am.date, inv.invoice_date)) = date_trunc('month', %(date_from)s::date)
+                            AND am.date > inv.invoice_date
                             {branch_filter_payment}
                     ) sub
                     GROUP BY sub.branch_id, sub.branch_name
@@ -487,7 +486,7 @@ class CommissionReportAPI(http.Controller):
                 LEFT JOIN res_branch rb ON am.branch_id = rb.id
                 LEFT JOIN res_users ru ON am.sales_contact_id = ru.id
                 LEFT JOIN res_partner rp ON ru.partner_id = rp.id
-                WHERE aj.name = 'สมุดรายวันเช่า(สาขา)'
+                WHERE aj.name IN ('สมุดรายวันเช่า(สาขา)', 'สมุดรายวันค่าปรับหาย', 'สมุดรายวันค่าปรับชำรุด')
                     AND am.state = 'posted'
                     AND am.move_type = 'out_invoice'
                     AND am.payment_state IN ('not_paid', 'partial')
@@ -513,7 +512,7 @@ class CommissionReportAPI(http.Controller):
                         rp.name AS sales_contact_name,
                         rb.id AS branch_id,
                         rb.name AS branch_name,
-                        ap.amount / 1.07 AS payment_amount
+                        CASE WHEN aj.name = 'สมุดรายวันรับชำระค่าปรับชำรุด' THEN ap.amount ELSE ap.amount / 1.07 END AS payment_amount
                     FROM account_payment ap
                     LEFT JOIN account_move am ON ap.move_id = am.id
                     LEFT JOIN account_journal aj ON am.journal_id = aj.id
@@ -526,15 +525,14 @@ class CommissionReportAPI(http.Controller):
                     LEFT JOIN res_partner rp ON ru.partner_id = rp.id
                     WHERE aj.name IN ('สมุดรายวันรับชำระ', 'สมุดรายวันรับชำระค่าปรับหาย', 'สมุดรายวันรับชำระค่าปรับชำรุด')
                         AND am.state = 'posted'
+                        AND am.date >= %(date_from)s
                         AND am.date <= %(date_to)s
-                        AND inv.invoice_date <= %(date_to)s
                         AND inv.invoice_date IS NOT NULL
                         AND inv.contact_type = 'sale'
                         AND inv.sales_contact_id IS NOT NULL
                         AND (EXTRACT(MONTH FROM am.date) != EXTRACT(MONTH FROM inv.invoice_date)
                              OR EXTRACT(YEAR FROM am.date) != EXTRACT(YEAR FROM inv.invoice_date))
-                        -- รับรู้ในเดือนรายงาน = เดือนที่มากกว่า (เดือนจ่าย, เดือนใบแจ้งหนี้) — รองรับ "ถัง"
-                        AND date_trunc('month', GREATEST(am.date, inv.invoice_date)) = date_trunc('month', %(date_from)s::date)
+                        AND am.date > inv.invoice_date
                         {sales_filter_payment}
                         {branch_filter_payment}
                 ) sub

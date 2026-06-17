@@ -104,13 +104,20 @@ class CommissionReportSales(models.TransientModel):
     def _compute_sales_data(self, date_from, date_to):
         """คำนวณข้อมูลค่าคอม Sales ต่อ (เซลล์, สาขา) — ใช้ร่วมกับ API /api/commission/sales
         คืน list ของ dict: date_from/date_to/sales_contact_id/branch_id + ยอดต่าง ๆ + net_rental"""
-        # ค้นหาสมุดรายวันที่ชื่อ 'สมุดรายวันเช่า(สาขา)' (ค้นหาครั้งเดียว)
-        rental_journal = self.env['account.journal'].search([
-            ('name', '=', 'สมุดรายวันเช่า(สาขา)')
-        ], limit=1)
-        
-        if not rental_journal:
-            raise models.UserError('ไม่พบสมุดรายวันชื่อ "สมุดรายวันเช่า(สาขา)"')
+        # ค้นหาสมุดรายวัน 3 เล่ม (เช่า + ค่าปรับหาย + ค่าปรับชำรุด) ให้ตรงกับฝั่งสาขา
+        rental_journal_names = [
+            'สมุดรายวันเช่า(สาขา)',
+            'สมุดรายวันค่าปรับหาย',
+            'สมุดรายวันค่าปรับชำรุด',
+        ]
+        rental_journals = self.env['account.journal'].search([
+            ('name', 'in', rental_journal_names)
+        ])
+        if not rental_journals:
+            raise models.UserError('ไม่พบสมุดรายวัน: %s' % ', '.join(rental_journal_names))
+        # ✅ ยอดเช่า นับเฉพาะ "สมุดเช่า(สาขา)" / หนี้ค้าง รวมทุกสมุด (ตรงกับฝั่งสาขา)
+        rent_only_journal = rental_journals.filtered(lambda j: j.name == 'สมุดรายวันเช่า(สาขา)')
+        rent_only_journal_id = rent_only_journal.id if rent_only_journal else False
         
         # ดึงข้อมูลจาก account.move โดยตรง
         # - กรองตามสมุดรายวัน 'สมุดรายวันเช่า(สาขา)'
@@ -120,7 +127,7 @@ class CommissionReportSales(models.TransientModel):
         invoices = self.env['account.move'].sudo().search([
             ('invoice_date', '>=', date_from),
             ('invoice_date', '<=', date_to),
-            ('journal_id', '=', rental_journal.id),
+            ('journal_id', 'in', rental_journals.ids),
             ('state', '=', 'posted'),
             ('move_type', 'in', ['out_invoice']),
             ('contact_type', '=', 'sale'),
@@ -149,8 +156,9 @@ class CommissionReportSales(models.TransientModel):
                     'shipping_cost': 0.0,  # เพิ่มฟิลด์ค่าขนส่ง
                 }
             
-            # ดึงยอดเช่า (rental_amount) จาก amount_untaxed ของ invoice
-            sales_data[key]['rental_amount'] += invoice.amount_untaxed or 0.0
+            # ✅ ยอดเช่า — เฉพาะสมุดเช่า(สาขา) ไม่รวมค่าปรับหาย/ชำรุด (ตรงกับฝั่งสาขา)
+            if invoice.journal_id.id == rent_only_journal_id:
+                sales_data[key]['rental_amount'] += invoice.amount_untaxed or 0.0
 
             # ✅ หนี้ค้างชำระ (outstanding_debt) — ยอดค้าง "ณ วันสิ้นรอบ (date_to)" ตามที่การเงินคิด
             #    ครอบคลุมทุกกรณี: ยังไม่จ่าย → ค้างเต็มใบ / จ่ายบางส่วน → ค้างที่เหลือ / จ่ายครบ(ก่อนสิ้นรอบ) → 0
@@ -206,7 +214,7 @@ class CommissionReportSales(models.TransientModel):
                 ('contact_type', '=', 'sale'),
                 ('sales_contact_id', '!=', False),
                 ('reason_code_id', 'in', penalty_reasons.ids),
-                ('journal_id', '!=', rental_journal.id),   # กันซ้ำกับลูปใบเช่า
+                ('journal_id', 'not in', rental_journals.ids),   # กันซ้ำกับลูปใบเช่า/ค่าปรับ (3 สมุด)
             ])
             for pinv in penalty_invoices:
                 key = (pinv.sales_contact_id.id,
@@ -283,48 +291,12 @@ class CommissionReportSales(models.TransientModel):
                                         'shipping_cost': 0.0,  # เพิ่มฟิลด์ค่าขนส่ง
                                     }
                                 
-                                sales_data[key]['payment_received'] += (payment.amount or 0.0) / 1.07
+                                # ถอด VAT 7% — ยกเว้น "สมุดรายวันค่าปรับชำรุด" ใช้ยอดเต็ม
+                                if payment.journal_id.name == 'สมุดรายวันรับชำระค่าปรับชำรุด':
+                                    sales_data[key]['payment_received'] += (payment.amount or 0.0)
+                                else:
+                                    sales_data[key]['payment_received'] += (payment.amount or 0.0) / 1.07
                             break  # นับ payment นี้ครั้งเดียว
-
-            # ✅ "ถัง" (deferred) — ใบแจ้งหนี้ออกหลังวันรับชำระ (เดือน/ปีใบ > เดือน/ปีจ่าย)
-            #    "เดือนที่จ่าย" จะไม่นับ (Case บนกรองออกด้วย is_date_greater)
-            #    แต่เก็บตกมารับรู้ใน "เดือนของใบแจ้งหนี้" แทน:
-            #    ไล่จากใบแจ้งหนี้ขาย (sale) ในเดือนนี้ → payment ที่ reconcile กันแต่จ่ายก่อนเดือนนี้
-            deferred_invoices = self.env['account.move'].sudo().search([
-                ('invoice_date', '>=', date_from),
-                ('invoice_date', '<=', date_to),
-                ('state', '=', 'posted'),
-                ('move_type', '=', 'out_invoice'),
-                ('contact_type', '=', 'sale'),
-                ('sales_contact_id', '!=', False),
-            ])
-            counted_deferred_payment_ids = set()
-            for inv in deferred_invoices:
-                if (inv.name or '').strip().upper().startswith('IV'):
-                    continue
-                sales_contact_id = inv.sales_contact_id.id if inv.sales_contact_id else False
-                if not sales_contact_id:
-                    continue
-                branch_id = inv.branch_id.id if inv.branch_id else False
-                key = (sales_contact_id, branch_id)
-                for pay in inv._get_reconciled_payments():
-                    if pay.id in counted_deferred_payment_ids:
-                        continue
-                    # เฉพาะ payment ในสมุดรับชำระ, posted, จ่าย "ก่อน" เดือนรายงาน
-                    if (pay.journal_id.id not in payment_journals.ids
-                            or pay.state != 'posted'
-                            or not pay.date
-                            or pay.date >= date_from):
-                        continue
-                    counted_deferred_payment_ids.add(pay.id)
-                    if key not in sales_data:
-                        sales_data[key] = {
-                            'rental_amount': 0.0,
-                            'payment_received': 0.0,
-                            'outstanding_debt': 0.0,
-                            'shipping_cost': 0.0,
-                        }
-                    sales_data[key]['payment_received'] += (pay.amount or 0.0) / 1.07
         
         # ดึงค่าขนส่งจาก account.voucher
         # - กรองตาม ชื่อ sales_contact_id และ สาขา ใน voucher.line_ids
