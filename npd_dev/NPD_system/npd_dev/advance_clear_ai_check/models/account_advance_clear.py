@@ -502,7 +502,7 @@ class AccountAdvanceClearAI(models.Model):
         # )
         # ─── NEW LOGIC: เทียบยอด cash_bill_ids กับ price_unit ใน clear_ids ──
         _cb_match2 = self._check_cash_bill_match_detail()
-        cash_bill_ok = (not cbc.get('required', False)) or _cb_match2['pass']
+        cash_bill_ok = self._cash_bill_pass(result)
 
         amount_ok = ac_data.get('pass', False)
         rc_data = result.get('receipt_check', {})
@@ -616,10 +616,29 @@ class AccountAdvanceClearAI(models.Model):
 
         is_pass = amount_ok and rc_ok and tc_ok and analytic_pass and cash_bill_ok and company_name_ok and idc_ok2 and uac_ok2 and slip_ok2
 
+        # Build failed-only summary (used when not passing)
+        _combined_re = new_receipt_total + _sub_re.get('amount_to_count', 0) + _cb_total_re
+        fail_items = self._collect_ai_fail_items(result, {
+            'rc_ok': rc_ok,
+            'amount_ok': amount_ok,
+            'tc_ok': tc_ok,
+            'analytic_pass': analytic_pass,
+            'cash_bill_ok': cash_bill_ok,
+            'company_name_ok': company_name_ok,
+            'idc_ok': idc_ok2,
+            'uac_ok': uac_ok2,
+            'slip_ok': slip_ok2,
+            'analytic_missing': analytic_missing,
+            'combined': _combined_re,
+            'system_total': s_total,
+        })
+        summary_html = self._render_ai_fail_summary(is_pass, fail_items)
+
         # Update stored result and parsed data
         self.write({
             'ai_verified': is_pass,
-            'ai_verify_result': result_html,
+            # ผ่านหมด → รายงานเต็ม (ทุกข้อ), ไม่ผ่าน → เฉพาะข้อที่ไม่ผ่าน
+            'ai_verify_result': result_html if is_pass else summary_html,
             'is_approved': is_pass,
             'ai_parsed_result': json.dumps(result, ensure_ascii=False),
         })
@@ -1931,6 +1950,20 @@ class AccountAdvanceClearAI(models.Model):
                       else u'มีรายการบิลเงินสดที่ลงทะเบียนแต่ไม่ตรงกับยอดในรายละเอียด',
         }
 
+    def _cash_bill_pass(self, result):
+        u"""ตัดสินว่าข้อ 5 (บิลเงินสด) ผ่านสำหรับการอนุมัติหรือไม่ — ใช้ร่วมกันทุก path
+        เพื่อไม่ให้ popup / รายงานเต็ม / is_pass คำนวณคนละแบบ:
+          - AI ไม่พบบิลเงินสด (required=False) → ผ่าน
+          - AI พบบิลเงินสด แต่ผู้ใช้ยังไม่ได้ลงทะเบียนเลย → ไม่ผ่าน (ต้องลงทะเบียน)
+          - ลงทะเบียนแล้ว → ทุกรายการต้องจับคู่กับยอดใน Detail Lines ได้
+        """
+        cbc = result.get('cash_bill_check', {}) or {}
+        if not cbc.get('required', False):
+            return True
+        if not self.cash_bill_ids:
+            return False
+        return self._check_cash_bill_match_detail()['pass']
+
     def _resolve_receipt_substitutes(self, result, py_receipt_total, py_system_total, tolerance=1.0):
         u"""ตัดสินว่าใบรับรองแทนใบเสร็จ (is_receipt_substitute=true ใน skipped_files)
         ควรนับยอดเข้า combined_total หรือไม่ โดยเปรียบเทียบยอดรวม:
@@ -2057,7 +2090,7 @@ class AccountAdvanceClearAI(models.Model):
         # )
         # ─── NEW LOGIC: เทียบยอด cash_bill_ids กับ price_unit ใน clear_ids ──
         cb_match_result = self._check_cash_bill_match_detail()
-        cash_bill_ok = (not cbc.get('required', False)) or cb_match_result['pass']
+        cash_bill_ok = self._cash_bill_pass(result)
 
         # Re-evaluate amount check: if cash bill passed, add registered_total to receipt_total
         ac_data = result.get('amount_check', {})
@@ -3035,6 +3068,201 @@ class AccountAdvanceClearAI(models.Model):
 
         return html
 
+    # ──────────────────────────────────────────────────────────────────
+    #  Failed-only summary for the AI verify popup
+    #  (the full report is still saved to ai_verify_result / shown at the
+    #   bottom of the document — this is only what the user must FIX)
+    # ──────────────────────────────────────────────────────────────────
+    @staticmethod
+    def _fmt_baht(val):
+        try:
+            return '{:,.2f}'.format(float(val))
+        except (ValueError, TypeError):
+            return str(val)
+
+    def _collect_ai_fail_items(self, result, flags):
+        """Build a list of failed checks with a plain-language reason and fix.
+
+        flags is a dict carrying the pass/fail booleans already computed in
+        action_ai_verify plus a few values used to craft the messages:
+          rc_ok, amount_ok, tc_ok, analytic_pass, cash_bill_ok,
+          company_name_ok, idc_ok, uac_ok, slip_ok,
+          analytic_missing (list), combined (float), system_total (float)
+        """
+        items = []
+        fmt = self._fmt_baht
+
+        # 1. ใบเสร็จ
+        if not flags.get('rc_ok', True):
+            rc = result.get('receipt_check', {}) or {}
+            skipped = [f for f in rc.get('skipped_files', []) if isinstance(f, dict)]
+            receipt_files = [f for f in rc.get('receipt_files', []) if isinstance(f, dict) and f.get('filename')]
+            has_unclear = any(
+                any(kw in (f.get('reason', '') or '').lower()
+                    for kw in ['ไม่ชัด', 'อ่านไม่ออก', 'เบลอ', 'unclear'])
+                for f in skipped if not f.get('is_receipt_substitute')
+            )
+            has_hw = any(
+                any(kw in (f.get('reason', '') or '').lower()
+                    for kw in ['ลายมือ', 'เขียนมือ', 'บิลเงินสด', 'handwritten', 'cash'])
+                for f in skipped if not f.get('is_receipt_substitute')
+            )
+            if not receipt_files and not rc.get('found', False) and not has_hw:
+                reason = u'ไม่พบไฟล์ใบเสร็จที่อ่านได้ในเอกสารแนบ'
+                fix = u'อัปโหลดรูปใบเสร็จ/ใบกำกับภาษีที่ชัดเจนในเอกสารแนบ แล้วกด "ตรวจสอบด้วย AI" อีกครั้ง'
+            elif has_unclear:
+                reason = u'ใบเสร็จบางใบไม่ชัดเจน ระบบอ่านข้อมูลไม่ออก'
+                fix = u'ถ่าย/สแกนใบเสร็จใหม่ให้ชัด แล้ว Reset to Draft > อัปโหลดรูปใหม่ > ตรวจสอบด้วย AI อีกครั้ง'
+            elif has_hw:
+                reason = u'พบบิลเขียนมือ/บิลเงินสด ที่ยังไม่ได้ลงทะเบียนเข้าระบบ'
+                fix = u'กดปุ่ม "เพิ่มรายการบิลเงินสด" เพื่อลงทะเบียนบิล หรือขอใบเสร็จที่พิมพ์จากระบบมาแนบแทน'
+            else:
+                reason = u'ใบเสร็จไม่ผ่านการตรวจสอบความถูกต้อง'
+                fix = u'ตรวจสอบไฟล์ใบเสร็จที่แนบให้ครบและชัดเจน แล้วตรวจสอบด้วย AI อีกครั้ง'
+            items.append({'title': u'1. ใบเสร็จ', 'reason': reason, 'fix': fix})
+
+        # 2. ยอดเงิน
+        if not flags.get('amount_ok', True):
+            c = flags.get('combined', 0) or 0
+            s = flags.get('system_total', 0) or 0
+            diff = abs(s - c)
+            reason = (u'ยอดรวมจากใบเสร็จ %s บาท ไม่ตรงกับยอดในระบบ %s บาท (ต่างกัน %s บาท)'
+                      % (fmt(c), fmt(s), fmt(diff)))
+            fix = (u'ตรวจสอบว่าแนบใบเสร็จครบทุกใบ และยอดในรายการ (Detail Lines) ถูกต้อง '
+                   u'หากมีบิลเงินสดที่ยังไม่ได้ลงทะเบียน ให้กด "เพิ่มรายการบิลเงินสด"')
+            items.append({'title': u'2. ยอดเงินไม่ตรง', 'reason': reason, 'fix': fix})
+
+        # 3. ภาษีในรายการ (VAT)
+        if not flags.get('tc_ok', True):
+            reason = u'ใบเสร็จมี VAT แต่ในรายการ (Detail Lines) ยังไม่ได้ระบุภาษี (Tax)'
+            fix = u'เปิดแต่ละบรรทัดใน Detail Lines แล้วเลือกภาษี (Tax) ให้ตรงกับ VAT ในใบเสร็จ'
+            items.append({'title': u'3. ภาษี (VAT) ไม่ครบ', 'reason': reason, 'fix': fix})
+
+        # 4. Analytic Account
+        if not flags.get('analytic_pass', True):
+            missing = [m for m in (flags.get('analytic_missing') or []) if m]
+            if missing:
+                reason = u'มีรายการที่ยังไม่ได้ระบุ Analytic Account: %s' % u', '.join(missing)
+            else:
+                reason = u'มีรายการที่ยังไม่ได้ระบุ Analytic Account'
+            fix = u'เปิดแต่ละบรรทัดใน Detail Lines แล้วเลือก Analytic Account ให้ครบทุกรายการ'
+            items.append({'title': u'4. ยังไม่ได้เลือก Analytic Account', 'reason': reason, 'fix': fix})
+
+        # 5. บิลเงินสด
+        if not flags.get('cash_bill_ok', True):
+            if not self.cash_bill_ids:
+                reason = u'ระบบพบบิลเงินสด/บิลเขียนมือในเอกสารแนบ แต่ผู้ใช้ยังไม่ได้ลงทะเบียนเข้าระบบ'
+                fix = u'กดปุ่ม "เพิ่มรายการบิลเงินสด" เพื่อลงทะเบียนบิลเงินสดให้ครบทุกใบ'
+            else:
+                reason = u'ยอดบิลเงินสดที่ลงทะเบียนไว้ ไม่ตรงกับราคาต่อหน่วยในรายการ (Detail Lines)'
+                fix = u'ตรวจสอบยอดในรายการบิลเงินสดที่ลงทะเบียน ให้ตรงกับยอดในรายการ Detail Lines'
+            items.append({'title': u'5. บิลเงินสดไม่ตรง', 'reason': reason, 'fix': fix})
+
+        # 6. ข้อมูลบริษัทลูกค้า (ผู้ซื้อ)
+        if not flags.get('company_name_ok', True):
+            cnc = result.get('company_name_check', {}) or {}
+            mm = [m.get('filename', '') for m in cnc.get('mismatched_files', []) if isinstance(m, dict)]
+            mm = [m for m in mm if m]
+            reason = u'ชื่อ / เลขภาษี / ที่อยู่ ของบริษัทในใบเสร็จ ไม่ตรงกับบริษัทที่ระบบยอมรับ'
+            if mm:
+                reason += u' (ไฟล์: %s)' % u', '.join(mm)
+            fix = u'ขอใบเสร็จที่ออกในชื่อ/เลขภาษี/ที่อยู่บริษัทให้ถูกต้อง แล้วอัปโหลดมาตรวจสอบใหม่'
+            items.append({'title': u'6. ข้อมูลบริษัทในใบเสร็จไม่ตรง', 'reason': reason, 'fix': fix})
+
+        # 7. เลขที่ใบเสร็จ / วันที่ / ร้านค้า
+        if not flags.get('idc_ok', True):
+            idc = result.get('invoice_detail_check', {}) or {}
+            rows = []
+            for it in idc.get('items', []):
+                if not isinstance(it, dict):
+                    continue
+                inv_m = it.get('invoice_number_match', False)
+                dt_m = it.get('date_match', False)
+                pt_m = it.get('partner_match', False)
+                if inv_m and dt_m and pt_m:
+                    continue
+                fname = it.get('filename', '') or u'?'
+                diffs = []
+                if not inv_m:
+                    diffs.append((u'เลขที่ใบเสร็จ',
+                                  it.get('receipt_invoice_number', '') or u'(อ่านไม่พบ)',
+                                  it.get('detail_invoice_number', '') or u'(ยังไม่กรอก)'))
+                if not dt_m:
+                    diffs.append((u'วันที่',
+                                  it.get('receipt_date', '') or u'(อ่านไม่พบ)',
+                                  it.get('detail_date', '') or u'(ยังไม่กรอก)'))
+                if not pt_m:
+                    diffs.append((u'ชื่อร้านค้า',
+                                  it.get('receipt_partner', '') or u'(อ่านไม่พบ)',
+                                  it.get('detail_partner', '') or u'(ยังไม่กรอก)'))
+                rows.append((fname, diffs))
+            if rows:
+                reason = u'AI อ่านข้อมูลจากใบเสร็จได้ไม่ตรงกับที่กรอกในรายการ Detail:'
+                for fname, diffs in rows:
+                    reason += u'<div style="margin-top:6px;"><strong>&#128196; %s</strong>' % fname
+                    reason += u'<table style="border-collapse:collapse; margin:4px 0; font-size:0.95em; background:#fff;">'
+                    reason += (u'<tr style="background:#f1f1f1;">'
+                               u'<th style="border:1px solid #ddd; padding:3px 8px; text-align:left;">หัวข้อ</th>'
+                               u'<th style="border:1px solid #ddd; padding:3px 8px; text-align:left;">AI อ่านจากรูป</th>'
+                               u'<th style="border:1px solid #ddd; padding:3px 8px; text-align:left;">ที่กรอกในระบบ</th></tr>')
+                    for label, ai_val, sys_val in diffs:
+                        reason += (u'<tr>'
+                                   u'<td style="border:1px solid #ddd; padding:3px 8px;">%s</td>'
+                                   u'<td style="border:1px solid #ddd; padding:3px 8px; color:#155724; font-weight:bold;">%s</td>'
+                                   u'<td style="border:1px solid #ddd; padding:3px 8px; color:#721c24;">%s</td></tr>'
+                                   % (label, ai_val, sys_val))
+                    reason += u'</table></div>'
+                fix = u'แก้ไขรายการใน Detail ให้ตรงกับค่าที่ AI อ่านได้จากใบเสร็จ (คอลัมน์ "AI อ่านจากรูป") แล้วตรวจสอบอีกครั้ง'
+            else:
+                reason = u'เลขที่ใบเสร็จ / วันที่ / ชื่อร้านค้า ในรายการ Detail ไม่ตรงกับใบเสร็จ หรือยังไม่ได้กรอก'
+                fix = u'กรอกเลขที่ใบเสร็จ วันที่ และชื่อร้านค้าในรายการ Detail ให้ตรงกับใบเสร็จจริง'
+            items.append({'title': u'7. เลขที่/วันที่/ร้านค้า ไม่ตรง', 'reason': reason, 'fix': fix})
+
+        # 8. ที่อยู่สาธารณูปโภค (ค่าน้ำ/ค่าไฟ)
+        if not flags.get('uac_ok', True):
+            reason = u'ที่อยู่ในใบเสร็จค่าน้ำ/ค่าไฟ ไม่สอดคล้องกับ Analytic Account (สาขา) ที่เลือก'
+            fix = u'เลือก Analytic Account (สาขา) ให้ตรงกับที่อยู่ในใบเสร็จค่าสาธารณูปโภค'
+            items.append({'title': u'8. ที่อยู่สาธารณูปโภคไม่ตรงสาขา', 'reason': reason, 'fix': fix})
+
+        # 9. สลิปโอนเงิน
+        if not flags.get('slip_ok', True):
+            reason = (u'ไม่พบสลิปโอนเงินที่มียอด (รวมกัน) ตรงกับยอดเคลียร์ (Clear Amount) %s บาท'
+                      % fmt(self.clear_amount or 0))
+            fix = u'แนบสลิปโอนเงินที่ยอดรวมตรงกับ Clear Amount หรือตรวจสอบยอด Clear Amount ให้ถูกต้อง'
+            items.append({'title': u'9. สลิปโอนเงินไม่ตรงยอด', 'reason': reason, 'fix': fix})
+
+        return items
+
+    def _render_ai_fail_summary(self, overall_pass, fail_items):
+        """Render the compact failed-only popup HTML."""
+        if overall_pass or not fail_items:
+            return (
+                u'<div style="font-family: Segoe UI, sans-serif; padding: 24px; text-align:center;">'
+                u'<div style="font-size:52px; color:#28a745; line-height:1;">&#10004;</div>'
+                u'<h2 style="color:#28a745; margin:12px 0 6px;">ผ่านการตรวจสอบทั้งหมด</h2>'
+                u'<p style="color:#155724; margin:0;">เอกสารถูกต้องครบถ้วน พร้อมสำหรับการอนุมัติ</p>'
+                u'</div>'
+            )
+        n = len(fail_items)
+        html = u'<div style="font-family: Segoe UI, sans-serif; padding: 6px 4px;">'
+        html += (u'<h2 style="text-align:center; color:#dc3545; border-bottom:2px solid #dc3545; '
+                 u'padding-bottom:8px; margin:0 0 4px;">ไม่ผ่านการตรวจสอบ &mdash; พบ %d รายการที่ต้องแก้ไข</h2>' % n)
+        html += (u'<p style="text-align:center; color:#6c757d; margin:6px 0 14px;">'
+                 u'กรุณาแก้ไขรายการด้านล่าง แล้วกด "ตรวจสอบด้วย AI" อีกครั้ง</p>')
+        for it in fail_items:
+            html += (u'<div style="margin:10px 0; border:1px solid #f5c6cb; border-left:5px solid #dc3545; '
+                     u'border-radius:6px; background:#fff5f5; padding:12px 14px;">')
+            html += (u'<div style="font-size:15px; font-weight:bold; color:#721c24;">'
+                     u'<span style="color:#dc3545;">&#10008;</span> %s</div>' % it['title'])
+            html += (u'<div style="margin-top:8px; color:#333; line-height:1.5;">'
+                     u'<span style="font-weight:bold; color:#dc3545;">ทำไมไม่ผ่าน:</span> %s</div>' % it['reason'])
+            html += (u'<div style="margin-top:8px; color:#0c5460; background:#e7f6f8; border-radius:4px; '
+                     u'padding:8px 10px; line-height:1.5;">'
+                     u'<span style="font-weight:bold;">&#128161; วิธีแก้:</span> %s</div>' % it['fix'])
+            html += u'</div>'
+        html += u'</div>'
+        return html
+
     def action_ai_verify(self):
         """Main action: verify document with AI and show popup."""
         self.ensure_one()
@@ -3116,7 +3344,7 @@ class AccountAdvanceClearAI(models.Model):
         # )
         # ─── NEW LOGIC: เทียบยอด cash_bill_ids กับ price_unit ใน clear_ids ──
         _cb_match3 = self._check_cash_bill_match_detail()
-        cash_bill_ok = (not cbc.get('required', False)) or _cb_match3['pass']
+        cash_bill_ok = self._cash_bill_pass(result)
         ac_data = result.get('amount_check', {})
         # ใช้ Python sum (เชื่อถือได้กว่า AI's receipt_total) — สอดคล้องกับ display Section 2
         r_total = self._python_sum_receipt_total(result)
@@ -3280,6 +3508,23 @@ class AccountAdvanceClearAI(models.Model):
 
         is_pass = amount_ok and rc_ok and tc_ok and analytic_pass and cash_bill_ok and company_name_ok and idc_ok2 and uac_ok2 and slip_ok2
 
+        # Build the failed-only popup summary (full report still saved below)
+        fail_items = self._collect_ai_fail_items(result, {
+            'rc_ok': rc_ok,
+            'amount_ok': amount_ok,
+            'tc_ok': tc_ok,
+            'analytic_pass': analytic_pass,
+            'cash_bill_ok': cash_bill_ok,
+            'company_name_ok': company_name_ok,
+            'idc_ok': idc_ok2,
+            'uac_ok': uac_ok2,
+            'slip_ok': slip_ok2,
+            'analytic_missing': analytic_missing,
+            'combined': combined,
+            'system_total': s_total,
+        })
+        summary_html = self._render_ai_fail_summary(is_pass, fail_items)
+
         # Check if any receipt has amount = 0 or mismatched with detail lines
         _has_zero = False
         _has_mismatch = False
@@ -3310,7 +3555,8 @@ class AccountAdvanceClearAI(models.Model):
             'ai_verified': is_pass,
             'ai_verify_date': fields.Datetime.now(),
             'ai_verify_uid': self.env.uid,
-            'ai_verify_result': result_html,
+            # ผ่านหมด → รายงานเต็ม (ทุกข้อ), ไม่ผ่าน → เฉพาะข้อที่ไม่ผ่าน
+            'ai_verify_result': result_html if is_pass else summary_html,
             'is_approved': is_pass,
             'ai_parsed_result': json.dumps(result, ensure_ascii=False),
             'has_zero_amount_receipt': _has_zero or _has_mismatch,
@@ -3321,7 +3567,7 @@ class AccountAdvanceClearAI(models.Model):
         # Step 8: Open wizard popup with results
         wizard = self.env['ai.verify.wizard'].create({
             'advance_clear_id': self.id,
-            'result_html': result_html,
+            'result_html': summary_html,
             'is_pass': is_pass,
             'raw_response': ai_response[:5000] if ai_response else '',
         })
