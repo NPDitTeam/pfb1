@@ -373,21 +373,26 @@ class CommissionReport(models.TransientModel):
             #                         total_expense += line.price_subtotal or 0.0
 
 
-            # ดึงจาก account.voucher (หัวเอกสาร) โดยตรง
-            # - กรองตาม branch_id ของหัวเอกสาร + วันที่ออกบิล (date)
-            # - state ตามเดิม (posted/transferred)
-            # - ยอด = amount (รวม VAT แล้ว) ไม่ต้องบวก VAT เพิ่ม
-            vouchers = self.env['account.voucher'].sudo().search([
-                ('date', '>=', date_from),
-                ('date', '<=', date_to),
-                ('state', 'in', ['posted', 'transferred']),
-                ('branch_id', '=', branch.id),
-                ('voucher_type', '=', 'purchase'),   # เฉพาะใบจ่าย (ค่าใช้จ่าย) ไม่เอาใบรับเงิน
-                ('check_show', '=', False),           # เฉพาะใบที่นับ (ตรงกับที่การเงินเห็นในหน้า voucher)
+            # ดึงจาก account.voucher.line (ตารางข้อมูลบิล) — ตามที่การเงินกำหนด
+            # - voucher: state posted/transferred + purchase + check_show=false
+            # - line: payment_date (วันที่กำหนดจ่าย) ในเดือน + analytic.branch = สาขานี้
+            # - ยอด: ถ้า tax = "ภาษีซื้อรวม Vat 7%"/"ภาษีซื้อไม่รวม Vat 7%" → price_subtotal × 1.07
+            #         ถ้าภาษีอื่น/ไม่มีภาษี → price_subtotal (ไม่บวก VAT)
+            voucher_lines = self.env['account.voucher.line'].sudo().search([
+                ('payment_date', '>=', date_from),
+                ('payment_date', '<=', date_to),
+                ('voucher_id.state', 'in', ['posted', 'transferred']),
+                ('voucher_id.voucher_type', '=', 'purchase'),
+                ('voucher_id.check_show', '=', False),
+                ('account_analytic_id.branch_id', '=', branch.id),
             ])
-
-            for voucher in vouchers:
-                total_expense += voucher.amount or 0.0
+            vat_tax_names = ('ภาษีซื้อรวม Vat 7%', 'ภาษีซื้อไม่รวม Vat 7%')
+            for line in voucher_lines:
+                line_subtotal = line.price_subtotal or 0.0
+                if any(t.name in vat_tax_names for t in line.tax_ids):
+                    total_expense += line_subtotal * 1.07
+                else:
+                    total_expense += line_subtotal
 
             # ✅ ดึง JV จากสมุดรายวันทั่วไป (account_move ที่เลขขึ้นต้นด้วย 'JV-')
             #    เงื่อนไข: state='posted' (ลงบันทึกแล้ว) + branch ตรง + วันที่ลงบัญชี (date) อยู่ในเดือน/ปีรอบนี้

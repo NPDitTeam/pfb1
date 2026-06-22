@@ -183,20 +183,29 @@ advance_clear_expense AS (
     GROUP BY aaa.branch_id, rb.name
 ),
 voucher_expense AS (
-    -- ดึงจาก account.voucher (หัวเอกสาร): branch_id ของหัวเอกสาร + amount (รวม VAT)
+    -- จาก account.voucher.line: payment_date + analytic.branch + tax-aware VAT
+    -- ภาษีซื้อรวม/ไม่รวม Vat7 = price_subtotal x 1.07 / อื่นๆ/ไม่มี = price_subtotal
     SELECT
-        av.branch_id AS branch_id,
+        aaa.branch_id AS branch_id,
         rb.name AS branch_name,
-        SUM(av.amount) AS voucher_expense
+        SUM(CASE WHEN EXISTS (
+                SELECT 1 FROM account_tax_account_voucher_line_rel rel
+                JOIN account_tax at ON rel.account_tax_id = at.id
+                WHERE rel.account_voucher_line_id = avl.id
+                  AND at.name IN ('ภาษีซื้อรวม Vat 7%%', 'ภาษีซื้อไม่รวม Vat 7%%')
+            ) THEN avl.price_subtotal * 1.07
+            ELSE avl.price_subtotal END) AS voucher_expense
     FROM account_voucher av
-    JOIN res_branch rb ON rb.id = av.branch_id
+    JOIN account_voucher_line avl ON avl.voucher_id = av.id
+    JOIN account_analytic_account aaa ON avl.account_analytic_id = aaa.id
+    JOIN res_branch rb ON rb.id = aaa.branch_id
     WHERE av.state IN ('posted', 'transferred')
         AND av.voucher_type = 'purchase'
         AND av.check_show IS NOT TRUE
-        AND av.date >= %(date_from)s
-        AND av.date <= %(date_to)s
-        AND av.branch_id IS NOT NULL
-    GROUP BY av.branch_id, rb.name
+        AND avl.payment_date >= %(date_from)s
+        AND avl.payment_date <= %(date_to)s
+        AND aaa.branch_id IS NOT NULL
+    GROUP BY aaa.branch_id, rb.name
 ),
 credit_note_expense AS (
     -- ✅ ไม่ filter payment_state — ตรงกับ ORM ของ _compute_branch_data

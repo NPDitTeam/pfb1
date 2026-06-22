@@ -242,21 +242,31 @@ advance_expense AS (
     GROUP BY 1, 2, 3
 ),
 
--- 6c) Voucher expense (ดึงจาก account.voucher หัวเอกสาร: branch_id + amount รวม VAT)
+-- 6c) Voucher expense (จาก account.voucher.line: payment_date + analytic.branch + tax-aware VAT)
+--      voucher: posted/transferred + purchase + check_show=false
+--      ยอด: ภาษีซื้อรวม/ไม่รวม Vat 7% → price_subtotal × 1.07 / อื่นๆ/ไม่มี → price_subtotal
 voucher_expense AS (
     SELECT
-        EXTRACT(YEAR FROM av.date)::int AS year,
-        EXTRACT(MONTH FROM av.date)::int AS month,
-        av.branch_id AS branch_id,
-        SUM(av.amount) AS voucher_amount
+        EXTRACT(YEAR FROM avl.payment_date)::int AS year,
+        EXTRACT(MONTH FROM avl.payment_date)::int AS month,
+        aaa.branch_id AS branch_id,
+        SUM(CASE WHEN EXISTS (
+                SELECT 1 FROM account_tax_account_voucher_line_rel rel
+                JOIN account_tax at ON rel.account_tax_id = at.id
+                WHERE rel.account_voucher_line_id = avl.id
+                  AND at.name IN ('ภาษีซื้อรวม Vat 7%', 'ภาษีซื้อไม่รวม Vat 7%')
+            ) THEN avl.price_subtotal * 1.07
+            ELSE avl.price_subtotal END) AS voucher_amount
     FROM account_voucher av
+    JOIN account_voucher_line avl ON avl.voucher_id = av.id
+    JOIN account_analytic_account aaa ON avl.account_analytic_id = aaa.id
     CROSS JOIN params p
     WHERE av.state IN ('posted', 'transferred')
       AND av.voucher_type = 'purchase'
       AND av.check_show IS NOT TRUE
-      AND av.branch_id IS NOT NULL
-      AND av.date IS NOT NULL
-      AND EXTRACT(YEAR FROM av.date)::int >= p.min_year
+      AND aaa.branch_id IS NOT NULL
+      AND avl.payment_date IS NOT NULL
+      AND EXTRACT(YEAR FROM avl.payment_date)::int >= p.min_year
     GROUP BY 1, 2, 3
 ),
 
