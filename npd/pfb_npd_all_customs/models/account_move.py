@@ -102,6 +102,13 @@ class AccountMove(models.Model):
         store=True
     )
 
+    npd_return_rent_discount_pulled = fields.Float(
+        string="ส่วนลดค่าเช่าจากใบคืน (ดึงแล้ว)",
+        copy=False,
+        help="ยอดส่วนลดค่าเช่า (rent_discount) จากใบคืนที่ถูกเพิ่มเป็นบรรทัดในใบลดหนี้นี้แล้ว "
+             "— ใช้กันการดึงซ้ำเมื่อกดปุ่มหลายครั้ง",
+    )
+
     @api.depends("invoice_line_ids.discount_type_selection", "invoice_line_ids.discount_amount","discount_amt_line","amount_total","amount_residual")
     def _compute_total_rental_discount(self):
         for move in self:
@@ -126,6 +133,115 @@ class AccountMove(models.Model):
             # print("🚀 Updated total_rental_discount:", move.total_rental_discount)
             # print("🚀 Updated discount_amt_line:", move.discount_amt_line)
 
+    # ===================================================================
+    # ดึงส่วนลดค่าเช่า (rent_discount) จากใบคืน เข้าใบลดหนี้
+    # -------------------------------------------------------------------
+    # ปัญหา: ส่วนลดค่าเช่าที่ให้ลูกค้าเพิ่มตอนคืนของ ถูกเก็บไว้ที่
+    #        stock.picking.rent_discount (อนุมัติผ่าน wizard) และแสดงบน
+    #        "ใบคืนการเช่า" เท่านั้น ไม่เคยไหลเข้าใบลดหนี้ → ใบลดหนี้จึง
+    #        "ขาดยอด" เท่ากับ rent_discount (เช่น 76.30)
+    #
+    # วิธีแก้: ปุ่มนี้จะรวม rent_discount ของใบคืนที่ "อนุมัติแล้ว" ซึ่งผูกกับ
+    #         Sales Order เดียวกัน แล้วบวกเข้า target_amount_total ของใบลดหนี้
+    #         (target_amount_total เป็นกลไกของ npd_rent_price_round ที่บังคับ
+    #         ยอดรวม incl-VAT ให้เป๊ะตามที่กำหนด — ใช้แทนการใส่ discount_amount
+    #         รายบรรทัด ซึ่งจะถูก Method A คำนวณทับทิ้งทุกครั้งที่ save/post)
+    # ===================================================================
+    def _get_related_return_pickings(self):
+        """หาใบคืน (stock.picking) ที่อนุมัติแล้ว + มี rent_discount > 0
+        ซึ่งผูกกับ Sales Order เดียวกับใบลดหนี้นี้"""
+        self.ensure_one()
+        moves = self | self.reversed_entry_id
+        orders = moves.invoice_line_ids.sale_line_ids.order_id
+        # fallback: จับคู่จาก invoice_origin (ชื่อ SO) เผื่อใบลดหนี้ไม่ได้ link
+        # sale_line_ids โดยตรง
+        origin_names = set()
+        for m in moves:
+            if m.invoice_origin:
+                origin_names |= {
+                    n.strip() for n in m.invoice_origin.split(',') if n.strip()
+                }
+        if origin_names:
+            orders |= self.env['sale.order'].search(
+                [('name', 'in', list(origin_names))])
+        if not orders:
+            return self.env['stock.picking']
+        return self.env['stock.picking'].search([
+            ('sale_id', 'in', orders.ids),
+            ('approval_state', '=', 'approved'),
+            ('rent_discount', '>', 0),
+        ])
+
+    def action_pull_return_rent_discount(self):
+        """ปุ่ม: ดึงส่วนลดค่าเช่าจากใบคืน → เพิ่มเป็น "บรรทัดจริง" ในใบลดหนี้
+
+        เหตุที่ใช้บรรทัดจริง ไม่ใช่ target_amount_total:
+        amount_total เป็น stored-compute (bi_sale_purchase_discount_with_tax)
+        ที่ recompute ใหม่ตอน post → ยอดที่บังคับผ่าน target/SQL จะถูกทับกลับ
+        เป็นยอดธรรมชาติ การเพิ่มเป็นบรรทัดจริงทำให้ยอดมาจากการคำนวณปกติ จึง
+        "รอด" การ post และ recompute ทุกครั้ง อีกทั้งได้ฐาน/VAT แยกถูกต้อง
+        (Method A: price_unit incl-VAT → subtotal = price_unit/1.07 × qty)
+        """
+        self.ensure_one()
+        if self.move_type != 'out_refund':
+            raise UserError(_("ฟังก์ชันนี้ใช้ได้เฉพาะใบลดหนี้ (Credit Note) เท่านั้น"))
+        if self.state != 'draft':
+            raise UserError(_("ดึงส่วนลดค่าเช่าได้เฉพาะตอนใบลดหนี้เป็นฉบับร่างเท่านั้น"))
+
+        pickings = self._get_related_return_pickings()
+        desired = round(sum(pickings.mapped('rent_discount')), 2)
+        if not desired:
+            raise UserError(_(
+                "ไม่พบส่วนลดค่าเช่า (rent_discount) ที่อนุมัติแล้วในใบคืนที่เกี่ยวข้อง\n"
+                "ตรวจสอบว่าใบคืนถูกอนุมัติ (approval_state = approved) "
+                "และกรอกส่วนลดค่าเช่าไว้แล้ว"))
+
+        names = ', '.join(pickings.mapped('name')) or '-'
+        line_name = _("ส่วนลดค่าเช่าเพิ่มตามใบคืน %s") % names
+
+        # idempotent: ถ้ามีบรรทัดส่วนลดจากใบคืนอยู่แล้ว → อัปเดตยอด, ไม่งั้นสร้างใหม่
+        disc_line = self.invoice_line_ids.filtered('npd_is_return_rent_discount')[:1]
+        if disc_line:
+            disc_line.write({
+                'name': line_name,
+                'quantity': 1,
+                'price_unit': desired,
+            })
+        else:
+            # คัดลอกบัญชี/ภาษี/วิเคราะห์ จากบรรทัดค่าเช่าที่มีอยู่ เพื่อให้ลงบัญชี
+            # + แยก VAT ตรงกับบรรทัดอื่น (tax 7% include → price_unit คิดเป็น incl-VAT)
+            template = self.invoice_line_ids.filtered(
+                lambda l: l.account_id and not l.exclude_from_invoice_tab)[:1]
+            if not template:
+                raise UserError(_(
+                    "ไม่พบบรรทัดสินค้าในใบลดหนี้เพื่อใช้เป็นต้นแบบบัญชี/ภาษี"))
+            vals = {
+                'name': line_name,
+                'quantity': 1,
+                'price_unit': desired,
+                'account_id': template.account_id.id,
+                'tax_ids': [(6, 0, template.tax_ids.ids)],
+                'discount_type_selection': 'rental',
+                'npd_is_return_rent_discount': True,
+            }
+            if template.analytic_account_id:
+                vals['analytic_account_id'] = template.analytic_account_id.id
+            if template.analytic_tag_ids:
+                vals['analytic_tag_ids'] = [(6, 0, template.analytic_tag_ids.ids)]
+            self.write({'invoice_line_ids': [(0, 0, vals)]})
+
+        # ล้าง target_amount_total เดิม (วิธีที่ไม่รอด post) เพื่อไม่ให้ตีกับยอดบรรทัด
+        if self.target_amount_total:
+            self.target_amount_total = 0.0
+
+        self.npd_return_rent_discount_pulled = desired
+        self.message_post(body=_(
+            "ดึงส่วนลดค่าเช่าจากใบคืน %s รวม %.2f บาท "
+            "→ เพิ่มเป็นบรรทัดส่วนลดค่าเช่าในใบลดหนี้ (ยอดรวมเพิ่มขึ้น %.2f บาท)"
+        ) % (names, desired, desired))
+        return True
+
+
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
 
@@ -145,6 +261,12 @@ class AccountMoveLine(models.Model):
         ],
         string="ประเภทส่วนลด",
         default='product'
+    )
+    # ทำเครื่องหมายบรรทัดที่ปุ่ม "ดึงส่วนลดค่าเช่าจากใบคืน" สร้างขึ้น
+    # ใช้กันสร้างซ้ำ + อัปเดตยอดเมื่อกดดึงใหม่
+    npd_is_return_rent_discount = fields.Boolean(
+        string="บรรทัดส่วนลดค่าเช่าจากใบคืน",
+        copy=False,
     )
 
     @api.onchange('pfb_date_of_rent', 'pfb_quantity')
