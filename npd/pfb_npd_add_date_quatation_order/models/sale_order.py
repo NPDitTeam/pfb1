@@ -337,6 +337,32 @@ class SaleOrder(models.Model):
     ], string='สถานะการคืนบ้านเขียว', default='none', tracking=True)
 
 
+    def _sales_contact_is_headoffice(self, user):
+        """True ถ้า user (res.users) เป็น "Sales สำนักงานใหญ่"
+        - ต้นทางอยู่ที่ HRMS (commission.sale.headoffice) → จับคู่ด้วย employee_code/ชื่อ
+        - แหล่งข้อมูลใน DB นี้ (company):
+            1) โมเดล commission.sale.headoffice (ถ้าติดตั้ง+มีข้อมูล) → match รหัส/ชื่อ
+            2) System Parameter 'npd.commission.headoffice_codes' (CSV รหัสพนักงาน
+               ที่ HRMS sync มาให้ผ่าน push_salary_snapshot) → match รหัส
+        """
+        if not user:
+            return False
+        code = (user.employee_code or '').strip()
+        name = (user.partner_id.name or '').strip()
+        if 'commission.sale.headoffice' in self.env:
+            for rec in self.env['commission.sale.headoffice'].sudo().search([]):
+                emp = rec.employee_id
+                if code and (emp.employee_code or '').strip() == code:
+                    return True
+                full = ((emp.firstname or '') + ' ' + (emp.lastname or '')).strip()
+                if name and full and name == full:
+                    return True
+            return False
+        param = self.env['ir.config_parameter'].sudo().get_param(
+            'npd.commission.headoffice_codes', default='') or ''
+        codes = [c.strip() for c in param.split(',') if c.strip()]
+        return bool(code and code in codes)
+
     def copy(self, default=None):
         default = dict(default or {})
 
@@ -354,6 +380,18 @@ class SaleOrder(models.Model):
 
         # สร้าง deposit_ref ใหม่
         default['deposit_ref'] = ",".join(deposit_list)
+
+        # ✅ บิลต่ออายุ (มี deposit_ref) + Sales เดิมเป็น "Sales สำนักงานใหญ่"
+        #    → กันไม่ให้บิลต่ออายุไปติดชื่อ Sales สนญ. (จะถูกนับเป็นยอดเช่าไม่ได้):
+        #    เปลี่ยน "การติดต่อของลูกค้า" = สาขา (branch) และ "Sales ที่ติดต่อ" = user ที่ login
+        if deposit_list and self._sales_contact_is_headoffice(self.sales_contact):
+            default['contact_type'] = 'branch'
+            default['sales_contact'] = self.env.user.id
+            _logger.info(
+                "🔁 ต่ออายุ %s: Sales เดิม '%s' เป็น Sales สนญ. → เปลี่ยนเป็น สาขา + user '%s'",
+                self.name, (self.sales_contact.partner_id.name or ''),
+                (self.env.user.partner_id.name or ''),
+            )
 
         # ตั้งค่าอื่นๆ
         default['start_rent_date'] = fields.Date.today()

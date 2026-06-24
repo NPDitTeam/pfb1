@@ -325,6 +325,18 @@ WITH rental AS (
         AND am.sales_contact_id IS NOT NULL
         AND am.invoice_date >= %(date_from)s
         AND am.invoice_date <= %(date_to)s
+        -- ✅ Sales สำนักงานใหญ่ (กรณีพิเศษ): "ยอดเช่า" นับเฉพาะ "บิลแรก"
+        --    = SO ที่ deposit_ref ว่าง/NULL  (บิลต่ออายุ deposit_ref มีค่า → ตัดออก)
+        --    Sales ปกติ (ไม่อยู่ในรายชื่อ สนญ.) → นับทุกบิลเหมือนเดิม
+        AND (
+            ru.employee_code IS NULL
+            OR NOT (ru.employee_code = ANY(%(ho_codes)s))
+            OR NOT EXISTS (
+                SELECT 1 FROM sale_order so2
+                WHERE so2.name = am.invoice_origin
+                  AND NULLIF(BTRIM(so2.deposit_ref), '') IS NOT NULL
+            )
+        )
     GROUP BY am.sales_contact_id, rp.name, rb.id, rb.name
 ),
 outstanding AS (
@@ -564,6 +576,61 @@ class CrossDbCommissionQuery(models.AbstractModel):
         return self.env['ir.config_parameter'].sudo().get_param(
             'npd.commission.bankheaw_db', default='NPD_S_Group_New_V2')
 
+    @api.model
+    def get_headoffice_codes(self):
+        """รายชื่อ employee_code ของ "Sales สำนักงานใหญ่" (commission.sale.headoffice)
+        — อ่าน local (DB นี้ = HRMS) ผ่าน ORM
+        ใช้กรอง "ยอดเช่า" ของ Sales สนญ. ให้นับเฉพาะบิลแรก (SO deposit_ref ว่าง)
+        คืน list[str] เช่น ['1094', '1285'] (ว่างถ้าไม่มี/ไม่ได้ติดตั้งโมเดล)
+        """
+        if 'commission.sale.headoffice' not in self.env:
+            return []
+        codes = []
+        for rec in self.env['commission.sale.headoffice'].sudo().search([]):
+            code = (rec.employee_id.employee_code or '').strip()
+            if code:
+                codes.append(code)
+        return codes
+
+    # ============================================================
+    # Push รายชื่อ Sales สนญ. (employee_code) → ทุก DB ปลายทาง (System Parameter)
+    # ============================================================
+    @api.model
+    def push_headoffice_codes(self):
+        """sync รายชื่อ "Sales สำนักงานใหญ่" (employee_code CSV) ไปยังทุก company DB
+        เป็น System Parameter 'npd.commission.headoffice_codes'
+        — ให้รายงาน ORM (npd.commission.report.sales) และ sale.order.copy() ฝั่ง company DB
+          ใช้รายชื่อล่าสุดได้ทันที (ไม่ต้องรอรันทำเงินเดือน)
+        เรียกอัตโนมัติเมื่อ เพิ่ม/แก้/ลบ ใน commission.sale.headoffice
+        คืน dict {db_name: status} — ไม่ throw (กันไม่ให้ flow แก้รายชื่อล้ม)
+        """
+        ho_codes_csv = ','.join(self.get_headoffice_codes())
+        results = {}
+        for db_name in self.get_db_list():
+            try:
+                conn = self._connect(db_name)
+                try:
+                    with conn.cursor() as cur:
+                        cur.execute("""
+                            INSERT INTO ir_config_parameter (key, value, create_date, write_date)
+                            VALUES ('npd.commission.headoffice_codes', %s, now(), now())
+                            ON CONFLICT (key) DO UPDATE
+                                SET value = EXCLUDED.value, write_date = now()
+                        """, (ho_codes_csv,))
+                    conn.commit()
+                    results[db_name] = 'OK'
+                except psycopg2.Error as e:
+                    conn.rollback()
+                    results[db_name] = 'FAIL: %s' % str(e).strip()[:120]
+                    _logger.warning("[PUSH-HEADOFFICE][%s] %s", db_name, e)
+                finally:
+                    conn.close()
+            except Exception as e:
+                results[db_name] = 'ERROR: %s' % str(e)[:120]
+                _logger.warning("[PUSH-HEADOFFICE][%s] %s", db_name, e)
+        _logger.info("[PUSH-HEADOFFICE] codes='%s' → %s", ho_codes_csv, results)
+        return results
+
     # ============================================================
     # Push salary snapshot จาก HRMS → DB ปลายทาง (ก่อนคิดค่าคอม)
     # ============================================================
@@ -579,6 +646,9 @@ class CrossDbCommissionQuery(models.AbstractModel):
         month = int(month)
         year = str(year)
         results = {}
+        # ✅ sync รายชื่อ Sales สนญ. (employee_code) ไปยังทุก DB ปลายทาง เป็น System Parameter
+        #    เพื่อให้รายงาน ORM (npd.commission.report.sales) ฝั่ง company DB ใช้กรองยอดเช่าบิลแรกได้
+        ho_codes_csv = ','.join(self.get_headoffice_codes())
         for db_name in self.get_db_list():
             try:
                 # 1) อ่าน company param ของ DB ปลายทาง
@@ -640,6 +710,13 @@ class CrossDbCommissionQuery(models.AbstractModel):
                                 int(r['employee_count'] or 0),
                                 float(r['total_income'] or 0.0),
                             ))
+                        # ✅ UPSERT System Parameter รายชื่อ Sales สนญ. (ใช้โดยรายงาน ORM ฝั่งนี้)
+                        cur.execute("""
+                            INSERT INTO ir_config_parameter (key, value, create_date, write_date)
+                            VALUES ('npd.commission.headoffice_codes', %s, now(), now())
+                            ON CONFLICT (key) DO UPDATE
+                                SET value = EXCLUDED.value, write_date = now()
+                        """, (ho_codes_csv,))
                     conn.commit()
                     results[db_name] = 'OK (%d สาขา)' % len(rows)
                 except psycopg2.Error as e:
@@ -723,7 +800,11 @@ class CrossDbCommissionQuery(models.AbstractModel):
                         branch_id, branch_name, rental_amount, payment_received,
                         outstanding_debt, shipping_cost, net_rental
         """
-        params = {'date_from': str(date_from), 'date_to': str(date_to)}
+        # ✅ รายชื่อ Sales สนญ. (employee_code) — ใช้กรองยอดเช่าบิลแรกใน SQL_SALES
+        #    sentinel กันกรณีว่าง: ไม่มี user รหัสนี้ → ANY() เป็นเท็จ → นับทุกบิลตามเดิม
+        ho_codes = self.get_headoffice_codes() or ['__no_headoffice__']
+        params = {'date_from': str(date_from), 'date_to': str(date_to),
+                  'ho_codes': ho_codes}
         rows, err = self._run_query(db_name, SQL_SALES, params)
         for r in rows:
             for k in ('rental_amount', 'payment_received', 'outstanding_debt',
