@@ -1212,11 +1212,17 @@ class PayrollSalary(models.Model):
         return cur_m - 1, str(cur_y)
 
     def _bankheaw_active(self, month, year):
-        """bankheaw (NPD_S_Group_New_V2) ใช้เฉพาะงวด <= 5/2026 เท่านั้น
-        ตั้งแต่งวด 6/2026 เป็นต้นไป → ข้าม bankheaw ไปเลย (ไม่ดึง/ไม่แสดง)
-        ปรับงวดสุดท้ายได้ที่ System Parameter npd.commission.bankheaw_until (รูปแบบ 'YYYY-MM', default 2026-05)
+        """bankheaw (NPD_S_Group_New_V2) — สถานะการใช้งาน
+        ✅ ปิดการใช้งานทั้งหมดได้ที่ System Parameter npd.commission.bankheaw_enabled
+           (default '0' = ปิด) → ทุก popup/calc จะข้าม bankheaw (ไม่ดึง/ไม่แสดงแถว)
+        ถ้าเปิด ('1'/'true') → ใช้เฉพาะงวด <= npd.commission.bankheaw_until
+           (รูปแบบ 'YYYY-MM', default 2026-05)
         """
-        param = self.env['ir.config_parameter'].sudo().get_param(
+        Param = self.env['ir.config_parameter'].sudo()
+        enabled = (Param.get_param('npd.commission.bankheaw_enabled', default='0') or '0').strip().lower()
+        if enabled in ('0', 'false', 'no', 'off', ''):
+            return False
+        param = Param.get_param(
             'npd.commission.bankheaw_until', default='2026-05')
         try:
             ly, lm = param.split('-')
