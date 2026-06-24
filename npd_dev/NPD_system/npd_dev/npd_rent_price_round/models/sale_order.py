@@ -71,3 +71,15 @@ class SaleOrder(models.Model):
             for order in self:
                 order.order_line.with_context(npd_skip_round=True)._npd_recalc_amounts()
         return res
+
+    def copy(self, default=None):
+        """ตอนกดซ้ำ (duplicate) flag ต่างๆ ถูกก็อปมาพร้อมค่าเดิม (copy=True)
+        จึงไม่ "เปลี่ยนค่า" → write hook ไม่ยิง → Method B (คิด VAT จากยอดรวม)
+        ไม่ทำงาน และ amount_tax ที่ _npd_force_round_sql เขียนตอน create line
+        ถูก compute มาตรฐานของ Odoo เขียนทับกลับเป็นผลรวมรายบรรทัด
+        บังคับ recompute ยอดทั้ง order หลัง copy เพื่อให้ยอดถูกต้อง"""
+        new_order = super().copy(default=default)
+        if new_order.order_line:
+            new_order.order_line.with_context(
+                npd_skip_round=True)._npd_recalc_amounts()
+        return new_order
