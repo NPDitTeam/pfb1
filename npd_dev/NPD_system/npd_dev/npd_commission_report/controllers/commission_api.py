@@ -428,6 +428,9 @@ class CommissionReportAPI(http.Controller):
             }
 
             # ===== [DEPRECATED] โค้ดเดิม raw SQL ปิดการใช้งานแล้ว (แทนด้วยเมธอดกลางด้านบน) =====
+            # ⚠️ logic "Sales สำนักงานใหญ่" (ยอดเช่านับเฉพาะบิลแรก SO deposit_ref ว่าง)
+            #    อยู่ในเมธอดกลาง _compute_sales_data ของ ORM แล้ว — path จริงด้านบนเรียกใช้
+            #    ถ้าจะ re-enable raw SQL นี้ ต้องเพิ่ม filter deposit_ref ใน rental CTE ด้วย
             # เงื่อนไข filter (optional)
             sales_filter_rental = ""
             sales_filter_outstanding = ""

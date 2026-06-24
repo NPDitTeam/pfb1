@@ -13,7 +13,8 @@ class AccountMove(models.Model):
         string='การติดต่อของลูกค้า',
         tracking=True,
         copy=True,
-        help='ประเภทการติดต่อของลูกค้า ดึงมาจาก Sale Order',
+        readonly=True,  # ✅ ล็อก: ดึงจาก Sale Order เท่านั้น กันพนักงานแก้ (ORM/_create_invoices ยัง set ได้)
+        help='ประเภทการติดต่อของลูกค้า ดึงมาจาก Sale Order (อ่านอย่างเดียว)',
     )
 
     sales_contact_id = fields.Many2one(
@@ -21,5 +22,6 @@ class AccountMove(models.Model):
         string='Sales ที่ติดต่อ',
         tracking=True,
         copy=True,
-        help='Sales ที่ติดต่อลูกค้า ดึงมาจาก Sale Order',
+        readonly=True,  # ✅ ล็อก: ดึงจาก Sale Order เท่านั้น กันพนักงานแก้ (ORM/_create_invoices ยัง set ได้)
+        help='Sales ที่ติดต่อลูกค้า ดึงมาจาก Sale Order (อ่านอย่างเดียว)',
     )

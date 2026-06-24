@@ -17,6 +17,14 @@ WITH params AS (
     SELECT 2026::int AS min_year   -- 🔧 เริ่มจาก 1/1/2026 เป็นต้นไป
 ),
 
+-- 🔧 รายชื่อ "Sales สำนักงานใหญ่" (employee_code) — กรณีพิเศษ: ยอดเช่านับเฉพาะบิลแรก
+--    (SO deposit_ref ว่าง). อัปเดตรายชื่อจาก query บน DB HRMS:
+--      SELECT es.employee_code FROM commission_sale_headoffice ho
+--      JOIN employee_salary es ON es.id = ho.employee_id;
+headoffice AS (
+    SELECT unnest(ARRAY['1094','1285']::text[]) AS employee_code
+),
+
 -- 1) Detect (year, month) ที่มีข้อมูล
 periods AS (
     SELECT DISTINCT
@@ -48,12 +56,23 @@ rental AS (
         SUM(am.amount_untaxed) AS rental_amount
     FROM account_move am
     JOIN account_journal aj ON am.journal_id = aj.id
+    LEFT JOIN res_users ru ON am.sales_contact_id = ru.id
     CROSS JOIN params p
     WHERE aj.name = 'สมุดรายวันเช่า(สาขา)'
       AND am.state = 'posted' AND am.move_type = 'out_invoice'
       AND am.contact_type = 'sale'
       AND am.sales_contact_id IS NOT NULL
       AND EXTRACT(YEAR FROM am.invoice_date)::int >= p.min_year
+      -- ✅ Sales สนญ.: นับเฉพาะบิลแรก (SO deposit_ref ว่าง) / Sales ปกติ → นับทุกบิล
+      AND (
+          ru.employee_code IS NULL
+          OR ru.employee_code NOT IN (SELECT employee_code FROM headoffice)
+          OR NOT EXISTS (
+              SELECT 1 FROM sale_order so
+              WHERE so.name = am.invoice_origin
+                AND NULLIF(BTRIM(so.deposit_ref), '') IS NOT NULL
+          )
+      )
     GROUP BY 1, 2, 3, 4
 ),
 

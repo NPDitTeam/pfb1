@@ -1037,6 +1037,20 @@ class PayrollSalary(models.Model):
                 return config.rate
         return 0.0
 
+    # ✅ Sales สำนักงานใหญ่ (กรณีพิเศษ): ต้องมียอดรวม "เกิน" ยอดนี้ ถึงจะคิดค่าคอม
+    SALES_HEADOFFICE_MIN = 100000.0
+
+    def _sales_commission_rate_amount(self, total_net_rental, comm_type):
+        """คืน (rate, amount) ค่าคอม Sales — ใช้ร่วมทั้ง calc และ popup ให้ตรงกันเสมอ
+        - Sales สำนักงานใหญ่ (sale_headoffice): ต้องมียอดรวม "เกิน" 100,000 ถึงจะคิด
+          (<= 100,000 → rate 0, amount 0) — gate เฉพาะ สนญ. เท่านั้น
+        - Sales สาขา (sale_branch): คิดตาม rate config ขั้นบันไดเดิม ไม่มี gate
+        """
+        rate = self._get_sales_commission_rate(total_net_rental, comm_type)
+        if comm_type == 'sale_headoffice' and total_net_rental <= self.SALES_HEADOFFICE_MIN:
+            return 0.0, 0.0
+        return rate, total_net_rental * (rate / 100.0)
+
     def _get_sale_commission_type(self):
         """คืนประเภทค่าคอม Sale ของพนักงานคนนี้:
         ถ้าอยู่ในรายชื่อ "จัดการค่าคอม Sales สำนักงานใหญ่" → 'sale_headoffice'
@@ -1198,11 +1212,17 @@ class PayrollSalary(models.Model):
         return cur_m - 1, str(cur_y)
 
     def _bankheaw_active(self, month, year):
-        """bankheaw (NPD_S_Group_New_V2) ใช้เฉพาะงวด <= 5/2026 เท่านั้น
-        ตั้งแต่งวด 6/2026 เป็นต้นไป → ข้าม bankheaw ไปเลย (ไม่ดึง/ไม่แสดง)
-        ปรับงวดสุดท้ายได้ที่ System Parameter npd.commission.bankheaw_until (รูปแบบ 'YYYY-MM', default 2026-05)
+        """bankheaw (NPD_S_Group_New_V2) — สถานะการใช้งาน
+        ✅ ปิดการใช้งานทั้งหมดได้ที่ System Parameter npd.commission.bankheaw_enabled
+           (default '0' = ปิด) → ทุก popup/calc จะข้าม bankheaw (ไม่ดึง/ไม่แสดงแถว)
+        ถ้าเปิด ('1'/'true') → ใช้เฉพาะงวด <= npd.commission.bankheaw_until
+           (รูปแบบ 'YYYY-MM', default 2026-05)
         """
-        param = self.env['ir.config_parameter'].sudo().get_param(
+        Param = self.env['ir.config_parameter'].sudo()
+        enabled = (Param.get_param('npd.commission.bankheaw_enabled', default='0') or '0').strip().lower()
+        if enabled in ('0', 'false', 'no', 'off', ''):
+            return False
+        param = Param.get_param(
             'npd.commission.bankheaw_until', default='2026-05')
         try:
             ly, lm = param.split('-')
@@ -1338,10 +1358,13 @@ class PayrollSalary(models.Model):
         _logger.info("[COMMISSION SALES] ★★★ ยอดรวม net_rental (รวม bankheaw) = %.2f", total_commission)
 
         # คำนวณอัตราคอมมิชชั่นตามขั้นบันได — เลือกประเภทตามรายชื่อ Sales สำนักงานใหญ่
+        # ✅ Sales สนญ.: gate ต้องเกิน 100,000 ถึงจะคิด (อยู่ใน _sales_commission_rate_amount)
         comm_type = self._get_sale_commission_type()
-        rate = self._get_sales_commission_rate(total_commission, comm_type)
-        commission_amount = total_commission * (rate / 100.0)
+        rate, commission_amount = self._sales_commission_rate_amount(total_commission, comm_type)
 
+        if comm_type == 'sale_headoffice' and total_commission <= self.SALES_HEADOFFICE_MIN:
+            _logger.info("[COMMISSION SALES] ★ Sales สนญ. ยอดรวม %.2f ไม่เกิน %.0f → ค่าคอม = 0",
+                         total_commission, self.SALES_HEADOFFICE_MIN)
         _logger.info("[COMMISSION SALES] ★★★ ประเภท=%s | อัตรา = %.2f%% | ค่าคอม = %.2f x %.2f%% = %.2f",
                      comm_type, rate, total_commission, rate, commission_amount)
         _logger.info("=" * 60)
@@ -1521,7 +1544,13 @@ class PayrollSalary(models.Model):
         branch_rate, sales_rate = rate_model.get_rates()
 
         # ===== คำนวณ: คิดอัตราก่อนรวม =====
-        branch_after_rate = total_net_rental * (branch_rate / 100.0)
+        # ✅ ค่าคอม "สาขา" คิดเฉพาะเมื่อ รวมยอดสุทธิสาขา (total_net_rental) > 100,000
+        #    ถ้าไม่เกิน → ค่าคอมสาขา = 0 (ส่วน Sales คิดตามปกติ ไม่เกี่ยวกับเงื่อนไขนี้)
+        BRANCH_COMMISSION_MIN = 100000.0
+        if total_net_rental > BRANCH_COMMISSION_MIN:
+            branch_after_rate = total_net_rental * (branch_rate / 100.0)
+        else:
+            branch_after_rate = 0.0
         sales_after_rate = sales_total_net_rental * (sales_rate / 100.0)
         grand_total_net_rental = branch_after_rate + sales_after_rate
         commission_per_person = (grand_total_net_rental * my_ratio) / total_ratio
@@ -1685,7 +1714,11 @@ class PayrollSalary(models.Model):
         branch_rate, sales_rate = rate_model.get_rates()
 
         # ===== คำนวณ: คิดอัตราก่อนรวม =====
-        branch_after_rate = total_net_rental * (branch_rate / 100.0)
+        # ✅ ค่าคอม "สาขา" คิดเฉพาะเมื่อ รวมยอดสุทธิสาขา > 100,000 (ไม่เกิน = 0) — ตรงกับตอนคิดจริง
+        if total_net_rental > 100000.0:
+            branch_after_rate = total_net_rental * (branch_rate / 100.0)
+        else:
+            branch_after_rate = 0.0
         sales_after_rate = sales_total_net_rental * (sales_rate / 100.0)
         grand_total = branch_after_rate + sales_after_rate
         per_person = (grand_total * my_ratio / total_ratio) if total_ratio > 0 and my_ratio > 0 else 0.0
@@ -1794,6 +1827,9 @@ class PayrollSalary(models.Model):
                 total_commission += bk_net
             lines.append((0, 0, bk_line_vals))
 
+        # ✅ คิด rate/amount ผ่าน helper เดียวกับ calc (รวม gate Sales สนญ. > 100,000)
+        s_rate, s_amount = self._sales_commission_rate_amount(total_commission, comm_type)
+
         wizard = self.env['commission.detail.wizard'].create({
             'commission_type': 'sale',
             'employee_name': emp_fullname,
@@ -1804,8 +1840,9 @@ class PayrollSalary(models.Model):
             'total_amount': total_commission,
             'active_emp_count': 0,
             'per_person_amount': 0.0,
-            'commission_rate': self._get_sales_commission_rate(total_commission, comm_type),
-            'commission_result': total_commission * (self._get_sales_commission_rate(total_commission, comm_type) / 100.0),
+            # ✅ Sales สนญ.: gate ต้องเกิน 100,000 (helper เดียวกับ calc → ตรงกันเสมอ)
+            'commission_rate': s_rate,
+            'commission_result': s_amount,
         })
 
         return {

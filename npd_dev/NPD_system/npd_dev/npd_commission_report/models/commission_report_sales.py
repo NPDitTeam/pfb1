@@ -101,6 +101,44 @@ class CommissionReportSales(models.TransientModel):
         return total_open / 1.07
 
     @api.model
+    def _get_headoffice_user_ids(self):
+        """คืน set ของ res.users.id ที่เป็น "Sales สำนักงานใหญ่" ใน DB นี้
+        - รายชื่อต้นทางอยู่ที่ HRMS (commission.sale.headoffice) → จับคู่ด้วย employee_code
+        - แหล่งโค้ด:
+            1) โมเดล commission.sale.headoffice ถ้าติดตั้ง+มีข้อมูลใน DB นี้
+            2) ถ้าไม่มี → System Parameter 'npd.commission.headoffice_codes' (CSV)
+               ที่ HRMS sync มาให้ผ่าน push_salary_snapshot
+        Sales สนญ. = กรณีพิเศษ: ยอดเช่านับเฉพาะ "บิลแรก" (SO deposit_ref ว่าง)
+        """
+        codes = []
+        if 'commission.sale.headoffice' in self.env:
+            for rec in self.env['commission.sale.headoffice'].sudo().search([]):
+                code = (rec.employee_id.employee_code or '').strip()
+                if code:
+                    codes.append(code)
+        if not codes:
+            param = self.env['ir.config_parameter'].sudo().get_param(
+                'npd.commission.headoffice_codes', default='') or ''
+            codes = [c.strip() for c in param.split(',') if c.strip()]
+        if not codes:
+            return set()
+        users = self.env['res.users'].sudo().search([('employee_code', 'in', codes)])
+        return set(users.ids)
+
+    @api.model
+    def _invoice_is_renewal(self, invoice):
+        """True ถ้าใบแจ้งหนี้นี้เป็น "บิลต่ออายุ" (SO ที่เชื่อมมี เลขอ้างอิงเงินประกัน)
+        เชื่อม SO ผ่าน invoice_origin = sale.order.name แล้วดู deposit_ref
+        - มีค่า (ไม่ว่าง) → บิลต่ออายุ → True (ไม่นับยอดเช่า)
+        - ว่าง/NULL หรือไม่พบ SO → บิลแรก → False (นับยอดเช่า)
+        """
+        origin = (invoice.invoice_origin or '').strip()
+        if not origin:
+            return False
+        orders = self.env['sale.order'].sudo().search([('name', '=', origin)])
+        return any((o.deposit_ref or '').strip() for o in orders)
+
+    @api.model
     def _compute_sales_data(self, date_from, date_to):
         """คำนวณข้อมูลค่าคอม Sales ต่อ (เซลล์, สาขา) — ใช้ร่วมกับ API /api/commission/sales
         คืน list ของ dict: date_from/date_to/sales_contact_id/branch_id + ยอดต่าง ๆ + net_rental"""
@@ -134,6 +172,9 @@ class CommissionReportSales(models.TransientModel):
             ('sales_contact_id', '!=', False),
         ])
         
+        # ✅ Sales สำนักงานใหญ่ (กรณีพิเศษ): ยอดเช่านับเฉพาะบิลแรก (SO deposit_ref ว่าง)
+        headoffice_user_ids = self._get_headoffice_user_ids()
+
         # Group ตาม sales_contact และ branch
         sales_data = {}
         for invoice in invoices:
@@ -158,7 +199,12 @@ class CommissionReportSales(models.TransientModel):
             
             # ✅ ยอดเช่า — เฉพาะสมุดเช่า(สาขา) ไม่รวมค่าปรับหาย/ชำรุด (ตรงกับฝั่งสาขา)
             if invoice.journal_id.id == rent_only_journal_id:
-                sales_data[key]['rental_amount'] += invoice.amount_untaxed or 0.0
+                # ✅ Sales สนญ.: ตัด "บิลต่ออายุ" (SO มี deposit_ref) ออก นับเฉพาะบิลแรก
+                #    Sales ปกติ → นับทุกบิลเหมือนเดิม
+                if sales_contact_id in headoffice_user_ids and self._invoice_is_renewal(invoice):
+                    pass  # บิลต่ออายุของ Sales สนญ. → ไม่นับยอดเช่า
+                else:
+                    sales_data[key]['rental_amount'] += invoice.amount_untaxed or 0.0
 
             # ✅ หนี้ค้างชำระ (outstanding_debt) — ยอดค้าง "ณ วันสิ้นรอบ (date_to)" ตามที่การเงินคิด
             #    ครอบคลุมทุกกรณี: ยังไม่จ่าย → ค้างเต็มใบ / จ่ายบางส่วน → ค้างที่เหลือ / จ่ายครบ(ก่อนสิ้นรอบ) → 0
