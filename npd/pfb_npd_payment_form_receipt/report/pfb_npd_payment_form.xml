@@ -299,6 +299,8 @@
                 <t t-set="total_untaxed_amount" t-value="doc.total_amount / 1.07"/>
                 <t t-set="total_vat" t-value="doc.total_amount - total_untaxed_amount"/>
             </t>
+            <!-- ภาษีหัก ณ ที่จ่าย 5% (ค่าเช่า) คิดตามสัดส่วนยอดชำระจริง ใช้ค่าเดียวกันทุกจุดในใบเสร็จ -->
+            <t t-set="wht_rent" t-value="total_untaxed_amount * 5 / 100"/>
             <tr>
                 <td colspan="1" class="text-left" style="border-bottom: hidden; white-space: nowrap;">ค่าเช่า/ค่าบริการก่อนภาษีมูลค่าเพิ่ม</td>
                 <td colspan="1" class="text-right" style="border-left: hidden; border-bottom: hidden;">
@@ -326,7 +328,7 @@
                         <td colspan="1" class="text-left" style="border-right: hidden;">ภาษีหัก ณ ที่จ่าย 5% (ค่าเช่า)</td>
                         <td colspan="1" class="text-right">
 <!--                            <t t-set="ๅtotal_untaxed_amount" t-value="sum(i.amount_untaxed_signed for i in doc.reconciled_invoice_ids)"/>-->
-                            <t t-esc="'{0:,.2f}'.format(total_untaxed_amount * 5 / 100)"/> บาท
+                            <t t-esc="'{0:,.2f}'.format(wht_rent)"/> บาท
                         </td>
                       </t>
                       <t t-else="">
@@ -369,10 +371,8 @@
                      <t t-else="">
                             <span style="float: left;">ภาษีหัก ณ ที่จ่าย</span>
                     <span style="float: right;">
-                        <t t-set="total_untaxed_amount" t-value="sum(i.amount_untaxed_signed for i in doc.reconciled_invoice_ids)"/>
-                        <t t-set="wht_amount" t-value="total_untaxed_amount * 5 / 100"/>
                         <t t-if="doc.partner_id.company_type == 'company'">
-                            <t t-esc="'{0:,.2f}'.format(wht_amount)"/>
+                            <t t-esc="'{0:,.2f}'.format(wht_rent)"/>
                         </t>
                         <t t-else="">
                           0.00
@@ -401,9 +401,8 @@
 <!--                  </strong></td>-->
                 <td class="text-center">ตัวอักษร :</td>
                 <td colspan="1" class="text-center"><strong>
-                    <t t-set="total_untaxed_amount" t-value="sum(i.amount_untaxed_signed for i in doc.reconciled_invoice_ids)"/>
                     <t t-if="doc.wht_has_slip != True and doc.partner_id.company_type == 'company'">
-                        <t t-set="wht_amount" t-value="total_untaxed_amount * 0.05"/>
+                        <t t-set="wht_amount" t-value="wht_rent"/>
                     </t>
                     <t t-else="">
                         <t t-set="wht_amount" t-value="0"/>
