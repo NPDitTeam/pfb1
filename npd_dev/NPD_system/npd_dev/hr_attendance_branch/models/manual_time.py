@@ -2,12 +2,36 @@ import requests
 import json
 from odoo import models, fields, api
 from odoo.exceptions import UserError
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 MANUAL_API_URL = 'https://npdhrms.com/json_manual_time_logs.php'
+MANUAL_UPDATE_URL = 'https://npdhrms.com/update_manual_time_log.php'
+MANUAL_DELETE_URL = 'https://npdhrms.com/delete_manual_time_log.php'
 API_USER = 'Npd_admin'
 API_PASS = '78901234'
 FILE_BASE_URL = 'https://npdhrms.com/api/'
+
+# map: Odoo field -> SQL column (สำหรับ push กลับฝั่ง PHP ตอนแก้ไข)
+# หมายเหตุ:
+#   - ไม่ push 'branch' (GET ดึงจากตาราง users ไม่ใช่ manual_time_logs)
+#   - ไม่ push 'approved_by' (DB เก็บเป็น id แต่ Odoo เก็บเป็นชื่อ จะทำให้ข้อมูลพัง)
+#   - ไม่ push ไฟล์ (Odoo เก็บ file_url เป็น URL เต็ม แต่ DB เก็บ file_path เป็น path)
+SQL_FIELD_MAP = {
+    'user_id': 'user_id',
+    'username': 'username',
+    'work_date': 'work_date',
+    'checkin_time': 'checkin_time',
+    'checkout_time': 'checkout_time',
+    'state': 'state',
+    'user_note': 'user_note',
+    'reason': 'reason',
+    'department': 'department',
+    'position': 'position',
+    'company': 'company',
+    'reason_type': 'reason_type',
+    'allowance_type': 'allowance_type',
+    'amount': 'amount',
+}
 
 BRANCH_SELECTION = [
     ("โคราช-บายพาส", "โคราช-บายพาส"),
@@ -199,6 +223,67 @@ class ManualTimeLog(models.Model):
             })
         return branch.id
 
+    # ---------------------------------------------------------------
+    # Push กลับฝั่ง PHP/SQL (แก้ไข / ลบ)
+    # ---------------------------------------------------------------
+    def _push_update_to_api(self, payload):
+        """ส่งข้อมูลที่แก้ไปอัพเดทตาราง manual_time_logs ฝั่ง SQL ผ่าน PHP"""
+        try:
+            resp = requests.post(
+                MANUAL_UPDATE_URL,
+                auth=(API_USER, API_PASS),
+                json=payload,
+                timeout=20,
+            )
+            resp.raise_for_status()
+            result = resp.json()
+            if not result.get('success'):
+                raise UserError("อัพเดทข้อมูลฝั่ง SQL ไม่สำเร็จ: %s" % result.get('error'))
+        except requests.exceptions.RequestException as e:
+            raise UserError("เชื่อมต่อ API เพื่ออัพเดทข้อมูลไม่สำเร็จ: %s" % e)
+
+    def _push_delete_to_api(self, sql_id):
+        """ลบเรคคอร์ดในตาราง manual_time_logs ฝั่ง SQL ผ่าน PHP"""
+        try:
+            resp = requests.post(
+                MANUAL_DELETE_URL,
+                auth=(API_USER, API_PASS),
+                json={'id': sql_id},
+                timeout=20,
+            )
+            resp.raise_for_status()
+            result = resp.json()
+            if not result.get('success'):
+                raise UserError("ลบข้อมูลฝั่ง SQL ไม่สำเร็จ: %s" % result.get('error'))
+        except requests.exceptions.RequestException as e:
+            raise UserError("เชื่อมต่อ API เพื่อลบข้อมูลไม่สำเร็จ: %s" % e)
+
+    def write(self, vals):
+        res = super(ManualTimeLog, self).write(vals)
+        # ข้ามถ้าเป็นการเขียนจาก cron sync (กันยิงกลับเป็นวงวน)
+        if not self.env.context.get('skip_api_sync'):
+            changed = [f for f in SQL_FIELD_MAP if f in vals]
+            if changed:
+                for rec in self:
+                    if not rec.hr_id_manual_time_log:
+                        continue
+                    payload = {'id': rec.hr_id_manual_time_log}
+                    for odoo_f in changed:
+                        val = rec[odoo_f]
+                        if isinstance(val, (date, datetime)):
+                            val = fields.Date.to_string(val)
+                        payload[SQL_FIELD_MAP[odoo_f]] = val if val not in (False, None) else None
+                    rec._push_update_to_api(payload)
+        return res
+
+    def unlink(self):
+        if not self.env.context.get('skip_api_sync'):
+            # ลบฝั่ง SQL ก่อน ถ้าล้มเหลวจะ raise และไม่ลบฝั่ง Odoo (ให้ข้อมูลตรงกัน)
+            for rec in self:
+                if rec.hr_id_manual_time_log:
+                    rec._push_delete_to_api(rec.hr_id_manual_time_log)
+        return super(ManualTimeLog, self).unlink()
+
     @api.model
     def sync_manual_time_logs_from_api(self, days_back=365):
         try:
@@ -289,14 +374,14 @@ class ManualTimeLog(models.Model):
                 }
 
                 if existing_record:
-                    existing_record.write(data_to_write)
+                    existing_record.with_context(skip_api_sync=True).write(data_to_write)
                 else:
                     data_to_write.update({
                         'user_id': record['user_id'],
                         'work_date': record['work_date'],
                         'checkin_time': record['checkin_time'],
                     })
-                    self.env['hr.manual.time.log'].create(data_to_write)
+                    self.env['hr.manual.time.log'].with_context(skip_api_sync=True).create(data_to_write)
 
         except requests.exceptions.RequestException as e:
             raise UserError(f"มีข้อผิดพลาดในการเชื่อมต่อกับ API: {e}")

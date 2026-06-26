@@ -150,6 +150,8 @@
                                     <field name="income_allowance"/>
                                     <field name="income_food"/>
                                     <field name="income_transport"/>
+                                    <field name="income_transport_trip" readonly="1"/>
+                                    <field name="income_transport_allowance" readonly="1"/>
                                     <field name="income_fuel"/>
                                     <field name="manual_override_income"
                                            string="ปรับแก้ด้วยมือ (ล็อกค่าคอม ไม่ดึง API ทับ)"/>

@@ -13,6 +13,7 @@
       <form string="Leave Form">
         <group>
           <field name="hr_id_attendance_branch_leave" invisible="1"/>
+          <field name="user_id"/>
           <field name="employee_id"/>
           <field name="username"/>
           <field name="branch" invisible="1"/>
@@ -29,6 +30,8 @@
           <field name="state"/>
           <field name="company"/>
           <field name="note"/>
+          <field name="reason"/>
+          <field name="approved_by"/>
           <field name="created_at"/>
           <field name="file_path"/>
           <field name="file_link" invisible="1"/>
@@ -62,6 +65,8 @@
         <field name="company"/>
         <field name="created_at"/>
         <field name="note"/>
+        <field name="reason"/>
+        <field name="approved_by"/>
         <field name="attachment" filename="filename" widget="binary"/>
         <field name="date_requested"/>
       </tree>

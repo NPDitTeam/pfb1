@@ -25,7 +25,7 @@ INCOME_REASON_MAP = {
 # Map: payroll.salary field → ชื่อ line ใน line_ids (ใช้ update line โดยตรง
 # กรณี manual_override=True ทำให้ _populate_all_lines ไม่ rebuild line_ids)
 INCOME_LINE_NAME_MAP = {
-    'income_allowance': 'เบี้ยเลี้ยง',
+    'income_allowance': 'เบี้ยเลี้ยง นอกสถานที่',
     'income_food': 'ค่าอาหาร',
 }
 

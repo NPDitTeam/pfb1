@@ -9,9 +9,33 @@ import logging
 _logger = logging.getLogger(__name__)
 
 LEAVE_API_URL = 'https://npdhrms.com/json_leave_requests.php'
+LEAVE_UPDATE_URL = 'https://npdhrms.com/update_leave_request.php'
+LEAVE_DELETE_URL = 'https://npdhrms.com/delete_leave_request.php'
 API_USER = 'Npd_admin'
 API_PASS = '78901234'
 BASE_URL = 'https://npdhrms.com/'
+
+# map: Odoo field -> SQL column (สำหรับ push กลับฝั่ง PHP ตอนแก้ไข)
+# หมายเหตุ:
+#   - คอลัมน์เวลาเริ่มต้นใน DB สะกดเป็น 'leave_statr_time' (typo ในฐานข้อมูลเดิม)
+#   - ไม่ push 'branch' (GET ดึงจากตาราง users ไม่ใช่ leave_requests)
+#   - ไม่ push 'approved_by' (DB เก็บเป็น id แต่ Odoo เก็บเป็นชื่อ จะทำให้ข้อมูลพัง)
+SQL_FIELD_MAP = {
+    'user_id': 'user_id',
+    'username': 'username',
+    'leave_start_date': 'leave_start_date',
+    'start_time': 'leave_statr_time',
+    'leave_end_date': 'leave_end_date',
+    'end_time': 'leave_end_time',
+    'leave_type': 'leave_type',
+    'note': 'note',
+    'state': 'state',
+    'reason': 'reason',
+    'department': 'department',
+    'position': 'position',
+    'file_path': 'file_path',
+    'company': 'company',
+}
 
 BRANCH_SELECTION = [
     ("โคราช-บายพาส", "โคราช-บายพาส"),
@@ -193,6 +217,67 @@ class LeaveRequest(models.Model):
             })
         return branch.id
 
+    # ---------------------------------------------------------------
+    # Push กลับฝั่ง PHP/SQL (แก้ไข / ลบ)
+    # ---------------------------------------------------------------
+    def _push_update_to_api(self, payload):
+        """ส่งข้อมูลที่แก้ไปอัพเดทตาราง leave_requests ฝั่ง SQL ผ่าน PHP"""
+        try:
+            resp = requests.post(
+                LEAVE_UPDATE_URL,
+                auth=(API_USER, API_PASS),
+                json=payload,
+                timeout=20,
+            )
+            resp.raise_for_status()
+            result = resp.json()
+            if not result.get('success'):
+                raise UserError("อัพเดทข้อมูลฝั่ง SQL ไม่สำเร็จ: %s" % result.get('error'))
+        except requests.exceptions.RequestException as e:
+            raise UserError("เชื่อมต่อ API เพื่ออัพเดทข้อมูลไม่สำเร็จ: %s" % e)
+
+    def _push_delete_to_api(self, sql_id):
+        """ลบเรคคอร์ดในตาราง leave_requests ฝั่ง SQL ผ่าน PHP"""
+        try:
+            resp = requests.post(
+                LEAVE_DELETE_URL,
+                auth=(API_USER, API_PASS),
+                json={'id': sql_id},
+                timeout=20,
+            )
+            resp.raise_for_status()
+            result = resp.json()
+            if not result.get('success'):
+                raise UserError("ลบข้อมูลฝั่ง SQL ไม่สำเร็จ: %s" % result.get('error'))
+        except requests.exceptions.RequestException as e:
+            raise UserError("เชื่อมต่อ API เพื่อลบข้อมูลไม่สำเร็จ: %s" % e)
+
+    def write(self, vals):
+        res = super(LeaveRequest, self).write(vals)
+        # ข้ามถ้าเป็นการเขียนจาก cron sync (กันยิงกลับเป็นวงวน)
+        if not self.env.context.get('skip_api_sync'):
+            changed = [f for f in SQL_FIELD_MAP if f in vals]
+            if changed:
+                for rec in self:
+                    if not rec.hr_id_attendance_branch_leave:
+                        continue
+                    payload = {'id': rec.hr_id_attendance_branch_leave}
+                    for odoo_f in changed:
+                        val = rec[odoo_f]
+                        if isinstance(val, (date, datetime)):
+                            val = fields.Date.to_string(val)
+                        payload[SQL_FIELD_MAP[odoo_f]] = val if val not in (False, None) else None
+                    rec._push_update_to_api(payload)
+        return res
+
+    def unlink(self):
+        if not self.env.context.get('skip_api_sync'):
+            # ลบฝั่ง SQL ก่อน ถ้าล้มเหลวจะ raise และไม่ลบฝั่ง Odoo (ให้ข้อมูลตรงกัน)
+            for rec in self:
+                if rec.hr_id_attendance_branch_leave:
+                    rec._push_delete_to_api(rec.hr_id_attendance_branch_leave)
+        return super(LeaveRequest, self).unlink()
+
     @api.model
     def sync_leave_requests_from_api(self):
         try:
@@ -266,9 +351,9 @@ class LeaveRequest(models.Model):
                 data_to_write = {k: v for k, v in data_to_write.items() if v}
 
                 if existing_record:
-                    existing_record.write(data_to_write)
+                    existing_record.with_context(skip_api_sync=True).write(data_to_write)
                 else:
-                    self.env['hr.attendance.branch.leave'].create(data_to_write)
+                    self.env['hr.attendance.branch.leave'].with_context(skip_api_sync=True).create(data_to_write)
 
         except requests.exceptions.RequestException as e:
             raise UserError(f"มีข้อผิดพลาดในการเชื่อมต่อกับ API: {e}")

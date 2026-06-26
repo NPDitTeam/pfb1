@@ -421,9 +421,13 @@ class PayrollSalary(models.Model):
     income_professional_allowance = fields.Float(string="เงินค่าวิชาชีพ", related="employee_id.professional_allowance",
                                                  store=True, readonly=True)
     # รายได้ใหม่
-    income_allowance = fields.Float(string="เบี้ยเลี้ยง", default=0.0)
+    income_allowance = fields.Float(string="เบี้ยเลี้ยง นอกสถานที่", default=0.0)
     income_food = fields.Float(string="ค่าอาหาร", default=0.0)
     income_transport = fields.Float(string="ค่าเดินทาง", default=0.0)
+    # แยกย่อยของ "ค่าเดินทาง" — ดึงจาก vehicle.booking (odoo18) ทั้งคู่
+    # income_transport = income_transport_trip + income_transport_allowance
+    income_transport_trip = fields.Float(string="ค่าเที่ยวขนส่ง", default=0.0)
+    income_transport_allowance = fields.Float(string="ค่าเบี้ยเลี้ยงขนส่ง", default=0.0)
     income_fuel = fields.Float(string="อินเซนทีฟ", default=0.0)
     income_commission = fields.Float(string="ค่าคอมมิชชั่นสาขา", default=0.0)
     income_commission_sale = fields.Float(string="ค่าคอมมิชชั่นSale", default=0.0)
@@ -1066,18 +1070,22 @@ class PayrollSalary(models.Model):
         เงื่อนไข:
           - state = 'done' (เสร็จสิ้น) — ฝั่ง API บังคับ
           - driver_id.employee_code = self.employee_id.employee_code (จับคู่ด้วยรหัสพนักงาน HR)
-          - planned_start_date_t อยู่ใน "รอบตัดเงินเดือน" (25 เดือนก่อน ถึง 24 เดือนนี้)
-        → เซ็ตลง income_transport และ income_allowance
+          - planned_end_date_t (วันเวลาส่งจริง) อยู่ใน "รอบตัดเงินเดือน" (25 เดือนก่อน ถึง 24 เดือนนี้)
+            * ถ้าไม่มีวันส่งจริง fallback ใช้ planned_start_date_t กันงานตกหล่น
+        → income_transport_trip = ค่าเที่ยว, income_transport_allowance = เบี้ยเลี้ยงขนส่ง
+          income_transport (ค่าเดินทาง) = ค่าเที่ยวขนส่ง + ค่าเบี้ยเลี้ยงขนส่ง
+          (ไม่แตะ income_allowance — เป็นของ HR hook payroll_allowance.py)
 
-        หมายเหตุ: API กรอง planned_start_date_t เป็น calendar month (1-31)
-        ดังนั้นต้องเรียก API 2 รอบ (เดือน N-1 และ N) แล้วกรองช่วงรอบตัดในฝั่ง Python
+        หมายเหตุ: API กรองดึงข้อมูลด้วย planned_start_date_t เป็น calendar month (1-31)
+        จึงเรียก API 2 รอบ (เดือน N-1 และ N) ให้ครอบคลุม แล้วค่อยกรองรอบตัดด้วย
+        planned_end_date_t ในฝั่ง Python (เพราะงานส่งจริงมักวันเดียวกับวันออกเดินทาง)
         """
         self.ensure_one()
 
         if not self.employee_id or not self.month or not self.year:
             return
 
-        from datetime import datetime as _dt
+        from datetime import datetime as _dt, timedelta as _td
         # ✅ match ด้วยรหัสพนักงาน HR — แม่นกว่าชื่อ (กันชื่อสะกดต่าง/มีคำนำหน้า)
         emp_code = (self.employee_id.employee_code or '').strip()
         emp_fullname = ((self.firstname or '') + ' ' + (self.lastname or '')).strip()
@@ -1160,12 +1168,16 @@ class PayrollSalary(models.Model):
                 api_emp_code = (item.get('employee_code') or '').strip()
                 if not api_emp_code or api_emp_code != emp_code:
                     continue
-                # ตรวจ planned_start_date_t (วันเวลาออกเดินทางจริง) ว่าอยู่ในรอบตัดไหม
-                planned_str = item.get('planned_start_date_t')
-                if not planned_str:
+                # ✅ ยึด "วันเวลาส่งจริง" (planned_end_date_t) เป็นหลักในการคิดรอบตัด
+                #    (ตรงกับที่ฝ่ายบุคคลกรองในระบบ logistics)
+                #    ถ้าไม่มีวันส่งจริง → fallback ใช้วันออกเดินทาง (planned_start_date_t) กันงานตกหล่น
+                ref_str = item.get('planned_end_date_t') or item.get('planned_start_date_t')
+                if not ref_str:
                     continue
                 try:
-                    planned_d = _dt.strptime(planned_str, '%Y-%m-%d %H:%M:%S').date()
+                    # API ส่งเวลาเป็น UTC → +7 ชม. เป็นเวลาไทยก่อนเทียบรอบตัด
+                    # (ให้ตรงกับที่ฝ่ายบุคคลกรองในระบบ logistics ซึ่งเป็นเวลาไทย)
+                    planned_d = (_dt.strptime(ref_str, '%Y-%m-%d %H:%M:%S') + _td(hours=7)).date()
                 except (ValueError, TypeError):
                     continue
                 if not (cycle_start <= planned_d <= cycle_end):
@@ -1193,11 +1205,15 @@ class PayrollSalary(models.Model):
                      total_travel_expenses, total_daily_allowance)
 
         # ===== เซ็ตค่าลง field =====
-        self.income_transport = total_travel_expenses
-        self.income_allowance = total_daily_allowance
+        # ค่าเดินทาง = ค่าเที่ยวขนส่ง + ค่าเบี้ยเลี้ยงขนส่ง (ดึงจาก vehicle.booking odoo18 ทั้งคู่)
+        # ❗ ไม่แตะ income_allowance (เบี้ยเลี้ยง) — ปล่อยให้ HR hook (payroll_allowance.py)
+        #    ดึงจาก hr.manual.time.log (reason_type='ค่าเบี้ยเลี้ยงออกนอกสถานที่') เหมือนเดิม
+        self.income_transport_trip = total_travel_expenses          # ค่าเที่ยวขนส่ง
+        self.income_transport_allowance = total_daily_allowance      # ค่าเบี้ยเลี้ยงขนส่ง
+        self.income_transport = total_travel_expenses + total_daily_allowance   # ค่าเดินทาง (รวม)
 
-        _logger.info("[VEHICLE BOOKING] ✅ เซ็ต income_transport=%.2f | income_allowance=%.2f สำเร็จ",
-                     self.income_transport, self.income_allowance)
+        _logger.info("[VEHICLE BOOKING] ✅ ค่าเดินทาง=%.2f (ค่าเที่ยวขนส่ง=%.2f + ค่าเบี้ยเลี้ยงขนส่ง=%.2f)",
+                     self.income_transport, self.income_transport_trip, self.income_transport_allowance)
 
     def _get_commission_period(self):
         """ค่าคอมจ่ายเดือนถัดไป → payroll เดือน N ใช้ค่าคอมของ "เดือนก่อนหน้า" (N-1)
@@ -2591,7 +2607,7 @@ class PayrollSalary(models.Model):
 
         # รายได้ใหม่
 
-        lines_to_create.append((0, 0, {'name': 'เบี้ยเลี้ยง', 'type': 'income', 'amount': self.income_allowance}))
+        lines_to_create.append((0, 0, {'name': 'เบี้ยเลี้ยง นอกสถานที่', 'type': 'income', 'amount': self.income_allowance}))
 
         lines_to_create.append((0, 0, {'name': 'ค่าอาหาร', 'type': 'income', 'amount': self.income_food}))
 
