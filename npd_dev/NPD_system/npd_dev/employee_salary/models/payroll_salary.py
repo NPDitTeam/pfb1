@@ -680,7 +680,8 @@ class PayrollSalary(models.Model):
           ขอบเขตการทำงานจริง = [max(ต้นรอบ, วันเริ่มงาน) .. min(วันตัดรอบ, วันลาออก)]
           * เริ่มงานกลางรอบ → นับจากวันเริ่มงาน (ไม่ใช่ต้นรอบ)
           * ลาออกกลางรอบ → นับถึงวันลาออก (ลาออกวันตัดรอบ/หลัง = ทำครบ → ใช้ฐานเต็ม)
-        ⚠️ ใช้เฉพาะ "บรรทัดรายได้เงินเดือน" — ประกันสังคม/ภาษี/ยอดหัก ยังคิดจาก base_salary เต็ม
+        ใช้กับ: บรรทัดรายได้เงินเดือน + ฐานคำนวณประกันสังคม (prorate ตามจริง)
+        ⚠️ ภาษี/ยอดหักอื่นๆ ยังคิดจาก base_salary เต็ม
         """
         self.ensure_one()
         base = self.base_salary or 0.0
@@ -1015,7 +1016,9 @@ class PayrollSalary(models.Model):
         exec_cfg = self.EXECUTIVE_TAX_CONFIG.get(self.employee_code or '')
         if exec_cfg and exec_cfg.get('skip_sso'):
             return 0.0
-        sso_base = max(self.sso_min_wage, min(self.base_salary, self.sso_max_wage))
+        # ✅ คิดประกันสังคมจาก "เงินเดือนที่ได้จริง" (prorate ถ้าทำงานไม่เต็มเดือน)
+        #    เต็มเดือน = base_salary เต็ม | ไม่เต็มเดือน = ยอด prorate (เช่น 10,400 → 520)
+        sso_base = max(self.sso_min_wage, min(self._get_prorated_salary_income(), self.sso_max_wage))
         return float(round_half_up(sso_base * (self.sso_rate / 100.0)))
 
     @api.onchange('manual_sso_annual')
@@ -2660,7 +2663,9 @@ class PayrollSalary(models.Model):
 
         # ประกันสังคม — ปัดเศษเป็นจำนวนเต็มบาทตามกฎ สปส.
         #   (เศษสตางค์ ≥ 0.50 ปัดขึ้น, < 0.50 ปัดทิ้ง = round_half_up)
-        sso_base = max(self.sso_min_wage, min(self.base_salary, self.sso_max_wage))
+        # ✅ คิดประกันสังคมจาก "เงินเดือนที่ได้จริง" (prorate ถ้าทำงานไม่เต็มเดือน)
+        #    เต็มเดือน = base_salary เต็ม | ไม่เต็มเดือน = ยอด prorate (เช่น 10,400 → 520)
+        sso_base = max(self.sso_min_wage, min(self._get_prorated_salary_income(), self.sso_max_wage))
         sso_amount = float(round_half_up(sso_base * (self.sso_rate / 100.0)))
         # บุคคลพิเศษที่ skip_sso → ไม่หักประกันสังคม
         if exec_cfg and exec_cfg.get('skip_sso'):
