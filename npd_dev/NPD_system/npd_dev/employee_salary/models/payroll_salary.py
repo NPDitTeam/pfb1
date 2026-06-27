@@ -556,11 +556,11 @@ class PayrollSalary(models.Model):
                     'amount': rec.tax_monthly
                 })]
 
-    @api.depends('line_ids.amount', 'line_ids.name', 'manual_sso_amount')
+    @api.depends('line_ids.amount', 'line_ids.name', 'manual_sso_amount', 'manual_override_sso')
     def _compute_sso_total(self):
         for rec in self:
-            if rec.manual_sso_amount and rec.manual_sso_amount > 0:
-                # กรอก ปกส. เอง → ยึดค่าที่กรอก
+            if rec.manual_override_sso or (rec.manual_sso_amount and rec.manual_sso_amount > 0):
+                # ติ๊ก "ปรับแก้ด้วยมือ" หรือกรอก ปกส. เอง → ยึดค่าที่กรอก
                 rec.sso_total = rec.manual_sso_amount
             else:
                 rec.sso_total = sum(l.amount for l in rec.line_ids if l.name == 'ประกันสังคม')
@@ -973,7 +973,7 @@ class PayrollSalary(models.Model):
         'income_other_manual', 'income_bonus', 'bonus_active', 'income_missed_payment',
         'expense_provident', 'expense_advance', 'expense_loan',
         'expense_ksl', 'expense_other_manual', 'child_deduction',
-        'manual_tax_amount', 'manual_sso_amount',
+        'manual_tax_amount', 'manual_sso_amount', 'manual_override_sso',
         'ded_spouse', 'ded_parents', 'ded_disabled',
         'ded_life_insurance', 'ded_health_insurance',
         'ded_parents_health_insurance', 'ded_pension_insurance',
@@ -2670,10 +2670,10 @@ class PayrollSalary(models.Model):
         # บุคคลพิเศษที่ skip_sso → ไม่หักประกันสังคม
         if exec_cfg and exec_cfg.get('skip_sso'):
             sso_amount = 0.0
-        # ✅ กรอก "ประกันสังคม (กรอกเอง)" > 0 → ยึดค่านี้เลย ไม่คำนวณทับ
-        elif self.manual_sso_amount and self.manual_sso_amount > 0:
+        # ✅ ติ๊ก "ปรับแก้ด้วยมือ" หรือกรอก "ประกันสังคม (กรอกเอง)" > 0 → ยึดค่านี้ ไม่คำนวณทับ
+        elif self.manual_override_sso or (self.manual_sso_amount and self.manual_sso_amount > 0):
             sso_amount = self.manual_sso_amount
-            _logger.info("[SSO] manual_sso_amount=%.2f → ใช้ค่าที่กรอกเอง", sso_amount)
+            _logger.info("[SSO] override ด้วยมือ → ใช้ค่า manual_sso_amount=%.2f", sso_amount)
         lines_to_create.append((0, 0, {
             'name': 'ประกันสังคม',
             'type': 'deduction',

@@ -374,6 +374,10 @@
                             <group>
                                 <field name="sso_rate"/>
                                 <field name="sso_min_wage"/>
+                                <field name="manual_override_sso" string="ปรับแก้ประกันสังคมด้วยมือ"/>
+                                <field name="manual_sso_amount"
+                                       string="ประกันสังคม/เดือน (กรอกเอง)"
+                                       attrs="{'readonly': [('manual_override_sso','=',False)]}"/>
                                 <field name="manual_sso_annual"
                                        string="ประกันสังคม/ปี (กรอกเอง — ว่าง=คำนวณเอง)"/>
                                 <field name="sso_annual_used" string="ประกันสังคม/ปี (ที่ใช้)" readonly="1"/>
