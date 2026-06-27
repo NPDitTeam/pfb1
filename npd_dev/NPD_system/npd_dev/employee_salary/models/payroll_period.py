@@ -135,13 +135,20 @@ class PayrollPeriod(models.Model):
             prev_m, prev_y = m - 1, y
         last_prev = calendar.monthrange(prev_y, prev_m)[1]
         cycle_start = date(prev_y, prev_m, min(start_day, last_prev))
+        # วันสิ้นสุดรอบ = cutoff_end_day ของเดือนรอบ
+        end_day = self.cutoff_end_day or 24
+        last_curr = calendar.monthrange(y, m)[1]
+        cycle_end = date(y, m, min(end_day, last_curr))
 
-        # ตัวกรอง: ให้ resign_date มีอำนาจตัดสินก่อน status
+        # ตัวกรอง: ให้ start_date / resign_date มีอำนาจตัดสินก่อน status
+        # → เริ่มงานหลังสิ้นรอบ (start_date > cycle_end) = ยังไม่เข้ารอบนี้ → ข้าม (ไปรอบหน้า)
         # → ลาออกก่อนรอบเริ่ม (resign_date < cycle_start) = ลาออกไปแล้ว → ข้ามเสมอ
         #   แม้ status ยังเป็น 'active' (กรณีลืมปรับสถานะหลังลาออก)
         # → ลาออกกลางรอบ (resign_date >= cycle_start) → ยังได้เงินเดือนรอบสุดท้าย
         # → ไม่มี resign_date → ขึ้นกับสถานะ active ตามปกติ
         def _eligible(emp):
+            if emp.start_date and emp.start_date > cycle_end:
+                return False
             if emp.resign_date:
                 return emp.resign_date >= cycle_start
             return emp.status == 'active'
@@ -387,14 +394,66 @@ class PayrollPeriod(models.Model):
         last_prev = calendar.monthrange(prev_y, prev_m)[1]
         return date(prev_y, prev_m, min(start_day, last_prev))
 
-    def _is_eligible_employee(self, emp, cycle_start):
-        """พนักงานเข้าเงื่อนไขรับเงินเดือนรอบนี้ไหม (ตรงกับ action_run_auto_payroll):
-        - active = ได้เสมอ
-        - inactive = ได้เฉพาะถ้ามีวันลาออก และลาออก >= วันเริ่มรอบ (ลาออกกลางรอบ → จ่ายรอบสุดท้าย)
-        - inactive + ไม่มีวันลาออก / ลาออกก่อนรอบ → ไม่เข้าเงื่อนไข"""
-        if emp.status == 'active':
-            return True
-        return bool(emp.resign_date and emp.resign_date >= cycle_start)
+    def _get_cycle_end(self):
+        """วันสิ้นสุดรอบ = cutoff_end_day ของเดือนรอบ (เช่น เดือน 6 → 24/06)"""
+        try:
+            m = int(self.month)
+            y = int(self.year)
+        except (TypeError, ValueError):
+            today = fields.Date.today()
+            m, y = today.month, today.year
+        end_day = self.cutoff_end_day or 24
+        last_curr = calendar.monthrange(y, m)[1]
+        return date(y, m, min(end_day, last_curr))
+
+    def _is_eligible_employee(self, emp, cycle_start, cycle_end):
+        """พนักงานเข้าเงื่อนไขรับเงินเดือนรอบนี้ไหม (ตรงกับ _eligible ใน action_run_auto_payroll):
+        - เริ่มงานหลังสิ้นรอบ (start_date > cycle_end) → ยังไม่เข้ารอบนี้ (ไปรอบหน้า)
+        - มี resign_date → ใช้ resign_date ตัดสิน (ลาออก >= วันเริ่มรอบ = ได้รอบสุดท้าย,
+          ลาออกก่อนรอบ = ตัดออก แม้ status ยัง active)
+        - ไม่มี resign_date → ขึ้นกับ status active"""
+        if emp.start_date and emp.start_date > cycle_end:
+            return False
+        if emp.resign_date:
+            return emp.resign_date >= cycle_start
+        return emp.status == 'active'
+
+    def _reconcile_php_for_period(self):
+        """เก็บกวาด orphan ฝั่ง MySQL ของรอบนี้:
+        ส่งรายการ odoo_id ที่ "มีอยู่จริงใน Odoo" (month/year นี้, รวม archived) ไปให้ PHP
+        แล้ว PHP ลบ row ที่ month/year ตรงกัน แต่ odoo_id ไม่อยู่ในรายการ
+        = record ที่ถูกลบใน Odoo แล้วแต่ delete-sync เคยล้มเหลว (ค้างใน MySQL)
+        คืนจำนวนที่ลบ (int) | None ถ้าพลาด
+        ⚠️ ถ้าไม่มี payroll ในรอบนี้เลย → ไม่ทำ (กันเผลอลบยกเดือนจาก bug)"""
+        self.ensure_one()
+        valid_ids = self.env['payroll.salary'].with_context(active_test=False).search([
+            ('month', '=', self.month),
+            ('year', '=', self.year),
+        ]).ids
+        if not valid_ids:
+            return 0
+        resp = self.env['payroll.salary']._send_data_to_php_api('reconcile', {
+            'month': self.month,
+            'year': self.year,
+            'valid_ids': valid_ids,
+        })
+        if resp and resp.get('status') == 'success':
+            return int(resp.get('deleted', 0) or 0)
+        return None
+
+    def action_reconcile_php_orphans(self):
+        """ปุ่ม/manual: เก็บกวาด orphan ฝั่ง MySQL ของรอบนี้ทันที (ไม่ recompute)"""
+        self.ensure_one()
+        removed = self._reconcile_php_for_period()
+        if removed is None:
+            msg, typ = 'reconcile ล้มเหลว (ดู log เซิร์ฟเวอร์)', 'warning'
+        else:
+            msg, typ = ('ลบ orphan %d รายการ' % removed), 'success'
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {'title': 'เก็บกวาด orphan (MySQL)', 'message': msg, 'type': typ, 'sticky': False},
+        }
 
     def action_refresh_payrolls(self):
         """อัพเดตข้อมูลเงินเดือนทุกคนในรอบนี้ (คำนวณใหม่ OT/สาย/ขาด/ลา)"""
@@ -432,9 +491,10 @@ class PayrollPeriod(models.Model):
         #   (ยกเว้นคนที่ติ๊ก manual_override เพื่อกันลบรายการที่ HR ปรับมือไว้)
         #   unlink จะ sync ลบไป PHP API ด้วย
         cycle_start = self._get_cycle_start()
+        cycle_end = self._get_cycle_end()
         to_remove = payrolls_scope.filtered(
             lambda p: not p.manual_override
-            and not self._is_eligible_employee(p.employee_id, cycle_start))
+            and not self._is_eligible_employee(p.employee_id, cycle_start, cycle_end))
         payrolls_to_refresh = payrolls_scope - to_remove
         for p in to_remove:
             log_lines.append("[REMOVED] %s (%s) - ไม่เข้าเงื่อนไขรอบนี้ (ไม่ใช้งาน/ลาออกก่อนรอบ) → ลบออก" % (
@@ -477,11 +537,21 @@ class PayrollPeriod(models.Model):
                 log_lines.append("[ERROR] %s (%s) - %s" % (emp_first, emp_code, str(e)))
                 _logger.error("Refresh payroll error for %s: %s", emp_code, e)
 
+        # เก็บกวาด orphan ฝั่ง MySQL (record ที่ลบใน Odoo แล้วแต่ delete-sync เคยล้มเหลว)
+        orphan_removed = 0
+        try:
+            res = self._reconcile_php_for_period()
+            orphan_removed = res or 0
+            if orphan_removed:
+                log_lines.append("[RECONCILE] ลบ orphan ใน MySQL %d รายการ" % orphan_removed)
+        except Exception as e:
+            log_lines.append("[RECONCILE] ล้มเหลว: %s" % str(e)[:150])
+
         # ใช้เวลาตาม timezone ของ user (เช่น Asia/Bangkok = UTC+7) แทน UTC
         timestamp = fields.Datetime.context_timestamp(
             self, fields.Datetime.now()).strftime('%Y-%m-%d %H:%M:%S')
-        new_log = "[%s] อัพเดตข้อมูล: สำเร็จ %d, ผิดพลาด %d, ลบออก %d\n%s" % (
-            timestamp, success_count, error_count, removed_count, '\n'.join(log_lines))
+        new_log = "[%s] อัพเดตข้อมูล: สำเร็จ %d, ผิดพลาด %d, ลบออก %d, orphan %d\n%s" % (
+            timestamp, success_count, error_count, removed_count, orphan_removed, '\n'.join(log_lines))
         self.write({
             'log': new_log,
         })
@@ -597,6 +667,16 @@ class PayrollPeriod(models.Model):
                 period.action_refresh_payrolls()
             except Exception as e:
                 _logger.error("[CRON] Error refreshing payroll for %s: %s", period.name, e)
+
+        # 3) เก็บกวาด orphan ฝั่ง MySQL ย้อนหลัง 6 รอบล่าสุด (reconcile อย่างเดียว ไม่ recompute → เบา)
+        #    ครอบรอบที่ refresh ไม่แตะแล้ว (จ่ายเงินไปแล้ว) — กัน record ที่ลบใน Odoo แต่ delete-sync เคยล้มเหลว
+        for period in self.search([], order='year desc, month desc', limit=6):
+            try:
+                removed = period._reconcile_php_for_period()
+                if removed:
+                    _logger.info("[CRON-RECONCILE] รอบ %s ลบ orphan %d รายการ", period.name, removed)
+            except Exception as e:
+                _logger.error("[CRON-RECONCILE] รอบ %s ล้มเหลว: %s", period.name, e)
 
     def action_view_payrolls(self):
         """เปิดรายการเงินเดือนของรอบนี้"""

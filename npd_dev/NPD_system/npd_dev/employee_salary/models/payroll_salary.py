@@ -800,10 +800,12 @@ class PayrollSalary(models.Model):
                 _logger.info(f"Successfully sent {action} data to PHP API for record {data.get('odoo_id')}")
             else:
                 _logger.error(f"Failed to send {action} data to PHP API: {api_response.get('message')}")
+            return api_response
         except requests.exceptions.RequestException as e:
             _logger.error(f"API Connection Error: {e}")
         except json.JSONDecodeError:
             _logger.error("JSON Decode Error: Response from API is not a valid JSON.")
+        return None
 
     @api.onchange('employee_id', 'ot_calculation_method', 'month', 'year')
     def _onchange_employee_id(self):
