@@ -447,11 +447,8 @@ class AccountAdvanceClearAI(models.Model):
         # Receipt substitute certificates — auto-decide if their amount counts
         _sub_re = self._resolve_receipt_substitutes(result, new_receipt_total, s_total)
         # Cash bills — count when new check passes
-        _cbc_re = result.get('cash_bill_check', {}) or {}
-        _cb_match_re = self._check_cash_bill_match_detail()
-        _cb_total_re = 0
-        if _cbc_re.get('required', False) and _cb_match_re['pass']:
-            _cb_total_re = sum((cb.amount or 0) + (cb.vat_amount or 0) for cb in self.cash_bill_ids)
+        # บวกยอดบิลเงินสดที่ลงทะเบียนเมื่อจับคู่ Detail ได้ (ไม่ผูกกับ AI required)
+        _cb_total_re = self._registered_cash_bill_total(result)
         ac_data['pass'] = abs(new_receipt_total + _sub_re['amount_to_count'] + _cb_total_re - s_total) < 1.0 if s_total > 0 else True
 
         # Check analytic (Python check)
@@ -1964,6 +1961,18 @@ class AccountAdvanceClearAI(models.Model):
             return False
         return self._check_cash_bill_match_detail()['pass']
 
+    def _registered_cash_bill_total(self, result=None):
+        u"""ยอดบิลเงินสดที่ลงทะเบียน ซึ่งควรนับรวมเข้า combined total ของข้อ 2.
+        นับเมื่อ: มีบิลเงินสดลงทะเบียน และทุกใบจับคู่ยอดกับ price_unit ใน Detail Lines ได้
+        ไม่ผูกกับ AI 'required' แล้ว — รองรับกรณีผู้ใช้ลงทะเบียนบิล/รายการปรับปรุงเอง
+        (เช่น เงินขาด/เงินเกินบัญชี ที่ไม่มีรูปใบเสร็จ AI จึงตั้ง required=False)
+        """
+        if not self.cash_bill_ids:
+            return 0.0
+        if not self._check_cash_bill_match_detail()['pass']:
+            return 0.0
+        return sum((cb.amount or 0) + (cb.vat_amount or 0) for cb in self.cash_bill_ids)
+
     def _resolve_receipt_substitutes(self, result, py_receipt_total, py_system_total, tolerance=1.0):
         u"""ตัดสินว่าใบรับรองแทนใบเสร็จ (is_receipt_substitute=true ใน skipped_files)
         ควรนับยอดเข้า combined_total หรือไม่ โดยเปรียบเทียบยอดรวม:
@@ -2110,12 +2119,8 @@ class AccountAdvanceClearAI(models.Model):
             if _untaxed > 0:
                 py_system_total = _untaxed + _tax
         py_cb_total = 0
-        # ใช้ logic ใหม่ (cash_bill_ok) แทน AI's pass/cross-verify
-        if cbc.get('required', False) and cash_bill_ok:
-            # ถ้า new check ผ่าน ใช้ผลรวม cash_bill_ids ที่ user ลงทะเบียน
-            py_cb_total = sum((cb.amount or 0) + (cb.vat_amount or 0) for cb in self.cash_bill_ids)
-            if not py_cb_total:
-                py_cb_total = cbc_reg_total
+        # บวกยอดบิลเงินสดที่ลงทะเบียนเมื่อจับคู่ Detail ได้ (ไม่ผูกกับ AI required)
+        py_cb_total = self._registered_cash_bill_total(result)
         # ใบรับรองแทนใบเสร็จ — ตัดสินอัตโนมัติว่านับเข้า combined ไหม
         sub_resolution = self._resolve_receipt_substitutes(result, py_receipt_total, py_system_total)
         py_sub_total = sub_resolution['amount_to_count']
@@ -3360,12 +3365,8 @@ class AccountAdvanceClearAI(models.Model):
             _tax3 = self.tax_amount or 0
             if _untaxed3 > 0:
                 s_total = _untaxed3 + _tax3
-        cb_total = 0
-        # ใช้ cash_bill_ok (logic ใหม่) แทน AI's pass/cross-verify
-        if cbc.get('required', False) and cash_bill_ok:
-            cb_total = sum((cb.amount or 0) + (cb.vat_amount or 0) for cb in self.cash_bill_ids)
-            if not cb_total:
-                cb_total = cbc_reg2
+        # บวกยอดบิลเงินสดที่ลงทะเบียนเมื่อจับคู่ Detail ได้ (ไม่ผูกกับ AI required)
+        cb_total = self._registered_cash_bill_total(result)
         # ใบรับรองแทนใบเสร็จ — ตัดสินอัตโนมัติว่านับเข้า combined ไหม
         sub_resolution3 = self._resolve_receipt_substitutes(result, r_total, s_total)
         sub_total3 = sub_resolution3['amount_to_count']
