@@ -3112,14 +3112,27 @@ class AccountAdvanceClearAI(models.Model):
                     for kw in ['ลายมือ', 'เขียนมือ', 'บิลเงินสด', 'handwritten', 'cash'])
                 for f in skipped if not f.get('is_receipt_substitute')
             )
+            def _list_skipped(keywords):
+                # คืน HTML รายการไฟล์ที่ reason ตรง keyword (filename — reason)
+                lines = u''
+                for f in skipped:
+                    if f.get('is_receipt_substitute'):
+                        continue
+                    rsn = (f.get('reason', '') or '')
+                    if any(kw in rsn.lower() for kw in keywords):
+                        fn = f.get('filename', '') or u'?'
+                        lines += u'<li>&#128196; <strong>%s</strong> — %s</li>' % (fn, rsn or u'-')
+                return (u'<ul style="margin:6px 0 4px;">%s</ul>' % lines) if lines else u''
             if not receipt_files and not rc.get('found', False) and not has_hw:
                 reason = u'ไม่พบไฟล์ใบเสร็จที่อ่านได้ในเอกสารแนบ'
                 fix = u'อัปโหลดรูปใบเสร็จ/ใบกำกับภาษีที่ชัดเจนในเอกสารแนบ แล้วกด "ตรวจสอบด้วย AI" อีกครั้ง'
             elif has_unclear:
-                reason = u'ใบเสร็จบางใบไม่ชัดเจน ระบบอ่านข้อมูลไม่ออก'
+                reason = u'ใบเสร็จต่อไปนี้ไม่ชัดเจน ระบบอ่านข้อมูลไม่ออก:'
+                reason += _list_skipped([u'ไม่ชัด', u'อ่านไม่ออก', u'เบลอ', u'unclear'])
                 fix = u'ถ่าย/สแกนใบเสร็จใหม่ให้ชัด แล้ว Reset to Draft > อัปโหลดรูปใหม่ > ตรวจสอบด้วย AI อีกครั้ง'
             elif has_hw:
-                reason = u'พบบิลเขียนมือ/บิลเงินสด ที่ยังไม่ได้ลงทะเบียนเข้าระบบ'
+                reason = u'พบบิลเขียนมือ/บิลเงินสด ที่ยังไม่ได้ลงทะเบียนเข้าระบบ:'
+                reason += _list_skipped([u'ลายมือ', u'เขียนมือ', u'บิลเงินสด', u'handwritten', u'cash'])
                 fix = u'กดปุ่ม "เพิ่มรายการบิลเงินสด" เพื่อลงทะเบียนบิล หรือขอใบเสร็จที่พิมพ์จากระบบมาแนบแทน'
             else:
                 reason = u'ใบเสร็จไม่ผ่านการตรวจสอบความถูกต้อง'
@@ -3133,13 +3146,46 @@ class AccountAdvanceClearAI(models.Model):
             diff = abs(s - c)
             reason = (u'ยอดรวมจากใบเสร็จ %s บาท ไม่ตรงกับยอดในระบบ %s บาท (ต่างกัน %s บาท)'
                       % (fmt(c), fmt(s), fmt(diff)))
+            # แสดงยอดที่ AI อ่านได้จากแต่ละไฟล์ เพื่อให้รู้ว่าใบไหนยอดเท่าไหร่
+            rc2 = result.get('receipt_check', {}) or {}
+            r_lines = u''
+            for f in rc2.get('receipt_files', []):
+                if not isinstance(f, dict) or not f.get('filename'):
+                    continue
+                fn = f.get('filename', '')
+                ftype = (f.get('type', '') or '').lower()
+                val = f.get('fee') if 'deposit' in ftype else f.get('amount')
+                if isinstance(val, (int, float)) and val > 0:
+                    label = u' (ค่าธรรมเนียม)' if 'deposit' in ftype else u''
+                    r_lines += u'<li>&#128196; <strong>%s</strong> — %s บาท%s</li>' % (fn, fmt(val), label)
+            if r_lines:
+                reason += u'<div style="margin-top:6px;">AI อ่านยอดจากแต่ละไฟล์:<ul style="margin:4px 0;">%s</ul></div>' % r_lines
             fix = (u'ตรวจสอบว่าแนบใบเสร็จครบทุกใบ และยอดในรายการ (Detail Lines) ถูกต้อง '
                    u'หากมีบิลเงินสดที่ยังไม่ได้ลงทะเบียน ให้กด "เพิ่มรายการบิลเงินสด"')
             items.append({'title': u'2. ยอดเงินไม่ตรง', 'reason': reason, 'fix': fix})
 
         # 3. ภาษีในรายการ (VAT)
         if not flags.get('tc_ok', True):
+            tc = result.get('tax_in_detail_check', {}) or {}
             reason = u'ใบเสร็จมี VAT แต่ในรายการ (Detail Lines) ยังไม่ได้ระบุภาษี (Tax)'
+            # ไฟล์ใบเสร็จที่มี VAT (ถ้า AI ระบุมา)
+            vat_file = tc.get('receipt_filename', '') or ''
+            if vat_file:
+                reason += u'<div style="margin-top:6px;">ใบเสร็จที่มี VAT: <strong>&#128196; %s</strong></div>' % vat_file
+            # รายการ Detail ที่ยังไม่ระบุภาษี (พร้อมไฟล์ที่มา)
+            ml_lines = u''
+            for ml in tc.get('missing_tax_lines', []):
+                if isinstance(ml, dict):
+                    nm = ml.get('product', '') or ml.get('description', '') or ml.get('line', '') or ml.get('name', '') or u'-'
+                    fn = ml.get('receipt_filename', '') or ml.get('invoice_number', '') or u''
+                    sub = ml.get('subtotal', ml.get('unit_price', ''))
+                    sub_str = (u' (%s บาท)' % fmt(sub)) if sub not in ('', None) else u''
+                    fn_str = (u' — ไฟล์: %s' % fn) if fn else u''
+                    ml_lines += u'<li><strong>%s</strong>%s%s</li>' % (nm, sub_str, fn_str)
+                else:
+                    ml_lines += u'<li>%s</li>' % ml
+            if ml_lines:
+                reason += u'<div style="margin-top:6px;">รายการที่ยังไม่ระบุภาษี:<ul style="margin:4px 0;">%s</ul></div>' % ml_lines
             fix = u'เปิดแต่ละบรรทัดใน Detail Lines แล้วเลือกภาษี (Tax) ให้ตรงกับ VAT ในใบเสร็จ'
             items.append({'title': u'3. ภาษี (VAT) ไม่ครบ', 'reason': reason, 'fix': fix})
 
@@ -3192,11 +3238,16 @@ class AccountAdvanceClearAI(models.Model):
         # 6. ข้อมูลบริษัทลูกค้า (ผู้ซื้อ)
         if not flags.get('company_name_ok', True):
             cnc = result.get('company_name_check', {}) or {}
-            mm = [m.get('filename', '') for m in cnc.get('mismatched_files', []) if isinstance(m, dict)]
-            mm = [m for m in mm if m]
             reason = u'ชื่อ / เลขภาษี / ที่อยู่ ของบริษัทในใบเสร็จ ไม่ตรงกับบริษัทที่ระบบยอมรับ'
-            if mm:
-                reason += u' (ไฟล์: %s)' % u', '.join(mm)
+            mm_lines = u''
+            for m in cnc.get('mismatched_files', []):
+                if not isinstance(m, dict):
+                    continue
+                fn = m.get('filename', '') or u'?'
+                issue = m.get('issue', '') or u''
+                mm_lines += u'<li>&#128196; <strong>%s</strong>%s</li>' % (fn, (u' — %s' % issue) if issue else u'')
+            if mm_lines:
+                reason += u'<ul style="margin:6px 0 4px;">%s</ul>' % mm_lines
             fix = u'ขอใบเสร็จที่ออกในชื่อ/เลขภาษี/ที่อยู่บริษัทให้ถูกต้อง แล้วอัปโหลดมาตรวจสอบใหม่'
             items.append({'title': u'6. ข้อมูลบริษัทในใบเสร็จไม่ตรง', 'reason': reason, 'fix': fix})
 
@@ -3259,6 +3310,25 @@ class AccountAdvanceClearAI(models.Model):
         if not flags.get('slip_ok', True):
             reason = (u'ไม่พบสลิปโอนเงินที่มียอด (รวมกัน) ตรงกับยอดเคลียร์ (Clear Amount) %s บาท'
                       % fmt(self.clear_amount or 0))
+            # แสดงสลิป/โอนเงินที่ AI เจอ พร้อมยอด เพื่อให้เทียบได้ว่าอ่านใบไหนยอดเท่าไหร่
+            rc9 = result.get('receipt_check', {}) or {}
+            s_lines = u''
+            for f in (rc9.get('skipped_files', []) + rc9.get('receipt_files', [])):
+                if not isinstance(f, dict) or not f.get('filename'):
+                    continue
+                ftype = (f.get('type', '') or '').lower()
+                rsn = (f.get('reason', '') or '').lower()
+                is_slip = ('deposit' in ftype or 'slip' in ftype or 'transfer' in ftype
+                           or u'สลิป' in rsn or u'โอนเงิน' in rsn)
+                if not is_slip:
+                    continue
+                amt = f.get('amount')
+                amt_str = (u'%s บาท' % fmt(amt)) if isinstance(amt, (int, float)) and amt > 0 else u'(อ่านยอดไม่ได้)'
+                s_lines += u'<li>&#128196; <strong>%s</strong> — %s</li>' % (f.get('filename', '') or u'?', amt_str)
+            if s_lines:
+                reason += u'<div style="margin-top:6px;">สลิป/โอนเงินที่ AI เจอ:<ul style="margin:4px 0;">%s</ul></div>' % s_lines
+            else:
+                reason += u'<div style="margin-top:6px; color:#856404;">ไม่พบไฟล์สลิปโอนเงินในเอกสารแนบเลย</div>'
             fix = u'แนบสลิปโอนเงินที่ยอดรวมตรงกับ Clear Amount หรือตรวจสอบยอด Clear Amount ให้ถูกต้อง'
             items.append({'title': u'9. สลิปโอนเงินไม่ตรงยอด', 'reason': reason, 'fix': fix})
 
