@@ -3352,7 +3352,7 @@
                     <td class="column90 text-right" style="font-size:18px;">
                         <!--                        <br/>-->
                         <br/>
-                        <strong style="font-size: 14px;">ใบเสร็จรับเงิน</strong>
+                        <strong style="font-size: 14px;">ใบกำกับภาษี/ใบเสร็จรับเงิน</strong>
                         <br/>
                         <b>ต้นฉบับ</b>
                     </td>
@@ -3584,32 +3584,31 @@
             </style>
 
 
-<div style="width: 100%; font-size: 22px; margin-top: 30px;">
+<div style="width: 100%; font-size: 22px; margin-top: 20px;">
   <div style="clear: both;"></div>
 
   <!-- ผู้รับเงิน -->
   <div style="width: 33.3%; float: left; text-align: center;">
-    <div style="margin-bottom: 10px;"><strong style="font-size: 18px;">ลงชื่อ..............................................</strong></div>
-    <div style="margin-bottom: 5px;"><strong style="font-size: 18px;">ผู้รับเงิน</strong></div>
-    <div><strong style="font-size: 18px;">วันที่........./................../...............</strong></div>
-  </div>
-
-  <!-- ผู้รับใบเสร็จ -->
-  <div style="width: 33.3%; float: left; text-align: center;">
-    <div style="margin-bottom: 10px;"><strong style="font-size: 18px;">ลงชื่อ..............................................</strong></div>
-    <div style="margin-bottom: 5px;"><strong style="font-size: 18px;">ผู้รับใบเสร็จ</strong></div>
-    <div><strong style="font-size: 18px;">วันที่........./................../...............</strong></div>
+<!--    <div style="margin-bottom: 10px;"><strong style="font-size: 18px;">ลงชื่อ..............................................</strong></div>-->
+<!--    <div style="margin-bottom: 5px;"><strong style="font-size: 18px;">ผู้รับเงิน</strong></div>-->
+<!--    <div><strong style="font-size: 18px;">วันที่........./................../...............</strong></div>-->
   </div>
 
   <!-- ผู้มีอำนาจอนุมัติ -->
-  <div style="width: 33.3%; float: left; text-align: center;">
+  <div style="width: 100%; float: none; text-align: center;">
+       <div><strong style="font-size: 22px;"><strong t-field="company.partner_id.name" /></strong></div>
     <div style="margin-bottom: 10px;">
-      <strong style="font-size: 14px;">ลงชื่อ</strong>
+      <strong style="font-size: 22px;">ลงชื่อ</strong>
       <img t-att-src="'/pfb_npd_accounting_qweb/static/description/signature_npd.png'"
-           style="height: 50px; vertical-align: middle; margin-left: 5px;" />
+           style="height: 65px; vertical-align: middle; margin-left: 5px;" />
     </div>
-    <div style="margin-bottom: 5px;"><strong style="font-size: 18px;">ผู้มีอำนาจอนุมัติ</strong></div>
-    <div><strong style="font-size: 18px;">วันที่........./................../...............</strong></div>
+    <div style="margin-bottom: 5px;"><strong style="font-size: 22px;">ผู้มีอำนาจอนุมัติ</strong></div>
+  </div>
+     <!-- ผู้รับใบเสร็จ -->
+  <div style="width: 33.3%; float: left; text-align: center;">
+<!--    <div style="margin-bottom: 10px;"><strong style="font-size: 18px;">ลงชื่อ..............................................</strong></div>-->
+<!--    <div style="margin-bottom: 5px;"><strong style="font-size: 18px;">ผู้รับใบเสร็จ</strong></div>-->
+<!--    <div><strong style="font-size: 18px;">วันที่........./................../...............</strong></div>-->
   </div>
 
   <div style="clear: both;"></div>
@@ -4334,9 +4333,9 @@
                                     -->
                                     <t t-foreach="inv_ids.invoice_id.invoice_line_ids" t-as="line">
                                         <t t-set="total_line" t-value="total_line + 1"/>
-                                        <tr>
+                                        <tr style="height: 30px;">
                                             <td class="text-center line_ids" style="vertical-align: middle;font-size: 16px">
-                                                <span style="font-size: 14px;" t-esc="line_index+1"/>
+                                                <div style="line-height: 24px;"><span style="font-size: 14px;" t-esc="line_index+1"/></div>
                                             </td>
                                             <td class="text-left line_ids" style="vertical-align: middle;font-size: 16px">
                                                 <span style="font-size: 14px;" t-esc="line.name"/>
@@ -4356,10 +4355,10 @@
                                     </t>
                                 </t>
 
-                                <t t-foreach="range(10-total_line)" t-as="x">
-                                    <tr>
+                                <t t-foreach="range(18-total_line)" t-as="x">
+                                    <tr style="height: 30px;">
                                         <td class="text-center line_ids" style="vertical-align: middle;">
-                                            <span style="color: white;">|</span>
+                                            <div style="line-height: 26px; color: white;">|</div>
                                         </td>
                                         <td class="text-left line_ids" style="vertical-align: middle;">
 
