@@ -449,7 +449,7 @@ class AccountAdvanceClearAI(models.Model):
         # Cash bills — count when new check passes
         # บวกยอดบิลเงินสดที่ลงทะเบียนเมื่อจับคู่ Detail ได้ (ไม่ผูกกับ AI required)
         _cb_total_re = self._registered_cash_bill_total(result)
-        ac_data['pass'] = abs(new_receipt_total + _sub_re['amount_to_count'] + _cb_total_re - s_total) < 1.0 if s_total > 0 else True
+        ac_data['pass'] = self._amount_matches(new_receipt_total + _sub_re['amount_to_count'] + _cb_total_re, s_total) if s_total > 0 else True
 
         # Check analytic (Python check)
         analytic_pass, analytic_missing = self._check_analytic_account()
@@ -1973,6 +1973,20 @@ class AccountAdvanceClearAI(models.Model):
             return 0.0
         return sum((cb.amount or 0) + (cb.vat_amount or 0) for cb in self.cash_bill_ids)
 
+    def _amount_matches(self, combined, system_total, tolerance=1.0):
+        u"""ยอดรวมจากใบเสร็จตรงกับยอดในระบบหรือไม่ — เผื่อกรณีมีภาษีหัก ณ ที่จ่าย (WHT):
+        ใบเสร็จบางใบ AI อ่านยอด 'จำนวนเงินที่ต้องชำระ' (สุทธิหลังหัก ณ ที่จ่าย)
+        แทนยอดรวมก่อนหัก (= มูลค่าสินค้า + VAT) ที่ตรงกับ Unit Price ในระบบ
+        จึงยอมรับทั้ง combined == system และ combined + WHT == system
+        (tolerance 1 บาท ครอบคลุมการปัดเศษ เช่น MISC REV)
+        """
+        if abs(combined - system_total) < tolerance:
+            return True
+        wht = self.wht_amount or 0
+        if wht > 0 and abs(combined + wht - system_total) < tolerance:
+            return True
+        return False
+
     def _resolve_receipt_substitutes(self, result, py_receipt_total, py_system_total, tolerance=1.0):
         u"""ตัดสินว่าใบรับรองแทนใบเสร็จ (is_receipt_substitute=true ใน skipped_files)
         ควรนับยอดเข้า combined_total หรือไม่ โดยเปรียบเทียบยอดรวม:
@@ -2125,7 +2139,7 @@ class AccountAdvanceClearAI(models.Model):
         sub_resolution = self._resolve_receipt_substitutes(result, py_receipt_total, py_system_total)
         py_sub_total = sub_resolution['amount_to_count']
         py_combined = py_receipt_total + py_cb_total + py_sub_total
-        py_amount_ok = abs(py_combined - py_system_total) < 1.0 if py_system_total > 0 else ac_data.get('matches', False)
+        py_amount_ok = self._amount_matches(py_combined, py_system_total) if py_system_total > 0 else ac_data.get('matches', False)
 
         # Override AI status: if amount didn't match but now matches with cash bill total → pass
         rc_data = result.get('receipt_check', {})
@@ -2506,9 +2520,9 @@ class AccountAdvanceClearAI(models.Model):
         if (r_total > 0 or cb_total > 0 or sub_total > 0) and (combined == 0 or _py_overrode_r_total or sub_total > 0):
             combined = round(r_total + cb_total + sub_total, 2)
 
-        # Re-check matches with combined_total
+        # Re-check matches with combined_total (เผื่อ WHT ด้วย)
         if combined > 0 and s_total > 0:
-            ac_pass = abs(combined - s_total) < 1.0  # tolerance 1 baht
+            ac_pass = self._amount_matches(combined, s_total)  # tolerance 1 baht + WHT
 
         # Check if amount check was skipped by condition
         amount_skipped = bool(skip_amount_files and _any_receipt_matches_skip(skip_amount_files))
@@ -3467,7 +3481,7 @@ class AccountAdvanceClearAI(models.Model):
         sub_resolution3 = self._resolve_receipt_substitutes(result, r_total, s_total)
         sub_total3 = sub_resolution3['amount_to_count']
         combined = r_total + cb_total + sub_total3
-        amount_ok = abs(combined - s_total) < 1.0 if s_total > 0 else ac_data.get('matches', False)
+        amount_ok = self._amount_matches(combined, s_total) if s_total > 0 else ac_data.get('matches', False)
 
         rc_data = result.get('receipt_check', {})
         dc_data = result.get('description_check', {})
