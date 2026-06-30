@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================= -->
+    <!-- ACTION : ปุ่ม Print บน Sale Order                              -->
+    <!-- ============================================================= -->
+    <record id="action_report_power_of_attorney" model="ir.actions.report">
+        <field name="name">หนังสือมอบอำนาจ</field>
+        <field name="model">sale.order</field>
+        <field name="report_name">npd_power_of_attorney_qweb.report_power_of_attorney</field>
+        <field name="report_file">npd_power_of_attorney_qweb.report_power_of_attorney</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="paperformat_id" ref="npd_rental_equipment_contract_qweb.paperformat_rental_contract"/>
+        <field name="print_report_name">'หนังสือมอบอำนาจ-%s' % (object._get_rental_contract_base() or object.name)</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- TEMPLATE                                                       -->
+    <!-- ============================================================= -->
+    <template id="report_power_of_attorney">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="lessor_name" t-value="o._get_rental_lessor_name()"/>
+                <t t-set="cust" t-value="o._get_rental_customer_info()"/>
+                <t t-set="cdate" t-value="o._get_rental_start_date_thai()"/>
+                <t t-set="onsite" t-value="o._get_rental_on_site()"/>
+                <t t-set="branch" t-value="o._get_rental_branch_name()"/>
+                <!-- เส้นประ fallback เมื่อไม่มีข้อมูล -->
+                <t t-set="dot_s" t-value="'............'"/>
+                <t t-set="dot_m" t-value="'............................'"/>
+                <t t-set="dot_l" t-value="'........................................................'"/>
+                <div class="page" style="font-family: 'THSarabunNew',sans-serif; font-weight: normal; font-size: 16px; line-height: 1.4; color: #000;">
+
+                    <style>
+                        @font-face {
+                            font-family: 'THSarabunNew';
+                            font-weight: normal;
+                            src: url('/npd_rental_equipment_contract_qweb/static/fonts/THSarabunNew.ttf') format('truetype');
+                        }
+                        @font-face {
+                            font-family: 'THSarabunNew';
+                            font-weight: bold;
+                            src: url('/npd_rental_equipment_contract_qweb/static/fonts/THSarabunNew-Bold.ttf') format('truetype');
+                        }
+                        @font-face {
+                            font-family: 'THSarabunNew';
+                            font-style: italic;
+                            font-weight: normal;
+                            src: url('/npd_rental_equipment_contract_qweb/static/fonts/THSarabunNew-Italic.ttf') format('truetype');
+                        }
+                        @font-face {
+                            font-family: 'THSarabunNew';
+                            font-style: italic;
+                            font-weight: bold;
+                            src: url('/npd_rental_equipment_contract_qweb/static/fonts/THSarabunNew-BoldItalic.ttf') format('truetype');
+                        }
+                        .page * { font-family: 'THSarabunNew',sans-serif !important; }
+
+                        /* ไม่มีกรอบ -- ดันบล็อกลงชื่อลงท้ายกระดาษด้วย spacer (poa-gap) */
+                        .poa-doc { padding: 12px 16px 14px 16px; box-sizing: border-box; }
+                        .poa-title { text-align: center; font-size: 25px; font-weight: bold; margin: 34px 0 8px 0; letter-spacing: 1px; }
+                        .poa-place { text-align: right; margin: 9px 0; }
+                        .poa-clause { margin: 0 0 12px 0; text-align: left; text-indent: 2.5em; line-height: 1.8; }
+                        .poa-item { margin: 0 0 14px 0; text-align: left; padding-left: 1.5em; line-height: 1.7; }
+                        .poa-val { font-weight: bold; }
+                        .poa-evidence { text-align: right; text-indent: 0; margin: 0 0 12px 0; }   /* "เพื่อเป็นหลักฐาน" ชิดขวา */
+                        .poa-gap { height: 15mm; }   /* spacer ดันลงชื่อไปท้ายกระดาษ -- ปรับค่านี้ */
+                        .poa-sign { width: 58%; margin-left: auto; text-align: center; line-height: 2.0; }   /* บล็อกชิดขวา ข้อความกึ่งกลาง */
+                        .poa-sign-sub { font-size: 16px; color: #9a9a9a; display: block; margin-bottom: 16px; }
+                        .poa-stamp { border: 1px solid #999; color: #888; width: 130px; height: 56px;
+                                     font-size: 13px; text-align: center; padding-top: 6px;
+                                     display: inline-block; }   /* ชิดขวาด้วย text-align ของ td */
+                        .poa-sign-tb { width: 100%; border-collapse: collapse; table-layout: fixed; }
+                        .poa-sig { display: inline-block; text-align: center; vertical-align: top; }
+                        .poa-sig-row { margin-bottom: 4px; }
+                        .poa-note { font-size: 14px; margin-top: 44px; line-height: 1.4; }
+                    </style>
+
+                    <div class="poa-doc">
+
+                        <!-- ===== หัวเอกสาร ===== -->
+                        <div class="poa-title">หนังสือมอบอำนาจ</div>
+
+                        <div class="poa-place">ทำที่ <span class="poa-val"><span t-esc="lessor_name"/></span> สาขา <span t-attf-class="#{branch and 'poa-val' or ''}" t-esc="branch or dot_s"/></div>
+                        <div class="poa-place">วันที่ <span t-attf-class="#{cdate['day'] and 'poa-val' or ''}" t-esc="cdate['day'] or dot_s"/>
+                            เดือน <span t-attf-class="#{cdate['month'] and 'poa-val' or ''}" t-esc="cdate['month'] or dot_m"/>
+                            พ.ศ. <span t-attf-class="#{cdate['year'] and 'poa-val' or ''}" t-esc="cdate['year'] or dot_s"/></div>
+
+                        <!-- ===== คำนำ ===== -->
+                        <p class="poa-clause" style="margin-top: 42px; margin-bottom: 40px;">
+                            โดยหนังสือฉบับนี้ ข้าพเจ้า (ชื่อบริษัท/ชื่อบุคคล)
+                            <span t-attf-class="#{cust['name'] and 'poa-val' or ''}" t-esc="cust['name'] or dot_l"/>
+                            เลขประจำตัวประชาชน/<br/>
+                            เลขทะเบียนนิติบุคคล <span t-attf-class="#{cust['vat'] and 'poa-val' or ''}" t-esc="cust['vat'] or dot_m"/>
+                            ที่อยู่ <span t-attf-class="#{cust['address'] and 'poa-val' or ''}" t-esc="cust['address'] or dot_m"/>
+                            ซึ่งต่อไปในหนังสือนี้เรียกว่า "<span class="poa-val">ผู้มอบอำนาจ</span>" ขอมอบอำนาจให้<br/>
+                            (ชื่อตัวแทนผู้รับมอบ) <span t-esc="dot_l"/> อายุ <span t-esc="dot_s"/> ปี
+                            เลขประจำตัวประชาชน <span t-esc="dot_m"/><br/>
+                            อยู่บ้านเลขที่ <span t-esc="dot_m"/>
+                            เป็นผู้มีอำนาจกระทำการแทนข้าพเจ้า ในการดำเนินการ<br/>
+                            ดังต่อไปนี้:
+                        </p>
+
+                        <!-- ===== รายการมอบอำนาจ ===== -->
+                        <div class="poa-item">
+                            1. ลงนามในสัญญาเช่าอุปกรณ์ก่อสร้าง เลขที่
+                            <span t-attf-class="#{o._get_rental_contract_base() and 'poa-val' or ''}" t-esc="o._get_rental_contract_base() or dot_m"/>
+                            กับ <span class="poa-val"><span t-esc="lessor_name"/></span>
+                        </div>
+                        <div class="poa-item">
+                            2. รับมอบทรัพย์สินที่เช่า ตามรายการและเงื่อนไขที่ระบุในสัญญาเช่าและเอกสารแนบท้าย
+                        </div>
+                        <div class="poa-item">
+                            3. ลงนามในเอกสารการรับ-ส่งสินค้า ใบแจ้งหนี้ ใบกำกับการเช่า และเอกสารอื่นใดที่เกี่ยวข้องกับการเช่าและการส่ง<br/>
+                            คืนทรัพย์สินทั้งหมด
+                        </div>
+                        <div class="poa-item">
+                            4. ดำเนินการอื่น ๆ ที่จำเป็นเพื่อให้การทำธุรกรรมการเช่าครั้งนี้สำเร็จลุล่วงตามวัตถุประสงค์
+                        </div>
+
+                        <!-- ===== ข้อความยืนยัน ===== -->
+                        <p class="poa-clause" style="margin-top: 24px;">
+                            การใดที่ผู้รับมอบอำนาจได้กระทำไปภายในขอบเขตอำนาจนี้ ให้ถือเสมือนว่าข้าพเจ้าได้กระทำการด้วย<br/>
+                            ตนเองทุกประการ และข้าพเจ้าขอรับผิดชอบต่อการกระทำดังกล่าวเสมือนหนึ่งข้าพเจ้าได้ลงนามด้วยตนเอง
+                        </p>
+                        <p class="poa-clause" style="margin-top: 16px;">
+                            เพื่อเป็นหลักฐาน ข้าพเจ้าได้ลงลายมือ และประทับตรา(ถ้ามี)ชื่อไว้เป็นสำคัญต่อหน้าพยาน
+                        </p>
+
+                        <!-- spacer ดันบล็อกลงชื่อไปท้ายกระดาษ -->
+                        <div class="poa-gap"></div>
+
+                        <!-- ===== บล็อกล่างสุด ===== -->
+                        <div class="poa-bottom">
+
+                        <!-- ===== กล่องตราประทับ (ซ้าย) + ลายเซ็น (ขวา) ===== -->
+                        <table class="poa-sign-tb">
+                            <tr>
+                                <td style="width: 40%; vertical-align: top; padding-top: 0px; text-align: right; padding-right: 10px;">
+                                    <div class="poa-stamp">ประทับตราสำคัญบริษัท<br/>(ถ้ามี)</div>
+                                </td>
+                                <td style="width: 60%; text-align: left; line-height: 1.5; padding-left: 4px;">
+                                    <div class="poa-sig-row">ลงชื่อ <span class="poa-sig">................................................<br/>( .................................... )</span> ผู้มอบอำนาจ</div>
+                                    <div style="height: 54px;"></div>
+                                    <div class="poa-sig-row">ลงชื่อ <span class="poa-sig">................................................<br/>( .................................... )</span> ผู้รับมอบอำนาจ</div><br/>
+                                    <div class="poa-sig-row">ลงชื่อ <span class="poa-sig">................................................<br/>( .................................... )</span> พยาน</div><br/>
+                                    <div class="poa-sig-row">ลงชื่อ <span class="poa-sig">................................................<br/>( .................................... )</span> พยาน</div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- ===== หมายเหตุ ===== -->
+                            <br/>
+                        <div class="poa-note">
+                            <div style="font-size: 15px; font-weight: bold;">หมายเหตุ</div>
+                            <div style="font-size: 15px; font-weight: bold;">1. หนังสือมอบอำนาจให้ประธานบริษัทลูกค้า</div>
+                            <div style="font-size: 15px; font-weight: bold;">2. แนบเอกสารประกอบพร้อมลงนามรับรองสำเนาถูกต้อง ดังนี้</div>
+                            <div style="font-size: 14px; font-weight: normal; padding-left: 1.8em;">1. หนังสือรับรองบริษัท (ถ้ามี)</div>
+                            <div style="font-size: 14px; font-weight: normal; padding-left: 1.8em;">2. สำเนาบัตรประชาชนของผู้มอบอำนาจ (หรือผู้มีอำนาจลงนามแทนนิติบุคคล)</div>
+                            <div style="font-size: 14px; font-weight: normal; padding-left: 1.8em;">3. สำเนาบัตรประชาชนของผู้รับมอบอำนาจ</div>
+                            <div style="font-size: 14px; font-weight: normal; padding-left: 1.8em;">พร้อมลงนามรับรองสำเนาถูกต้อง</div>
+                            <div style="font-size: 14px; font-weight: normal;">หากเป็นนิติบุคคล อย่าลืมประทับตราสำคัญของบริษัทในช่องผู้มอบอำนาจ</div>
+                        </div>
+                        </div>
+                        <!-- /poa-bottom -->
+
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

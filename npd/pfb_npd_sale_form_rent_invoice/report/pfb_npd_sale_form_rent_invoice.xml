@@ -49,15 +49,15 @@
             <div class="col-7" style="margin-top: 15px;">
                 <table style="width: 100%;" class="ml-45">
                     <tr>
-                        <td><strong class="ml-2" style="font-size: 22px;">ใบกำกับการเช่า</strong></td>
+                        <td><strong class="ml-2" style="font-size: 22px;">ใบกำกับการเช่า<t t-if="doc._get_rental_doc_count() >= 2">(เพิ่มเติม)</t></strong></td>
                     </tr>
                     <tr>
-                        <td><strong class="ml-2" style="font-size: 13px;"><span
+                        <td><strong class="ml-2" style="font-size: 16px;"><span
                                 t-esc="doc.company_id.name"/></strong></td>
                     </tr>
                     <tr>
-                        <td style="padding-left: 10px;font-size: 14px">
-                            <span t-field="doc.branch_id.address" style="line-height: 1.3;font-size: 13px;"/><br/>
+                        <td style="padding-left: 10px;font-size: 14px;line-height: 1.0;">
+                            <span t-field="doc.branch_id.address" style="line-height: 1.0;font-size: 13px;margin: 0;"/><br/>
                             เลขประจำตัวผู้เสียภาษี <span t-esc="doc.company_id.vat"></span>
                                     <span t-if="doc.branch_id.telephone == '00000'">(สำนักงานใหญ่)</span>
                         </td>
@@ -66,14 +66,25 @@
             </div>        <!-- โลโก้บริษัท -->
             <div class="col-3" style="margin-top: 15px;">
                 <table style="width: 100%;">
+<!--                    <tr>-->
+<!--                        <td class="text-center"><strong style="font-size: 18px;"></strong></td>-->
+<!--                    </tr>-->
                     <tr>
-                        <td class="text-center"><strong style="font-size: 18px;">เลขที่ใบเช่า</strong></td>
+                        <td class="text-center">
+                            <strong style="font-size: 13px;">เลขที่ <span t-esc="doc.name"/></strong>
+                        </td>
                     </tr>
                     <tr>
                         <td class="text-center">
-                            <strong style="font-size: 13px;"><span t-esc="doc.name"/></strong>
+                            <strong style="font-size: 13px;">วันที่ <span t-esc="doc.date_order.strftime('%d') + ' ' + {1: 'มกราคม', 2: 'กุมภาพันธ์', 3: 'มีนาคม', 4: 'เมษายน', 5: 'พฤษภาคม', 6: 'มิถุนายน', 7: 'กรกฎาคม', 8: 'สิงหาคม', 9: 'กันยายน', 10: 'ตุลาคม', 11: 'พฤศจิกายน', 12: 'ธันวาคม'}[int(doc.date_order.strftime('%m'))] + ' ' + str(int(doc.date_order.strftime('%Y')) + 543)"/></strong>
                         </td>
                     </tr>
+                    <tr>
+                        <td class="text-center">
+                            <strong style="font-size: 13px;">สัญญา <span t-esc="doc.rental_contract_full"/></strong>
+                        </td>
+                    </tr>
+
                     <tr>
                         <td class="text-center">
                             <strong style="font-size: 13px;">อ้างอิงใบกำกับการเช่า</strong>
@@ -517,8 +528,8 @@
                     </div>
                     <div class="col-3">
                         <p class="text-right">
-                            <strong style="font-size: 14px;"><span
-                                    t-esc="'{0:,.2f}'.format(doc.pfb_amount + doc.amount_total)"/></strong></p>
+                            <strong style="font-size: 14px;"><b><span
+                                    t-esc="'{0:,.2f}'.format(doc.pfb_amount + doc.amount_total)"/></b></strong></p>
                     </div>
                 </div>
             </div>
@@ -543,7 +554,7 @@
                     </tr>
                     <tr>
                         <td style="vertical-align: top;">4.</td>
-                        <td>หากสินค้าที่ส่งคืนไม่สามารถซ่อมแซมได้ หรือสินค้าเช่าที่ผู้เช่ายังไม่ได้ส่งคืน ให้หักราคาค่าสินค้า ตามใบเสนอราคา/ใบสั่งเช่าสินค้าค้างต้น</td>
+                        <td>หากสินค้าที่ส่งคืนไม่สามารถซ่อมแซมได้ หรือสินค้าเช่าที่ผู้เช่ายังไม่ได้ส่งคืน ให้หักราคาค่าสินค้า ตามใบเสนอราคา/ใบสั่งเช่าสินค้าข้างต้น</td>
                     </tr>
 
                     <t t-if="request.db == 'NPD_Intertrading_New'">
@@ -629,34 +640,44 @@
                 <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
                     <thead>
                         <tr>
-                            <th style="border: 1px solid #000; padding: 6px; text-align: center; width: 33.33%; font-size: 13px;">ขอแสดงความนับถือ</th>
-                            <th style="border: 1px solid #000; padding: 6px; text-align: center; width: 33.33%; font-size: 13px;">ผู้รับสินค้า</th>
-                            <th style="border: 1px solid #000; padding: 6px; text-align: center; width: 33.34%; font-size: 13px;">อนุมัติเช่าสินค้าตามรายการสินค้า อัตราค่าเช่า และเงื่อนไขข้างต้น</th>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: center; width: 50%; font-size: 15px;"><br/>ผู้เช่า</th>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: center; width: 50%; font-size: 15px;"><br/>ผู้ให้เช่า</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: bottom; height: 110px; font-size: 13px;">
-                                <br/><br/><br/>
-                                <div>.................................................................................</div>
                                 <br/>
-                                <span t-esc="user.name"/><br/>
+                                <table style="width: 100%; margin-top: 16px;">
+                                    <tr>
+                                        <td style="border: 0; width: 26%; text-align: center; vertical-align: bottom;">
+                                            <div style="border: 1px solid #999; color: #888; width: 100px; height: 46px; font-size: 11px; text-align: center; padding-top: 4px; display: inline-block;">ตราประทับผู้เช่า<br/>(ถ้ามี)</div>
+                                        </td>
+                                        <td style="border: 0; width: 48%; text-align: center; vertical-align: bottom;">...........................................................</td>
+                                        <td style="border: 0; width: 26%;"></td>
+                                    </tr>
+                                </table>
+                                <br/>
+<!--                                <span t-esc="user.name"/><br/>-->
                                 <span t-esc="user.partner_id.phone or user.partner_id.mobile or ''"/><br/>
-                                <strong><span t-esc="doc.company_id.name"/></strong>
-                            </td>
-                            <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: bottom; height: 110px; font-size: 13px;">
-                                <div style="height: 25px;"></div>
-                                <div>..................................................................</div>
-                                <br/>
-                                <div style="margin-top: 10px;">วันที่..........................................</div>
+                                <strong><span t-esc="doc.partner_id.name"/></strong>
                             </td>
                             <td style="border: 1px solid #000; padding: 8px; text-align: center; height: 110px; font-size: 13px;">
-                                <div style="height: 65px;"></div>
-                                <div>.................................................................................</div>
+                                <div style="height: 30px;"></div>
+                                <table style="width: 100%;">
+                                    <tr>
+                                        <td style="border: 0; width: 26%;"></td>
+                                        <td style="border: 0; width: 48%; text-align: center; vertical-align: bottom;">...........................................................</td>
+                                        <td style="border: 0; width: 26%; text-align: center; vertical-align: bottom;">
+                                            <div style="border: 1px solid #999; color: #888; width: 100px; height: 46px; font-size: 11px; text-align: center; padding-top: 4px; display: inline-block;">ตราประทับผู้ให้เช่า</div>
+                                        </td>
+                                    </tr>
+                                </table>
                                 <br/>
-                                <div>ผู้มีอำนาจสั่งเช่า................/................/................</div>
+                                <div>(นายธีระพล รอดสาตร์)</div>
                                 <div style="border-top: 1px solid #000; margin-top: 4px; padding-top: 4px;">
-                                    <strong><span t-esc="doc.partner_id.name"/></strong>
+
+                                    <strong><span t-esc="doc.company_id.name"/></strong>
                                 </div>
                             </td>
                         </tr>

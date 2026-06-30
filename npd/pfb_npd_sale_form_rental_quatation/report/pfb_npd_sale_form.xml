@@ -11,7 +11,7 @@
         <field name="default" eval="False" />
         <field name="format">A4</field>
         <field name="orientation">Portrait</field>
-        <field name="margin_top">5</field>
+        <field name="margin_top">6</field>
         <field name="margin_bottom">5</field>
         <field name="margin_left">5</field>
         <field name="margin_right">2</field>
@@ -32,11 +32,12 @@
 
     <template id="so_form_header">
         <style>
+            .page, .page * { font-family: 'Sarabun', sans-serif !important; }
             .font_weight {
-                font-weight: 800;
+                font-weight: 400;
             }
             .address-line {
-                font-size: 13px;
+                font-size: 15px;
                 margin-top: 5px;
             }
             .tax-id {
@@ -70,7 +71,7 @@
             <div class="col-1"/>
             <div class="col-7 company-info">
                 <h1 class="font_weight"><strong>ใบเสนอราคาเช่าสินค้า</strong></h1>
-                <h6><strong><span t-esc="doc.company_id.name"/></strong></h6>
+                <h5><strong><span t-esc="doc.company_id.name"/></strong></h5>
                 <p class="address-line">
 <!--                    <strong>ที่อยู่ :</strong>-->
 <!--                    <strong><span t-esc="doc.company_id.street"/></strong>-->
@@ -100,7 +101,7 @@
                             <p class="text-center"><strong><span t-esc="doc.name"/></strong></p>
                             <p class="text-center text-date"><strong>วันที่ทำเอกสาร</strong></p>
                             <p class="text-center date-info">
-                                <span t-esc="doc.date_order.strftime('%d') + '-' + {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'}[int(doc.date_order.strftime('%m'))] + '-' + doc.date_order.strftime('%Y')"/>
+                                <span t-esc="doc.date_order.strftime('%d') + ' ' + {1: 'มกราคม', 2: 'กุมภาพันธ์', 3: 'มีนาคม', 4: 'เมษายน', 5: 'พฤษภาคม', 6: 'มิถุนายน', 7: 'กรกฎาคม', 8: 'สิงหาคม', 9: 'กันยายน', 10: 'ตุลาคม', 11: 'พฤศจิกายน', 12: 'ธันวาคม'}[int(doc.date_order.strftime('%m'))] + ' ' + str(int(doc.date_order.strftime('%Y')) + 543)"/>
                             </p>
                         </td>
                     </tr>
@@ -117,21 +118,20 @@
                 border-radius: 10px;
                 padding: 20px;
                 width: 1000px;
-                font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
-<!--                margin: auto; /* Center align */-->
+                <!--                margin: auto; /* Center align */-->
             }
             .preserve-whitespace {
                 white-space: pre;
             }
 
             .text-partner {
-                font-size: 14px;
+                font-size: 16px;
             }
         </style>
         <div class="rounded-square">
             <div class="row">
                 <div class="col-7">
-                    <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                    <table width="100%">
                         <tr>
                             <td class="text-left text-partner"><strong>ชื่อบริษัท</strong> : <span t-esc="doc.partner_id.name"/></td>
                         </tr>
@@ -189,10 +189,10 @@
         }
         .line-distance {
             line-height: 1;
-            font-size: 14px !important;
+            font-size: 16px !important;
         }
         .small-font {
-            font-size: 14px !important;
+            font-size: 16px !important;
         }
         .border_report {
             border-bottom: 1px solid black !important;
@@ -204,7 +204,7 @@
     </style>
 
     <t t-set="order_lines" t-value="doc.order_line"/>
-    <t t-set="chunk_size" t-value="9"/>
+    <t t-set="chunk_size" t-value="11"/>
     <t t-set="chunks" t-value="[order_lines[i:i + chunk_size] for i in range(0, len(order_lines), chunk_size)]"/>
 
     <t t-foreach="chunks" t-as="group" t-index="group_index">
@@ -254,15 +254,14 @@
 
 
     <template id="so_form_footer">
-        <div style="display: block; width: 97%; position: fixed; left: 5px; top: 890px;">
+        <div style="display: block; width: 97%; position: fixed; left: 5px; top: 750px;">
             <style>
                 .rounded-square {
                     border: 1px solid #000;
                     border-radius: 10px;
                     padding: 20px;
                     width: 100%;
-                    font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
-                }
+                                    }
                 .row {
                     display: flex;
                     align-items: center;
@@ -311,7 +310,10 @@
                     width: 97%;
                 }
                 .small-font {
-                    font-size: 14px !important;
+                    font-size: 16px !important;
+                }
+                .line-distance {
+                    font-size: 16px !important;
                 }
             </style>
             <div class="mt-1" style="border-bottom: 1px solid black"/>
@@ -322,10 +324,12 @@
                         <div>
                             <table>
                                 <tr>
-                                    <td class="text-left small-font">หมายเหตุ : <span t-raw="doc.note.replace('&lt;p&gt;', '').replace('&lt;/p&gt;', '')"/></td>
+                                    <td class="text-left small-font">
+                                        <div style="height: 63px; line-height: 21px; overflow: hidden;">หมายเหตุ : <span t-raw="doc.note.replace('&lt;p&gt;', '').replace('&lt;/p&gt;', '')"/></div>
+                                    </td>
                                 </tr>
                                 <tr>
-                                    <td><div class="row" style="margin-bottom: 40px;"/></td>
+                                    <td><div class="row" style="margin-bottom: 5px;"/></td>
                                 </tr>
                                 <tr>
                                     <td><div class="mt-1" style="border-bottom: 1px solid black"/></td>
@@ -334,19 +338,28 @@
                                     <td class="text-left small-font"><strong>เงื่อนไขการเช่าสินค้า :</strong></td>
                                 </tr>
                                 <tr>
-                                    <td class="small-font">1. ชำระค่าเช่า/เงินประกันสินค้าก่อนวันรับสินค้า เพื่อจัดเตรียมสินค้าให้พร้อม</td>
+                                    <td class="small-font" style="font-size: 15px !important;">1. ลูกค้าต้องชำระค่าเช่าและวางเงินประกันสินค้าก่อนรับสินค้า เพื่อให้บริษัทจัดเตรียมสินค้าให้พร้อมส่งมอบ</td>
                                 </tr>
                                 <tr>
-                                    <td class="small-font">2. วางเงินประกันด้วย(เงินสด/BG-หนังสือค้ำประกันของธนาคาร)</td>
+                                    <td class="small-font" style="font-size: 15px !important;">2. ลูกค้าต้องวางเงินประกันสินค้า โดยชำระเป็นเงินสด หรือหนังสือค้ำประกันจากธนาคาร (Bank Guarantee: BG) ตามที่บริษัทกำหนด</td>
                                 </tr>
                                 <tr>
-                                    <td class="small-font">3. การรับสินค้า(รับสินค้าที่สาขา ไม่รวมค่าขนย้ายสินค้า ขึ้น-ลง)</td>
+                                    <td class="small-font" style="font-size: 15px !important;">3. การรับสินค้า การขนส่ง การยกขึ้น-ลงสินค้า และค่าใช้จ่ายอื่น ๆ ไม่รวมอยู่ในราคาค่าเช่า เว้นแต่ระบุไว้เป็นลายลักษณ์อักษร</td>
                                 </tr>
                                 <tr>
-                                    <td class="small-font">4. ระยะเวลาในการเช่าสินค้าอย่างน้อยตามจำนวนวันตามใบเสนอราคา</td>
+                                    <td class="small-font" style="font-size: 15px !important;">4. ระยะเวลาการเช่าขั้นต่ำ ให้เป็นไปตามจำนวนวันที่ระบุไว้ในใบเสนอราคา</td>
                                 </tr>
                                 <tr>
-                                    <td class="small-font">5. กรณีต่อสัญญาเช่าต้องกระทำภายใน7วันก่อนครบกำหนด</td>
+                                    <td class="small-font" style="font-size: 15px !important;">5. กรณีต้องการยกเลิก เปลี่ยนแปลง หรือขยายระยะเวลาการเช่า ลูกค้าต้องแจ้งบริษัทล่วงหน้าไม่น้อยกว่า 7 วันก่อนครบกำหนดเช่า</td>
+                                </tr>
+                                <tr>
+                                    <td class="small-font" style="font-size: 15px !important;">6. เงินประกันสินค้าเช่าเป็นเงินประกันความเสียหาย สูญหาย หรือค่าเช่าค้างชำระ และจะคืนให้หลังจากลูกค้าคืนสินค้าครบถ้วน สภาพเรียบร้อย และบริษัทตรวจนับเสร็จสิ้น</td>
+                                </tr>
+                                <tr>
+                                    <td class="small-font" style="font-size: 15px !important;">7. ใบเสนอราคานี้มีอายุ 30 วัน นับจากวันที่ออกเอกสาร</td>
+                                </tr>
+                                <tr>
+                                    <td class="small-font" style="font-size: 15px !important;">8. ค่าเช่าจะคิดต่อเนื่องจนกว่าสินค้าจะถูกส่งคืนครบถ้วนและได้รับการตรวจรับจากบริษัท</td>
                                 </tr>
                             </table>
                         </div>
@@ -417,12 +430,12 @@
             </div>
             <div class="row" style="margin-bottom: 5px;"/>
             <div class="col-16">
-                <div class="rounded-square">
+                <div class="rounded-square" style="padding-top: 6px; padding-bottom: 6px;">
                     <div class="row">
-                        <div class="col-2" style="margin-top: 6px;">
+                        <div class="col-2" style="margin-top: 0;">
                             <strong>รวมสุทธิ :</strong>
                         </div>
-                        <div class="col-6 text-center" style="margin-top: 6px;">
+                        <div class="col-6 text-center" style="margin-top: 0; font-size: 19px; font-weight: bold;">
                             (<span t-esc="doc.get_baht_text_rental_quatation()"/>)
                         </div>
                         <div class="col-1 move-text" style="margin-top: 0;">
@@ -440,7 +453,7 @@
                     <div class="row">
                         <div class="col-8">
                             <div>
-                                <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                                <table width="100%">
                                     <tr>
                                         <td class="text-left"><strong>วิธีการชำระเงิน : โอนเงินเข้าบัญชี</strong></td>
                                     </tr>
@@ -481,11 +494,12 @@
                     </div>
                 </div>
             </div>
+            <!-- QR Code ชำระเงิน 3 ช่อง : ลบออกตามที่ลูกค้าแจ้ง -->
             <div class="row" style="margin-bottom: 40px;"/>
             <div class="row">
                 <div class="col-7">
                     <div>
-                        <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                        <table width="100%" style="font-size: 26px;">
                             <tr>
                                 <td class="text-center">
                                     <span class="inline-text">[ตัวบรรจง]...........................................................</span>
@@ -502,7 +516,7 @@
                 </div>
                 <div class="col-5">
                     <div>
-                        <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                        <table width="100%" style="font-size: 26px;">
                             <tr>
                                 <td class="text-center"><strong>ขอแสดงความนับถือ</strong></td>
                             </tr>
@@ -532,11 +546,14 @@
     <t t-call="web.html_container">
         <t t-foreach="docs" t-as="doc">
             <t t-set="order_lines" t-value="doc.order_line"/>
-            <t t-set="chunk_size" t-value="9"/>
+            <t t-set="chunk_size" t-value="11"/>
             <t t-set="chunks" t-value="[order_lines[i:i + chunk_size] for i in range(0, len(order_lines), chunk_size)]"/>
 
             <t t-foreach="chunks" t-as="group" t-index="group_index">
-                <div class="page">
+                <div class="page" style="font-family: 'Sarabun', sans-serif;">
+                    <style>
+                        .page, .page * { font-family: 'Sarabun', sans-serif !important; }
+                    </style>
                     <t t-call="web.basic_layout">
                         <!-- Header -->
                         <t t-call="pfb_npd_sale_form_rental_quatation.so_form_header"/>
@@ -550,15 +567,15 @@
                                 <tr style="border-bottom: 1px solid black !important;">
                                     <th width="1%" class="text-left small-font number-col border_report">No.</th>
 <!--                                    <th width="9%" class="text-center small-font pass-col border_report">รหัส</th>-->
-                                    <th width="19%" class="text-left small-font list-col border_report">รายการสินค้า</th>
+                                    <th width="23%" class="text-left small-font list-col border_report">รายการสินค้า</th>
                                     <th width="7%" class="text-right small-font weight-col border_report">น้ำหนัก</th>
 
-                                    <th width="7%" class="text-right small-font quantity-col border_report">จำนวน</th>
+                                    <th width="6%" class="text-right small-font quantity-col border_report">จำนวน</th>
 
                                     <th width="16%" class="text-center small-font guarantee-col border_report"> ค่าปรับ/เงินประกัน<br/>ราคาสินค้า(ชิ้น)</th>
-                                    <th width="11%" class="text-center small-font guarantee-col border_report">ค่าซ่อมแซม<br/>(B/ชิ้น)</th>
-                                    <th width="11%" class="text-center small-font rent-col border_report">ค่าเช่า<br/>ต่อหน่วย</th>
-                                    <th width="13%" class="text-center small-font rent-total-col border_report">รวมค่าเช่า<br/>รายวัน</th>
+                                    <th width="9%" class="text-center small-font guarantee-col border_report">ค่าซ่อมแซม<br/>(B/ชิ้น)</th>
+                                    <th width="9%" class="text-center small-font rent-col border_report">ค่าเช่า<br/>ต่อหน่วย</th>
+                                    <th width="11%" class="text-center small-font rent-total-col border_report">รวมค่าเช่า<br/>รายวัน</th>
                                     <th width="11%" class="text-right small-font guarantee-total-col border_report">รวมประกัน</th>
                                 </tr>
                             </thead>

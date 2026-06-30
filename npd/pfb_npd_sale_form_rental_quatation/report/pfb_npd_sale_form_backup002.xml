@@ -11,7 +11,7 @@
         <field name="default" eval="False" />
         <field name="format">A4</field>
         <field name="orientation">Portrait</field>
-        <field name="margin_top">5</field>
+        <field name="margin_top">6</field>
         <field name="margin_bottom">5</field>
         <field name="margin_left">5</field>
         <field name="margin_right">2</field>
@@ -33,7 +33,7 @@
     <template id="so_form_header">
         <style>
             .font_weight {
-                font-weight: 800;
+                font-weight: 400;
             }
             .address-line {
                 font-size: 13px;
@@ -70,7 +70,7 @@
             <div class="col-1"/>
             <div class="col-7 company-info">
                 <h1 class="font_weight"><strong>ใบเสนอราคาเช่าสินค้า</strong></h1>
-                <h6><strong><span t-esc="doc.company_id.name"/></strong></h6>
+                <h5><strong><span t-esc="doc.company_id.name"/></strong></h5>
                 <p class="address-line">
 <!--                    <strong>ที่อยู่ :</strong>-->
 <!--                    <strong><span t-esc="doc.company_id.street"/></strong>-->
@@ -100,7 +100,7 @@
                             <p class="text-center"><strong><span t-esc="doc.name"/></strong></p>
                             <p class="text-center text-date"><strong>วันที่ทำเอกสาร</strong></p>
                             <p class="text-center date-info">
-                                <span t-esc="doc.date_order.strftime('%d') + '-' + {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'}[int(doc.date_order.strftime('%m'))] + '-' + doc.date_order.strftime('%Y')"/>
+                                <span t-esc="doc.date_order.strftime('%d') + ' ' + {1: 'มกราคม', 2: 'กุมภาพันธ์', 3: 'มีนาคม', 4: 'เมษายน', 5: 'พฤษภาคม', 6: 'มิถุนายน', 7: 'กรกฎาคม', 8: 'สิงหาคม', 9: 'กันยายน', 10: 'ตุลาคม', 11: 'พฤศจิกายน', 12: 'ธันวาคม'}[int(doc.date_order.strftime('%m'))] + ' ' + str(int(doc.date_order.strftime('%Y')) + 543)"/>
                             </p>
                         </td>
                     </tr>
@@ -117,21 +117,20 @@
                 border-radius: 10px;
                 padding: 20px;
                 width: 1000px;
-                font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
-<!--                margin: auto; /* Center align */-->
+                <!--                margin: auto; /* Center align */-->
             }
             .preserve-whitespace {
                 white-space: pre;
             }
 
             .text-partner {
-                font-size: 14px;
+                font-size: 16px;
             }
         </style>
         <div class="rounded-square">
             <div class="row">
                 <div class="col-7">
-                    <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                    <table width="100%">
                         <tr>
                             <td class="text-left text-partner"><strong>ชื่อบริษัท</strong> : <span t-esc="doc.partner_id.name"/></td>
                         </tr>
@@ -189,10 +188,10 @@
         }
         .line-distance {
             line-height: 1;
-            font-size: 14px !important;
+            font-size: 16px !important;
         }
         .small-font {
-            font-size: 14px !important;
+            font-size: 16px !important;
         }
         .border_report {
             border-bottom: 1px solid black !important;
@@ -204,7 +203,7 @@
     </style>
 
     <t t-set="order_lines" t-value="doc.order_line"/>
-    <t t-set="chunk_size" t-value="9"/>
+    <t t-set="chunk_size" t-value="11"/>
     <t t-set="chunks" t-value="[order_lines[i:i + chunk_size] for i in range(0, len(order_lines), chunk_size)]"/>
 
     <t t-foreach="chunks" t-as="group" t-index="group_index">
@@ -234,7 +233,7 @@
                         <td class="text-right line-distance weight-col">
                             <span t-esc="'{0:,.2f}'.format(l.second_uom_qty * l.pfb_quantity)"/>
                         </td>
-                        <td class="text-right line-distance rent-col"><span t-esc="'{0:,.2f}'.format(l.price_unit)"/></td>
+                        <td class="text-right line-distance rent-col"><span t-esc="'{0:,.2f}'.format(l.price_unit_no_vat)"/></td>
                         <td class="text-right line-distance quantity-col"><span t-esc="'{0:,.0f}'.format(l.pfb_quantity)"/></td>
                         <td class="text-right line-distance rent-total-col"><span t-esc="'{0:,.2f}'.format((l.price_subtotal or 0) * 1.07)"/></td>
                         <td class="text-right line-distance guarantee-col"><span t-esc="'{0:,.2f}'.format(l.pfb_insurance_price)"/></td>
@@ -254,15 +253,14 @@
 
 
     <template id="so_form_footer">
-        <div style="display: block; width: 97%; position: fixed; left: 5px; top: 890px;">
+        <div style="display: block; width: 97%; position: fixed; left: 5px; top: 770px;">
             <style>
                 .rounded-square {
                     border: 1px solid #000;
                     border-radius: 10px;
                     padding: 20px;
                     width: 100%;
-                    font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
-                }
+                                    }
                 .row {
                     display: flex;
                     align-items: center;
@@ -311,7 +309,7 @@
                     width: 97%;
                 }
                 .small-font {
-                    font-size: 14px !important;
+                    font-size: 16px !important;
                 }
             </style>
             <div class="mt-1" style="border-bottom: 1px solid black"/>
@@ -322,10 +320,12 @@
                         <div>
                             <table>
                                 <tr>
-                                    <td class="text-left small-font">หมายเหตุ : <span t-raw="doc.note.replace('&lt;p&gt;', '').replace('&lt;/p&gt;', '')"/></td>
+                                    <td class="text-left small-font">
+                                        <div style="height: 63px; line-height: 21px; overflow: hidden;">หมายเหตุ : <span t-raw="doc.note.replace('&lt;p&gt;', '').replace('&lt;/p&gt;', '')"/></div>
+                                    </td>
                                 </tr>
                                 <tr>
-                                    <td><div class="row" style="margin-bottom: 40px;"/></td>
+                                    <td><div class="row" style="margin-bottom: 5px;"/></td>
                                 </tr>
                                 <tr>
                                     <td><div class="mt-1" style="border-bottom: 1px solid black"/></td>
@@ -422,7 +422,7 @@
                         <div class="col-2" style="margin-top: 6px;">
                             <strong>รวมสุทธิ :</strong>
                         </div>
-                        <div class="col-6 text-center" style="margin-top: 6px;">
+                        <div class="col-6 text-center" style="margin-top: 6px; font-size: 19px; font-weight: bold;">
                             (<span t-esc="doc.get_baht_text_rental_quatation()"/>)
                         </div>
                         <div class="col-1 move-text" style="margin-top: 0;">
@@ -440,7 +440,7 @@
                     <div class="row">
                         <div class="col-8">
                             <div>
-                                <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                                <table width="100%">
                                     <tr>
                                         <td class="text-left"><strong>วิธีการชำระเงิน : โอนเงินเข้าบัญชี</strong></td>
                                     </tr>
@@ -481,11 +481,43 @@
                     </div>
                 </div>
             </div>
+            <!-- QR Code ชำระเงิน 3 ช่อง : ค่าประกัน / ค่าเช่า / ค่าขนส่ง -->
+            <div class="row" style="margin-bottom: 5px;"/>
+            <div class="col-16">
+                <div class="rounded-square" style="padding: 10px;">
+                    <table width="100%" style="table-layout: fixed;">
+                        <tr>
+                            <td class="text-center small-font" width="33%"><strong>ค่าประกันสินค้า</strong></td>
+                            <td class="text-center small-font" width="33%"><strong>ค่าเช่าสินค้า</strong></td>
+                            <td class="text-center small-font" width="33%"><strong>ค่าขนส่ง</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-center" width="33%">
+                                <t t-set="qr_deposit" t-value="doc.get_qr_code_image('deposit')"/>
+                                <img t-if="qr_deposit" t-att-src="'data:image/png;base64,%s' % qr_deposit" style="width: 120px; height: 120px;"/>
+                            </td>
+                            <td class="text-center" width="33%">
+                                <t t-set="qr_rent" t-value="doc.get_qr_code_image('rent')"/>
+                                <img t-if="qr_rent" t-att-src="'data:image/png;base64,%s' % qr_rent" style="width: 120px; height: 120px;"/>
+                            </td>
+                            <td class="text-center" width="33%">
+                                <t t-set="qr_logistics" t-value="doc.get_qr_code_image('logistics')"/>
+                                <img t-if="qr_logistics" t-att-src="'data:image/png;base64,%s' % qr_logistics" style="width: 120px; height: 120px;"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center small-font" width="33%"><span t-esc="doc.get_qr_company_name('deposit')"/></td>
+                            <td class="text-center small-font" width="33%"><span t-esc="doc.get_qr_company_name('rent')"/></td>
+                            <td class="text-center small-font" width="33%"><span t-esc="doc.get_qr_company_name('logistics')"/></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
             <div class="row" style="margin-bottom: 40px;"/>
             <div class="row">
                 <div class="col-7">
                     <div>
-                        <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                        <table width="100%" style="font-size: 20px;">
                             <tr>
                                 <td class="text-center">
                                     <span class="inline-text">[ตัวบรรจง]...........................................................</span>
@@ -502,7 +534,7 @@
                 </div>
                 <div class="col-5">
                     <div>
-                        <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
+                        <table width="100%" style="font-size: 20px;">
                             <tr>
                                 <td class="text-center"><strong>ขอแสดงความนับถือ</strong></td>
                             </tr>
@@ -532,7 +564,7 @@
     <t t-call="web.html_container">
         <t t-foreach="docs" t-as="doc">
             <t t-set="order_lines" t-value="doc.order_line"/>
-            <t t-set="chunk_size" t-value="9"/>
+            <t t-set="chunk_size" t-value="11"/>
             <t t-set="chunks" t-value="[order_lines[i:i + chunk_size] for i in range(0, len(order_lines), chunk_size)]"/>
 
             <t t-foreach="chunks" t-as="group" t-index="group_index">
@@ -550,15 +582,15 @@
                                 <tr style="border-bottom: 1px solid black !important;">
                                     <th width="1%" class="text-left small-font number-col border_report">No.</th>
 <!--                                    <th width="9%" class="text-center small-font pass-col border_report">รหัส</th>-->
-                                    <th width="19%" class="text-left small-font list-col border_report">รายการสินค้า</th>
+                                    <th width="23%" class="text-left small-font list-col border_report">รายการสินค้า</th>
                                     <th width="7%" class="text-right small-font weight-col border_report">น้ำหนัก</th>
 
-                                    <th width="7%" class="text-right small-font quantity-col border_report">จำนวน</th>
+                                    <th width="6%" class="text-right small-font quantity-col border_report">จำนวน</th>
 
                                     <th width="16%" class="text-center small-font guarantee-col border_report"> ค่าปรับ/เงินประกัน<br/>ราคาสินค้า(ชิ้น)</th>
-                                    <th width="11%" class="text-center small-font guarantee-col border_report">ค่าซ่อมแซม<br/>(B/ชิ้น)</th>
-                                    <th width="11%" class="text-center small-font rent-col border_report">ค่าเช่า<br/>ต่อหน่วย</th>
-                                    <th width="13%" class="text-center small-font rent-total-col border_report">รวมค่าเช่า<br/>รายวัน</th>
+                                    <th width="9%" class="text-center small-font guarantee-col border_report">ค่าซ่อมแซม<br/>(B/ชิ้น)</th>
+                                    <th width="9%" class="text-center small-font rent-col border_report">ค่าเช่า<br/>ต่อหน่วย</th>
+                                    <th width="11%" class="text-center small-font rent-total-col border_report">รวมค่าเช่า<br/>รายวัน</th>
                                     <th width="11%" class="text-right small-font guarantee-total-col border_report">รวมประกัน</th>
                                 </tr>
                             </thead>
@@ -574,7 +606,7 @@
 
                                         <td class="text-right"><span t-esc="'{0:,.2f}'.format(l.pfb_insurance_price or 0)"/></td>
                                          <td class="text-right">ตามจริง</td>
-                                        <td class="text-right"><span t-esc="'{0:,.2f}'.format(l.price_unit or 0)"/></td>
+                                        <td class="text-right"><span t-esc="'{0:,.2f}'.format(l.price_unit_no_vat or 0)"/></td>
                                         <td class="text-right"><span t-esc="'{0:,.2f}'.format(l.price_subtotal or 0)"/></td>
                                         <td class="text-right"><span t-esc="'{0:,.2f}'.format((l.pfb_quantity or 0) * (l.pfb_insurance_price or 0))"/></td>
                                     </tr>

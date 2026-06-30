@@ -62,7 +62,8 @@
                     <div style="font-size: 18px; margin: 0 0 4px 0;"><strong>เลขที่ใบคืน</strong></div>
                     <div style="font-size: 14px; margin: 0 0 4px 0;"><strong><span t-esc="doc.name"/></strong></div>
                     <div style="font-size: 14px; margin: 0 0 4px 0;" class="text-rent"><strong>ใบกำกับการเช่า</strong></div>
-                    <div style="font-size: 14px; margin: 0 0 4px 0;" class="text-rent"><span t-esc="doc.sale_id.name"/></div>
+                    <div style="font-size: 14px; margin: 0 0 4px 0;" class="text-rent">เลขที่ <span t-esc="doc.sale_id.name"/></div>
+                    <div style="font-size: 14px; margin: 0 0 4px 0;" class="text-rent"><strong>สัญญา <span t-esc="doc.sale_id.rental_contract_full"/></strong></div>
                 </td>
             </tr>
         </table>
