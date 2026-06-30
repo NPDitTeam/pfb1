@@ -3156,8 +3156,34 @@ class AccountAdvanceClearAI(models.Model):
         # 5. บิลเงินสด
         if not flags.get('cash_bill_ok', True):
             if not self.cash_bill_ids:
-                reason = u'ระบบพบบิลเงินสด/บิลเขียนมือในเอกสารแนบ แต่ผู้ใช้ยังไม่ได้ลงทะเบียนเข้าระบบ'
-                fix = u'กดปุ่ม "เพิ่มรายการบิลเงินสด" เพื่อลงทะเบียนบิลเงินสดให้ครบทุกใบ'
+                # หาไฟล์ที่ AI จัดว่าเป็นบิลเงินสด/บิลเขียนมือ (จาก skipped_files)
+                rc5 = result.get('receipt_check', {}) or {}
+                cash_files = []
+                for f in rc5.get('skipped_files', []):
+                    if not isinstance(f, dict) or f.get('is_receipt_substitute'):
+                        continue
+                    rsn = (f.get('reason', '') or '').lower()
+                    if any(kw in rsn for kw in [u'ลายมือ', u'เขียนมือ', u'บิลเงินสด', u'handwritten', u'cash']):
+                        cash_files.append(f)
+                if cash_files:
+                    reason = u'AI อ่านว่าไฟล์ต่อไปนี้เป็น "บิลเงินสด/บิลเขียนมือ" แต่ยังไม่ได้ลงทะเบียนเข้าระบบ:'
+                    reason += u'<ul style="margin:6px 0 4px;">'
+                    for f in cash_files:
+                        fn = f.get('filename', '') or u'?'
+                        amt = f.get('amount')
+                        if isinstance(amt, (int, float)) and amt > 0:
+                            reason += u'<li>&#128196; <strong>%s</strong> — ยอดที่ AI อ่านได้ %s บาท</li>' % (fn, fmt(amt))
+                        else:
+                            reason += u'<li>&#128196; <strong>%s</strong> — (AI อ่านยอดไม่ได้)</li>' % fn
+                    reason += u'</ul>'
+                    reason += (u'<div style="margin-top:6px; color:#856404;">หากไฟล์ข้างต้นจริงๆ '
+                               u'เป็นใบกำกับภาษี/ใบเสร็จปกติ (AI อ่านผิดเพราะมีลายเซ็น/ตรายางเขียนมือ) '
+                               u'แปลว่าไม่ใช่บิลเงินสด — ไม่ต้องลงทะเบียน</div>')
+                else:
+                    reason = u'ระบบพบบิลเงินสด/บิลเขียนมือในเอกสารแนบ แต่ผู้ใช้ยังไม่ได้ลงทะเบียนเข้าระบบ'
+                fix = (u'ถ้าเป็นบิลเงินสดจริง ให้กดปุ่ม "เพิ่มรายการบิลเงินสด" ลงทะเบียนให้ครบทุกใบ '
+                       u'/ ถ้า AI อ่านใบเสร็จปกติผิด ให้สแกนใบใหม่ให้ชัด (เลี่ยงลายเซ็นทับตัวเลข) '
+                       u'แล้ว Reset to Draft > อัปโหลดใหม่ > ตรวจสอบด้วย AI อีกครั้ง')
             else:
                 reason = u'ยอดบิลเงินสดที่ลงทะเบียนไว้ ไม่ตรงกับราคาต่อหน่วยในรายการ (Detail Lines)'
                 fix = u'ตรวจสอบยอดในรายการบิลเงินสดที่ลงทะเบียน ให้ตรงกับยอดในรายการ Detail Lines'
