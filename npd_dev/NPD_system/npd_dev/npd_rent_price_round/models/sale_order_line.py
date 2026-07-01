@@ -125,6 +125,11 @@ class SaleOrderLine(models.Model):
                 continue
             unit_ex_vat = round(line.price_unit / 1.07, 2)
             new_subtotal = round(unit_ex_vat * line.product_uom_qty, 2)
+            # VAT คิดไปข้างหน้าจากยอดก่อน VAT (ที่แสดงจริง) × 7%
+            # ให้ VAT ถูกต้องตามอัตรา 7% จริง ไม่ใช่ถอดย้อนจาก price_unit incl
+            # ที่ปัดเศษ 2 ตำแหน่งแล้ว (การปัด 0.10→0.11, 2.80→3.00 ทำให้ VAT บวม)
+            # ราคารวม VAT = ยอดก่อน VAT + VAT (ยอมให้ยอดรวม incl ติดเศษสตางค์
+            # เช่น 27,830.70 — ตรงกับหลักการคิด VAT มาตรฐาน/iTax)
             new_tax = round(new_subtotal * 0.07, 2)
             new_price_total = round(new_subtotal + new_tax, 2)
             result[line.id] = (new_subtotal, new_price_total, new_tax)
@@ -160,21 +165,26 @@ class SaleOrderLine(models.Model):
                 """
                 SELECT
                     COALESCE(SUM(price_subtotal), 0) AS untaxed,
-                    COALESCE(SUM(price_tax), 0) AS tax
+                    COALESCE(SUM(price_tax), 0) AS tax,
+                    COALESCE(SUM(price_total), 0) AS total
                 FROM sale_order_line
                 WHERE order_id = %s
                 """,
                 (order_id,),
             )
-            untaxed, tax = cr.fetchone()
+            untaxed, tax, total_incl = cr.fetchone()
             untaxed = round(float(untaxed or 0), 2)
             tax = round(float(tax or 0), 2)
-            # Method B: ถ้าติ๊ก vat_from_total → คิด VAT จากยอดรวม
-            # ปัดครั้งเดียว แทนที่ผลรวมของ price_tax ที่ปัดรายบรรทัด
+            total_incl = round(float(total_incl or 0), 2)
+            # Method B: ถ้าติ๊ก vat_from_total → ยึดยอดรวม (incl) เป็นความจริง
+            # tax = ยอดรวม − ยอดก่อน VAT (ถอดย้อน) ให้ amount_total ตรงราคารวม
+            # incl เป๊ะ ไม่เกิดเศษจากการคูณ 0.07 กลับบน base ที่ปัดแล้ว
             order = self.env['sale.order'].browse(order_id)
             if order.vat_from_total:
-                tax = round(untaxed * 0.07, 2)
-            total = round(untaxed + tax, 2)
+                total = total_incl
+                tax = round(total_incl - untaxed, 2)
+            else:
+                total = round(untaxed + tax, 2)
             cr.execute(
                 """
                 UPDATE sale_order
@@ -203,19 +213,23 @@ class SaleOrderLine(models.Model):
                 """
                 SELECT
                     COALESCE(SUM(price_subtotal), 0) AS untaxed,
-                    COALESCE(SUM(price_tax), 0) AS tax
+                    COALESCE(SUM(price_tax), 0) AS tax,
+                    COALESCE(SUM(price_total), 0) AS total
                 FROM sale_order_line
                 WHERE order_id = %s
                 """,
                 (order.id,),
             )
-            untaxed, tax = cr.fetchone()
+            untaxed, tax, total_incl = cr.fetchone()
             untaxed = round(float(untaxed or 0), 2)
             tax = round(float(tax or 0), 2)
-            # Method B: VAT จากยอดรวม ปัดครั้งเดียว
+            total_incl = round(float(total_incl or 0), 2)
+            # Method B: VAT ถอดย้อนจากยอดรวม (total - subtotal) ให้ยอดตรงเป๊ะ
             if order.vat_from_total:
-                tax = round(untaxed * 0.07, 2)
-            total = round(untaxed + tax, 2)
+                total = total_incl
+                tax = round(total_incl - untaxed, 2)
+            else:
+                total = round(untaxed + tax, 2)
             cr.execute(
                 """
                 UPDATE sale_order

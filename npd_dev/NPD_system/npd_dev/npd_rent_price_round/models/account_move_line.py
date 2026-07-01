@@ -128,6 +128,11 @@ class AccountMoveLine(models.Model):
                 continue
             unit_ex_vat = round(line.price_unit / 1.07, 2)
             new_subtotal = round(unit_ex_vat * line.quantity, 2)
+            # VAT คิดไปข้างหน้าจากยอดก่อน VAT (ที่แสดงจริง) × 7%
+            # ตรงกับฝั่ง SO — ให้ VAT ถูกต้องตามอัตรา 7% จริง ไม่ถอดย้อนจาก
+            # price_unit incl ที่ปัดเศษแล้ว (การปัดทำให้ VAT บวม)
+            # downstream ทุกจุด (Method B / rebalance) คิด tax = total - subtotal
+            # จึงได้ค่า forward VAT ตามไปเองโดยอัตโนมัติ
             new_tax = round(new_subtotal * 0.07, 2)
             new_price_total = round(new_subtotal + new_tax, 2)
             result[line.id] = (new_subtotal, new_price_total, new_tax)
@@ -421,10 +426,10 @@ class AccountMoveLine(models.Model):
                         new_tax_amount = round(
                             target_value - base_subtotal, 2)
                     elif use_method_b and abs(tax_obj.amount - 7.0) < 0.01:
-                        # Method B: VAT 7% คิดจากยอดรวม ปัดครั้งเดียว
+                        # Method B: VAT 7% ถอดย้อนจากยอดรวม (total - subtotal)
+                        # ให้ยอดตรงราคารวม incl เป๊ะ ไม่เกิดเศษจากการคูณ 0.07 กลับ
                         # (ใช้เฉพาะภาษี 7% — ภาษีอื่น เช่น WHT ใช้สูตรเดิม)
-                        new_tax_amount = round(
-                            base_subtotal * tax_obj.amount / 100.0, 2)
+                        new_tax_amount = round(base_total - base_subtotal, 2)
                     else:
                         # Default: tax = SUM(price_total) - SUM(price_subtotal)
                         new_tax_amount = round(base_total - base_subtotal, 2)
@@ -604,8 +609,10 @@ class AccountMoveLine(models.Model):
                 per_line_tax_7 = round(float(row_b[1] or 0), 2)
                 per_line_tax_all = round(total_with_tax - untaxed, 2)
                 if taxable_7_subtotal > 0:
-                    # มีบรรทัด VAT 7% → Method B สำหรับส่วน 7%
-                    method_b_vat = round(taxable_7_subtotal * 0.07, 2)
+                    # มีบรรทัด VAT 7% → Method B (ถอดย้อน): VAT 7% =
+                    # ผลรวม (price_total - price_subtotal) ของบรรทัด 7%
+                    # = ตรงกับยอดรวม incl เป๊ะ ไม่คูณ 0.07 กลับบน base ที่ปัดแล้ว
+                    method_b_vat = per_line_tax_7
                     # ภาษีอื่น (WHT ฯลฯ) = ผลรวม per-line tax ลบส่วนของ 7%
                     other_taxes = round(per_line_tax_all - per_line_tax_7, 2)
                     tax = round(method_b_vat + other_taxes, 2)
