@@ -1,8 +1,15 @@
 from odoo import api, fields, models
 from bahttext import bahttext
+from decimal import Decimal, ROUND_HALF_UP
 
 class SaleOrder(models.Model):
     _inherit = "sale.order"
+
+    def get_wht_amount(self):
+        # ภาษีหัก ณ ที่จ่าย 5% ปัดแบบ round-half-up (เช่น 353.025 -> 353.03)
+        base = Decimal(str(self.amount_untaxed))
+        wht = (base * Decimal('0.05')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        return float(wht)
 
     def get_date_baht_text(self):
         return bahttext(self.commitment_date)

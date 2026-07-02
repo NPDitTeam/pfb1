@@ -299,8 +299,8 @@
                 <t t-set="total_untaxed_amount" t-value="doc.total_amount / 1.07"/>
                 <t t-set="total_vat" t-value="doc.total_amount - total_untaxed_amount"/>
             </t>
-            <!-- ภาษีหัก ณ ที่จ่าย 5% (ค่าเช่า) คิดตามสัดส่วนยอดชำระจริง ใช้ค่าเดียวกันทุกจุดในใบเสร็จ -->
-            <t t-set="wht_rent" t-value="total_untaxed_amount * 5 / 100"/>
+            <!-- ภาษีหัก ณ ที่จ่าย 5% (ค่าเช่า) คิดตามสัดส่วนยอดชำระจริง ใช้ค่าเดียวกันทุกจุดในใบเสร็จ ปัดแบบ round-half-up -->
+            <t t-set="wht_rent" t-value="doc.round_half_up(total_untaxed_amount * 5 / 100)"/>
             <tr>
                 <td colspan="1" class="text-left" style="border-bottom: hidden; white-space: nowrap;">ค่าเช่า/ค่าบริการก่อนภาษีมูลค่าเพิ่ม</td>
                 <td colspan="1" class="text-right" style="border-left: hidden; border-bottom: hidden;">

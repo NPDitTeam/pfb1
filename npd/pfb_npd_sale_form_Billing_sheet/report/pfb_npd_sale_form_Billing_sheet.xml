@@ -201,6 +201,12 @@
                             <span>วันที่ :</span>
                         </td>
                     </tr>
+                    <tr>
+                        <td class="text-right text_bold b"
+                            style="font-size: 14px;padding-left: 10px; padding-right: 0px;">
+                            <span>วันที่กำหนดจ่าย :</span>
+                        </td>
+                    </tr>
                 </table>
             </div>
             <div class="col-2_report">
@@ -213,6 +219,11 @@
                     <tr>
                         <td class="text-left b" style="font-size: 14px; padding-left: 0px;">
                             <span class="ml-1" t-esc="doc.date_order.strftime('%d-%m-%Y')"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-left b" style="font-size: 14px; padding-left: 0px;">
+                            <span class="ml-1" t-esc="doc.invoice_ids.invoice_date_due.strftime('%d-%m-%Y') if doc.invoice_ids.invoice_date_due else ''"/>
                         </td>
                     </tr>
                 </table>
@@ -382,7 +393,7 @@
                 ภาษีหัก ณ ที่จ่าย 5% ของ :
                 <span class="spacing1" style="font-size: 14px;" t-esc="'{0:,.2f}'.format(doc.amount_untaxed)"/>
                 <span class="spacing2" style="font-size: 14px;">=</span>
-                <span class="spacing2" style="font-size: 14px;" t-esc="'{0:,.2f}'.format(doc.amount_untaxed / 20)"/>
+                <span class="spacing2" style="font-size: 14px;" t-esc="'{0:,.2f}'.format(doc.get_wht_amount())"/>
                 <span class="spacing2" style="font-size: 14px;">บาท</span>
             </p>
         </t>
