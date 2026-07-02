@@ -219,14 +219,12 @@ class NpdDebtSummary(models.Model):
     # =========================================================================
     @api.model
     def _get_overdue_partner_ids(self):
-        """คืน commercial partner ids ที่มีใบแจ้งหนี้ลูกค้าค้างชำระเกินกำหนด (ตั้งแต่วันนี้ย้อนหลัง)"""
-        today = date.today()
+        """คืน commercial partner ids ที่มีใบแจ้งหนี้ลูกค้าค้างชำระ (ไม่ว่าถึงกำหนดหรือยัง)"""
         invoices = self.env['account.move'].search([
             ('move_type', 'in', ('out_invoice', 'out_refund')),
             ('state', '=', 'posted'),
             ('payment_state', 'in', ('not_paid', 'partial')),
             ('amount_residual', '>', 0),
-            ('invoice_date_due', '<=', today),
         ])
         partner_ids = set()
         for inv in invoices:
@@ -289,9 +287,9 @@ class NpdDebtSummary(models.Model):
         existing_inv_ids = set(self.customer_invoice_line_ids.mapped('invoice_id').ids)
         unpaid_invoices = self.env['account.move'].search([
             ('partner_id', 'child_of', commercial.id),
+            ('move_type', 'in', ('out_invoice', 'out_refund')),
             ('state', '=', 'posted'),
             ('amount_residual', '>', 0),
-            ('invoice_date_due', '<=', today),
         ])
         invoices = self.env['account.move'].browse(
             sorted(existing_inv_ids | set(unpaid_invoices.ids))).exists()
@@ -418,8 +416,8 @@ class NpdDebtSummary(models.Model):
 
         candidate_invoices = self.env['account.move'].search([
             ('partner_id', 'child_of', commercial.id),
+            ('move_type', 'in', ('out_invoice', 'out_refund')),
             ('state', '=', 'posted'),
-            ('invoice_date_due', '<=', today),
         ])
         for tinv in candidate_invoices:
             payment_inv_lines = self.env['account.payment.invoice'].search([
