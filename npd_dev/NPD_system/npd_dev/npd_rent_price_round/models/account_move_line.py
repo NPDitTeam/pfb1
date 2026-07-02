@@ -426,10 +426,11 @@ class AccountMoveLine(models.Model):
                         new_tax_amount = round(
                             target_value - base_subtotal, 2)
                     elif use_method_b and abs(tax_obj.amount - 7.0) < 0.01:
-                        # Method B: VAT 7% ถอดย้อนจากยอดรวม (total - subtotal)
-                        # ให้ยอดตรงราคารวม incl เป๊ะ ไม่เกิดเศษจากการคูณ 0.07 กลับ
+                        # Method B: VAT 7% ปัดครั้งเดียวจากยอดรวม (subtotal × 7%)
+                        # ให้ตรงกับ iTax/การปัดยอดรวมทีเดียว
                         # (ใช้เฉพาะภาษี 7% — ภาษีอื่น เช่น WHT ใช้สูตรเดิม)
-                        new_tax_amount = round(base_total - base_subtotal, 2)
+                        new_tax_amount = round(
+                            base_subtotal * tax_obj.amount / 100.0, 2)
                     else:
                         # Default: tax = SUM(price_total) - SUM(price_subtotal)
                         new_tax_amount = round(base_total - base_subtotal, 2)
@@ -609,10 +610,9 @@ class AccountMoveLine(models.Model):
                 per_line_tax_7 = round(float(row_b[1] or 0), 2)
                 per_line_tax_all = round(total_with_tax - untaxed, 2)
                 if taxable_7_subtotal > 0:
-                    # มีบรรทัด VAT 7% → Method B (ถอดย้อน): VAT 7% =
-                    # ผลรวม (price_total - price_subtotal) ของบรรทัด 7%
-                    # = ตรงกับยอดรวม incl เป๊ะ ไม่คูณ 0.07 กลับบน base ที่ปัดแล้ว
-                    method_b_vat = per_line_tax_7
+                    # มีบรรทัด VAT 7% → Method B: ปัด VAT 7% ครั้งเดียวจากยอดรวม
+                    # ของบรรทัด 7% (subtotal × 7%) ให้ตรง iTax/การปัดยอดรวมทีเดียว
+                    method_b_vat = round(taxable_7_subtotal * 0.07, 2)
                     # ภาษีอื่น (WHT ฯลฯ) = ผลรวม per-line tax ลบส่วนของ 7%
                     other_taxes = round(per_line_tax_all - per_line_tax_7, 2)
                     tax = round(method_b_vat + other_taxes, 2)

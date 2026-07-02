@@ -176,13 +176,13 @@ class SaleOrderLine(models.Model):
             untaxed = round(float(untaxed or 0), 2)
             tax = round(float(tax or 0), 2)
             total_incl = round(float(total_incl or 0), 2)
-            # Method B: ถ้าติ๊ก vat_from_total → ยึดยอดรวม (incl) เป็นความจริง
-            # tax = ยอดรวม − ยอดก่อน VAT (ถอดย้อน) ให้ amount_total ตรงราคารวม
-            # incl เป๊ะ ไม่เกิดเศษจากการคูณ 0.07 กลับบน base ที่ปัดแล้ว
+            # Method B: ถ้าติ๊ก vat_from_total → ปัด VAT ครั้งเดียวจากยอดรวม
+            # tax = round(ยอดก่อน VAT × 7%) ให้ตรงกับ iTax/การปัดยอดรวมทีเดียว
+            # (ยอมให้ amount_total ต่างจากผลบวก price_total รายบรรทัดได้ 1 สตางค์)
             order = self.env['sale.order'].browse(order_id)
             if order.vat_from_total:
-                total = total_incl
-                tax = round(total_incl - untaxed, 2)
+                tax = round(untaxed * 0.07, 2)
+                total = round(untaxed + tax, 2)
             else:
                 total = round(untaxed + tax, 2)
             cr.execute(
@@ -224,10 +224,10 @@ class SaleOrderLine(models.Model):
             untaxed = round(float(untaxed or 0), 2)
             tax = round(float(tax or 0), 2)
             total_incl = round(float(total_incl or 0), 2)
-            # Method B: VAT ถอดย้อนจากยอดรวม (total - subtotal) ให้ยอดตรงเป๊ะ
+            # Method B: ปัด VAT ครั้งเดียวจากยอดรวม (untaxed × 7%) ให้ตรง iTax
             if order.vat_from_total:
-                total = total_incl
-                tax = round(total_incl - untaxed, 2)
+                tax = round(untaxed * 0.07, 2)
+                total = round(untaxed + tax, 2)
             else:
                 total = round(untaxed + tax, 2)
             cr.execute(
