@@ -3316,10 +3316,10 @@
             </style>
             <table class="table table-sm" style="margin-bottom: 0px !important;">
                 <tr>
-                    <td class="text-left column100">
+                    <td class="text-left" style="width: 70px;">
                         <br/>
                         <br/>
-                        <img t-if="company.logo" t-att-src="image_data_uri(company.logo)" style="max-height: 110px;"
+                        <img t-if="company.logo" t-att-src="image_data_uri(company.logo)" style="max-height: 55px;"
                              alt="Logo"/>
                     </td>
                     <td class="column370 text-left" style="font-size:16px;">
@@ -3341,18 +3341,18 @@
 <!--                        <strong t-field="company.partner_id.vat"/>-->
                         <br/>
                         <br/>
-                        <strong t-field="company.partner_id.name" style="font-size:16px;"/>
+                        <strong t-field="company.partner_id.name" style="font-size:17px; font-weight:bold;"/>
                         <br/>
-                        <strong t-field="user.branch_id.address" style="font-size:16px;"/>
+                        <span t-field="user.branch_id.address" style="font-size:13px;"/>
                          <br/>
-                         <strong style="font-size:16px;">เลขประจำตัวผู้เสียภาษีอากร :</strong>
-                        <strong style="font-size:16px;" t-field="company.partner_id.vat"/><span style="font-size:16px;" t-if="user.branch_id.telephone == '00000'">(สำนักงานใหญ่)</span>
+                         <span style="font-size:13px;">เลขประจำตัวผู้เสียภาษีอากร :</span>
+                        <span style="font-size:13px;" t-field="company.partner_id.vat"/><span style="font-size:13px;" t-if="user.branch_id.telephone == '00000'">(สำนักงานใหญ่)</span>
 
                     </td>
-                    <td class="column90 text-right" style="font-size:18px;">
+                    <td class="text-right" style="width: 175px; font-size:18px;">
                         <!--                        <br/>-->
                         <br/>
-                        <strong style="font-size: 14px;">ใบกำกับภาษี/ใบเสร็จรับเงิน</strong>
+                        <strong style="font-size: 16px; white-space: nowrap;">ใบกำกับภาษี/ใบเสร็จรับเงิน</strong>
                         <br/>
                         <b>ต้นฉบับ</b>
                     </td>
@@ -4335,19 +4335,19 @@
                                         <t t-set="total_line" t-value="total_line + 1"/>
                                         <tr style="height: 30px;">
                                             <td class="text-center line_ids" style="vertical-align: middle;font-size: 16px">
-                                                <div style="line-height: 24px;"><span style="font-size: 14px;" t-esc="line_index+1"/></div>
+                                                <div style="line-height: 20px;"><span style="font-size: 13px;" t-esc="line_index+1"/></div>
                                             </td>
                                             <td class="text-left line_ids" style="vertical-align: middle;font-size: 16px">
-                                                <span style="font-size: 14px;" t-esc="line.name"/>
+                                                <span style="font-size: 13px;" t-esc="line.name"/>
                                             </td>
                                             <td class="text-center line_ids" style="vertical-align: middle;font-size: 16px">
-                                                <span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(line.quantity)"/>
+                                                <span style="font-size: 13px;" t-esc="'{0:,.2f}'.format(line.quantity)"/>
                                             </td>
                                             <td class="text-center line_ids" style="vertical-align: middle;font-size: 16px">
-                                                <span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(line.price_unit)"/>
+                                                <span style="font-size: 13px;" t-esc="'{0:,.2f}'.format(line.price_unit)"/>
                                             </td>
                                             <td class="text-right line_ids" style="vertical-align: middle;font-size: 16px">
-                                                <span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(line.price_subtotal)"/>
+                                                <span style="font-size: 13px;" t-esc="'{0:,.2f}'.format(line.price_subtotal)"/>
                                                 <t t-set="discount"
                                                    t-value="discount +((line.quantity*line.price_unit)-line.price_subtotal)"/>
                                             </td>
@@ -4358,7 +4358,7 @@
                                 <t t-foreach="range(18-total_line)" t-as="x">
                                     <tr style="height: 30px;">
                                         <td class="text-center line_ids" style="vertical-align: middle;">
-                                            <div style="line-height: 26px; color: white;">|</div>
+                                            <div style="line-height: 24px; color: white;">|</div>
                                         </td>
                                         <td class="text-left line_ids" style="vertical-align: middle;">
 
@@ -4378,7 +4378,7 @@
 
 
                                 <tr style="border: 1px solid black !important;">
-                                    <td colspan="3"  class="text-left" style="font-size: 14px;">
+                                    <td colspan="3"  class="text-left" style="font-size: 14px; line-height: 1.1;">
                                         <strong style="font-size: 14px;">หมายเหตุ :</strong><br/>
 
                                                     <t t-if="request.db == 'NPD_S_Group_New'">
@@ -4455,7 +4455,7 @@
 
 
                                 <tr style="border: 1px solid black !important;">
-                                    <td style="font-size:16px;">
+                                    <td style="font-size:16px; white-space: nowrap;">
                                         <strong style="font-size: 14px;">ตัวอักษร :</strong>
                                     </td>
                                     <td colspan="2" class="text-center" style="border: 0px solid black !important;">

@@ -111,7 +111,7 @@
 
         <!-- ข้อมูลลูกค้า -->
         <div class="row">
-            <div class="col-6">
+            <div class="col-8">
                 <table width="100%">
                     <tr>
                         <td class="text_bold b" style="font-size: 13px; width: 110px;">ชื่อลูกค้า :</td>
@@ -137,15 +137,22 @@
                     </tr>
                 </table>
             </div>
-            <div class="col-6">
-                <table width="100%">
+            <div class="col-4">
+                <table width="100%" style="white-space: nowrap;">
                     <tr>
                         <td class="text-right text_bold b" style="font-size: 13px;">เลขที่ :</td>
-                        <td class="text-right b" style="font-size: 13px; width: 110px;"><span t-esc="doc.name"/></td>
+                        <td class="text-left b" style="font-size: 13px; white-space: nowrap; padding-left: 4px;"><span t-esc="doc.name"/></td>
                     </tr>
+                    <t t-set="_dates" t-value="[l.rental_start_date for l in doc.customer_penalty_line_ids if l.rental_start_date]"/>
+                    <t t-set="_rdate" t-value="max(_dates) if _dates else False"/>
+                    <t t-set="_ddate" t-value="_rdate + datetime.timedelta(days=14) if _rdate else False"/>
                     <tr>
                         <td class="text-right text_bold b" style="font-size: 13px;">วันที่ :</td>
-                        <td class="text-right b" style="font-size: 13px;"><span t-esc="doc.create_date.strftime('%d-%m-%Y')"/></td>
+                        <td class="text-left b" style="font-size: 13px; padding-left: 4px;"><span t-esc="_rdate.strftime('%d-%m-%Y') if _rdate else '-'"/></td>
+                    </tr>
+                    <tr>
+                        <td class="text-right text_bold b" style="font-size: 13px;">วันที่กำหนดชำระ :</td>
+                        <td class="text-left b" style="font-size: 13px; padding-left: 4px;"><span t-esc="_ddate.strftime('%d-%m-%Y') if _ddate else '-'"/></td>
                     </tr>
                 </table>
             </div>

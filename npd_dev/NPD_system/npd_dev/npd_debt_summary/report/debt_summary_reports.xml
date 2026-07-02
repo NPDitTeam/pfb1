@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!--
+        ใช้ template เดิมจากโมดูล npd_debt_tracking_qweb ผ่าน wrapper
+        (report_name ไม่ชนกัน) โดยผูกกับโมเดล npd.debt.summary
+        เพื่อให้เมนู "พิมพ์" ของ รวมหนี้ลูกค้า มีรายงานครบ 4 ตัว
+    -->
+
+    <!-- 1) ใบแจ้งหนี้/ใบวางบิล (ค่าเช่า) -->
+    <template id="report_debt_summary_invoice">
+        <t t-call="npd_debt_tracking_qweb.report_npd_debt_tracking_qweb"/>
+    </template>
+    <report
+            id="action_debt_summary_invoice"
+            string="ใบแจ้งหนี้/ใบวางบิล"
+            name="npd_debt_summary.report_debt_summary_invoice"
+            model="npd.debt.summary"
+            report_type="qweb-pdf"
+            print_report_name="'Billing Note - %s' % (object.name)"
+            paperformat="npd_debt_tracking_qweb.paperformat_npd_debt_tracking_qweb"
+    />
+
+    <!-- 2) ใบแจ้งหนี้/ใบวางบิลค่าปรับชำรุด -->
+    <template id="report_debt_summary_damage">
+        <t t-call="npd_debt_tracking_qweb.report_npd_debt_tracking_damage_qweb"/>
+    </template>
+    <report
+            id="action_debt_summary_damage"
+            string="ใบแจ้งหนี้/ใบวางบิลค่าปรับชำรุด"
+            name="npd_debt_summary.report_debt_summary_damage"
+            model="npd.debt.summary"
+            report_type="qweb-pdf"
+            print_report_name="'Damage Billing Note - %s' % (object.name)"
+            paperformat="npd_debt_tracking_qweb.paperformat_npd_debt_tracking_qweb"
+    />
+
+    <!-- 3) ใบแจ้งหนี้/ใบวางบิลค่าปรับหาย -->
+    <template id="report_debt_summary_lost">
+        <t t-call="npd_debt_tracking_qweb.report_npd_debt_tracking_lost_qweb"/>
+    </template>
+    <report
+            id="action_debt_summary_lost"
+            string="ใบแจ้งหนี้/ใบวางบิลค่าปรับหาย"
+            name="npd_debt_summary.report_debt_summary_lost"
+            model="npd.debt.summary"
+            report_type="qweb-pdf"
+            print_report_name="'Lost Billing Note - %s' % (object.name)"
+            paperformat="npd_debt_tracking_qweb.paperformat_npd_debt_tracking_qweb"
+    />
+
+    <!-- 4) ใบแจ้งหนี้/ใบวางบิล/Tax -->
+    <template id="report_debt_summary_tax">
+        <t t-call="npd_debt_tracking_qweb.report_npd_debt_tracking_tax_qweb"/>
+    </template>
+    <report
+            id="action_debt_summary_tax"
+            string="ใบแจ้งหนี้/ใบวางบิล/Tax"
+            name="npd_debt_summary.report_debt_summary_tax"
+            model="npd.debt.summary"
+            report_type="qweb-pdf"
+            print_report_name="'Billing Note Tax - %s' % (object.name)"
+            paperformat="npd_debt_tracking_qweb.paperformat_npd_debt_tracking_qweb"
+    />
+</odoo>

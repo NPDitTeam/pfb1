@@ -22,11 +22,11 @@
 
     <report
             id="action_pfb_npd_payment_form_receipt"
-            string="ใบเสร็จรับเงิน"
+            string="ใบกำกับภาษี/ใบเสร็จรับเงิน"
             name="pfb_npd_payment_form_receipt.form_payment_npd_pfb"
             model="account.payment"
             report_type="qweb-pdf"
-            print_report_name="'ใบเสร็จรับเงิน - %s' % (object.name)"
+            print_report_name="'ใบกำกับภาษี/ใบเสร็จรับเงิน - %s' % (object.name)"
             paperformat="pfb_npd_payment_form_receipt.paperformat_payment_form_test"
     />
 
@@ -76,7 +76,7 @@
                 <img src="web/binary/company_logo" class="img-responsive"/>
             </div>
             <div class="col-1"/>
-            <div class="col-7 company-info">
+            <div class="col-6 company-info">
                 <b>
                     <h5 style="line-height: 1.6; overflow: visible;" ><strong><span t-esc="doc.company_id.name"/></strong></h5>
                 </b>
@@ -102,12 +102,12 @@
                                 </p>
             </div>
             <!--            <div class="col-1"></div>-->
-            <div class="col-4">
+            <div class="col-5">
                 <table width="100%" class="tt1">
                     <tr style="">
-                        <td style="display:block;width: 150px;text-align: center;padding-top: 5px;">
-                            <p class="text-center document-info"><h4><strong>ใบเสร็จรับเงิน</strong></h4></p>
-                            <p class="text-center"><h5><strong>Receipt</strong></h5></p>
+                        <td style="display:block;width: 280px;text-align: center;padding-top: 4px;">
+                            <p class="text-center document-info"><h4><strong>ใบกำกับภาษี/ใบเสร็จรับเงิน</strong></h4></p>
+                            <p class="text-center"><h5><strong>Tax invoice/Receipt</strong></h5></p>
                         </td>
                     </tr>
                 </table>
