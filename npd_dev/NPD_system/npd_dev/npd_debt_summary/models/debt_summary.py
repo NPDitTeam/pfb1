@@ -292,7 +292,8 @@ class NpdDebtSummary(models.Model):
             ('amount_residual', '>', 0),
         ])
         invoices = self.env['account.move'].browse(
-            sorted(existing_inv_ids | set(unpaid_invoices.ids))).exists()
+            sorted(existing_inv_ids | set(unpaid_invoices.ids))).exists().filtered(
+            lambda m: m.move_type == 'out_invoice')
         inv_lines = [(5, 0, 0)]
         total_residual = 0.0
         for inv in invoices:
