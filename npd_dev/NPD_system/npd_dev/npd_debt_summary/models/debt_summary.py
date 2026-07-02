@@ -221,7 +221,7 @@ class NpdDebtSummary(models.Model):
     def _get_overdue_partner_ids(self):
         """คืน commercial partner ids ที่มีใบแจ้งหนี้ลูกค้าค้างชำระ (ไม่ว่าถึงกำหนดหรือยัง)"""
         invoices = self.env['account.move'].search([
-            ('move_type', 'in', ('out_invoice', 'out_refund')),
+            ('move_type', '=', 'out_invoice'),
             ('state', '=', 'posted'),
             ('payment_state', 'in', ('not_paid', 'partial')),
             ('amount_residual', '>', 0),
@@ -287,7 +287,7 @@ class NpdDebtSummary(models.Model):
         existing_inv_ids = set(self.customer_invoice_line_ids.mapped('invoice_id').ids)
         unpaid_invoices = self.env['account.move'].search([
             ('partner_id', 'child_of', commercial.id),
-            ('move_type', 'in', ('out_invoice', 'out_refund')),
+            ('move_type', '=', 'out_invoice'),
             ('state', '=', 'posted'),
             ('amount_residual', '>', 0),
         ])
@@ -416,7 +416,7 @@ class NpdDebtSummary(models.Model):
 
         candidate_invoices = self.env['account.move'].search([
             ('partner_id', 'child_of', commercial.id),
-            ('move_type', 'in', ('out_invoice', 'out_refund')),
+            ('move_type', '=', 'out_invoice'),
             ('state', '=', 'posted'),
         ])
         for tinv in candidate_invoices:
