@@ -27,9 +27,13 @@
                 <t t-set="cdate" t-value="o._get_rental_start_date_thai()"/>
                 <t t-set="onsite" t-value="o._get_rental_on_site()"/>
                 <t t-set="branch" t-value="o._get_rental_branch_name()"/>
+                <!-- ทำที่ : นิติบุคคล -> ชื่อลูกค้า, บุคคลธรรมดา -> ที่อยู่ (ไม่เอาประเทศ) -->
+                <t t-set="poa_place_val" t-value="cust['name'] if cust['is_company'] else cust['address']"/>
                 <!-- เส้นประ fallback เมื่อไม่มีข้อมูล -->
                 <t t-set="dot_s" t-value="'............'"/>
                 <t t-set="dot_m" t-value="'............................'"/>
+                <t t-set="dot_addr" t-value="'...............................'"/>
+                <t t-set="dot_id" t-value="'.....................................'"/>
                 <t t-set="dot_l" t-value="'........................................................'"/>
                 <div class="page" style="font-family: 'THSarabunNew',sans-serif; font-weight: normal; font-size: 16px; line-height: 1.4; color: #000;">
 
@@ -66,7 +70,7 @@
                         .poa-item { margin: 0 0 14px 0; text-align: left; padding-left: 1.5em; line-height: 1.7; }
                         .poa-val { font-weight: bold; }
                         .poa-evidence { text-align: right; text-indent: 0; margin: 0 0 12px 0; }   /* "เพื่อเป็นหลักฐาน" ชิดขวา */
-                        .poa-gap { height: 15mm; }   /* spacer ดันลงชื่อไปท้ายกระดาษ -- ปรับค่านี้ */
+                        .poa-gap { height: 32mm; }   /* spacer ดันลงชื่อไปท้ายกระดาษ -- ปรับค่านี้ */
                         .poa-sign { width: 58%; margin-left: auto; text-align: center; line-height: 2.0; }   /* บล็อกชิดขวา ข้อความกึ่งกลาง */
                         .poa-sign-sub { font-size: 16px; color: #9a9a9a; display: block; margin-bottom: 16px; }
                         .poa-stamp { border: 1px solid #999; color: #888; width: 130px; height: 56px;
@@ -83,7 +87,7 @@
                         <!-- ===== หัวเอกสาร ===== -->
                         <div class="poa-title">หนังสือมอบอำนาจ</div>
 
-                        <div class="poa-place">ทำที่ <span class="poa-val"><span t-esc="lessor_name"/></span> สาขา <span t-attf-class="#{branch and 'poa-val' or ''}" t-esc="branch or dot_s"/></div>
+                        <div class="poa-place">ทำที่ <span t-attf-class="#{poa_place_val and 'poa-val' or ''}" t-esc="poa_place_val or dot_l"/> </div>
                         <div class="poa-place">วันที่ <span t-attf-class="#{cdate['day'] and 'poa-val' or ''}" t-esc="cdate['day'] or dot_s"/>
                             เดือน <span t-attf-class="#{cdate['month'] and 'poa-val' or ''}" t-esc="cdate['month'] or dot_m"/>
                             พ.ศ. <span t-attf-class="#{cdate['year'] and 'poa-val' or ''}" t-esc="cdate['year'] or dot_s"/></div>
@@ -97,10 +101,12 @@
                             ที่อยู่ <span t-attf-class="#{cust['address'] and 'poa-val' or ''}" t-esc="cust['address'] or dot_m"/>
                             ซึ่งต่อไปในหนังสือนี้เรียกว่า "<span class="poa-val">ผู้มอบอำนาจ</span>" ขอมอบอำนาจให้<br/>
                             (ชื่อตัวแทนผู้รับมอบ) <span t-esc="dot_l"/> อายุ <span t-esc="dot_s"/> ปี
-                            เลขประจำตัวประชาชน <span t-esc="dot_m"/><br/>
-                            อยู่บ้านเลขที่ <span t-esc="dot_m"/>
-                            เป็นผู้มีอำนาจกระทำการแทนข้าพเจ้า ในการดำเนินการ<br/>
-                            ดังต่อไปนี้:
+                            เลขประจำตัวประชาชน <span t-esc="dot_id"/><br/>
+                            อยู่บ้านเลขที่ <span t-esc="dot_s"/>
+                            หมู่ที่ <span t-esc="dot_s"/> ถนน <span t-esc="dot_addr"/>
+                            ตำบล/แขวง <span t-esc="dot_addr"/> อำเภอ/เขต <span t-esc="dot_addr"/><br/>
+                            จังหวัด <span t-esc="dot_addr"/> เบอร์โทรศัพท์ <span t-esc="dot_m"/>
+                            เป็นผู้มีอำนาจกระทำการแทนข้าพเจ้า ในการดำเนินการดังต่อไปนี้:
                         </p>
 
                         <!-- ===== รายการมอบอำนาจ ===== -->
@@ -110,15 +116,12 @@
                             กับ <span class="poa-val"><span t-esc="lessor_name"/></span>
                         </div>
                         <div class="poa-item">
-                            2. รับมอบทรัพย์สินที่เช่า ตามรายการและเงื่อนไขที่ระบุในสัญญาเช่าและเอกสารแนบท้าย
+                            2. ลงนามในเอกสารแนบท้ายสัญญา ใบกำกับการเช่า เอกสารการรับ-ส่งสินค้า ใบแจ้งหนี้ และเอกสารอื่นใดที่เกี่ยวข้องกับการเช่าและการส่งคืนทรัพย์สินทั้งหมด
                         </div>
                         <div class="poa-item">
-                            3. ลงนามในเอกสารการรับ-ส่งสินค้า ใบแจ้งหนี้ ใบกำกับการเช่า และเอกสารอื่นใดที่เกี่ยวข้องกับการเช่าและการส่ง<br/>
-                            คืนทรัพย์สินทั้งหมด
+                            3. ดำเนินการรับเงิน จ่ายเงิน วางเงินมัดจำ ชำระค่าเช่าสินค้า หรือดำเนินการใดๆ ที่จำเป็นเพื่อให้การทำธุรกรรมการเช่านี้สำเร็จตามวัตถุประสงค์
                         </div>
-                        <div class="poa-item">
-                            4. ดำเนินการอื่น ๆ ที่จำเป็นเพื่อให้การทำธุรกรรมการเช่าครั้งนี้สำเร็จลุล่วงตามวัตถุประสงค์
-                        </div>
+
 
                         <!-- ===== ข้อความยืนยัน ===== -->
                         <p class="poa-clause" style="margin-top: 24px;">
@@ -155,12 +158,10 @@
                             <br/>
                         <div class="poa-note">
                             <div style="font-size: 15px; font-weight: bold;">หมายเหตุ</div>
-                            <div style="font-size: 15px; font-weight: bold;">1. หนังสือมอบอำนาจให้ประธานบริษัทลูกค้า</div>
-                            <div style="font-size: 15px; font-weight: bold;">2. แนบเอกสารประกอบพร้อมลงนามรับรองสำเนาถูกต้อง ดังนี้</div>
+                            <div style="font-size: 15px; font-weight: bold;">แนบเอกสารประกอบพร้อมลงนามรับรองสำเนาถูกต้อง ดังนี้</div>
                             <div style="font-size: 14px; font-weight: normal; padding-left: 1.8em;">1. หนังสือรับรองบริษัท (ถ้ามี)</div>
                             <div style="font-size: 14px; font-weight: normal; padding-left: 1.8em;">2. สำเนาบัตรประชาชนของผู้มอบอำนาจ (หรือผู้มีอำนาจลงนามแทนนิติบุคคล)</div>
                             <div style="font-size: 14px; font-weight: normal; padding-left: 1.8em;">3. สำเนาบัตรประชาชนของผู้รับมอบอำนาจ</div>
-                            <div style="font-size: 14px; font-weight: normal; padding-left: 1.8em;">พร้อมลงนามรับรองสำเนาถูกต้อง</div>
                             <div style="font-size: 14px; font-weight: normal;">หากเป็นนิติบุคคล อย่าลืมประทับตราสำคัญของบริษัทในช่องผู้มอบอำนาจ</div>
                         </div>
                         </div>

@@ -28,6 +28,7 @@
                 <t t-set="dot_s" t-value="'............'"/>
                 <t t-set="dot_m" t-value="'............................'"/>
                 <t t-set="dot_l" t-value="'.................................................................'"/>
+                <t t-set="dot_xl" t-value="'.......................................................................'"/>
                 <div class="page" style="font-family: 'THSarabunNew',sans-serif; font-weight: normal; font-size: 17px; line-height: 1.6; color: #000;">
 
                     <style>
@@ -47,7 +48,7 @@
                         .rc-chk    { font-size: 22px; vertical-align: -3px; }
                         .rc-sign-tb { width: 100%; margin-top: 8px; border-collapse: collapse; }
                         .rc-sign-tb td { width: 50%; text-align: center; padding: 5px 8px; vertical-align: top; font-size: 19px; }
-                        .rc-stamp-tb { width: 100%; margin-top: 34px; border-collapse: collapse; }
+                        .rc-stamp-tb { width: 100%; margin-top: 93px; border-collapse: collapse; }
                         .rc-stamp-tb td { width: 50%; vertical-align: top; padding: 0 8px; }
                         .rc-stamp { border: 1px solid #999; color: #999; height: 54px; width: 120px;
                                     font-size: 13px; text-align: center; padding-top: 4px; }
@@ -74,19 +75,20 @@
                     </div>
 
                     <p class="rc-cl">สัญญาเช่าฉบับนี้ทำขึ้น ระหว่าง <span class="rc-val"><span t-esc="lessor_name"/></span>
-                        โดยนายธีระพล รอดสาตร์ กรรมการผู้มีอำนาจ เลขประจำตัวผู้เสียภาษี
+                        โดยพลตรี หรือ นายธีระพล รอดสาตร์ กรรมการผู้มีอำนาจ เลขประจำตัวผู้เสียภาษี
                         <span t-attf-class="#{o.company_id.vat and 'rc-val' or ''}" t-esc="o.company_id.vat or dot_m"/>
                         ที่อยู่ <span class="rc-val"><span t-esc="o._get_rental_lessor_address()"/></span><br/>
                         ซึ่งต่อไปในสัญญานี้เรียกว่า "ผู้ให้เช่า" ฝ่ายหนึ่งกับ</p>
 
+                    <t t-set="is_company" t-value="cust['is_company']"/>
                     <p class="rc-cl" style="text-indent: 0;">
-                        <span class="rc-chk">&#9745;</span> นิติบุคคล <span t-attf-class="#{cust['name'] and 'rc-val' or ''}" t-esc="cust['name'] or dot_m"/> โดยนาย/นาง/นางสาว......................................................กรรมการผู้มีอำนาจ เลขประจำตัวผู้เสียภาษี <span t-attf-class="#{cust['vat'] and 'rc-val' or ''}" t-esc="cust['vat'] or dot_m"/> ที่อยู่ <span t-attf-class="#{cust['address'] and 'rc-val' or ''}" t-esc="cust['address'] or dot_m"/><br/>
-                        มอบอำนาจให้ นาย/นาง/นางสาว...............................................................................................</p>
+                        <span class="rc-chk"><t t-if="is_company">&#9745;</t><t t-else="">&#9744;</t></span> นิติบุคคล <span t-attf-class="#{is_company and cust['name'] and 'rc-val' or ''}" t-esc="(is_company and cust['name']) or dot_m"/> โดยนาย/นาง/นางสาว......................................................กรรมการผู้มีอำนาจ เลขประจำตัวผู้เสียภาษี <span t-attf-class="#{is_company and cust['vat'] and 'rc-val' or ''}" t-esc="(is_company and cust['vat']) or dot_m"/> ที่อยู่ <span t-attf-class="#{is_company and cust['address'] and 'rc-val' or ''}" t-esc="(is_company and cust['address']) or dot_xl"/><br/>
+                        </p>
 
                     <p class="rc-cl" style="text-indent: 0;">
-                        <span class="rc-chk">&#9744;</span> นาย/นาง/นางสาว.......................................................... อายุ..............ปี ที่อยู่.............................หมู่ที่.............ถนน..................................ตำบล/แขวง.......................................อำเภอ/เขต........................................
-                        จังหวัด...........................................เบอร์โทรศัพท์....................................................<br/>
-                        มอบอำนาจให้ นาย/นาง/นางสาว...............................................................................................</p>
+                        <span class="rc-chk"><t t-if="not is_company">&#9745;</t><t t-else="">&#9744;</t></span> นาย/นาง/นางสาว<span t-attf-class="#{(not is_company) and cust['name'] and 'rc-val' or ''}" t-esc="((not is_company) and cust['name']) or dot_m"/> เลขประจำตัวผู้เสียภาษี <span t-attf-class="#{(not is_company) and cust['vat'] and 'rc-val' or ''}" t-esc="((not is_company) and cust['vat']) or dot_m"/> ที่อยู่ <span t-attf-class="#{(not is_company) and cust['address'] and 'rc-val' or ''}" t-esc="((not is_company) and cust['address']) or dot_xl"/><br/>
+
+                        <span class="rc-chk">&#9744;</span> มอบอำนาจให้ นาย/นาง/นางสาว...............................................................................................</p>
 
                     <p class="rc-cl">ถือบัตรประจำตัวประชาชน.............................................................สำนักงานใหญ่/บ้านเลขที่
                         .............................หมู่ที่.............ถนน..................................ตำบล/แขวง.......................................อำเภอ/เขต........................................
@@ -246,7 +248,7 @@
                         </tr>
                         <tr>
                             <td>(....................................................)</td>
-                            <td>( นายธีระพล รอดสาตร์ )</td>
+                            <td>( พลตรี หรือ นายธีระพล รอดสาตร์ )</td>
                         </tr>
                         <tr>
                             <td>บริษัท............................................... จำกัด</td>

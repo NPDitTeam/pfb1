@@ -296,18 +296,17 @@ class SaleOrder(models.Model):
         return ""
 
     def _get_rental_customer_info(self):
-        """ข้อมูลผู้เช่า (ลูกค้า) สำหรับหัวสัญญา -> {'name','vat','address','phone'}"""
+        """ข้อมูลผู้เช่า (ลูกค้า) สำหรับหัวสัญญา -> {'name','vat','address','phone','is_company'}"""
         self.ensure_one()
         p = self.partner_id
         if not p:
-            return {"name": "", "vat": "", "address": "", "phone": ""}
+            return {"name": "", "vat": "", "address": "", "phone": "", "is_company": False}
         addr_parts = [
             p.street,
             p.street2,
             p.city,
             p.state_id.name if p.state_id else "",
             p.zip,
-            p.country_id.name if p.country_id else "",
         ]
         address = " ".join([x for x in addr_parts if x])
         return {
@@ -315,6 +314,7 @@ class SaleOrder(models.Model):
             "vat": p.vat or "",
             "address": address,
             "phone": p.phone or p.mobile or "",
+            "is_company": bool(p.is_company),
         }
 
     def _ensure_rental_contract_no(self):

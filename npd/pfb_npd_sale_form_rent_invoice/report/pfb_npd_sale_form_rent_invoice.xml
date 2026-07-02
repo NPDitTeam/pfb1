@@ -674,8 +674,8 @@
                                     </tr>
                                 </table>
                                 <br/>
-                                <div>(นายธีระพล รอดสาตร์)</div>
-                                <div style="border-top: 1px solid #000; margin-top: 4px; padding-top: 4px;">
+                                <div>(พลตรี หรือ นายธีระพล รอดสาตร์)</div>
+                                <div style="margin-top: 4px; padding-top: 4px;">
 
                                     <strong><span t-esc="doc.company_id.name"/></strong>
                                 </div>
