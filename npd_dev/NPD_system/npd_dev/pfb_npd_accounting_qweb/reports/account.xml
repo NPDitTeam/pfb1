@@ -3587,29 +3587,47 @@
 <div style="width: 100%; font-size: 22px; margin-top: 20px;">
   <div style="clear: both;"></div>
 
-  <!-- ผู้รับเงิน -->
-  <div style="width: 33.3%; float: left; text-align: center;">
-<!--    <div style="margin-bottom: 10px;"><strong style="font-size: 18px;">ลงชื่อ..............................................</strong></div>-->
-<!--    <div style="margin-bottom: 5px;"><strong style="font-size: 18px;">ผู้รับเงิน</strong></div>-->
-<!--    <div><strong style="font-size: 18px;">วันที่........./................../...............</strong></div>-->
-  </div>
+  <t t-if="env.cr.dbname == 'NPD_Steeltech_New'">
+    <div style="width: 100%; text-align: center;">
+      <!-- ผู้รับเงิน -->
+      <div style="width: 40%; display: inline-block; vertical-align: top; text-align: center;">
+        <div style="margin-bottom: 10px;"><strong style="font-size: 22px;">ลงชื่อ..............................................</strong></div>
+        <div style="margin-bottom: 5px;"><strong style="font-size: 22px;">ผู้รับเงิน</strong></div>
+        <div><strong style="font-size: 22px;">วันที่........./................../...............</strong></div>
+      </div>
 
-  <!-- ผู้มีอำนาจอนุมัติ -->
-  <div style="width: 100%; float: none; text-align: center;">
-       <div><strong style="font-size: 22px;"><strong t-field="company.partner_id.name" /></strong></div>
-    <div style="margin-bottom: 10px;">
-      <strong style="font-size: 22px;">ลงชื่อ</strong>
-      <img t-att-src="'/pfb_npd_accounting_qweb/static/description/signature_npd.png'"
-           style="height: 65px; vertical-align: middle; margin-left: 5px;" />
+      <!-- ผู้มีอำนาจอนุมัติ -->
+      <div style="width: 40%; display: inline-block; vertical-align: top; text-align: center;">
+        <div><strong style="font-size: 22px;"><strong t-field="company.partner_id.name" /></strong></div>
+        <div style="margin-bottom: 10px;">
+          <strong style="font-size: 22px;">ลงชื่อ</strong>
+          <img t-att-src="'/pfb_npd_accounting_qweb/static/description/signature_npd.png'"
+               style="height: 65px; vertical-align: middle; margin-left: 5px;" />
+        </div>
+        <div style="margin-bottom: 5px;"><strong style="font-size: 22px;">ผู้มีอำนาจอนุมัติ</strong></div>
+      </div>
     </div>
-    <div style="margin-bottom: 5px;"><strong style="font-size: 22px;">ผู้มีอำนาจอนุมัติ</strong></div>
-  </div>
-     <!-- ผู้รับใบเสร็จ -->
-  <div style="width: 33.3%; float: left; text-align: center;">
-<!--    <div style="margin-bottom: 10px;"><strong style="font-size: 18px;">ลงชื่อ..............................................</strong></div>-->
-<!--    <div style="margin-bottom: 5px;"><strong style="font-size: 18px;">ผู้รับใบเสร็จ</strong></div>-->
-<!--    <div><strong style="font-size: 18px;">วันที่........./................../...............</strong></div>-->
-  </div>
+  </t>
+
+  <t t-else="">
+    <!-- ผู้รับเงิน -->
+    <div style="width: 33.3%; float: left; text-align: center;">
+<!--      <div style="margin-bottom: 10px;"><strong style="font-size: 22px;">ลงชื่อ..............................................</strong></div>-->
+<!--      <div style="margin-bottom: 5px;"><strong style="font-size: 22px;">ผู้รับเงิน</strong></div>-->
+<!--      <div><strong style="font-size: 22px;">วันที่........./................../...............</strong></div>-->
+    </div>
+
+    <!-- ผู้มีอำนาจอนุมัติ -->
+    <div style="width: 100%; float: left; text-align: center;">
+      <div><strong style="font-size: 22px;"><strong t-field="company.partner_id.name" /></strong></div>
+      <div style="margin-bottom: 10px;">
+        <strong style="font-size: 22px;">ลงชื่อ</strong>
+        <img t-att-src="'/pfb_npd_accounting_qweb/static/description/signature_npd.png'"
+             style="height: 65px; vertical-align: middle; margin-left: 5px;" />
+      </div>
+      <div style="margin-bottom: 5px;"><strong style="font-size: 22px;">ผู้มีอำนาจอนุมัติ</strong></div>
+    </div>
+  </t>
 
   <div style="clear: both;"></div>
 </div>
