@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- เพิ่มฟิลด์รหัสบัญชีกลางในฟอร์มผังบัญชี -->
+    <record id="view_account_form_inherit_central_code" model="ir.ui.view">
+        <field name="name">account.account.form.inherit.central.code</field>
+        <field name="model">account.account</field>
+        <field name="inherit_id" ref="account.view_account_form"/>
+        <field name="arch" type="xml">
+            <field name="deprecated" position="after">
+                <field name="central_account_code"
+                       placeholder="กรอกเฉพาะตัวเลข"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- เพิ่มคอลัมน์รหัสบัญชีกลางในมุมมองรายการผังบัญชี -->
+    <record id="view_account_list_inherit_central_code" model="ir.ui.view">
+        <field name="name">account.account.list.inherit.central.code</field>
+        <field name="model">account.account</field>
+        <field name="inherit_id" ref="account.view_account_list"/>
+        <field name="arch" type="xml">
+            <field name="code" position="after">
+                <field name="central_account_code" optional="show"/>
+            </field>
+        </field>
+    </record>
+</odoo>
