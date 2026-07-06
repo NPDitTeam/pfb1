@@ -446,6 +446,36 @@ class AccountAdvanceClear(models.Model):
                         {'debit': tax_move_line.debit + advance_clear.tax_correction if tax_move_line.debit > 0 else 0,
                          'credit': tax_move_line.credit + advance_clear.tax_correction if tax_move_line.credit > 0 else 0})
             print('line_total2')
+
+            # --- Auto-balance rounding residual (permanent fix) ---
+            # เหตุ: ยอดรวม/clear_amount ปัด VAT แบบ Round Globally (round(ผลรวม))
+            # แต่บรรทัด VAT ลงบัญชีจริงปัดแยกรายใบกำกับ (ผลรวม(round แต่ละใบ))
+            # ทำให้เดบิต-เครดิตเหลื่อมกันได้ทีละ 1-2 สตางค์ -> Cannot create unbalanced journal entry
+            # แก้โดยดันส่วนต่างที่เหลือลงบรรทัดเงินสด/โอน (หรือบรรทัดเงินทดรอง) ก่อนโพสต์
+            move_lines = self.env['account.move.line'].search([('move_id', '=', move.id)])
+            diff = advance_clear.currency_id.round(
+                sum(move_lines.mapped('debit')) - sum(move_lines.mapped('credit')))
+            if diff:
+                adj = move_lines.filtered(
+                    lambda l: l.account_id == advance_clear.payment_method_id.account_id)[:1]
+                if not adj:
+                    adj = move_lines.filtered(
+                        lambda l: l.account_id == advance_clear.account_id)[:1]
+                if adj:
+                    adj = adj.with_context(check_move_validity=False)
+                    if diff > 0:          # เดบิตเกิน
+                        if adj.debit >= diff:
+                            adj.debit = adj.debit - diff
+                        else:
+                            adj.credit = adj.credit + diff
+                    else:                 # เครดิตเกิน
+                        d = -diff
+                        if adj.credit >= d:
+                            adj.credit = adj.credit - d
+                        else:
+                            adj.debit = adj.debit + d
+            # --- end fix ---
+
             # We post the advance_clear.
             advance_clear.write({
                 'move_id': move.id,
