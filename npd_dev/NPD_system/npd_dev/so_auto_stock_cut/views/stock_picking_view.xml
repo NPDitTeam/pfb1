@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- priority สูง เพื่อให้ apply หลังโมดูลอื่น (เช่น stock_picking_cancel_extended ที่ replace ปุ่ม Cancel) -->
+    <record id="view_picking_form_so_auto_lock" model="ir.ui.view">
+        <field name="name">stock.picking.form.so.auto.lock</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <!-- ฟิลด์ช่วยสำหรับ attrs (ซ่อนไว้) -->
+            <xpath expr="//header" position="inside">
+                <field name="is_return_picking" invisible="1"/>
+                <field name="sc_is_rental_picking" invisible="1"/>
+            </xpath>
+
+            <!-- 1) ซ่อนปุ่ม 'ส่งคืน' (Return) บนใบคืน — กันวนกดสร้างใบคืนของใบคืน (= ตัดสต็อกใหม่) -->
+            <button name="%(stock.act_stock_return_picking)d" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', ('state', '!=', 'done'), ('is_return_picking', '=', True)]}</attribute>
+            </button>
+
+            <!-- 2) ซ่อนปุ่ม 'ยกเลิก' (Cancel) เมื่อใบขาย/เช่า สถานะเสร็จสิ้นแล้ว -->
+            <button name="action_cancel" position="attributes">
+                <attribute name="attrs">{'invisible': ['&amp;', ('state', '=', 'done'), ('sc_is_rental_picking', '=', True)]}</attribute>
+            </button>
+        </field>
+    </record>
+</odoo>

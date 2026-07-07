@@ -1810,6 +1810,30 @@ class StockCutGreenhomeLine(models.TransientModel):
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
+    is_return_picking = fields.Boolean(
+        string='เป็นใบคืน',
+        compute='_compute_sc_picking_flags',
+        help='ใบนี้เป็นใบคืน (มี move อ้างอิงใบตัดผ่าน origin_returned_move_id)')
+    sc_is_rental_picking = fields.Boolean(
+        string='ใบขาย/เช่า',
+        compute='_compute_sc_picking_flags',
+        help='ใบที่มาจากคำสั่งขาย (sale_id) หรือเป็นใบคืน — ใช้ล็อกยกเลิก/ลบเมื่อเสร็จสิ้น')
+
+    @api.depends('move_lines.origin_returned_move_id', 'sale_id')
+    def _compute_sc_picking_flags(self):
+        for picking in self:
+            is_ret = any(m.origin_returned_move_id for m in picking.move_lines)
+            picking.is_return_picking = is_ret
+            picking.sc_is_rental_picking = bool(picking.sale_id) or is_ret
+
+    def unlink(self):
+        # ห้ามลบใบขาย/เช่าที่สถานะเสร็จสิ้นแล้ว (กันพนักงานลบใบตัด/คืนที่ปิดงานแล้ว)
+        for picking in self:
+            if picking.state == 'done' and picking.sc_is_rental_picking:
+                raise UserError(
+                    "❌ ใบ '%s' สถานะ 'เสร็จสิ้น' แล้ว ไม่สามารถลบได้" % (picking.name or ''))
+        return super().unlink()
+
     def button_validate(self):
         res = super().button_validate()
         if not GREENHOME_SYNC_ENABLED:

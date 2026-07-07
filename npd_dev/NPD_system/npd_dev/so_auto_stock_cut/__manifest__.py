@@ -9,6 +9,7 @@
         'security/ir.model.access.csv',
         'views/sale_order_view.xml',
         'views/stock_confirm_wizard_view.xml',
+        'views/stock_picking_view.xml',
         'views/res_users_view.xml',
     ],
     'installable': True,

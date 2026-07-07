@@ -18,7 +18,8 @@ class SaleOrder(models.Model):
         string='มีการตัดที่ยังไม่ได้คืน', compute='_compute_sc_stock_flags')
 
     @api.depends('state', 'picking_ids.state', 'picking_ids.picking_type_id.code',
-                 'picking_ids.move_lines.origin_returned_move_id')
+                 'picking_ids.move_lines.origin_returned_move_id',
+                 'picking_ids.move_lines.state')
     def _compute_sc_stock_flags(self):
         for order in self:
             done_pickings = order.picking_ids.filtered(lambda p: p.state == 'done')
@@ -29,14 +30,17 @@ class SaleOrder(models.Model):
                 for m in p.move_lines:
                     if m.origin_returned_move_id:
                         returned_src_ids.add(m.origin_returned_move_id.id)
-            # หา 'ใบตัดสต๊อก' (ส่งออก done, ไม่ใช่ใบคืน) ที่ยังไม่ถูกคืน
+            # หา 'ใบตัดสต๊อก' (ส่งออก done, ไม่ใช่ใบคืน) ที่ยังไม่ถูกคืน 'ครบ'
+            # รองรับการตัดหลายรอบ: ทุกใบตัดต้องถูกคืนครบทุก move จึงจะไม่บล็อก
             unreturned_cut = False
             for p in done_pickings:
                 if p.picking_type_id.code != 'outgoing':
                     continue
                 if any(m.origin_returned_move_id for m in p.move_lines):
                     continue  # ใบนี้เป็นใบคืน ไม่ใช่ใบตัด
-                if not (set(p.move_lines.ids) & returned_src_ids):
+                # move ที่ตัดจริง (done) 'ทุกตัว' ต้องถูกคืน (subset) ไม่ใช่แค่บางตัว
+                cut_move_ids = set(p.move_lines.filtered(lambda m: m.state == 'done').ids)
+                if cut_move_ids and not cut_move_ids.issubset(returned_src_ids):
                     unreturned_cut = True
                     break
             order.sc_has_cut = unreturned_cut

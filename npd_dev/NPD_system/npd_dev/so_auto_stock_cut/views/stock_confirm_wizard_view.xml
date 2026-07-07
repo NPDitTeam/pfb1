@@ -22,7 +22,8 @@
             <group>
                 <field name="confirm_line_ids" nolabel="1"
                        options="{'no_create': True, 'no_create_edit': True, 'no_open': True, 'no_delete': True}">
-                <tree editable="bottom" string="ตัดสต๊อกตาม SO">
+                <!-- ล็อกไม่ให้เพิ่ม/ลบรายการ (ทั้งโหมดตัดและคืน) — รายการมาจากระบบเท่านั้น -->
+                <tree editable="bottom" create="false" delete="false" string="ตัดสต๊อกตาม SO">
                   <field name="product_id" string="สินค้า" readonly="1" force_save="1"/>
                   <field name="odoo_stock_qty" string="สต๊อกคงเหลือ" readonly="1" force_save="1"/>
                   <field name="quantity" string="จำนวนที่ตัด" readonly="1" force_save="1"/>
