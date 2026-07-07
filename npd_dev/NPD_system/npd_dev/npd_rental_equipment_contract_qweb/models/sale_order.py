@@ -109,6 +109,13 @@ class SaleOrder(models.Model):
         compute="_compute_rental_contract_full",
         help=u"เลขที่สัญญาเช่าเต็ม = ตัวย่อ + เลขรัน + .ลำดับ/ทั้งหมด",
     )
+    rental_contract_skip = fields.Boolean(
+        string=u"ข้ามการสร้างเลขที่สัญญา",
+        copy=False,   # ไม่คัดลอกธงไปเอกสารที่ซ้ำต่อ (คำนวณใหม่จากต้นฉบับทุกครั้ง)
+        default=False,
+        help=u"ตั้งเป็น True อัตโนมัติเมื่อเอกสารถูก 'ซ้ำ' มาจากต้นฉบับที่ไม่เคยมี"
+             u"เลขที่สัญญาเช่า เพื่อไม่ให้ระบบสร้างเลขที่สัญญาให้ตอนยืนยัน",
+    )
 
     @api.depends("rental_contract_prefix", "rental_contract_no")
     def _compute_rental_contract_full(self):
@@ -317,6 +324,16 @@ class SaleOrder(models.Model):
             "is_company": bool(p.is_company),
         }
 
+    def copy(self, default=None):
+        """กดซ้ำเอกสาร: ถ้าต้นฉบับ (self) ไม่เคยมีเลขที่สัญญาเช่า
+        ให้ตั้งธง rental_contract_skip=True บนเอกสารที่ซ้ำ เพื่อ 'ข้าม' การสร้าง
+        เลขที่สัญญาตอนยืนยัน. ถ้าต้นฉบับมีเลขอยู่แล้ว → ทำงานตามเดิม
+        (rental_contract_no copy=True จะคัดลอกเลขเดิมไปให้)"""
+        default = dict(default or {})
+        if not self.rental_contract_no:
+            default.setdefault('rental_contract_skip', True)
+        return super(SaleOrder, self).copy(default)
+
     def _ensure_rental_contract_no(self):
         """สร้างเลขที่สัญญาเช่าให้ครั้งแรก แล้วเก็บไว้ (ไม่เปลี่ยนถ้ามีแล้ว)"""
         seq_obj = self.env["ir.sequence"]
@@ -351,6 +368,9 @@ class SaleOrder(models.Model):
         """เมื่อกดยืนยัน (state -> 'sale' / ใบสั่งขาย) ถ้าประเภท = rent ให้สร้างเลขที่สัญญาเช่าทันที"""
         res = super(SaleOrder, self).action_confirm()
         for order in self:
+            # ข้ามการสร้างเลข ถ้าเอกสารถูกซ้ำมาจากต้นฉบับที่ไม่เคยมีเลขที่สัญญา
+            if order.rental_contract_skip:
+                continue
             if self._is_rental_contract_order(order) and not order.rental_contract_no:
                 order._ensure_rental_contract_no()
         return res
