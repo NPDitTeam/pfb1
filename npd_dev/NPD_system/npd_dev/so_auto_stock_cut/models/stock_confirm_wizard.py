@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from odoo import models, api, fields
 from odoo.exceptions import UserError
+from odoo.tools import float_compare
 import pymysql
 import logging
 
@@ -38,6 +39,12 @@ class StockCutConfirmWizard(models.TransientModel):
     greenhome_line_ids = fields.One2many('stock.cut.greenhome.line', 'wizard_id', string='ข้อมูลบ้านเขียว')
 
     can_return_greenhome = fields.Boolean(string='Allow Greenhome Return', default=False)
+
+    # โหมดของ wizard: 'cut' = ตัดสต๊อก, 'return' = คืนสต๊อก
+    mode = fields.Selection([
+        ('cut', 'ตัดสต๊อก'),
+        ('return', 'คืนสต๊อก'),
+    ], string='โหมด', default='cut')
     # ----------------------------
     # Helpers
     # ----------------------------
@@ -438,6 +445,44 @@ class StockCutConfirmWizard(models.TransientModel):
             ('location_id', '=', location.id),
         ])
         return sum(quants.mapped('quantity'))
+
+    def _get_branch_internal_location(self, branch, product_ids=None):
+        """หา 'คลังต้นทาง' (usage=internal) ของสาขา
+        กันเคส location ซ้ำ (บางสาขามีหลาย location ชื่อเดียวกัน เช่น ปลวกแดง/โคราช)
+        โดยเลือกอันที่ 'มีสต๊อกจริง' ของสินค้าที่จะตัดมากที่สุด แทนการหยิบ limit=1
+        มั่ว ๆ ที่อาจได้ location ว่าง -> จองไม่ได้ -> error"""
+        Location = self.env['stock.location']
+        locations = Location.search([
+            ('branch_id', '=', branch.id),
+            ('usage', '=', 'internal'),
+        ])
+        if len(locations) <= 1:
+            return locations[:1]
+
+        Quant = self.env['stock.quant']
+
+        def _best(domain):
+            agg = {}
+            for q in Quant.search(domain):
+                agg[q.location_id.id] = agg.get(q.location_id.id, 0.0) + q.quantity
+            if agg:
+                best_id = max(agg, key=agg.get)
+                if agg[best_id] > 0:
+                    return Location.browse(best_id)
+            return None
+
+        # 1) เลือกจากสต๊อกของ 'สินค้าที่จะตัด'
+        if product_ids:
+            loc = _best([('location_id', 'in', locations.ids),
+                         ('product_id', 'in', list(product_ids))])
+            if loc:
+                return loc
+        # 2) เลือกจากสต๊อกรวมทั้งหมด (หา location ที่ใช้งานจริง)
+        loc = _best([('location_id', 'in', locations.ids)])
+        if loc:
+            return loc
+        # 3) ไม่มีสต๊อกเลย -> อันแรก (พฤติกรรมเดิม)
+        return locations[:1]
 
     def _branch_mapping(self):
         return {
@@ -949,12 +994,20 @@ class StockCutConfirmWizard(models.TransientModel):
             return res
 
         order = self.env['sale.order'].browse(order_id)
-        location = self.env['stock.location'].search([
-            ('branch_id', '=', order.branch_id.id),
-            ('usage', '=', 'internal')
-        ], limit=1)
+        location = self._get_branch_internal_location(
+            order.branch_id,
+            order.order_line.filtered(lambda l: l.product_id).mapped('product_id').ids,
+        )
         location_name = location.display_name if location else "ไม่พบคลังของสาขา"
         branch_name = location.branch_id.name if location and location.branch_id else False
+
+        # ----------------- โหมดคืนสต๊อก: ดึงสินค้าที่ 'ตัดจริง' มาแสดงเพื่อคืน -----------------
+        mode = self.env.context.get('default_mode', 'cut')
+        if mode == 'return':
+            res['mode'] = 'return'
+            res['order_id'] = order.id
+            res['confirm_line_ids'] = self._build_return_lines(order, location, location_name)
+            return res
 
         # ----------------- ตรวจสอบ bk_reference_code ก่อนดำเนินการ -----------------
         missing_bk_products = []
@@ -1134,6 +1187,190 @@ class StockCutConfirmWizard(models.TransientModel):
             _dbg(f"📦 _adjust_odoo_stock: {product.display_name} "
                  f"current={current_qty} >= target={target_qty}, ไม่ต้องเติม")
 
+    # ==========================================================================
+    # คืนสต๊อก Auto (return) — ย้อนกลับการตัดสต๊อก
+    # ==========================================================================
+    def _sync_rent_dates(self, picking):
+        """คัดลอกวันที่เริ่มต้น/สิ้นสุดการเช่า จาก sale.order ไปยัง stock.picking
+        (start_rent_date -> start_x_date, end_rent_date -> end_x_date)
+        ใช้ทั้งตอนตัดสต๊อกและตอนคืนสต๊อก"""
+        order = self.order_id
+        vals = {}
+        if order.start_rent_date:
+            vals['start_x_date'] = order.start_rent_date
+        if order.end_rent_date:
+            vals['end_x_date'] = order.end_rent_date
+        if vals:
+            picking.write(vals)
+
+    @staticmethod
+    def _is_cut_picking(p):
+        """เป็นใบ 'ตัดสต๊อก' จริง = ใบส่งออกเสร็จสิ้น และไม่ใช่ใบคืน
+        ตรวจใบคืนด้วย origin_returned_move_id (ไม่ใช่ข้อความ origin ที่ถูกแปลภาษาได้)"""
+        return (
+            p.state == 'done'
+            and p.picking_type_id.code == 'outgoing'
+            and not any(m.origin_returned_move_id for m in p.move_lines)
+        )
+
+    def _get_last_cut_picking(self):
+        """ใบจัดส่งขาออกที่ตัดสต๊อกแล้ว (done) ล่าสุดของคำสั่งขายนี้ (ไม่ใช่ใบคืน)"""
+        pickings = self.order_id.picking_ids.filtered(
+            self._is_cut_picking
+        ).sorted('id', reverse=True)
+        return pickings[:1]
+
+    def _build_return_lines(self, order, location, location_name):
+        """สร้างบรรทัดรายการคืน จากสินค้าที่ 'ตัดจริง' ในใบจัดส่งขาออกล่าสุด"""
+        lines = []
+        picking = order.picking_ids.filtered(
+            self._is_cut_picking
+        ).sorted('id', reverse=True)[:1]
+        if not picking:
+            return lines
+        for move in picking.move_ids_without_package.filtered(
+                lambda m: m.state == 'done' and m.quantity_done > 0):
+            lines.append((0, 0, {
+                'product_id': move.product_id.id,
+                'quantity': move.quantity_done,
+                'location_name': location_name,
+                'odoo_stock_qty': self._get_odoo_stock_qty(move.product_id, location),
+            }))
+        return lines
+
+    def _force_done_full(self, picking):
+        """ใส่ qty_done เต็มจำนวนให้ทุก move แล้ว validate ปิดใบเป็น 'เสร็จสิ้น'"""
+        picking.action_assign()
+        for move in picking.move_ids_without_package:
+            qty = float(move.product_uom_qty or 0.0)
+            if qty <= 0:
+                continue
+            if move.move_line_ids:
+                first_ml = move.move_line_ids[0]
+                for extra in move.move_line_ids[1:]:
+                    extra.unlink()
+                first_ml.write({'qty_done': qty, 'picking_id': picking.id})
+                if move.product_id.tracking in ('lot', 'serial') and not (first_ml.lot_id or first_ml.lot_name):
+                    first_ml.lot_name = f"AUTO-{fields.Date.today()}"
+            else:
+                ml_vals = {
+                    'move_id': move.id,
+                    'picking_id': picking.id,
+                    'product_id': move.product_id.id,
+                    'product_uom_id': move.product_uom.id,
+                    'location_id': move.location_id.id,
+                    'location_dest_id': move.location_dest_id.id,
+                    'qty_done': qty,
+                }
+                if move.product_id.tracking in ('lot', 'serial'):
+                    ml_vals['lot_name'] = f"AUTO-{fields.Date.today()}"
+                self.env['stock.move.line'].create(ml_vals)
+        picking.invalidate_cache()
+        picking.with_context(
+            skip_immediate=True, skip_sms=True, skip_backorder=True
+        ).button_validate()
+
+    def confirm_stock_return(self):
+        self.ensure_one()
+        order = self.order_id
+        picking = self._get_last_cut_picking()
+        if not picking:
+            raise UserError("❌ ไม่พบใบจัดส่งที่ตัดสต๊อกแล้ว (เสร็จสิ้น) สำหรับคำสั่งขายนี้")
+
+        # กันคืนซ้ำ: มี move ในใบตัดนี้ถูกอ้างอิงเป็นต้นทางการคืน (origin_returned_move_id) แล้วหรือยัง
+        # ใช้โครงสร้างจริงแทนการเทียบ origin เพราะ 'Return of..' ถูกแปลภาษาได้
+        cut_move_ids = set(picking.move_lines.ids)
+        already_returned = any(
+            m.origin_returned_move_id.id in cut_move_ids
+            for p in order.picking_ids.filtered(lambda x: x.state == 'done')
+            for m in p.move_lines
+            if m.origin_returned_move_id
+        )
+        if already_returned:
+            raise UserError("↩️ ใบจัดส่งนี้ถูกคืนสต๊อกเรียบร้อยแล้ว ไม่สามารถคืนซ้ำได้")
+
+        # จำนวนที่ 'ตัดจริง' ต่อสินค้า (ใช้ตรวจความครบถ้วนของการคืน)
+        cut_qty_by_product = {}
+        for move in picking.move_ids_without_package.filtered(
+                lambda m: m.state == 'done' and m.quantity_done > 0):
+            cut_qty_by_product[move.product_id.id] = \
+                cut_qty_by_product.get(move.product_id.id, 0.0) + move.quantity_done
+        if not cut_qty_by_product:
+            raise UserError("❌ ไม่พบรายการสินค้าที่ถูกตัดในใบจัดส่งนี้")
+
+        # ---- สร้างใบคืนด้วย stock.return.picking (มาตรฐาน Odoo) ----
+        return_lines = []
+        for move in picking.move_ids_without_package.filtered(
+                lambda m: m.state == 'done' and m.quantity_done > 0):
+            return_lines.append((0, 0, {
+                'product_id': move.product_id.id,
+                'quantity': move.quantity_done,
+                'move_id': move.id,
+                'uom_id': move.product_id.uom_id.id,
+            }))
+
+        return_wiz = self.env['stock.return.picking'].with_context(
+            active_id=picking.id, active_ids=picking.ids, active_model='stock.picking'
+        ).create({
+            'picking_id': picking.id,
+            'product_return_moves': return_lines,
+            'location_id': picking.location_id.id,   # คืนกลับคลังต้นทาง (สาขา)
+        })
+
+        result = return_wiz.create_returns()
+        new_picking = self.env['stock.picking'].browse(result['res_id'])
+        _dbg(f"↩️ สร้างใบคืน {new_picking.name} จาก {picking.name}")
+
+        # ---- ดันให้เสร็จสิ้นอัตโนมัติ (qty_done เต็ม + validate) ----
+        self._force_done_full(new_picking)
+
+        # sync วันที่เช่าจาก SO ไปยังใบคืน (start_x_date/end_x_date)
+        # ⚠️ ต้องทำ 'หลัง' _force_done_full เพราะ action_assign เรียก
+        # update_location_from_branch() ที่ค้นหา SO จาก origin ของใบคืน
+        # ('การส่งคืนของ..') ไม่เจอ แล้วเซ็ตวันเป็น False ทับ — จึงต้องเขียนเป็นค่าสุดท้าย
+        self._sync_rent_dates(new_picking)
+
+        # ---- ตรวจความครบถ้วนของการคืน เทียบกับสินค้าที่ 'ตัดจริง' ----
+        new_picking.invalidate_cache()
+        returned_qty_by_product = {}
+        for move in new_picking.move_ids_without_package.filtered(lambda m: m.state == 'done'):
+            returned_qty_by_product[move.product_id.id] = \
+                returned_qty_by_product.get(move.product_id.id, 0.0) + move.quantity_done
+
+        not_returned = []
+        for product_id, need in cut_qty_by_product.items():
+            product = self.env['product.product'].browse(product_id)
+            rounding = product.uom_id.rounding or 0.01
+            done = returned_qty_by_product.get(product_id, 0.0)
+            if float_compare(done, need, precision_rounding=rounding) < 0:
+                not_returned.append((product, need, done))
+
+        if not_returned:
+            lines = [
+                f"• {p.display_name} — ต้องคืน {need:.0f} แต่คืนได้ {done:.0f}"
+                for (p, need, done) in not_returned
+            ]
+            raise UserError(
+                "❌ คืนสต๊อกไม่ครบทุกรายการ!\n\n"
+                "สินค้าต่อไปนี้ถูกตัดไปแต่คืนกลับได้ไม่ครบ:\n\n"
+                + "\n".join(lines)
+                + "\n\nระบบยกเลิกการคืนสต๊อกทั้งใบแล้ว (ไม่มีการคืนค้างบางส่วน)\n"
+                  "กรุณาตรวจสอบและลองใหม่อีกครั้ง หรือแจ้งผู้ดูแลระบบ"
+            )
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': '✅ คืนสต๊อกสำเร็จ',
+                'message': f'สร้างใบคืน {new_picking.name} และปิดสถานะเสร็จสิ้นเรียบร้อย '
+                           f'(คืน {len(cut_qty_by_product)} รายการ)',
+                'sticky': False,
+                'type': 'success',
+                'next': {'type': 'ir.actions.act_window_close'}
+            }
+        }
+
     def confirm_stock_cut(self):
         pickings = self.order_id.picking_ids.filtered(lambda p: p.state != 'cancel').sorted('id', reverse=True)
         if not pickings:
@@ -1156,20 +1393,17 @@ class StockCutConfirmWizard(models.TransientModel):
                 f"หากต้องการตัดสต๊อกด่วน สามารถใช้งานผ่านเมนู Inventory โดยตรง"
             )
 
-        # sync วันที่เช่า
-        if self.order_id.start_rent_date:
-            picking.write({'start_x_date': self.order_id.start_rent_date})
-        if self.order_id.end_rent_date:
-            picking.write({'end_x_date': self.order_id.end_rent_date})
+        # sync วันที่เช่า (start_rent_date/end_rent_date -> start_x_date/end_x_date)
+        self._sync_rent_dates(picking)
 
         if picking.state == 'done':
             raise UserError("📦 ใบจัดส่งนี้ถูกตัดสต๊อกเรียบร้อยแล้ว ไม่สามารถตัดซ้ำได้")
 
-        # ใช้คลังสาขา
-        location = self.env['stock.location'].search([
-            ('branch_id', '=', self.order_id.branch_id.id),
-            ('usage', '=', 'internal'),
-        ], limit=1)
+        # ใช้คลังสาขา (เลือก location ที่มีสต๊อกจริง กันเคส location ซ้ำของสาขา)
+        location = self._get_branch_internal_location(
+            self.order_id.branch_id,
+            self.order_id.order_line.filtered(lambda l: l.product_id).mapped('product_id').ids,
+        )
         if not location:
             raise UserError("❌ ไม่พบคลังต้นทางของสาขา (ย่อย)")
 
@@ -1192,6 +1426,12 @@ class StockCutConfirmWizard(models.TransientModel):
                 'pdn_id': sol.product_id.bk_reference_code,
             }
         _dbg(f"📊 cut_items from SO: {[(v['product'].display_name, v['quantity']) for v in cut_items.values()]}")
+
+        # 📌 บันทึกสต๊อกคงเหลือใน Odoo ก่อนตัด (ต่อสินค้า) ไว้ตรวจ/เตือนกรณีสต๊อกไม่พอ
+        pre_cut_available = {
+            product_id: self._get_odoo_stock_qty(item['product'], location)
+            for product_id, item in cut_items.items()
+        }
 
         # ✅ ตัดเฉพาะสต๊อก Odoo อย่างเดียว
         #    เมื่อ GREENHOME_SYNC_ENABLED = False จะข้ามการอ่านสต๊อกบ้านเขียว
@@ -1261,23 +1501,28 @@ class StockCutConfirmWizard(models.TransientModel):
         # ป้องกัน error "unreserve more products than you have in stock"
         self._fix_stale_reserved_qty(cut_items, location)
 
-        # ✅ ถ้ายังไม่มี move → สร้างใหม่
-        if not picking.move_ids_without_package:
-            _dbg("📦 ไม่มี moves → สร้างใหม่")
-            moves = []
-            for product_id, item in cut_items.items():
-                product = item['product']
-                moves.append((0, 0, {
-                    'name': product.name,
-                    'product_id': product.id,
-                    'product_uom_qty': float(item['quantity']),
-                    'product_uom': product.uom_id.id,
-                    'location_id': location.id,
-                    'location_dest_id': picking.location_dest_id.id,
-                    'picking_id': picking.id,
-                }))
-            picking.write({'move_ids_without_package': moves})
-            _dbg(f"📦 สร้าง moves สำเร็จ: {len(moves)} รายการ")
+        # ✅ สร้าง move ให้ครบทุกสินค้าจาก SO ที่ยังไม่มีใน picking
+        #    (เดิมสร้างเฉพาะตอน picking ยังไม่มี move เลย ทำให้สินค้าบางตัว —
+        #     เช่น ที่เพิ่มใน SO ทีหลัง หรือไม่ถูกสร้าง move ไว้ — ไม่ถูกตัดสต๊อก
+        #     แก้ให้ครอบคลุมทุกตัวจาก SO เสมอ)
+        existing_product_ids = set(picking.move_ids_without_package.mapped('product_id').ids)
+        missing_moves = []
+        for product_id, item in cut_items.items():
+            if product_id in existing_product_ids:
+                continue
+            product = item['product']
+            missing_moves.append((0, 0, {
+                'name': product.name,
+                'product_id': product.id,
+                'product_uom_qty': float(item['quantity']),
+                'product_uom': product.uom_id.id,
+                'location_id': location.id,
+                'location_dest_id': picking.location_dest_id.id,
+                'picking_id': picking.id,
+            }))
+        if missing_moves:
+            picking.write({'move_ids_without_package': missing_moves})
+            _dbg(f"📦 สร้าง moves สำหรับสินค้าที่ยังไม่มีใน picking: {len(missing_moves)} รายการ")
 
         # ✅ อัพเดท location ของ moves ที่มีอยู่
         for move in picking.move_ids_without_package:
@@ -1368,6 +1613,59 @@ class StockCutConfirmWizard(models.TransientModel):
         _dbg(f"🚀 กำลัง button_validate() picking {picking.name}")
         picking.with_context(skip_immediate=True, skip_sms=True).button_validate()
 
+        # ============================================================
+        # ✅ ตรวจสอบความครบถ้วน: สินค้าทุกตัวจาก Sale Order ต้องถูกตัดครบ
+        #    แก้ปัญหาเดิมที่สินค้าบางตัวที่ส่งมาตัด กลับไม่ถูกตัด (ไม่มี move
+        #    หรือสต๊อกไม่พอ) โดยไม่มีการแจ้งเตือน
+        # ============================================================
+        picking.invalidate_cache()
+
+        done_qty_by_product = {}
+        for move in picking.move_ids_without_package.filtered(lambda m: m.state == 'done'):
+            done_qty_by_product[move.product_id.id] = \
+                done_qty_by_product.get(move.product_id.id, 0.0) + move.quantity_done
+
+        not_cut = []        # ตัดไม่ครบจำนวน / ไม่ถูกตัดเลย
+        insufficient = []   # ตัดครบ แต่สต๊อกในระบบไม่พอ (ตัดจนติดลบ)
+        for product_id, item in cut_items.items():
+            product = item['product']
+            need = float(item['quantity'] or 0.0)
+            rounding = product.uom_id.rounding or 0.01
+            done = done_qty_by_product.get(product_id, 0.0)
+            if float_compare(done, need, precision_rounding=rounding) < 0:
+                not_cut.append((product, need, done))
+            avail_before = pre_cut_available.get(product_id, 0.0)
+            if not GREENHOME_SYNC_ENABLED and \
+                    float_compare(avail_before, need, precision_rounding=rounding) < 0:
+                insufficient.append((product, need, avail_before))
+
+        # ❌ ตัดไม่ครบ → ยกเลิกทั้งใบ (rollback) แล้วแจ้งพนักงานให้ชัด
+        if not_cut:
+            lines = [
+                f"• {p.display_name} — ต้องตัด {need:.0f} แต่ตัดได้ {done:.0f}"
+                for (p, need, done) in not_cut
+            ]
+            raise UserError(
+                "❌ ตัดสต๊อกไม่ครบทุกรายการ!\n\n"
+                "สินค้าต่อไปนี้ถูกส่งมาจากใบสั่งขายแต่ตัดสต๊อกได้ไม่ครบ:\n\n"
+                + "\n".join(lines)
+                + "\n\nระบบยกเลิกการตัดสต๊อกทั้งใบแล้ว (ไม่มีการตัดค้างไว้บางส่วน)\n"
+                  "กรุณาตรวจสอบและลองใหม่อีกครั้ง หรือแจ้งผู้ดูแลระบบ"
+            )
+
+        # ⚠️ ตัดครบแต่สต๊อกในระบบไม่พอ (ติดลบ) → เตรียมข้อความเตือน (ไม่ยกเลิกการตัด)
+        insufficient_msg = ""
+        if insufficient:
+            lines = [
+                f"• {p.display_name} — ตัด {need:.0f} / มีในระบบ {avail:.0f}"
+                for (p, need, avail) in insufficient
+            ]
+            insufficient_msg = (
+                "\n\n⚠️ สต๊อกในระบบไม่พอ (ตัดจนติดลบ) สำหรับ:\n"
+                + "\n".join(lines)
+                + "\nกรุณาตรวจนับ/เติมสต๊อกสาขาให้ตรงกับความเป็นจริง"
+            )
+
         # --- NEW: เตรียมรายการที่จะอัปเดต MySQL ---
         # map สาขา Odoo -> branch_id MySQL
 
@@ -1408,10 +1706,11 @@ class StockCutConfirmWizard(models.TransientModel):
                     'type': 'ir.actions.client',
                     'tag': 'display_notification',
                     'params': {
-                        'title': '✅ ตัดสต๊อกสำเร็จ',
-                        'message': f'ใบจัดส่ง {picking.name} ถูกตัดใน Odoo และอัปเดตข้อมูลรายงานเรียบร้อย',
-                        'sticky': False,
-                        'type': 'success',
+                        'title': '⚠️ ตัดสต๊อกสำเร็จ (มีรายการสต๊อกไม่พอ)' if insufficient else '✅ ตัดสต๊อกสำเร็จ',
+                        'message': (f'ใบจัดส่ง {picking.name} ถูกตัดใน Odoo และอัปเดตข้อมูลรายงานเรียบร้อย'
+                                    + insufficient_msg),
+                        'sticky': True if insufficient else False,
+                        'type': 'warning' if insufficient else 'success',
                         'next': {'type': 'ir.actions.act_window_close'}
                     }
                 }
@@ -1421,12 +1720,26 @@ class StockCutConfirmWizard(models.TransientModel):
                     'tag': 'display_notification',
                     'params': {
                         'title': '⚠️ ตัดสต๊อกสำเร็จ แต่ซิงก์รายงานล้มเหลว',
-                        'message': str(ue),
+                        'message': str(ue) + insufficient_msg,
                         'sticky': True,
                         'type': 'warning',
                         'next': {'type': 'ir.actions.act_window_close'}
                     }
                 }
+
+        # กรณีไม่เข้าเงื่อนไข MySQL (เช่น ปิดบ้านเขียว/ไม่มี branch mapping)
+        # ก็ยังต้องแจ้งผลการตัดสต๊อก + คำเตือนสต๊อกไม่พอ (ถ้ามี) ให้พนักงานเห็นเสมอ
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': '⚠️ ตัดสต๊อกสำเร็จ (มีรายการสต๊อกไม่พอ)' if insufficient else '✅ ตัดสต๊อกสำเร็จ',
+                'message': (f'ใบจัดส่ง {picking.name} ถูกตัดสต๊อกใน Odoo เรียบร้อย' + insufficient_msg),
+                'sticky': True if insufficient else False,
+                'type': 'warning' if insufficient else 'success',
+                'next': {'type': 'ir.actions.act_window_close'}
+            }
+        }
 
     @api.model
     def check_missing_bk_reference_codes(self):

@@ -4,12 +4,17 @@
     <field name="model">stock.cut.confirm.wizard</field>
     <field name="arch" type="xml">
       <form string="ยืนยันการตัดสต๊อก">
+        <field name="mode" invisible="1"/>
         <group>
           <field name="order_id" readonly="1"/>
           <!-- ปิดฟิลด์ "Allow Greenhome Return": ตัดการเชื่อมต่อบ้านเขียว — เปิดกลับได้โดยลบคอมเมนต์
           <field name="can_return_greenhome" readonly="1"/>
           -->
         </group>
+
+        <div attrs="{'invisible': [('mode', '!=', 'return')]}" class="alert alert-warning" role="alert">
+          ↩️ โหมด<b>คืนสต๊อก</b> — รายการด้านล่างคือสินค้าที่ถูกตัดจริง กด "ยืนยันคืนสต๊อก" เพื่อคืนกลับคลังอัตโนมัติ (สถานะเสร็จสิ้น)
+        </div>
 
         <notebook>
           <!-- แท็บเดิม: รายการตัดสต๊อก -->
@@ -62,7 +67,14 @@
           <button string="ยืนยันตัดสต๊อก"
                   type="object"
                   name="confirm_stock_cut"
-                  class="btn-primary"/>
+                  class="btn-primary"
+                  attrs="{'invisible': [('mode', '!=', 'cut')]}"/>
+
+          <button string="↩️ ยืนยันคืนสต๊อก"
+                  type="object"
+                  name="confirm_stock_return"
+                  class="btn-warning"
+                  attrs="{'invisible': [('mode', '!=', 'return')]}"/>
 
           <!-- ปิดปุ่ม "คืนสินค้าบ้านเขียว": ตัดการเชื่อมต่อบ้านเขียว
                เปิดกลับได้โดยลบคอมเมนต์บล็อกนี้

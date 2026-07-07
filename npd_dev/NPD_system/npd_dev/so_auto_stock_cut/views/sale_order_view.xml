@@ -5,11 +5,19 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
+                <field name="sc_has_cut" invisible="1"/>
+                <!-- ยังไม่ตัด (หรือคืนครบแล้ว) → แสดงปุ่มตัดสต๊อก -->
                 <button name="action_auto_validate_delivery"
                         type="object"
                         class="btn-primary"
                         string="ตัดสต๊อก Auto 🚚"
-                        attrs="{'invisible': [('state', '!=', 'sale')]}"/>
+                        attrs="{'invisible': ['|', ('state', '!=', 'sale'), ('sc_has_cut', '=', True)]}"/>
+                <!-- มีการตัดที่ยังไม่ได้คืน → แสดงปุ่มคืนสต๊อก (คืนครบแล้วจะหายไป จนกว่าจะตัดใหม่) -->
+                <button name="action_auto_return_delivery"
+                        type="object"
+                        class="btn-warning"
+                        string="คืนสต๊อก Auto ↩️"
+                        attrs="{'invisible': [('sc_has_cut', '=', False)]}"/>
             </xpath>
             <!-- ปิดแท็บ "บ้านเขียว" (สถานะการคืนบ้านเขียว): ตัดการเชื่อมต่อบ้านเขียว
                  เปิดกลับได้โดยลบคอมเมนต์บล็อกนี้
