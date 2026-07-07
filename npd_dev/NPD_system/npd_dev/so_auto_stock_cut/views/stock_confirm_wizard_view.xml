@@ -6,7 +6,9 @@
       <form string="ยืนยันการตัดสต๊อก">
         <group>
           <field name="order_id" readonly="1"/>
+          <!-- ปิดฟิลด์ "Allow Greenhome Return": ตัดการเชื่อมต่อบ้านเขียว — เปิดกลับได้โดยลบคอมเมนต์
           <field name="can_return_greenhome" readonly="1"/>
+          -->
         </group>
 
         <notebook>
@@ -17,18 +19,23 @@
                        options="{'no_create': True, 'no_create_edit': True, 'no_open': True, 'no_delete': True}">
                 <tree editable="bottom" string="ตัดสต๊อกตาม SO">
                   <field name="product_id" string="สินค้า" readonly="1" force_save="1"/>
+                  <field name="odoo_stock_qty" string="สต๊อกคงเหลือ" readonly="1" force_save="1"/>
                   <field name="quantity" string="จำนวนที่ตัด" readonly="1" force_save="1"/>
                   <field name="location_name" string="คลังต้นทาง" readonly="1" force_save="1"/>
+                  <!-- ปิดคอลัมน์บ้านเขียว: สต็อกคงเหลือ (บ้านเขียว) + จำนวนสต็อกจริง (กรอกเมื่อไม่พอ)
+                       ตัดการเชื่อมต่อบ้านเขียว — เปิดกลับได้โดยลบคอมเมนต์บล็อกนี้
                   <field name="stock_remain" string="สต็อกคงเหลือ (บ้านเขียว)" readonly="1" force_save="1"/>
                   <field name="need_manual_input" invisible="1" force_save="1"/>
                   <field name="manual_stock_input" string="จำนวนสต็อกจริง (กรอกเมื่อไม่พอ)"
                          attrs="{'readonly': [('need_manual_input', '=', False)]}"/>
+                  -->
                 </tree>
               </field>
             </group>
           </page>
 
-          <!-- แท็บใหม่: ข้อมูลบ้านเขียว -->
+          <!-- ปิดแท็บ "สต๊อกล่าสุด (บ้านเขียว)": ตัดการเชื่อมต่อบ้านเขียว
+               เปิดกลับได้โดยลบคอมเมนต์บล็อกนี้
           <page string="สต๊อกล่าสุด (บ้านเขียว)">
             <group>
               <field name="greenhome_line_ids"
@@ -48,6 +55,7 @@
               </field>
             </group>
           </page>
+          -->
         </notebook>
 
         <footer>
@@ -56,13 +64,15 @@
                   name="confirm_stock_cut"
                   class="btn-primary"/>
 
-          <!-- 👉 ปุ่มใหม่: คืนสินค้าบ้านเขียว -->
+          <!-- ปิดปุ่ม "คืนสินค้าบ้านเขียว": ตัดการเชื่อมต่อบ้านเขียว
+               เปิดกลับได้โดยลบคอมเมนต์บล็อกนี้
           <button string="🔄 คืนสินค้าบ้านเขียว"
                   type="object"
                   name="return_greenhome_only"
                   class="btn-warning"
                   attrs="{'invisible': [('can_return_greenhome', '=', False)]}"
                   />
+          -->
 
           <button string="ยกเลิก"
                   class="btn-secondary"

@@ -6,6 +6,17 @@ import logging
 
 _logger = logging.getLogger(__name__)
 _LOGGER = logging.getLogger(__name__)
+
+# ==============================================================================
+# GREENHOME_SYNC_ENABLED — สวิตช์รวมการเชื่อมต่อฐานข้อมูลบ้านเขียว (MySQL)
+#   False = ปิดการเชื่อมต่อ MySQL บ้านเขียวทั้งหมด (อ่าน/เขียน/ตัด/คืน/สินค้าหาย)
+#           และให้ตัดเฉพาะสต๊อกใน Odoo อย่างเดียว โดยไม่บังคับกรอกสต๊อก manual
+#   True  = เปิดการซิงก์กับบ้านเขียวตามเดิม
+# หากต้องการเปิดใช้งานบ้านเขียวอีกครั้ง ให้เปลี่ยนเป็น True เพียงจุดเดียว
+# ==============================================================================
+GREENHOME_SYNC_ENABLED = False
+
+
 def _dbg(msg):
     # ใช้ทั้ง logger และ print เป็น fallback
     try:
@@ -74,6 +85,8 @@ class StockCutConfirmWizard(models.TransientModel):
           - sa_stockout (ถูกเช่า)   = sa_stockout + qty
         ตรวจก่อน-หลัง และฟ้อง pdn ที่ไม่พบแถวให้ชัด
         """
+        if not GREENHOME_SYNC_ENABLED:
+            return  # ปิดการตัดสต๊อกบ้านเขียว (MySQL)
         if not items:
             return
 
@@ -210,6 +223,8 @@ class StockCutConfirmWizard(models.TransientModel):
           - ลด rentorder_detail.rentd_amount ตามจำนวนที่คืน (ไม่ติดลบ)
           - ถ้าทุกรายการในใบ = 0 ให้ตั้ง rentorder_head.renth_return='Y' (เพื่อให้ query รายงานตัดออก)
         """
+        if not GREENHOME_SYNC_ENABLED:
+            return  # ปิดการคืนของบ้านเขียว (MySQL)
         if not items:
             return
         conn = None;
@@ -297,6 +312,8 @@ class StockCutConfirmWizard(models.TransientModel):
           - sa_stockin  = sa_stockin + qty
           - sa_stockout = GREATEST(sa_stockout - qty, 0)
         """
+        if not GREENHOME_SYNC_ENABLED:
+            return  # ปิดการเดิน stockactual ฝั่งคืนของบ้านเขียว (MySQL)
         if not items:
             return
 
@@ -412,6 +429,16 @@ class StockCutConfirmWizard(models.TransientModel):
             except Exception:
                 pass
 
+    def _get_odoo_stock_qty(self, product, location):
+        """ดึงสต๊อกคงเหลือใน Odoo จากตาราง stock.quant (ฟิลด์ quantity) ที่คลังต้นทาง (location)"""
+        if not product or not location:
+            return 0.0
+        quants = self.env['stock.quant'].search([
+            ('product_id', '=', product.id),
+            ('location_id', '=', location.id),
+        ])
+        return sum(quants.mapped('quantity'))
+
     def _branch_mapping(self):
         return {
             'สำนักงานใหญ่': '01',
@@ -429,6 +456,8 @@ class StockCutConfirmWizard(models.TransientModel):
           - ensure head: rentorder_head(renth_id=picking) พร้อมสถานะที่รายงานอ่านได้
           - set detail: rentorder_detail(rentd_id=picking, rentd_proid) = ปริมาณล่าสุด (ไม่บวกทับ)
         """
+        if not GREENHOME_SYNC_ENABLED:
+            return  # ปิดการอัปเดต 'สินค้าที่ถูกเช่า' บนบ้านเขียว (MySQL)
         if not items:
             return
 
@@ -520,6 +549,10 @@ class StockCutConfirmWizard(models.TransientModel):
         จะทำการ sync MySQL เท่านั้น โดยไม่สร้าง picking ใหม่
         """
         self.ensure_one()
+
+        if not GREENHOME_SYNC_ENABLED:
+            # ปิดการเชื่อมต่อบ้านเขียว → ไม่ทำการคืนของไป MySQL
+            raise UserError("ℹ️ ฟังก์ชันคืนสินค้าบ้านเขียวถูกปิดใช้งานอยู่ (ตัดการเชื่อมต่อบ้านเขียว)")
 
         if self.order_id:
             self.order_id.write({'return_greenhome_state': 'processing'})
@@ -617,8 +650,7 @@ class StockCutConfirmWizard(models.TransientModel):
                 picking_name=rent_head_id, # ใช้ชื่อใบจัดส่งขาออกเดิม
             )
 
-            # 2) เดิน master_stockactual (เพิ่ม stockin, ลด stockout)
-            # จุดนี้คือการอัปเดตสต็อกคงเหลือ/ถูกเช่าใน Greenhome
+            # 2) เดิน master_stockactual (เพิ่ม stockin, ลด stockout) — ควบคุมด้วย GREENHOME_SYNC_ENABLED
             self._update_mysql_after_return(
                 branch_id_for_mysql=branch_id_for_mysql,
                 items=items,
@@ -742,7 +774,7 @@ class StockCutConfirmWizard(models.TransientModel):
             picking_name=rent_head_id,
         )
 
-        # 2) เดิน master_stockactual
+        # 2) เดิน master_stockactual — ควบคุมด้วย GREENHOME_SYNC_ENABLED
         _logger.info("2️⃣ กำลังอัปเดต stockactual...")
         self._update_mysql_after_return(
             branch_id_for_mysql=branch_id_for_mysql,
@@ -756,6 +788,8 @@ class StockCutConfirmWizard(models.TransientModel):
         """
         ดึง begin / rented / lost ตามสูตรเดียวกับ stock_daily_report.py แล้วคำนวณ remain
         """
+        if not GREENHOME_SYNC_ENABLED:
+            return {}  # ปิดการอ่านสต๊อกจากบ้านเขียว (MySQL)
         if not pdn_ids:
             return {}
 
@@ -961,10 +995,15 @@ class StockCutConfirmWizard(models.TransientModel):
                 'product_id': so_line.product_id.id,
                 'quantity': so_line.pfb_quantity,
                 'location_name': location_name,
+                'odoo_stock_qty': self._get_odoo_stock_qty(so_line.product_id, location),
             }))
 
         res['order_id'] = order.id
         res['confirm_line_ids'] = base_lines
+
+        # ปิดการเชื่อมต่อบ้านเขียว → ไม่ต้องดึงข้อมูลบ้านเขียวมาแสดง
+        if not GREENHOME_SYNC_ENABLED:
+            return res
 
         # ----------------- ดึง “ข้อมูลบ้านเขียว” แยกชุด -----------------
         branch_id_for_mysql = self._branch_mapping().get(branch_name)
@@ -1154,60 +1193,64 @@ class StockCutConfirmWizard(models.TransientModel):
             }
         _dbg(f"📊 cut_items from SO: {[(v['product'].display_name, v['quantity']) for v in cut_items.values()]}")
 
-        # ✅ ดึง stock_remain จากบ้านเขียว (ดึงสดทุกครั้ง)
+        # ✅ ตัดเฉพาะสต๊อก Odoo อย่างเดียว
+        #    เมื่อ GREENHOME_SYNC_ENABLED = False จะข้ามการอ่านสต๊อกบ้านเขียว
+        #    การเติม Odoo stock จากบ้านเขียว และการบังคับกรอกสต๊อก manual ทั้งหมด
         branch_name = location.branch_id.name if location.branch_id else False
         branch_id_for_mysql = self._branch_mapping().get(branch_name)
-        gh_remain_map = {}  # product_id -> stock_remain
-        if branch_id_for_mysql:
-            pdn_ids = [v['pdn_id'] for v in cut_items.values() if v.get('pdn_id')]
-            pdn_to_product = {v['pdn_id']: pid for pid, v in cut_items.items() if v.get('pdn_id')}
-            if pdn_ids:
-                data_by_pdn = self._fetch_stock_numbers_like_daily_report(branch_id_for_mysql, pdn_ids)
-                for pdn_id, rec in data_by_pdn.items():
-                    product_id = pdn_to_product.get(pdn_id)
-                    if product_id:
-                        gh_remain_map[product_id] = rec.get('stock_remain', 0)
-        _dbg(f"📊 gh_remain_map = {gh_remain_map}")
+        if GREENHOME_SYNC_ENABLED:
+            # ✅ ดึง stock_remain จากบ้านเขียว (ดึงสดทุกครั้ง)
+            gh_remain_map = {}  # product_id -> stock_remain
+            if branch_id_for_mysql:
+                pdn_ids = [v['pdn_id'] for v in cut_items.values() if v.get('pdn_id')]
+                pdn_to_product = {v['pdn_id']: pid for pid, v in cut_items.items() if v.get('pdn_id')}
+                if pdn_ids:
+                    data_by_pdn = self._fetch_stock_numbers_like_daily_report(branch_id_for_mysql, pdn_ids)
+                    for pdn_id, rec in data_by_pdn.items():
+                        product_id = pdn_to_product.get(pdn_id)
+                        if product_id:
+                            gh_remain_map[product_id] = rec.get('stock_remain', 0)
+            _dbg(f"📊 gh_remain_map = {gh_remain_map}")
 
-        # ✅ ดึง manual_stock_input จาก confirm_line_ids (field นี้ไม่ readonly จึงถูกส่งกลับ)
-        manual_input_map = {}  # product_id -> manual_stock_input
-        for line in self.confirm_line_ids:
-            if line.product_id and line.manual_stock_input and line.manual_stock_input > 0:
-                manual_input_map[line.product_id.id] = line.manual_stock_input
+            # ✅ ดึง manual_stock_input จาก confirm_line_ids (field นี้ไม่ readonly จึงถูกส่งกลับ)
+            manual_input_map = {}  # product_id -> manual_stock_input
+            for line in self.confirm_line_ids:
+                if line.product_id and line.manual_stock_input and line.manual_stock_input > 0:
+                    manual_input_map[line.product_id.id] = line.manual_stock_input
 
-        # ✅ ตรวจสต๊อกก่อนตัด (เช็คจากบ้านเขียว + เติม Odoo stock)
-        lines_need_input = []
-        for product_id, item in cut_items.items():
-            product = item['product']
-            quantity = item['quantity']
-            gh_remain = gh_remain_map.get(product_id, 0)
-            manual_input = manual_input_map.get(product_id, 0)
+            # ✅ ตรวจสต๊อกก่อนตัด (เช็คจากบ้านเขียว + เติม Odoo stock)
+            lines_need_input = []
+            for product_id, item in cut_items.items():
+                product = item['product']
+                quantity = item['quantity']
+                gh_remain = gh_remain_map.get(product_id, 0)
+                manual_input = manual_input_map.get(product_id, 0)
 
-            if quantity <= gh_remain:
-                # กรณีพอ: เอา stock_remain ไปเติม Odoo stock ก่อนตัด
-                self._adjust_odoo_stock(product, location, gh_remain)
-                _dbg(f"✅ เติมสต็อก Odoo '{product.display_name}' = {gh_remain} (บ้านเขียว)")
-            else:
-                # กรณีไม่พอ: ต้องกรอก manual
-                if manual_input > 0:
-                    # ผู้ใช้กรอกแล้ว → เติม Odoo stock ตามที่ระบุ
-                    self._adjust_odoo_stock(product, location, manual_input)
-                    _dbg(f"✅ เติมสต็อก Odoo '{product.display_name}' = {manual_input} (กรอกเอง)")
+                if quantity <= gh_remain:
+                    # กรณีพอ: เอา stock_remain ไปเติม Odoo stock ก่อนตัด
+                    self._adjust_odoo_stock(product, location, gh_remain)
+                    _dbg(f"✅ เติมสต็อก Odoo '{product.display_name}' = {gh_remain} (บ้านเขียว)")
                 else:
-                    lines_need_input.append((product, quantity, gh_remain))
+                    # กรณีไม่พอ: ต้องกรอก manual
+                    if manual_input > 0:
+                        # ผู้ใช้กรอกแล้ว → เติม Odoo stock ตามที่ระบุ
+                        self._adjust_odoo_stock(product, location, manual_input)
+                        _dbg(f"✅ เติมสต็อก Odoo '{product.display_name}' = {manual_input} (กรอกเอง)")
+                    else:
+                        lines_need_input.append((product, quantity, gh_remain))
 
-        # ถ้ายังมีรายการที่ต้องกรอกสต็อกจริง → แจ้งเตือนให้กรอก
-        if lines_need_input:
-            msg_parts = []
-            for product, quantity, remain in lines_need_input:
-                msg_parts.append(
-                    f"• {product.display_name} (ต้องตัด {quantity:.0f}, บ้านเขียวคงเหลือ {remain:.0f})"
+            # ถ้ายังมีรายการที่ต้องกรอกสต็อกจริง → แจ้งเตือนให้กรอก
+            if lines_need_input:
+                msg_parts = []
+                for product, quantity, remain in lines_need_input:
+                    msg_parts.append(
+                        f"• {product.display_name} (ต้องตัด {quantity:.0f}, บ้านเขียวคงเหลือ {remain:.0f})"
+                    )
+                raise UserError(
+                    "⚠️ กรุณานับจำนวนสต็อกจริงจากสาขา แล้วกรอกในช่อง 'จำนวนสต็อกจริง':\n\n"
+                    + "\n".join(msg_parts)
+                    + "\n\nกรอกจำนวนแล้วกด 'ยืนยันตัดสต๊อก' อีกครั้ง"
                 )
-            raise UserError(
-                "⚠️ กรุณานับจำนวนสต็อกจริงจากสาขา แล้วกรอกในช่อง 'จำนวนสต็อกจริง':\n\n"
-                + "\n".join(msg_parts)
-                + "\n\nกรอกจำนวนแล้วกด 'ยืนยันตัดสต๊อก' อีกครั้ง"
-            )
 
         # ============ จัดการ moves + validate picking ============
         _dbg(f"🔧 picking {picking.name}: state={picking.state}, moves={len(picking.move_ids_without_package)}")
@@ -1354,7 +1397,7 @@ class StockCutConfirmWizard(models.TransientModel):
                     picking_name=picking.name,  # ใช้เลขที่ใบจัดส่งอ้างอิงไปเป็น renth_id/rentd_id
                 )
 
-                # (ออปชัน) ถ้ายังต้องการให้ master_stockactual เดินด้วย ก็เรียกต่อ
+                # (ออปชัน) เดิน master_stockactual — ควบคุมด้วย GREENHOME_SYNC_ENABLED
                 self._update_mysql_after_cut(
                     branch_id_for_mysql=branch_id_for_mysql,
                     items=items_for_mysql,
@@ -1456,6 +1499,8 @@ class StockPicking(models.Model):
 
     def button_validate(self):
         res = super().button_validate()
+        if not GREENHOME_SYNC_ENABLED:
+            return res  # ปิดการซิงก์คืนของไปบ้านเขียว
         for picking in self:
             # เรียกเฉพาะใบรับคืนที่ done แล้ว
             is_return = (
@@ -1591,6 +1636,8 @@ class StockScrap(models.Model):
         - head: rentorder_head.renth_id = scrap_name, renth_return='Y', renth_cancel='N'
         - detail: rentorder_detail (rentd_amount เพิ่มตาม qty, rentd_amt_return = 0)
         """
+        if not GREENHOME_SYNC_ENABLED:
+            return  # ปิดการบันทึก 'สินค้าหาย' บนบ้านเขียว (MySQL)
         if not (branch_name and pdn_id and qty > 0 and scrap_name):
             return
 
@@ -1665,6 +1712,8 @@ class StockScrap(models.Model):
 
     def _mysql_decrease_stockin(self, branch_name, pdn_id, qty):
         """ลด sa_stockin ตามจำนวนที่หาย + debug log"""
+        if not GREENHOME_SYNC_ENABLED:
+            return  # ปิดการลด sa_stockin ของสินค้าหายบนบ้านเขียว (MySQL)
         if not pdn_id or qty <= 0:
             _dbg(f"⛔ LOSS SKIP | pdn_id='{pdn_id}' | qty={qty}")
             return
@@ -1746,6 +1795,9 @@ class StockScrap(models.Model):
     # ------- main hook -------
     def action_validate(self):
         res = super().action_validate()
+
+        if not GREENHOME_SYNC_ENABLED:
+            return res  # ปิดการซิงก์ 'สินค้าหาย' ไปบ้านเขียว
 
         for scrap in self:
             try:

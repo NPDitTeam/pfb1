@@ -6,6 +6,7 @@ class StockCutConfirmLine(models.TransientModel):
 
     wizard_id = fields.Many2one('stock.cut.confirm.wizard', string='Wizard')
     product_id = fields.Many2one('product.product', string='Product')
+    odoo_stock_qty = fields.Float(string='สต๊อกคงเหลือ', readonly=True)
     quantity = fields.Float(string='Quantity')
     location_name = fields.Char(string='Location')
     stock_remain = fields.Float(string='สต็อกคงเหลือ (บ้านเขียว)', readonly=True)
