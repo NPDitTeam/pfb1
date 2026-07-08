@@ -298,6 +298,9 @@ class AccountPaymentSlipDate(models.Model):
         'ห้างหุ้นส่วนจำกัด', 'ห้างหุ้นส่วนจํากัด', 'ห้างหุ้นส่วน',
         'co', 'ltd', 'company', 'limited', 'public', 'inc',
         'corp', 'corporation', 'the', 'and',
+        # ตัวระบุสาขา — ไม่ใช่ส่วนของชื่อบริษัท ต้องตัดทิ้งก่อนเทียบ
+        'สำนักงานใหญ่', 'สำนักงานใหญ', 'สํานักงานใหญ่', 'สํานักงานใหญ',
+        'สนงใหญ่', 'สนงใหญ', 'สาขา', 'head', 'office', 'branch', 'hq',
     }
 
     # เกณฑ์ความคล้าย (0-1) ขั้นต่ำที่ถือว่าชื่อ "ตรงบางส่วน" — ปรับได้ผ่าน
@@ -318,7 +321,10 @@ class AccountPaymentSlipDate(models.Model):
         # เปลี่ยนเครื่องหมายวรรคตอนเป็นช่องว่าง เพื่อแยก token
         s = re.sub(r'[.,()\[\]{}\-_/\\&"\'`:;|+]', ' ', s)
         s = re.sub(r'\s+', ' ', s).strip()
-        tokens = [t for t in s.split(' ') if t and t not in self._COMPANY_NAME_STOPWORDS]
+        tokens = [
+            t for t in s.split(' ')
+            if t and t not in self._COMPANY_NAME_STOPWORDS and not t.isdigit()
+        ]
         return ''.join(tokens)
 
     def _name_similarity(self, a, b):
