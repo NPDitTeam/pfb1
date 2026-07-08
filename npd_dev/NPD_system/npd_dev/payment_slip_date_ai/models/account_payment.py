@@ -70,14 +70,18 @@ class AccountPaymentSlipDate(models.Model):
         )
         return image_attachments
 
-    def _call_gemini_for_slip_info(self, attachments):
+    def _call_gemini_for_slip_info(self, attachments, company_names=None):
         """Call Gemini API to extract date AND recipient name from payment slip images.
+
+        company_names: รายชื่อบริษัทที่ระบบใช้งานอยู่ (ไทย/อังกฤษ) เพื่อให้ AI
+        ช่วยตัดสินว่าผู้รับในสลิปเป็นบริษัทเดียวกันหรือไม่ (เทียบข้ามภาษาได้)
 
         Returns dict: {
             'date': 'DD/MM/YYYY',
             'found': True/False,
             'recipient_name': 'ชื่อผู้รับเงิน',
-            'recipient_found': True/False
+            'recipient_found': True/False,
+            'recipient_matches_company': True/False,  # AI ช่วยเทียบข้ามภาษา
         }
         """
         api_key = self._get_gemini_api_key()
@@ -139,11 +143,29 @@ class AccountPaymentSlipDate(models.Model):
             '  "date": "DD/MM/YYYY",\n'
             '  "found": true,\n'
             '  "recipient_name": "ชื่อผู้รับเงินที่อ่านได้ (ทั้งไทยและอังกฤษ คั่นด้วย / ถ้ามีทั้งสองภาษา)",\n'
-            '  "recipient_found": true\n'
+            '  "recipient_found": true,\n'
+            '  "recipient_matches_company": true\n'
             "}\n\n"
             "ถ้าไม่พบวันที่หรือชื่อผู้รับ ให้ set found/recipient_found เป็น false\n\n"
             "หมายเหตุ: DD/MM/YYYY เป็นรูปแบบ วัน/เดือน/ปี ค.ศ. เช่น 24/03/2026"
         )
+
+        # เพิ่มข้อมูลบริษัทที่ระบบใช้งานอยู่ ให้ AI ช่วยเทียบว่าผู้รับเป็นบริษัทเดียวกันไหม
+        # (เทียบข้ามภาษาไทย/อังกฤษได้ เช่น NOPPADOL INTERTRADING = นภดล อินเตอร์เทรดดิ้ง)
+        names = [n for n in (company_names or []) if n]
+        if names:
+            prompt += (
+                "\n\n6. ตรวจสอบชื่อบริษัทผู้รับเงิน:\n"
+                "   บริษัทที่ระบบกำลังใช้งานอยู่ (ชื่อที่ถูกต้อง) มีดังนี้:\n"
+                + ''.join("   - %s\n" % n for n in names) +
+                "   ให้ตั้ง recipient_matches_company = true ถ้าชื่อผู้รับเงินในสลิป "
+                "เป็นบริษัทเดียวกันกับรายชื่อข้างต้น โดยถือว่าเป็นบริษัทเดียวกันได้แม้:\n"
+                "   - ชื่อเป็นคนละภาษา (สลิปเป็นอังกฤษ แต่รายชื่อเป็นไทย หรือกลับกัน)\n"
+                "   - สะกด/อ่านผิดเล็กน้อย, มี/ไม่มีคำว่า บริษัท/จำกัด/CO.,LTD/(สำนักงานใหญ่)\n"
+                "   ให้ตั้งเป็น false ถ้าเป็นคนละบริษัทกันจริง ๆ (ชื่อหลักคนละชื่อ)\n"
+                "   ถ้าอ่านชื่อผู้รับไม่ได้เลย ให้ตั้งเป็น false\n"
+            )
+
         parts.append({"text": prompt})
 
         payload = {
@@ -469,8 +491,10 @@ class AccountPaymentSlipDate(models.Model):
                 "กรุณาลบสลิปที่ไม่ต้องการออกก่อนแล้วลองใหม่อีกครั้ง"
             ) % len(attachments))
 
-        # Step 2: Call Gemini API to get date + recipient
-        result = self._call_gemini_for_slip_info(attachments)
+        # Step 2: Call Gemini API to get date + recipient. ส่งชื่อบริษัทที่ใช้งานอยู่
+        # เข้าไปด้วย เพื่อให้ AI ช่วยเทียบว่าผู้รับเป็นบริษัทเดียวกันไหม (เทียบข้ามภาษาได้)
+        company_names = self._get_company_name_candidates()
+        result = self._call_gemini_for_slip_info(attachments, company_names)
 
         # Step 3: Validate date
         if not result.get('found', False) or not result.get('date'):
@@ -501,11 +525,17 @@ class AccountPaymentSlipDate(models.Model):
             ))
 
         verify = self._verify_recipient_company(recipient_name)
+        # AI ช่วยเทียบข้ามภาษา (ไทย/อังกฤษ) — ผ่านถ้า fuzzy match ตัวอักษร
+        # หรือ AI ยืนยันว่าเป็นบริษัทเดียวกัน อย่างใดอย่างหนึ่ง
+        ai_match = bool(result.get('recipient_matches_company', False))
+        matched = verify['matched'] or ai_match
         _logger.info(
-            "Company name verify: recipient='%s' company='%s' score=%.2f matched=%s",
-            recipient_name, verify['company'], verify['score'], verify['matched'],
+            "Company name verify: recipient='%s' company='%s' score=%.2f "
+            "fuzzy_matched=%s ai_matched=%s -> matched=%s",
+            recipient_name, verify['company'], verify['score'],
+            verify['matched'], ai_match, matched,
         )
-        if not verify['matched']:
+        if not matched:
             raise UserError(_(
                 "ชื่อบริษัทในสลิปไม่ตรงกับบริษัทที่ใช้งานอยู่ ยืนยันไม่ได้\n"
                 "บริษัท: %s\n"
