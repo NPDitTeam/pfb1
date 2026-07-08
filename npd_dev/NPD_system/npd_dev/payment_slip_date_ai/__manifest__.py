@@ -10,6 +10,7 @@
     'data': [
         'views/account_payment_view.xml',
         'views/res_users_view.xml',
+        'views/res_company_view.xml',
     ],
     'installable': True,
     'auto_install': False,

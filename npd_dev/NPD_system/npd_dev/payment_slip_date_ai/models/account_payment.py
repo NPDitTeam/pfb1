@@ -4,6 +4,7 @@ import logging
 import re
 import requests
 from datetime import datetime
+from difflib import SequenceMatcher
 
 from odoo import fields, models, api, _
 from odoo.exceptions import UserError
@@ -290,6 +291,111 @@ class AccountPaymentSlipDate(models.Model):
 
         return None
 
+    # คำที่ตัดทิ้งตอน normalize ชื่อบริษัท (รูปแบบทางกฎหมาย/คำนำหน้า)
+    # ตัดทั้งภาษาไทยและอังกฤษ เพื่อเทียบเฉพาะ "แก่นชื่อ" ที่แยกแยะบริษัทได้
+    _COMPANY_NAME_STOPWORDS = {
+        'บริษัท', 'บมจ', 'หจก', 'จำกัด', 'จํากัด', 'มหาชน',
+        'ห้างหุ้นส่วนจำกัด', 'ห้างหุ้นส่วนจํากัด', 'ห้างหุ้นส่วน',
+        'co', 'ltd', 'company', 'limited', 'public', 'inc',
+        'corp', 'corporation', 'the', 'and',
+    }
+
+    # เกณฑ์ความคล้าย (0-1) ขั้นต่ำที่ถือว่าชื่อ "ตรงบางส่วน" — ปรับได้ผ่าน
+    # System Parameter: payment_slip_date_ai.name_match_threshold
+    _DEFAULT_NAME_MATCH_THRESHOLD = 0.65
+
+    def _normalize_company_name(self, name):
+        u"""ย่อชื่อบริษัทให้เหลือเฉพาะ "แก่นชื่อ" สำหรับเปรียบเทียบ.
+
+        - ตัดคำนำหน้า/รูปแบบทางกฎหมาย (บริษัท, จำกัด, CO.,LTD ฯลฯ)
+        - ตัดช่องว่างและเครื่องหมายวรรคตอนทั้งหมด
+        - แปลงเป็นตัวพิมพ์เล็ก
+        คืนค่าเป็นสตริงกระชับ เช่น "บริษัท นภดล เอสกรุ๊ป จำกัด" -> "นภดลเอสกรุ๊ป"
+        """
+        if not name:
+            return ''
+        s = name.lower()
+        # เปลี่ยนเครื่องหมายวรรคตอนเป็นช่องว่าง เพื่อแยก token
+        s = re.sub(r'[.,()\[\]{}\-_/\\&"\'`:;|+]', ' ', s)
+        s = re.sub(r'\s+', ' ', s).strip()
+        tokens = [t for t in s.split(' ') if t and t not in self._COMPANY_NAME_STOPWORDS]
+        return ''.join(tokens)
+
+    def _name_similarity(self, a, b):
+        u"""คืนคะแนนความคล้าย 0-1 ระหว่างชื่อที่ normalize แล้ว 2 ชื่อ.
+
+        ใช้ค่าที่สูงกว่าระหว่าง
+        - อัตราส่วนความคล้ายแบบ SequenceMatcher (ทนต่อการอ่านผิดบางตัว)
+        - คะแนน "เป็นส่วนหนึ่งของกัน" (ชื่อสั้นเป็น substring ของชื่อยาว)
+          โดยถ่วงด้วยสัดส่วนความยาว เพื่อกันไม่ให้แค่คำร่วม (เช่น "นภดล")
+          ทำให้บริษัทพี่น้องผ่านกันเอง
+        """
+        if not a or not b:
+            return 0.0
+        ratio = SequenceMatcher(None, a, b).ratio()
+        shorter, longer = (a, b) if len(a) <= len(b) else (b, a)
+        contain = (len(shorter) / len(longer)) if shorter in longer else 0.0
+        return max(ratio, contain)
+
+    def _get_company_name_candidates(self):
+        u"""รวมรายชื่อที่ยอมรับได้ของบริษัทปัจจุบัน (ชื่อหลัก + ชื่อสำรอง)."""
+        self.ensure_one()
+        company = self.company_id or self.env.company
+        names = [company.name or '']
+        extra = company.slip_verify_extra_names or ''
+        for line in re.split(r'[\r\n]+', extra):
+            line = line.strip()
+            if line:
+                names.append(line)
+        return names
+
+    def _verify_recipient_company(self, recipient_name):
+        u"""ตรวจว่าชื่อผู้รับเงินจากสลิปตรงกับบริษัทปัจจุบัน (แบบ partial match).
+
+        คืน dict: {'matched': bool, 'score': float, 'company': str, 'best': str}
+        - แยกชื่อผู้รับที่ AI อ่านได้เป็นหลายท่อน (คั่นด้วย / หรือขึ้นบรรทัดใหม่)
+          เผื่อมีทั้งไทยและอังกฤษ แล้วเทียบทุกท่อนกับทุกชื่อของบริษัท
+        - ผ่านถ้าคะแนนสูงสุด >= threshold
+        """
+        self.ensure_one()
+        threshold = self._DEFAULT_NAME_MATCH_THRESHOLD
+        param = self.env['ir.config_parameter'].sudo().get_param(
+            'payment_slip_date_ai.name_match_threshold', default=''
+        )
+        if param:
+            try:
+                threshold = float(param)
+            except (ValueError, TypeError):
+                pass
+
+        company = self.company_id or self.env.company
+        # แยกชื่อผู้รับเป็นหลายท่อน (ทั้งท่อนรวม และแต่ละท่อนที่คั่นด้วย / หรือ newline)
+        recipient_parts = [recipient_name or '']
+        recipient_parts += re.split(r'[/\r\n]+', recipient_name or '')
+        norm_recipients = [
+            n for n in (self._normalize_company_name(p) for p in recipient_parts) if n
+        ]
+
+        norm_companies = [
+            n for n in (self._normalize_company_name(c) for c in self._get_company_name_candidates()) if n
+        ]
+
+        best_score = 0.0
+        best_pair = ('', '')
+        for nr in norm_recipients:
+            for nc in norm_companies:
+                score = self._name_similarity(nr, nc)
+                if score > best_score:
+                    best_score = score
+                    best_pair = (nr, nc)
+
+        return {
+            'matched': best_score >= threshold,
+            'score': best_score,
+            'company': company.name or '',
+            'best': best_pair[1],
+        }
+
     def action_post(self):
         """Block confirmation unless the slip date has been extracted/checked first.
 
@@ -372,6 +478,27 @@ class AccountPaymentSlipDate(models.Model):
 
         recipient_name = result.get('recipient_name', '')
         _logger.info("AI read recipient name: %s", recipient_name)
+
+        # Step 3.5: Verify the recipient company on the slip matches the
+        # company currently in use. Uses partial/fuzzy matching so a few
+        # mis-read characters from the AI don't cause a false rejection.
+        company = self.company_id or self.env.company
+        if not result.get('recipient_found', False) or not recipient_name:
+            raise UserError(_(
+                "อ่านชื่อผู้รับเงินจากสลิปไม่ได้ กรุณาใช้สลิปที่ชัดเจนกว่านี้"
+            ))
+
+        verify = self._verify_recipient_company(recipient_name)
+        _logger.info(
+            "Company name verify: recipient='%s' company='%s' score=%.2f matched=%s",
+            recipient_name, verify['company'], verify['score'], verify['matched'],
+        )
+        if not verify['matched']:
+            raise UserError(_(
+                "ชื่อบริษัทในสลิปไม่ตรงกับบริษัทที่ใช้งานอยู่ ยืนยันไม่ได้\n"
+                "บริษัท: %s\n"
+                "ชื่อในสลิป: %s"
+            ) % (verify['company'] or '-', recipient_name or '-'))
 
         # Step 4: All checks passed — mark as checked.
         # Only overwrite the payment date while still in draft. Once the payment
