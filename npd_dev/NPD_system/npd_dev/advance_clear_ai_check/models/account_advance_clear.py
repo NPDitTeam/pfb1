@@ -572,6 +572,23 @@ class AccountAdvanceClearAI(models.Model):
             tc_ok = True
         if self.env.cr.dbname == 'NPD_Logistics_New':
             tc_ok = True
+        # ข้อ 6: Company — apply skip filter (base-name matching for split files)
+        if skip_company_files:
+            def _fn_in_skip_company_re(fname, skip_set):
+                if not fname or not skip_set:
+                    return False
+                if fname in skip_set:
+                    return True
+                for sf in skip_set:
+                    sf_base = sf.rsplit('.', 1)[0]
+                    if sf_base and fname.startswith(sf_base):
+                        return True
+                return False
+            cnc_mm_re = cnc.get('mismatched_files', [])
+            cnc_mm_re_filtered = [mf for mf in cnc_mm_re
+                                  if isinstance(mf, dict) and not _fn_in_skip_company_re(mf.get('filename', ''), skip_company_files)]
+            if not cnc_mm_re_filtered and cnc_mm_re:
+                company_name_ok = True
         # ข้อ 7: Invoice Detail — apply skip filter (was missing here)
         if skip_invoice_files:
             def _fn_in_skip_re(fname, skip_set):
@@ -2250,10 +2267,21 @@ class AccountAdvanceClearAI(models.Model):
             tc_ok = True
 
         # ข้อ 6: Company Name Check — filter mismatched_files excluding unchecked files
+        # Use base-name matching: AI may split "X.jpg" into "X.0.jpg", "X.jpg (บนซ้าย)" etc.
+        def _fname_in_skip_company(fname, skip_set):
+            if not fname or not skip_set:
+                return False
+            if fname in skip_set:
+                return True
+            for sf in skip_set:
+                sf_base = sf.rsplit('.', 1)[0]
+                if sf_base and fname.startswith(sf_base):
+                    return True
+            return False
         if skip_company_files:
             cnc_mismatched = cnc.get('mismatched_files', [])
             cnc_filtered = [mf for mf in cnc_mismatched
-                            if isinstance(mf, dict) and mf.get('filename', '') not in skip_company_files]
+                            if isinstance(mf, dict) and not _fname_in_skip_company(mf.get('filename', ''), skip_company_files)]
             if not cnc_filtered and cnc_mismatched:
                 # All mismatched files were skipped → force pass
                 company_name_ok = True
@@ -2906,10 +2934,11 @@ class AccountAdvanceClearAI(models.Model):
         if skip_company_files and cnc_required and not cnc_pass:
             cnc_mismatched_orig = cnc.get('mismatched_files', [])
             cnc_mismatched_filtered = [mf for mf in cnc_mismatched_orig
-                                       if isinstance(mf, dict) and mf.get('filename', '') not in skip_company_files]
+                                       if isinstance(mf, dict) and not _fname_in_skip_company(mf.get('filename', ''), skip_company_files)]
             if not cnc_mismatched_filtered and cnc_mismatched_orig:
                 cnc_pass = True  # all mismatched files were skipped → force pass
-                company_skipped_names = set(mf.get('filename', '') for mf in cnc_mismatched_orig if isinstance(mf, dict)) & skip_company_files
+                company_skipped_names = set(mf.get('filename', '') for mf in cnc_mismatched_orig
+                                            if isinstance(mf, dict) and _fname_in_skip_company(mf.get('filename', ''), skip_company_files))
         check7_company_ok = (not cnc_required) or cnc_pass
         check7_utility_ok = uac_ok  # from Python _check_utility_analytic_partner()
         check7_pass = check7_company_ok and check7_utility_ok
@@ -3568,11 +3597,21 @@ class AccountAdvanceClearAI(models.Model):
             tc_ok = True
         if self.env.cr.dbname == 'NPD_Logistics_New':
             tc_ok = True
-        # ข้อ 6: Company — filter mismatched files
+        # ข้อ 6: Company — filter mismatched files (base-name matching for split files)
+        def _fn_in_skip_company2(fname, skip_set):
+            if not fname or not skip_set:
+                return False
+            if fname in skip_set:
+                return True
+            for sf in skip_set:
+                sf_base = sf.rsplit('.', 1)[0]
+                if sf_base and fname.startswith(sf_base):
+                    return True
+            return False
         if skip_company_files:
             cnc_mm = cnc_data.get('mismatched_files', [])
             cnc_mm_filtered = [mf for mf in cnc_mm
-                               if isinstance(mf, dict) and mf.get('filename', '') not in skip_company_files]
+                               if isinstance(mf, dict) and not _fn_in_skip_company2(mf.get('filename', ''), skip_company_files)]
             if not cnc_mm_filtered and cnc_mm:
                 company_name_ok = True
         # ข้อ 7: Invoice Detail — filter items (use base-name matching for split files)
