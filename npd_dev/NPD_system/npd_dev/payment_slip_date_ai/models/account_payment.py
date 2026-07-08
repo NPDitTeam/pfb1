@@ -418,6 +418,9 @@ class AccountPaymentSlipDate(models.Model):
         - ประเภท 'cash' (เงินสด)
         - ชื่อ 'หักเงินประกันค่าเช่า' (หักจากเงินประกัน — ไม่มีสลิป)
 
+        สมุดรายวันที่เป็นการ 'ลดหนี้' (เช่น 'สมุดรายวันรับชำระลดหนี้') ก็ข้ามได้
+        เพราะเป็นการตัดหนี้ในระบบ ไม่ใช่การรับโอนเงินจริงที่มีสลิป
+
         นอกจากนี้ ผู้ใช้ที่มีสิทธิ์ allow_skip_slip_date_check (ตั้งที่หน้า User)
         สามารถ post ได้เลย ใช้เป็น escape hatch กรณี AI อ่านสลิปไม่ได้
         """
@@ -429,6 +432,9 @@ class AccountPaymentSlipDate(models.Model):
                 pm = payment.payment_method_one_id
                 # จ่ายเงินสด / หักจากเงินประกัน → ไม่มีสลิป ข้ามได้
                 if pm and (pm.type == 'cash' or pm.name == 'หักเงินประกันค่าเช่า'):
+                    continue
+                # สมุดรายวันรับชำระลดหนี้ (ตัดหนี้ในระบบ ไม่มีสลิป) → ข้ามได้
+                if payment.journal_id and 'ลดหนี้' in (payment.journal_id.name or ''):
                     continue
                 if not payment.slip_date_checked:
                     raise UserError(_(
