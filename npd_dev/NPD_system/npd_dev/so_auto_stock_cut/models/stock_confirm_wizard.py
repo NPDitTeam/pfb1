@@ -1492,6 +1492,17 @@ class StockCutConfirmWizard(models.TransientModel):
                     + "\n\nกรอกจำนวนแล้วกด 'ยืนยันตัดสต๊อก' อีกครั้ง"
                 )
 
+        # ✅ (โหมดปิดบ้านเขียว) เติมสต๊อก Odoo ส่วนที่ขาดให้ครบก่อนตัด เพื่อให้ตัดได้ครบทุกรายการเสมอ
+        #    ยึดจำนวนจากใบสั่งขาย (pfb_quantity) เป็นเป้าหมาย
+        #    _adjust_odoo_stock() จะเติมเฉพาะสินค้าที่สต๊อกปัจจุบัน < need เท่านั้น
+        #    (ตัวที่สต๊อกพออยู่แล้วจะไม่ถูกแตะต้อง) — ช่วยกัน error "จองไม่ได้" ตอน action_assign
+        #    และกัน backorder/ตัดไม่ครบ กรณีสต๊อกสาขาใน Odoo ไม่ตรงกับของจริง
+        if not GREENHOME_SYNC_ENABLED:
+            for _pid, _item in cut_items.items():
+                _need = float(_item['quantity'] or 0.0)
+                if _need > 0:
+                    self._adjust_odoo_stock(_item['product'], location, _need)
+
         # ============ จัดการ moves + validate picking ============
         _dbg(f"🔧 picking {picking.name}: state={picking.state}, moves={len(picking.move_ids_without_package)}")
         for m in picking.move_ids_without_package:
@@ -1611,7 +1622,13 @@ class StockCutConfirmWizard(models.TransientModel):
         self._fix_stale_reserved_qty(cut_items, location)
 
         _dbg(f"🚀 กำลัง button_validate() picking {picking.name}")
-        picking.with_context(skip_immediate=True, skip_sms=True).button_validate()
+        # ⚠️ ต้องส่ง skip_backorder=True ด้วย มิฉะนั้นเมื่อ qty_done < demand ของ move ใด ๆ
+        #    button_validate() จะ "return" ตัว wizard 'Create Backorder?' กลับมา (ไม่รัน _action_done)
+        #    ทำให้ไม่มี move ไหนกลายเป็น 'done' เลย → ระบบเห็น 'ตัดได้ 0' ทุกตัวแล้ว rollback ทั้งใบ
+        #    (พฤติกรรมเดียวกับ _force_done_full ที่ส่ง skip_backorder=True อยู่แล้ว)
+        picking.with_context(
+            skip_immediate=True, skip_sms=True, skip_backorder=True
+        ).button_validate()
 
         # ============================================================
         # ✅ ตรวจสอบความครบถ้วน: สินค้าทุกตัวจาก Sale Order ต้องถูกตัดครบ
@@ -1657,13 +1674,13 @@ class StockCutConfirmWizard(models.TransientModel):
         insufficient_msg = ""
         if insufficient:
             lines = [
-                f"• {p.display_name} — ตัด {need:.0f} / มีในระบบ {avail:.0f}"
+                f"• {p.display_name} — ตัด {need:.0f} / เดิมมีใน Odoo {avail:.0f} / เติมให้ {max(need - avail, 0):.0f}"
                 for (p, need, avail) in insufficient
             ]
             insufficient_msg = (
-                "\n\n⚠️ สต๊อกในระบบไม่พอ (ตัดจนติดลบ) สำหรับ:\n"
+                "\n\n⚠️ สต๊อกใน Odoo ไม่พอ ระบบเติมส่วนที่ขาดให้อัตโนมัติเพื่อให้ตัดได้ครบ:\n"
                 + "\n".join(lines)
-                + "\nกรุณาตรวจนับ/เติมสต๊อกสาขาให้ตรงกับความเป็นจริง"
+                + "\nกรุณาตรวจนับสต๊อกจริงที่สาขาให้ตรงกับความเป็นจริง"
             )
 
         # --- NEW: เตรียมรายการที่จะอัปเดต MySQL ---
