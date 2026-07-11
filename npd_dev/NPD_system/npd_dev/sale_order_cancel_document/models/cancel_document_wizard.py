@@ -409,6 +409,160 @@ class SaleOrderCancelDocumentWizard(models.TransientModel):
             )
         return messages
 
+    # ========== Net stock return (แก้บั๊ก: กันคืนซ้ำ/สต๊อกเบิ้ล) ==========
+
+    def _get_lost_scrap_qty(self, order):
+        """จำนวน 'สินค้าหาย' ต่อสินค้า จาก stock.scrap ที่ผูกกับใบรับ/ใบคืน
+        ของใบเช่านี้ (scrap.picking_id) และทำเสร็จแล้ว (state=done)
+        ของหายถูก scrap ทิ้งไป virtual location 'สินค้าหาย' แล้ว → ตอนยกเลิก
+        'ไม่ต้องคืน' กลับสต๊อก จึงหักออกจากจำนวนที่จะคืน"""
+        lost = {}
+        picking_ids = order.picking_ids.ids
+        if not picking_ids:
+            return lost
+        scraps = self.env['stock.scrap'].sudo().search([
+            ('picking_id', 'in', picking_ids),
+            ('state', '=', 'done'),
+        ])
+        for s in scraps:
+            reason = (s.reason_code_id.name or '') if (
+                'reason_code_id' in s._fields and s.reason_code_id) else ''
+            dest = s.scrap_location_id.complete_name if s.scrap_location_id else ''
+            if 'หาย' in (reason or '') or 'หาย' in (dest or ''):
+                lost[s.product_id.id] = lost.get(s.product_id.id, 0.0) + s.scrap_qty
+        return lost
+
+    def _validate_return_picking(self, return_pick):
+        """ดันใบคืนให้ 'เสร็จสิ้น' อัตโนมัติ (qty เต็ม + button_validate + wizard)"""
+        return_pick.action_confirm()
+        return_pick.action_assign()
+        for ml in return_pick.move_lines:
+            ml.quantity_done = ml.product_uom_qty
+        for sml in return_pick.move_line_ids:
+            if sml.qty_done == 0:
+                sml.qty_done = sml.product_uom_qty
+        res = return_pick.sudo().button_validate()
+        if isinstance(res, dict) and res.get('res_model'):
+            model = res.get('res_model')
+            if model == 'stock.immediate.transfer':
+                self.env['stock.immediate.transfer'].create({
+                    'pick_ids': [(6, 0, [return_pick.id])]}).process()
+            elif model == 'stock.backorder.confirmation':
+                self.env['stock.backorder.confirmation'].create({
+                    'pick_ids': [(6, 0, [return_pick.id])]}).process()
+        return_pick.invalidate_cache()
+
+    def _return_net_stock(self, tz):
+        """คืนสต๊อก 'สุทธิ' ต่อสินค้า ทั้งใบเช่า
+            ค้างต้องคืน = ตัดออก(done) − คืนแล้ว(done ทุกใบ) − สินค้าหาย(scrap)
+        - นับการคืน 'ทุกชนิด' ด้วยจำนวนจริง → กันคืนซ้ำ/สต๊อกเบิ้ล แม้ใบคืน
+          จะไม่ผูก origin_returned_move_id (เช่น คืนมือ/ใบคืนเก่า)
+        - รองรับตัดหลายรอบ (รวมทุกใบตัด)
+        - สินค้าหายที่ scrap ทิ้งแล้ว → ไม่คืนกลับ
+        คืน list ข้อความสรุป"""
+        order = self.sale_id
+        messages = []
+        now_thai = datetime.now(tz)
+
+        # ใบตัดจริง = ส่งออก done ที่ไม่ใช่ใบคืน (ใหม่สุดก่อน)
+        cut_pickings = order.picking_ids.filtered(
+            lambda p: p.state == 'done'
+            and p.picking_type_id.code == 'outgoing'
+            and not any(m.origin_returned_move_id for m in p.move_lines)
+        ).sorted('id', reverse=True)
+
+        delivered = {}              # product_id -> qty ตัดออกรวม
+        cut_moves_by_product = {}   # product_id -> [(picking, move)] ใหม่สุดก่อน
+        for p in cut_pickings:
+            for m in p.move_lines.filtered(
+                    lambda m: m.state == 'done' and m.quantity_done > 0):
+                delivered[m.product_id.id] = \
+                    delivered.get(m.product_id.id, 0.0) + m.quantity_done
+                cut_moves_by_product.setdefault(
+                    m.product_id.id, []).append((p, m))
+
+        if not delivered:
+            messages.append(
+                "ไม่พบการตัดสต๊อก (ใบส่งออกเสร็จสิ้น) — ไม่มีอะไรต้องคืน (%s)" %
+                now_thai.strftime('%d/%m/%Y %H:%M:%S'))
+            return messages
+
+        # คืนแล้วจริง = รับเข้า done ทุกใบ (นับด้วยจำนวนจริง กันเบิ้ล)
+        returned = {}
+        for p in order.picking_ids.filtered(
+                lambda p: p.state == 'done'
+                and p.picking_type_id.code == 'incoming'):
+            for m in p.move_lines.filtered(
+                    lambda m: m.state == 'done' and m.quantity_done > 0):
+                returned[m.product_id.id] = \
+                    returned.get(m.product_id.id, 0.0) + m.quantity_done
+
+        # สินค้าหาย (scrap) → ไม่คืน
+        lost = self._get_lost_scrap_qty(order)
+
+        # ค้างต้องคืน (สุทธิ)
+        outstanding = {}
+        for pid, out_qty in delivered.items():
+            net = out_qty - returned.get(pid, 0.0) - lost.get(pid, 0.0)
+            if net > 0.0001:
+                outstanding[pid] = net
+
+        if not outstanding:
+            messages.append(
+                "สต๊อกคืนครบ/เป็นสินค้าหายทั้งหมดแล้ว — ไม่คืนซ้ำ (กันสต๊อกเบิ้ล) (%s)"
+                % now_thai.strftime('%d/%m/%Y %H:%M:%S'))
+            return messages
+
+        # จับคู่จำนวนค้าง กับ move ของใบตัด (ไล่ใบใหม่สุดก่อน รองรับตัดหลายใบ)
+        picking_returns = {}   # picking -> [(move, qty)]
+        for pid, need in outstanding.items():
+            for (p, m) in cut_moves_by_product.get(pid, []):
+                if need <= 0.0001:
+                    break
+                take = min(need, m.quantity_done)
+                if take <= 0:
+                    continue
+                picking_returns.setdefault(p, []).append((m, take))
+                need -= take
+
+        for picking, mv_list in picking_returns.items():
+            try:
+                return_wiz = self.env['stock.return.picking'].with_context(
+                    active_id=picking.id, active_ids=picking.ids,
+                    active_model='stock.picking'
+                ).create({
+                    'picking_id': picking.id,
+                    'location_id': picking.location_id.id,
+                    'product_return_moves': [(0, 0, {
+                        'product_id': m.product_id.id,
+                        'quantity': qty,
+                        'move_id': m.id,
+                    }) for (m, qty) in mv_list],
+                })
+                return_action = return_wiz.create_returns()
+                return_pick = self.env['stock.picking'].browse(
+                    return_action.get('res_id'))
+                if not return_pick:
+                    continue
+                self._validate_return_picking(return_pick)
+                total_qty = sum(q for (_, q) in mv_list)
+                if return_pick.state == 'done':
+                    messages.append(
+                        "คืนสต๊อก(สุทธิ) %s → %s จำนวน %g ชิ้น (%s)" % (
+                            picking.name, return_pick.name, total_qty,
+                            now_thai.strftime('%d/%m/%Y %H:%M:%S')))
+                else:
+                    messages.append(
+                        "สร้างใบคืน %s จาก %s สถานะ: %s (%s)" % (
+                            return_pick.name, picking.name, return_pick.state,
+                            now_thai.strftime('%d/%m/%Y %H:%M:%S')))
+            except Exception as e:
+                _logger.error(
+                    "Net return error for %s: %s", picking.name, str(e))
+                messages.append(
+                    "ไม่สามารถคืนสต๊อก %s: %s" % (picking.name, str(e)))
+        return messages
+
     # ========== Main confirm action ==========
 
     def confirm_cancel(self):
@@ -629,10 +783,18 @@ class SaleOrderCancelDocumentWizard(models.TransientModel):
 
             # ---- 1. ยกเลิกใบเช่า ----
             if self.cancel_sale_order:
-                stock_messages = []
-                for picking in self.sale_id.picking_ids:
-                    stock_msg = self._handle_stock_return(picking, tz)
-                    stock_messages.extend(stock_msg)
+                # คืนสต๊อก 'สุทธิ' (ตัด − คืนแล้ว − หาย) กันเบิ้ล + รองรับตัดหลายรอบ
+                messages.extend(self._return_net_stock(tz))
+                # ยกเลิกใบส่ง/ใบคืนที่ยังค้าง (ยังไม่ done)
+                for picking in self.sale_id.picking_ids.filtered(
+                        lambda p: p.state not in ('done', 'cancel')):
+                    try:
+                        picking.action_cancel()
+                        messages.append("ยกเลิก %s ที่รอดำเนินการ (%s)" % (
+                            picking.name, now_thai.strftime('%d/%m/%Y %H:%M:%S')))
+                    except Exception as e:
+                        messages.append(
+                            "ไม่สามารถยกเลิก %s: %s" % (picking.name, str(e)))
 
                 if self.sale_id.state not in ['cancel', 'done']:
                     try:
@@ -720,16 +882,17 @@ class SaleOrderCancelDocumentWizard(models.TransientModel):
 
             # ---- 4. ยกเลิกการตัดสต๊อก ----
             if self.cancel_stock_cut and not self.cancel_sale_order:
-                done_pickings = self.sale_id.picking_ids.filtered(lambda p: p.state == 'done')
-                if done_pickings:
-                    for picking in done_pickings:
-                        stock_msg = self._handle_stock_return(picking, tz)
-                        messages.extend(stock_msg)
-
+                cut_pickings = self.sale_id.picking_ids.filtered(
+                    lambda p: p.state == 'done'
+                    and p.picking_type_id.code == 'outgoing'
+                    and not any(m.origin_returned_move_id for m in p.move_lines))
+                if cut_pickings:
+                    # คืนสต๊อก 'สุทธิ' (ตัด − คืนแล้ว − หาย) กันเบิ้ล
+                    messages.extend(self._return_net_stock(tz))
                     log_model.sudo().create({
                         'sale_order_id': self.sale_id.id,
                         'document_type': 'stock_cut',
-                        'document_name': ', '.join([p.name for p in done_pickings]),
+                        'document_name': ', '.join([p.name for p in cut_pickings]),
                         'reason': self.reason_stock_cut,
                         'cancelled_by': self.env.user.id,
                         'cancelled_date': fields.Datetime.now(),
