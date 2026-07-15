@@ -404,7 +404,6 @@
                                 <td style="font-size: 15px;">
                                     <b>หมายเหตุ:</b>
                                     <span t-if="doc.note" t-esc="doc.note"/>
-                                    <span t-else="ไม่มีหมายเหตุ">ไม่มีหมายเหตุ</span>
                                     <br/>
                                     กำหนดชำระค่าขนส่งวันที่ <span t-esc="doc._get_formatted_order_date()"/>
                                     <br/>
