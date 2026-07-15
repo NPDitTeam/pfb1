@@ -6,13 +6,13 @@
         <field name="default" eval="False"/>
         <field name="format">A4</field>
         <field name="orientation">Portrait</field>
-        <field name="margin_top">5</field> <!-- ระยะขอบด้านบน -->
-        <field name="margin_bottom">5</field> <!-- ระยะขอบด้านล่าง (เล็ก เพื่อให้ footer position:fixed ไม่ถูกตัด) -->
-        <field name="margin_left">5</field>
-        <field name="margin_right">5</field>
+        <field name="margin_top">60</field> <!-- ระยะขอบด้านบน -->
+        <field name="margin_bottom">110</field> <!-- ระยะขอบด้านล่างตั้งค่าเป็น 5 หน่วย -->
+        <field name="margin_left">10</field>
+        <field name="margin_right">10</field>
         <field name="dpi">90</field>
         <field name="header_line" eval="False"/>
-        <field name="header_spacing">0</field>
+        <field name="header_spacing">60</field>
         <!-- กำหนดขนาดตัวอักษรเป็น 12 -->
         <!--        <field name="font_size">12</field>-->
     </record>
@@ -49,10 +49,10 @@
             <div class="col-7" style="margin-top: 15px;">
                 <table style="width: 100%;" class="ml-45">
                     <tr>
-                        <td><strong class="ml-2" style="font-size: 25px;">ใบกำกับการเช่า</strong></td>
+                        <td><strong class="ml-2" style="font-size: 22px;">ใบกำกับการเช่า</strong></td>
                     </tr>
                     <tr>
-                        <td><strong class="ml-2" style="font-size: 16px;"><span
+                        <td><strong class="ml-2" style="font-size: 13px;"><span
                                 t-esc="doc.company_id.name"/></strong></td>
                     </tr>
                     <tr>
@@ -263,12 +263,20 @@
                 height: 22px;
             }
         </style>
-        <!-- ตารางของ "หนึ่งหน้า" (chunk เดียว) — ตัวแปร group / start / empty_count ตั้งจาก main template -->
+        <t t-set="chunk_size" t-value="21"/>
+        <t t-set="order_lines" t-value="doc.order_line"/>
+        <t t-set="total_lines" t-value="len(order_lines)"/>
+        <t t-set="num_chunks" t-value="max(1, (total_lines + chunk_size - 1) // chunk_size)"/>
+        <t t-foreach="range(num_chunks)" t-as="group_index">
+            <t t-set="start" t-value="group_index * chunk_size"/>
+            <t t-set="end" t-value="start + chunk_size"/>
+            <t t-set="group" t-value="order_lines[start:end]"/>
+            <t t-set="empty_count" t-value="chunk_size - len(group)"/>
             <table width="100%" style="mt-1">
                 <thead>
                     <tr style="border-bottom: 1px solid black !important; font-size: 13px;">
                         <th width="3%" class="text-center border_report" style="font-size: 13px;">ลำดับ</th>
-                        <th width="22%" class="text-center border_report" style="font-size: 13px;">รายการสินค้า</th>
+                        <th width="20%" class="text-center border_report" style="font-size: 13px;">รายการสินค้า</th>
                         <th width="7%" class="text-right border_report" style="padding: 0 4px;font-size: 13px;">น้ำหนักสินค้า</th>
                         <th width="6%" class="text-right border_report" style="font-size: 13px;">จำนวน</th>
                         <th width="12%" class="text-right border_report" style="padding: 0 6px;font-size: 13px;">ค่าปรับเงินประกัน<br/>หลังหักค่าเสื่อมแล้ว</th>
@@ -312,6 +320,10 @@
                     </t>
                 </tbody>
             </table>
+            <t t-if="group_index + 1 &lt; num_chunks">
+                <div class="page-break"/>
+            </t>
+        </t>
     </template>
 
     <!--    สรุป-->
@@ -394,7 +406,7 @@
     <!--    ลายเช็น-->
     <template id="report_signature">
 <!--        <div style="display: block; width: 900px; position: fixed; left: 10px; top: 980px;">-->
-            <div style="display: block; width: calc(100% - 20px); position: fixed; left: 10px; right: 10px; top: 620px;">
+            <div style="display: block; width: calc(100% - 20px); position: fixed; left: 10px; right: 10px; top: 740px;">
             <style>
                 .mt-1 {
                 margin-top: 1rem;
@@ -496,16 +508,16 @@
             <div class="rounded-square">
                 <div class="row">
                     <div class="col-3">
-                        <p class="text-left"><strong style="font-size: 16px;"> ค่าเช่าเเละค่าประกันสุทธิ :</strong></p>
+                        <p class="text-left"><strong style="font-size: 13px;"> ค่าเช่าเเละค่าประกันสุทธิ :</strong></p>
                     </div>
                     <div class="col-6">
-                        <p class="text-right mr-99" style="font-size: 16px;">(<span t-esc="doc.get_total_baht_text()"/>)
+                        <p class="text-right mr-99" style="font-size: 13px;">(<span t-esc="doc.get_total_baht_text()"/>)
                             <span> | </span>
                         </p>
                     </div>
                     <div class="col-3">
                         <p class="text-right">
-                            <strong style="font-size: 16px;"><span
+                            <strong style="font-size: 14px;"><span
                                     t-esc="'{0:,.2f}'.format(doc.pfb_amount + doc.amount_total)"/></strong></p>
                     </div>
                 </div>
@@ -612,37 +624,6 @@
 
                 </table>
             </div>
-            <!-- QR Code ชำระเงิน 3 ช่อง : ค่าประกัน / ค่าเช่า / ค่าขนส่ง -->
-            <div class="mt-1">
-                <div class="rounded-square" style="padding: 5px;">
-                    <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; table-layout: fixed;">
-                        <tr>
-                            <td class="text-center" style="font-size: 13px;" width="33%"><strong>ค่าประกันสินค้า</strong></td>
-                            <td class="text-center" style="font-size: 13px;" width="33%"><strong>ค่าเช่าสินค้า</strong></td>
-                            <td class="text-center" style="font-size: 13px;" width="33%"><strong>ค่าขนส่ง</strong></td>
-                        </tr>
-                        <tr>
-                            <td class="text-center" width="33%">
-                                <t t-set="qr_deposit" t-value="doc.get_invoice_qr_image('deposit')"/>
-                                <img t-if="qr_deposit" t-att-src="'data:image/png;base64,%s' % qr_deposit" style="width: 95px; height: 95px;"/>
-                            </td>
-                            <td class="text-center" width="33%">
-                                <t t-set="qr_rent" t-value="doc.get_invoice_qr_image('rent')"/>
-                                <img t-if="qr_rent" t-att-src="'data:image/png;base64,%s' % qr_rent" style="width: 95px; height: 95px;"/>
-                            </td>
-                            <td class="text-center" width="33%">
-                                <t t-set="qr_logistics" t-value="doc.get_invoice_qr_image('logistics')"/>
-                                <img t-if="qr_logistics" t-att-src="'data:image/png;base64,%s' % qr_logistics" style="width: 95px; height: 95px;"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center" style="font-size: 12px;" width="33%"><span t-esc="doc.get_invoice_qr_company_name('deposit')"/></td>
-                            <td class="text-center" style="font-size: 12px;" width="33%"><span t-esc="doc.get_invoice_qr_company_name('rent')"/></td>
-                            <td class="text-center" style="font-size: 12px;" width="33%"><span t-esc="doc.get_invoice_qr_company_name('logistics')"/></td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
             <!-- ตารางลายเซ็น -->
             <div class="mt-1">
                 <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
@@ -704,28 +685,15 @@
     <template id="report_pfb_npd_sale_form_rent_invoice">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="doc">
-                <!-- แบ่งรายการสินค้าเป็นหน้าๆ ละ chunk_size แล้ว render แต่ละหน้าให้มี
-                     header + วันที่ + ผู้เช่า + ตาราง + บล็อกสรุป/ลายเซ็น ครบในหน้านั้น
-                     (ใช้ pattern เดียวกับใบเสนอราคา เพื่อให้บล็อกสรุปแสดงทุกหน้าถูกต้อง) -->
-                <t t-set="order_lines" t-value="doc.order_line"/>
-                <t t-set="chunk_size" t-value="15"/>
-                <t t-set="num_chunks" t-value="max(1, (len(order_lines) + chunk_size - 1) // chunk_size)"/>
-                <t t-foreach="range(num_chunks)" t-as="group_index">
-                    <t t-set="start" t-value="group_index * chunk_size"/>
-                    <t t-set="group" t-value="order_lines[start:start + chunk_size]"/>
-                    <t t-set="empty_count" t-value="chunk_size - len(group)"/>
-                    <div class="page">
-                        <t t-call="web.basic_layout">
-                            <t t-call="pfb_npd_sale_form_rent_invoice.report_header"/>
-                            <t t-call="pfb_npd_sale_form_rent_invoice.report_day"/>
-                            <t t-call="pfb_npd_sale_form_rent_invoice.report_detail"/>
-                            <t t-call="pfb_npd_sale_form_rent_invoice.report_table"/>
-                            <t t-call="pfb_npd_sale_form_rent_invoice.report_signature"/>
-                        </t>
+                <t t-call="web.basic_layout">
+                    <t t-set="number" t-vatue="0"/>
+                    <div class="header">
+                        <t t-call="pfb_npd_sale_form_rent_invoice.report_header"/>
+                        <t t-call="pfb_npd_sale_form_rent_invoice.report_day"/>
+                        <t t-call="pfb_npd_sale_form_rent_invoice.report_detail"/>
+                        <t t-call="pfb_npd_sale_form_rent_invoice.report_signature"/>
                     </div>
-                    <t t-if="group_index + 1 &lt; num_chunks">
-                        <div class="page-break"/>
-                    </t>
+                    <t t-call="pfb_npd_sale_form_rent_invoice.report_table"/>
                 </t>
             </t>
         </t>
