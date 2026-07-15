@@ -38,11 +38,11 @@
             font-weight: 800;
             }
             .address-line {
-            font-size: 14px;
+            font-size: 11px;
             margin-top: 5px;
             }
             .tax-id {
-            font-size: 14px;
+            font-size: 11px;
             margin-top: -10px;
             display: block;
             }
@@ -59,14 +59,14 @@
             <!--                margin-left: -20px;-->
             }
             .text-rent {
-            font-size: 11px;
+            font-size: 8px;
             margin-top: -10px
             }
             .date-info {
             margin-top: -10px;
             }
             .doc-post {
-            font-size: 12px;
+            font-size: 9px;
             }
         </style>
         <div class="row">
@@ -208,10 +208,10 @@
                             <strong>ค่าขนส่งสินค้า</strong>
                         </h4>
 
-<!--                        <span class="bold" style="font-size: 20px;">-->
+<!--                        <span class="bold" style="font-size: 17px;">-->
 <!--                            <span t-esc="doc.sale_id.shipping_cost"/>-->
 <!--                        </span>-->
-                        <span class="bold" style="font-size: 20px;">
+                        <span class="bold" style="font-size: 17px;">
 <!--    <span t-if="doc.sale_id.shipping_cost_m" t-esc="doc.sale_id.shipping_cost_m"/>-->
 <!--    <span t-else="" t-esc="doc.sale_id.shipping_cost"/>-->
                             <!-- แสดงค่าขนส่งตามเงื่อนไข -->
@@ -286,7 +286,7 @@
                             <strong>ระยะทาง (กิโลเมตร)</strong>
                         </h4>
 
-                        <span class="bold" style="font-size: 20px;">
+                        <span class="bold" style="font-size: 17px;">
                             <span t-esc="doc.sale_id.distance_km"/>
                         </span>
                     </td>
@@ -364,7 +364,7 @@
     <template id="so_form_footer">
         <style>
             .footer {
-            margin-top: 190px; /* เพิ่มระยะห่างด้านบน */
+            margin-top: 140px; /* เพิ่มระยะห่างด้านบน */
             <!--        padding-bottom: 90px; /* เพิ่มระยะห่างด้านล่าง */-->
             }
         </style>
@@ -376,7 +376,7 @@
             <div class="row">
                 <div class="col-6">
                 </div>
-                <div class="col-6 text-right" style="padding-right: 40px; font-size: 16px;">
+                <div class="col-6 text-right" style="padding-right: 40px; font-size: 13px;">
                     <div>
                         น้ำหนักรวมสุทธิ์ (กิโลกรัม) :
                         <strong>
@@ -401,7 +401,7 @@
                         <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
 
                             <tr>
-                                <td style="font-size: 15px;">
+                                <td style="font-size: 12px;">
                                     <b>หมายเหตุ:</b>
                                     <span t-if="doc.note" t-esc="doc.note"/>
                                     <br/>
@@ -419,7 +419,7 @@
 
 
                             <tr>
-                                <td width="50%" style="font-size: 15px;">
+                                <td width="50%" style="font-size: 12px;">
                                     <b>วิธีการชำระเงิน โอนเงินเข้าบัญชี</b>
                                 </td>
 
@@ -439,10 +439,10 @@
                         <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
 
                             <tr>
-                                <td width="7%" style="font-size: 15px;">
+                                <td width="7%" style="font-size: 12px;">
 
                                 </td>
-                                <td width="50%" style="font-size: 15px;">
+                                <td width="50%" style="font-size: 12px;">
                                     บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6
                                 </td>
                             </tr>
@@ -458,7 +458,7 @@
                 width: 100%;
                 border-collapse: collapse;
                 margin-top: 20px;
-                font-size: 14px;
+                font-size: 11px;
                 }
 
                 .signature-table td {
@@ -501,13 +501,13 @@
                             <t t-esc="user.name"/>
                         </span><br/>
                         <span class="">________________________</span><br/>
-                        <span class="signature-subtitle" style="font-size: 15px;">(เจ้าหน้าที่ออกเอกสาร)</span>
+                        <span class="signature-subtitle" style="font-size: 12px;">(เจ้าหน้าที่ออกเอกสาร)</span>
 
                     </td>
                     <td>
                         <span class="signature-title"></span><br/>
                         <span class="">________________________</span><br/>
-                        <span class="signature-subtitle" style="font-size: 15px;">(เจ้าหน้าที่ใบสินค้า)</span>
+                        <span class="signature-subtitle" style="font-size: 12px;">(เจ้าหน้าที่ใบสินค้า)</span>
 
                     </td>
                     <td>
@@ -517,13 +517,13 @@
                             <span t-esc="doc.sale_id.delivery_employee_id.name"/>
                         </span><br/>
                         <span class="">________________________</span><br/>
-                        <span class="signature-subtitle" style="font-size: 15px;">(ทะเบียนรถ / ชื่อผู้ขับ)</span>
+                        <span class="signature-subtitle" style="font-size: 12px;">(ทะเบียนรถ / ชื่อผู้ขับ)</span>
 
                     </td>
                     <td>
                         <span class="signature-title"></span><br/>
                        <span class="">________________________</span><br/>
-                        <span class="signature-subtitle" style="font-size: 15px;">ผู้รับสินค้า</span>
+                        <span class="signature-subtitle" style="font-size: 12px;">ผู้รับสินค้า</span>
 
                     </td>
                 </tr>

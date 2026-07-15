@@ -29,7 +29,7 @@
                 <t t-set="dot_m" t-value="'............................'"/>
                 <t t-set="dot_l" t-value="'.................................................................'"/>
                 <t t-set="dot_xl" t-value="'.......................................................................'"/>
-                <div class="page" style="font-family: 'THSarabunNew',sans-serif; font-weight: normal; font-size: 14px; line-height: 1.6; color: #000;">
+                <div class="page" style="font-family: 'THSarabunNew',sans-serif; font-weight: normal; font-size: 13px; line-height: 1.6; color: #000;">
 
                     <style>
                         @font-face { font-family: 'THSarabunNew'; font-weight: normal;
@@ -38,20 +38,20 @@
                             src: url('/npd_rental_equipment_contract_qweb/static/fonts/THSarabunNew-Bold.ttf') format('truetype'); }
                         .page * { font-family: 'THSarabunNew',sans-serif !important; }
 
-                        .rc-pageno { text-align: right; font-size: 12px; margin: 0 0 16px 0; }
-                        .rc-title  { text-align: center; font-size: 20px; font-weight: bold; margin: 0; }
-                        .rc-no     { text-align: right; font-size: 14px; font-weight: bold; margin: 2px 0 20px 0; }
+                        .rc-pageno { text-align: right; font-size: 11px; margin: 0 0 16px 0; }
+                        .rc-title  { text-align: center; font-size: 19px; font-weight: bold; margin: 0; }
+                        .rc-no     { text-align: right; font-size: 13px; font-weight: bold; margin: 2px 0 20px 0; }
                         .rc-cl     { margin: 0 0 14px 0; text-align: left; text-indent: 2.2em; }
                         .rc-sub    { margin: 0 0 9px 0; text-align: left; padding-left: 2.2em; }
                         .rc-note   { margin: 4px 0; text-align: left; }
                         .rc-val    { font-weight: bold; }
-                        .rc-chk    { font-size: 19px; vertical-align: -3px; }
+                        .rc-chk    { font-size: 18px; vertical-align: -3px; }
                         .rc-sign-tb { width: 100%; margin-top: 8px; border-collapse: collapse; }
-                        .rc-sign-tb td { width: 50%; text-align: center; padding: 5px 8px; vertical-align: top; font-size: 16px; }
+                        .rc-sign-tb td { width: 50%; text-align: center; padding: 5px 8px; vertical-align: top; font-size: 15px; }
                         .rc-stamp-tb { width: 100%; margin-top: 93px; border-collapse: collapse; }
                         .rc-stamp-tb td { width: 50%; vertical-align: top; padding: 0 8px; }
                         .rc-stamp { border: 1px solid #999; color: #999; height: 54px; width: 120px;
-                                    font-size: 11px; text-align: center; padding-top: 4px; }
+                                    font-size: 10px; text-align: center; padding-top: 4px; }
                         .rc-stamp-r { margin-left: auto; }
                     </style>
 

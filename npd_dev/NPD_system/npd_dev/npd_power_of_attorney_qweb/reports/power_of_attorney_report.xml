@@ -33,9 +33,9 @@
                 <t t-set="dot_s" t-value="'............'"/>
                 <t t-set="dot_m" t-value="'............................'"/>
                 <t t-set="dot_addr" t-value="'...............................'"/>
-                <t t-set="dot_id" t-value="'.....................................'"/>
+                <t t-set="dot_id" t-value="'............................................'"/>
                 <t t-set="dot_l" t-value="'........................................................'"/>
-                <div class="page" style="font-family: 'THSarabunNew',sans-serif; font-weight: normal; font-size: 16px; line-height: 1.4; color: #000;">
+                <div class="page" style="font-family: 'THSarabunNew',sans-serif; font-weight: normal; font-size: 14px; line-height: 1.4; color: #000;">
 
                     <style>
                         @font-face {
@@ -64,22 +64,22 @@
 
                         /* ไม่มีกรอบ -- ดันบล็อกลงชื่อลงท้ายกระดาษด้วย spacer (poa-gap) */
                         .poa-doc { padding: 12px 16px 14px 16px; box-sizing: border-box; }
-                        .poa-title { text-align: center; font-size: 25px; font-weight: bold; margin: 34px 0 8px 0; letter-spacing: 1px; }
+                        .poa-title { text-align: center; font-size: 23px; font-weight: bold; margin: 34px 0 8px 0; letter-spacing: 1px; }
                         .poa-place { text-align: right; margin: 9px 0; }
                         .poa-clause { margin: 0 0 12px 0; text-align: left; text-indent: 2.5em; line-height: 1.8; }
-                        .poa-item { margin: 0 0 14px 0; text-align: left; padding-left: 1.5em; line-height: 1.7; }
+                        .poa-item { margin: 0 0 6px 0; text-align: left; padding-left: 1.5em; line-height: 1.6; }
                         .poa-val { font-weight: bold; }
                         .poa-evidence { text-align: right; text-indent: 0; margin: 0 0 12px 0; }   /* "เพื่อเป็นหลักฐาน" ชิดขวา */
                         .poa-gap { height: 32mm; }   /* spacer ดันลงชื่อไปท้ายกระดาษ -- ปรับค่านี้ */
                         .poa-sign { width: 58%; margin-left: auto; text-align: center; line-height: 2.0; }   /* บล็อกชิดขวา ข้อความกึ่งกลาง */
-                        .poa-sign-sub { font-size: 16px; color: #9a9a9a; display: block; margin-bottom: 16px; }
+                        .poa-sign-sub { font-size: 14px; color: #9a9a9a; display: block; margin-bottom: 16px; }
                         .poa-stamp { border: 1px solid #999; color: #888; width: 130px; height: 56px;
-                                     font-size: 13px; text-align: center; padding-top: 6px;
+                                     font-size: 11px; text-align: center; padding-top: 6px;
                                      display: inline-block; }   /* ชิดขวาด้วย text-align ของ td */
                         .poa-sign-tb { width: 100%; border-collapse: collapse; table-layout: fixed; }
                         .poa-sig { display: inline-block; text-align: center; vertical-align: top; }
                         .poa-sig-row { margin-bottom: 4px; }
-                        .poa-note { font-size: 14px; margin-top: 44px; line-height: 1.4; }
+                        .poa-note { font-size: 12px; margin-top: 18px; line-height: 1.4; }   /* ระยะห่างจากบล็อกลงชื่อ -- ปรับค่านี้ */
                     </style>
 
                     <div class="poa-doc">
@@ -93,7 +93,7 @@
                             พ.ศ. <span t-attf-class="#{cdate['year'] and 'poa-val' or ''}" t-esc="cdate['year'] or dot_s"/></div>
 
                         <!-- ===== คำนำ ===== -->
-                        <p class="poa-clause" style="margin-top: 42px; margin-bottom: 40px;">
+                        <p class="poa-clause" style="margin-top: 42px; margin-bottom: 18px;">
                             โดยหนังสือฉบับนี้ ข้าพเจ้า (ชื่อบริษัท/ชื่อบุคคล)
                             <span t-attf-class="#{cust['name'] and 'poa-val' or ''}" t-esc="cust['name'] or dot_l"/>
                             เลขประจำตัวประชาชน/<br/>
@@ -122,6 +122,16 @@
                             3. ดำเนินการรับเงิน จ่ายเงิน วางเงินมัดจำ ชำระค่าเช่าสินค้า หรือดำเนินการใดๆ ที่จำเป็นเพื่อให้การทำธุรกรรมการเช่านี้สำเร็จตามวัตถุประสงค์
                         </div>
 
+                        <!-- ===== ผู้มีอำนาจกระทำการแทนเพิ่มเติม ===== -->
+                        <p class="poa-clause" style="margin-top: 16px; margin-bottom: 6px;">
+                            ทั้งนี้ ให้บุคคลดังต่อไปนี้ มีอำนาจกระทำการแทนข้าพเจ้า ข้อ 1 - ข้อ 3 ข้างต้นด้วย
+                        </p>
+                        <div class="poa-item">
+                            1. (ชื่อ-นามสกุล) <span t-esc="dot_l"/> เลขประจำตัวประชาชน <span t-esc="dot_id"/>
+                        </div>
+                        <div class="poa-item">
+                            2. (ชื่อ-นามสกุล) <span t-esc="dot_l"/> เลขประจำตัวประชาชน <span t-esc="dot_id"/>
+                        </div>
 
                         <!-- ===== ข้อความยืนยัน ===== -->
                         <p class="poa-clause" style="margin-top: 24px;">
@@ -157,12 +167,12 @@
                         <!-- ===== หมายเหตุ ===== -->
                             <br/>
                         <div class="poa-note">
-                            <div style="font-size: 15px; font-weight: bold;">หมายเหตุ</div>
-                            <div style="font-size: 15px; font-weight: bold;">แนบเอกสารประกอบพร้อมลงนามรับรองสำเนาถูกต้อง ดังนี้</div>
-                            <div style="font-size: 14px; font-weight: normal; padding-left: 1.8em;">1. หนังสือรับรองบริษัท (ถ้ามี)</div>
-                            <div style="font-size: 14px; font-weight: normal; padding-left: 1.8em;">2. สำเนาบัตรประชาชนของผู้มอบอำนาจ (หรือผู้มีอำนาจลงนามแทนนิติบุคคล)</div>
-                            <div style="font-size: 14px; font-weight: normal; padding-left: 1.8em;">3. สำเนาบัตรประชาชนของผู้รับมอบอำนาจ</div>
-                            <div style="font-size: 14px; font-weight: normal;">หากเป็นนิติบุคคล อย่าลืมประทับตราสำคัญของบริษัทในช่องผู้มอบอำนาจ</div>
+                            <div style="font-size: 13px; font-weight: bold;">หมายเหตุ</div>
+                            <div style="font-size: 13px; font-weight: bold;">แนบเอกสารประกอบพร้อมลงนามรับรองสำเนาถูกต้อง ดังนี้</div>
+                            <div style="font-size: 12px; font-weight: normal; padding-left: 1.8em;">1. หนังสือรับรองบริษัท และประทับตราสำคัญของบริษัท (ถ้ามี)</div>
+                            <div style="font-size: 12px; font-weight: normal; padding-left: 1.8em;">2. สำเนาบัตรประชาชนของผู้มอบอำนาจ (หรือผู้มีอำนาจลงนามแทนนิติบุคคล)</div>
+                            <div style="font-size: 12px; font-weight: normal; padding-left: 1.8em;">3. สำเนาบัตรประชาชนของผู้รับมอบอำนาจ (ทุกคน)</div>
+
                         </div>
                         </div>
                         <!-- /poa-bottom -->
