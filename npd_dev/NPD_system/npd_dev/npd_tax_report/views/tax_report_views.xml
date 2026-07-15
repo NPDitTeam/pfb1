@@ -1,0 +1,86 @@
+<odoo>
+
+    <!-- List / Tree view : column headers match the original VAT report -->
+    <record id="view_npd_tax_report_tree" model="ir.ui.view">
+        <field name="name">npd.tax.report.tree</field>
+        <field name="model">npd.tax.report</field>
+        <field name="arch" type="xml">
+            <tree string="TAX Report" create="0" edit="0" delete="0">
+                <field name="invoice_date" string="Date"/>
+                <field name="invoice_number" string="Invoice"/>
+                <field name="payment_state" string="สถานะการชำระ"/>
+                <field name="payment_name" string="Payment"/>
+                <field name="partner_id" string="Cust./Sup."/>
+                <field name="partner_vat" string="Tax ID"/>
+                <field name="partner_branch" string="Branch ID"/>
+                <field name="base_amount" string="Base Amount" sum="Base Amount"/>
+                <field name="tax_amount" string="Tax Amount" sum="Tax Amount"/>
+                <field name="doc_ref" string="Doc Ref."/>
+                <field name="move_branch_id" string="Branch"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="company_id" optional="hide"
+                       groups="base.group_multi_company"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Search view : filters & group-by via the standard Odoo UI -->
+    <record id="view_npd_tax_report_search" model="ir.ui.view">
+        <field name="name">npd.tax.report.search</field>
+        <field name="model">npd.tax.report</field>
+        <field name="arch" type="xml">
+            <search string="TAX Report">
+                <field name="invoice_number" string="Invoice"/>
+                <field name="partner_id" string="Cust./Sup."/>
+                <field name="payment_id" string="Payment"/>
+                <field name="move_branch_id" string="Branch"/>
+                <filter name="filter_invoice_date" string="Date"
+                        date="invoice_date"/>
+                <separator/>
+                <filter name="paid" string="ชำระแล้ว"
+                        domain="[('payment_state','=','paid')]"/>
+                <filter name="partial" string="ชำระบางส่วน"
+                        domain="[('payment_state','=','partial')]"/>
+                <filter name="not_paid" string="ยังไม่ชำระ"
+                        domain="[('payment_state','in',['not_paid','in_payment'])]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_partner" string="Cust./Sup."
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_branch" string="Branch"
+                            context="{'group_by': 'move_branch_id'}"/>
+                    <filter name="group_invoice_date" string="Date"
+                            context="{'group_by': 'invoice_date'}"/>
+                    <filter name="group_company" string="Company"
+                            context="{'group_by': 'company_id'}"
+                            groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action opened directly from the menu -->
+    <record id="action_npd_tax_report" model="ir.actions.act_window">
+        <field name="name">NPD Tax Report</field>
+        <field name="res_model">npd.tax.report</field>
+        <field name="view_mode">tree</field>
+        <field name="search_view_id" ref="view_npd_tax_report_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ยังไม่มีใบแจ้งหนี้ในเงื่อนไขที่เลือก
+            </p>
+            <p>
+                รายงานนี้แสดงเฉพาะใบแจ้งหนี้ลูกค้า (Customer Invoice) ที่ลงบัญชีแล้ว
+                ใช้แถบค้นหาด้านบนเพื่อกรองตามวันที่ คู่ค้า หรือสาขา
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu : Accounting > Reporting > NPD Tax Report -->
+    <menuitem
+        id="menu_npd_tax_report"
+        parent="account.menu_finance_reports"
+        action="action_npd_tax_report"
+        name="NPD Tax Report"
+        groups="account.group_account_manager,account.group_account_user"/>
+
+</odoo>

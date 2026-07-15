@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_npd_tax_report_user,npd.tax.report.user,model_npd_tax_report,account.group_account_user,1,0,0,0
+access_npd_tax_report_manager,npd.tax.report.manager,model_npd_tax_report,account.group_account_manager,1,0,0,0
+access_npd_tax_report_invoice,npd.tax.report.invoice,model_npd_tax_report,account.group_account_invoice,1,0,0,0
