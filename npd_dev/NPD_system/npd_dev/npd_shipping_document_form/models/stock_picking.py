@@ -21,6 +21,20 @@ class SaleOrder(models.Model):
             return format_date(self.env, self.sale_id.commitment_date, date_format='dd/MM/yyyy')
         return ""
 
+    def _get_formatted_order_date(self):
+        """วันที่สั่งซื้อ (date_order) รูปแบบ dd/MM/yyyy -- ใช้แสดง 'กำหนดชำระค่าขนส่งวันที่'"""
+        if self.sale_id and self.sale_id.date_order:
+            return format_date(self.env, self.sale_id.date_order, date_format='dd/MM/yyyy')
+        return ""
+
+    def _get_rental_contract_display(self):
+        """เลขที่สัญญาเช่าจากฟิลด์ rental_contract_ref (ดึงมาเก็บผ่านปุ่มดึงข้อมูลการเช่า)
+        เช็ค _fields ก่อน กัน DB ที่ไม่ได้ติดตั้ง sale_api_rent -> ไม่ให้ report error"""
+        so = self.sale_id
+        if so and 'rental_contract_ref' in so._fields:
+            return so.rental_contract_ref or ""
+        return ""
+
     def _get_report_values(self, docids, data=None):
         docs = self.env["stock.picking"].browse(docids)
         for doc in docs:

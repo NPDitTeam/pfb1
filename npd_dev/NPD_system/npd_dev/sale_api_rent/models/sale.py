@@ -35,6 +35,8 @@ class SaleOrder(models.Model):
     # ], string="ดึงข้อมูลการเช่าจาก บ.อื่น")
 
     so_number = fields.Char(string="เลขเอกสาร SO")
+    # เลขที่สัญญาเช่าที่ดึงมาจาก SO ต้นทาง (คนละตัวกับ rental_contract_full ที่ compute ในเครื่องนี้)
+    rental_contract_ref = fields.Char(string="เลขที่สัญญาเช่า", copy=False)
     is_renew_green_house = fields.Boolean(string="บิลต่ออายุจากบ้านเขียว", default=False)
 
     def action_fetch_rental_data(self):
@@ -121,6 +123,7 @@ class SaleOrder(models.Model):
             raise UserError(_("\n❌ ไม่พบป้ายทะเบียน: %s") % license_plate_name)
 
         self.write({
+            'rental_contract_ref': so_data.get('rental_contract_full', ''),
             'delivery_employee_id':employee.id,
             'license_plate_id': license_plate.id,
             'pickup_location': so_data.get('pickup_location', ''),

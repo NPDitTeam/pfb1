@@ -57,6 +57,7 @@ class SaleOrderAPI(http.Controller):
         sale_order_data = {
             "so_id": sale_order.id,
             "so_number": sale_order.name,
+            "rental_contract_full": sale_order.rental_contract_full if hasattr(sale_order, 'rental_contract_full') else None,
             "pickup_location": sale_order.pickup_location if hasattr(sale_order, 'pickup_location') else None,
             "destination": sale_order.destination if hasattr(sale_order, 'destination') else None,
             "vehicle_type_name": sale_order.vehicle_type_id.name if hasattr(sale_order, 'name') else None,

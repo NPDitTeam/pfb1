@@ -20,6 +20,7 @@
                 <field name="is_renew_green_house"/>
                 <field name="database_selection" attrs="{'readonly': ['|', ('state', '=', 'sale'), ('is_renew_green_house', '=', True)]}"/>
                 <field name="so_number" attrs="{'readonly': ['|', ('state', '=', 'sale'), ('is_renew_green_house', '=', True)]}"/>
+                <field name="rental_contract_ref" readonly="1"/>
             </xpath>
 
 
