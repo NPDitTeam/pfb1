@@ -1,0 +1,493 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <template id="assets_common" name="office_rent_billing_sheet_assets" inherit_id="web.report_assets_common">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/css" href="pfb_npd_office_rent_billing_sheet/static/report.css"/>
+        </xpath>
+    </template>
+
+    <!--        กำหนดค่ากระดาษ-->
+    <record id="paperformat_office_rent_billing_sheet" model="report.paperformat">
+        <field name="name">A4 Office Rent Invoice (account.move)</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">10</field>
+        <field name="margin_bottom">7</field>
+        <field name="margin_left">10</field>
+        <field name="margin_right">10</field>
+        <field name="dpi">90</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+    </record>
+
+    <!-- ===== ปุ่มพิมพ์ในหน้าใบแจ้งหนี้ account.move (เมนู "พิมพ์") ===== -->
+    <report
+            id="action_office_rent_billing_sheet"
+            string="ใบแจ้งหนี้ค่าเช่าพื้นที่สำนักงาน"
+            name="pfb_npd_office_rent_billing_sheet.report_office_rent_billing_sheet"
+            model="account.move"
+            report_type="qweb-pdf"
+            print_report_name="'Office Rent Invoice - %s' %(object.name)"
+            paperformat="pfb_npd_office_rent_billing_sheet.paperformat_office_rent_billing_sheet"
+    />
+
+    <!--    หัวข้อรายงาน -->
+    <template id="report_header">
+        <style>
+            .mt-1 {
+            margin-top: 1rem;
+            }
+            .mb-1 {
+            margin-bottom: 1rem;
+            }
+            .ml-45 {
+            margin-left: 40px;
+            }.ml-3 {
+            margin-left: 45px;
+            }.text-left {
+            text-align: left;
+            }
+            .text-right {
+            text-align: right;
+            }.col-7_report, .col-2_report, .col-1_report{
+            padding-left: 0;
+            }.text_bold{ font-weight: 600;}
+        </style>
+        <div class="row">
+            <div class="col-2">
+                <img src="web/binary/company_logo" class="img-responsive"/>
+            </div>
+            <div class="col-7">
+                <table width="100%" class="ml-45">
+                    <tr>
+                        <td><strong class="a" style="font-size: 19px;"><span t-esc="doc.company_id.name"/></strong></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="b" t-field="user.branch_id.address" style="line-height: 1.5;font-size: 14px;"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="b" style="font-size: 14px;">
+                            <t t-if="env.cr.dbname == 'NPD_S_Group_New_V2'">
+                            </t>
+                            <t t-else="">
+                                เลขประจำตัวผู้เสียภาษี <span t-esc="doc.company_id.vat"/>
+                            </t>
+                            <span t-if="user.branch_id.telephone == '00000'">(สำนักงานใหญ่)</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-3">
+                <table width=" 100%">
+                    <tr>
+                        <td class="text-center" style="white-space: nowrap; line-height: 1.8; padding-top: 12px;">
+                            <strong class="a" style="font-size: 15px;">ใบแจ้งหนี้ค่าเช่าพื้นที่สำนักงาน</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center" style="line-height: 1.8;">
+                            <strong class="c" style="font-size: 14px;">INVOICE / BILLING NOTE</strong>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <p class="c" style="font-size: 15px ;color : white">.</p>
+        <div class="row">
+            <div class="col-2_report">
+                <table width="100%">
+                    <tr>
+                        <td class="text-right text_bold b" style="font-size: 14px; padding-left: 25px;padding-right: 0;">
+                            <span>ชื่อลูกค้า :</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-right text_bold b" style="font-size: 14px; padding-left: 25px;padding-right: 0;">
+                            <span>ที่อยู่ :</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 10px ;color : white">.</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right text_bold b" style="font-size: 14px; padding-left: 25px;padding-right: 0;">
+                            <span>เบอร์โทรศัพท์ :</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-right text_bold b" style="font-size: 14px; padding-left: 25px;padding-right: 0;">
+                            <span>เลขที่ผู้เสียภาษี :</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-7_report">
+                <table width="100%">
+                    <tr>
+                        <td class="text-left b" style="font-size: 14px; padding-left: 0; padding-right: 150px;"><span
+                                class="ml-1" t-esc="doc.partner_id.name"/></td>
+                    </tr>
+                    <tr>
+                        <td class="text-left b" style="font-size: 14px; padding-left: 0; padding-right: 150px;">
+                            <span class="ml-1" t-esc="doc.partner_id.street"/>
+                            <span class="ml-1" t-esc="doc.partner_id.street2"/>
+                            <span class="ml-1" t-esc="doc.partner_id.city"/>
+                            <span class="ml-1" t-esc="doc.partner_id.state_id.name"/>
+                            <span class="ml-1" t-esc="doc.partner_id.zip"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 10px ;color : white">.</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left b" style="font-size: 14px; padding-left: 0px; padding-right: 150px;">
+                            <span class="ml-1" t-esc="doc.partner_id.phone"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-left b" style="font-size: 14px; padding-left: 0px; padding-right: 150px;">
+                            <span class="ml-1" t-esc="doc.partner_id.vat"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-1_report">
+                <table width="100%">
+                    <tr>
+                        <td class="text-right text_bold b"
+                            style="font-size: 14px;padding-left: 10px; padding-right: 0px;">
+                            <span>เลขที่ :</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-right text_bold b"
+                            style="font-size: 14px;padding-left: 10px; padding-right: 0px;">
+                            <span>วันที่ :</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-right text_bold b"
+                            style="font-size: 14px;padding-left: 10px; padding-right: 0px;">
+                            <span>วันที่กำหนดจ่าย :</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-2_report">
+                <table width="100%">
+                    <tr>
+                        <td class="text-left b" style="font-size: 14px; padding-left: 0px;">
+                            <span class="ml-1" t-esc="doc.name"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-left b" style="font-size: 14px; padding-left: 0px;">
+                            <span class="ml-1" t-esc="doc.invoice_date.strftime('%d-%m-%Y') if doc.invoice_date else ''"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-left b" style="font-size: 14px; padding-left: 0px;">
+                            <span class="ml-1" t-esc="doc.invoice_date_due.strftime('%d-%m-%Y') if doc.invoice_date_due else ''"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <p style="color : white; font-size: 18px;">.</p>
+        <!-- ===== ตารางรายการ: ดึงรายการจากใบแจ้งหนี้ (invoice_line_ids) ที่กำลังพิมพ์ ===== -->
+        <table width="100%" class="table" style="margin-top: 18px;">
+            <thead>
+                <tr class="b" style="border-bottom: 1px solid black !important;">
+                    <th width="6%" class="text-center border_report" style="font-size: 14px;">ลำดับ</th>
+                    <th width="46%" class="text-left  border_report" style="font-size: 14px;">รายการ</th>
+                    <th width="16%" class="text-right border_report" style="font-size: 14px;">ค่าเช่าต่อวัน</th>
+                    <th width="12%" class="text-right border_report" style="font-size: 14px;">จำนวนวัน</th>
+                    <th width="20%" class="text-right border_report" style="font-size: 14px;">จำนวนเงิน</th>
+                </tr>
+            </thead>
+            <tbody>
+                <t t-set="lines" t-value="doc.get_office_rent_lines()"/>
+                <t t-set="line_count" t-value="len(lines)"/>
+                <t t-foreach="lines" t-as="l">
+                    <tr class="b">
+                        <td class="text-center" style="font-size: 14px;border-bottom:hidden;height:26px;"><span t-esc="l_index + 1"/></td>
+                        <td class="text-left" style="font-size: 14px;border-bottom:hidden;height:26px;"><span t-esc="l.name or l.product_id.name"/></td>
+                        <td class="text-right" style="font-size: 14px;border-bottom:hidden;height:26px;">
+                            <span t-if="l.pfb_date_of_rent" t-esc="'{0:,.2f}'.format(l.price_unit or 0)"/>
+                        </td>
+                        <td class="text-right" style="font-size: 14px;border-bottom:hidden;height:26px;"><span
+                                t-esc="'{0:,.2f}'.format(l.pfb_quantity or 0)"/></td>
+                        <td class="text-right" style="font-size: 14px;border-bottom:hidden;height:26px;"><span
+                                t-esc="'{0:,.2f}'.format(l.price_unit_no_vat or 0)"/></td>
+                    </tr>
+                </t>
+                <!-- เติมแถวว่างให้ครบ 10 แถว (ล็อกพื้นที่ตรงกลาง) -->
+                <t t-foreach="range(max(0, 10 - line_count))" t-as="empty_i">
+                    <tr class="b">
+                        <td style="font-size: 14px;border-bottom:hidden;height:26px;">&#160;</td>
+                        <td style="font-size: 14px;border-bottom:hidden;height:26px;">&#160;</td>
+                        <td style="font-size: 14px;border-bottom:hidden;height:26px;">&#160;</td>
+                        <td style="font-size: 14px;border-bottom:hidden;height:26px;">&#160;</td>
+                        <td style="font-size: 14px;border-bottom:hidden;height:26px;">&#160;</td>
+                    </tr>
+                </t>
+            </tbody>
+        </table>
+        <p style="color : white; font-size: 20px;">.</p>
+    </template>
+
+
+    <template id="report_footer">
+        <style>
+            .spacing1{
+            padding-left: 40px;
+            }.spacing2{
+            margin-left: 20px;
+            }
+        </style>
+        <div style="border-bottom: 1px solid black ;top: 400px;" class="mb-1"/>
+        <div class="row">
+            <div class="col-7">
+                <table width="100%">
+                    <tr>
+                        <td class="text-left b" style="font-size: 14px;">
+                            <span class="text_bold">หมายเหตุ :</span>
+                            <span class="ml-1" t-raw="(doc.narration or '').replace('&lt;p&gt;', '').replace('&lt;/p&gt;', '')"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="color : white; font-size: 14px;">.</td>
+                    </tr>
+                    <tr>
+                        <td style="color : white; font-size: 14px;">.</td>
+                    </tr>
+                    <tr>
+                        <td class="text-left text_bold mb-1 b" style="font-size: 14px;">
+                            จำนวนเงิน(ตัวอักษร)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="color : white; font-size: 10px;">.</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center mt-1 mb-1 d" style="font-size: 16px;">
+                            <strong>
+                                (<span t-esc="doc.get_office_rent_total_baht_text()"/>)
+                            </strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="color : white; font-size: 10px;">.</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-3">
+                <table width="100%">
+                    <tr>
+                        <td class="text-right b" style="font-size: 14px;">
+                            ค่าเช่า :
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-right b" style="font-size: 14px;">ภาษีมูลค่าเพิ่ม 7% :</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right b" style="font-size: 14px;">ยอดก่อนภาษีมูลค่าเพิ่ม :</td>
+                    </tr>
+                    <tr>
+                        <td style="color : white; font-size: 10px;">.</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right b" style="font-size: 16px"><strong>จำนวนเงินทั้งสิ้น :</strong></td>
+                    </tr>
+                    <tr>
+                        <td style="color : white; font-size: 10px;">.</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-2">
+                <table width="100%">
+                    <tr>
+                        <td class="text-right b" style="font-size: 14px;"><span
+                                t-esc="'{0:,.2f}'.format(doc.amount_total)"/></td>
+                    </tr>
+                    <tr>
+                        <td class="text-right b" style="font-size: 14px;"><span
+                                t-esc="'{0:,.2f}'.format(doc.amount_tax)"/></td>
+                    </tr>
+                    <tr>
+                        <td class="text-right b" style="font-size: 14px;"><span
+                                t-esc="'{0:,.2f}'.format(doc.amount_untaxed)"/></td>
+                    </tr>
+                    <tr>
+                        <td style="color : white; font-size: 10px;">.</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right mt-1 mb-1 b" style="font-size: 16px;">
+                            <strong><span t-esc="'{0:,.2f}'.format(doc.amount_total)"/></strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="color : white; font-size: 10px;">.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div style="border-bottom: 1px solid black ;top: 700px;" class="mt-1 mb-1"/>
+        <!-- ภาษีหัก ณ ที่จ่าย 5%: แสดงเฉพาะลูกค้านิติบุคคล -->
+        <t t-if="doc.partner_id.company_type == 'company'">
+            <p class="text-left b" style="font-size: 16px;"><strong>ข้อมูลภาษี หัก ณ.ที่จ่าย</strong></p>
+            <p class="spacing1 b" style="font-size: 14px;">
+                ภาษีหัก ณ ที่จ่าย 5% ของ :
+                <span class="spacing1" style="font-size: 14px;" t-esc="'{0:,.2f}'.format(doc.amount_untaxed)"/>
+                <span class="spacing2" style="font-size: 14px;">=</span>
+                <span class="spacing2" style="font-size: 14px;" t-esc="'{0:,.2f}'.format(doc.amount_untaxed / 20)"/>
+                <span class="spacing2" style="font-size: 14px;">บาท</span>
+            </p>
+        </t>
+        <p class="d" style="font-size: 16px;"><strong>การชำระเงิน :</strong></p>
+        <div class="row spacing1">
+            <t t-if="request.db == 'NPD_S_Group_New'">
+                <tr>
+                <td class="spacing1 b" style="font-size: 14px;">โอนเงินเข้าบัญชี : บริษัท นภดล เอส กรุ๊ป จํากัด
+                    ธนาคารไทยพาณิชย์ เลขที่บัญชี 186-222160-2</td>
+                </tr>
+                <tr>
+                    <td class="spacing1 b" style="font-size: 14px;">สั่งจ่ายด้วยเช็คกรุณาสั่งจ่ายในนาม :บริษัท นภดล เอส กรุ๊ป จํากัด</td>
+                </tr>
+            </t>
+            <t t-if="request.db == 'NPD_S_Group_New_v2'">
+                <tr>
+                <td class="spacing1 b" style="font-size: 14px;">โอนเงินเข้าบัญชี : บริษัท นภดล เอส กรุ๊ป จํากัด
+                    ธนาคารไทยพาณิชย์ เลขที่บัญชี 186-222160-2</td>
+                </tr>
+                <tr>
+                    <td class="spacing1 b" style="font-size: 14px;">สั่งจ่ายด้วยเช็คกรุณาสั่งจ่ายในนาม :บริษัท นภดล เอส กรุ๊ป จํากัด</td>
+                </tr>
+            </t>
+            <t t-if="request.db == 'NPD_Steeltech_New'">
+                <tr>
+                <td class="spacing1 b" style="font-size: 14px;">โอนเงินเข้าบัญชี :  บริษัท เอ็นพีดี สตีลเทค จำกัด
+                    ธนาคารไทยพาณิชย์ เลขที่บัญชี 408-582058-4</td>
+                </tr>
+                <tr>
+                    <td class="spacing1 b" style="font-size: 14px;">สั่งจ่ายด้วยเช็คกรุณาสั่งจ่ายในนาม : บริษัท เอ็นพีดี สตีลเทค จำกัด</td>
+                </tr>
+            </t>
+            <t t-if="request.db == 'NPD_Logistics_New'">
+                <tr>
+                <td class="spacing1 b" style="font-size: 14px;">โอนเงินเข้าบัญชี : บริษัท เอ็นพีดี โลจิสติกส์ จำกัด
+                    ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6</td>
+                </tr>
+                <tr>
+                    <td class="spacing1 b" style="font-size: 14px;">สั่งจ่ายด้วยเช็คกรุณาสั่งจ่ายในนาม :บริษัท เอ็นพีดี โลจิสติกส์ จำกัด</td>
+                </tr>
+            </t>
+            <t t-if="request.db == 'NPD_Intertrading_New'">
+                <tr>
+                <td class="spacing1 b" style="font-size: 14px;">โอนเงินเข้าบัญชี : บริษัท นภดล อินเตอร์เทรดดิ้ง จำกัด
+                    ธนาคารไทยพาณิชย์ เลขที่บัญชี 408-546107-1</td>
+                </tr>
+                <tr>
+                    <td class="spacing1 b" style="font-size: 14px;">สั่งจ่ายด้วยเช็คกรุณาสั่งจ่ายในนาม :บริษัท นภดล อินเตอร์เทรดดิ้ง จำกัด</td>
+                </tr>
+            </t>
+            <t t-if="request.db == 'NPD_Intertrading_New_NonVat'">
+                <tr>
+                <td class="spacing1 b" style="font-size: 14px;">โอนเงินเข้าบัญชี : บริษัท นภดล อินเตอร์เทรดดิ้ง จำกัด
+                    ธนาคารไทยพาณิชย์ เลขที่บัญชี 408-546107-1</td>
+                </tr>
+                <tr>
+                    <td class="spacing1 b" style="font-size: 14px;">สั่งจ่ายด้วยเช็คกรุณาสั่งจ่ายในนาม :บริษัท นภดล อินเตอร์เทรดดิ้ง จำกัด</td>
+                </tr>
+            </t>
+            <t t-if="request.db == 'NPD_Bangkok_New'">
+                <tr>
+                <td class="spacing1 b" style="font-size: 14px;">โอนเงินเข้าบัญชี : บริษัท นภดล กรุงเทพ จำกัด
+                    ธนาคารไทยพาณิชย์ เลขที่บัญชี 186-224773-9</td>
+                </tr>
+                <tr>
+                    <td class="spacing1 b" style="font-size: 14px;">สั่งจ่ายด้วยเช็คกรุณาสั่งจ่ายในนาม :บริษัท นภดล กรุงเทพ จำกัด</td>
+                </tr>
+            </t>
+
+            <tr>
+                <td class="spacing1 b" style="font-size: 14px;">ค่าธรรมเนียมธนาคาร ผู้ชำระเงินเป็นผู้รับผิดชอบ</td>
+            </tr>
+            <tr>
+                <td class="spacing1 b">
+                    <t t-if="request.db == 'NPD_S_Group_New'">
+                        <img t-att-src="'/pfb_npd_office_rent_billing_sheet/static/description/นภดล เอส กรุ๊ป.png'" style="max-height: 100px;"/>
+                    </t>
+                    <t t-if="request.db == 'NPD_S_Group_New_V2'">
+                        <img t-att-src="'/pfb_npd_office_rent_billing_sheet/static/description/นภดล เอส กรุ๊ป.png'" style="max-height: 100px;"/>
+                    </t>
+                    <t t-if="request.db == 'NPD_Steeltech_New'">
+                        <img t-att-src="'/pfb_npd_office_rent_billing_sheet/static/description/สตีลเทค.png'" style="max-height: 100px;"/>
+                    </t>
+                    <t t-if="request.db == 'NPD_Logistics_New'">
+                        <img t-att-src="'/pfb_npd_office_rent_billing_sheet/static/description/เอ็นพีดี โลจิสติกส์.png'" style="max-height: 100px;"/>
+                    </t>
+                    <t t-if="request.db == 'NPD_Intertrading_New'">
+                        <img t-att-src="'/pfb_npd_office_rent_billing_sheet/static/description/นภดล อินเตอร์เทรดดิ้ง.png'" style="max-height: 100px;"/>
+                    </t>
+                    <t t-if="request.db == 'NPD_Intertrading_New_NonVat'">
+                        <img t-att-src="'/pfb_npd_office_rent_billing_sheet/static/description/นภดล อินเตอร์เทรดดิ้ง.png'" style="max-height: 100px;"/>
+                    </t>
+                    <t t-if="request.db == 'NPD_Bangkok_New'">
+                        <img t-att-src="'/pfb_npd_office_rent_billing_sheet/static/description/นภดล กรุงเทพ.png'" style="max-height: 100px;"/>
+                    </t>
+                </td>
+            </tr>
+        </div>
+
+        <div class="row">
+            <div class="col-8">
+                <tr>
+                    <td style="color : white; font-size: 30px;">.</td>
+                </tr>
+            </div>
+            <div class="col-4">
+                <table width="100%">
+                    <tr>
+                        <td class="text-center" style="font-size: 15px;padding-left:550px;">
+                            ......................................................</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center c" style="font-size: 15px;padding-left:550px;">( <span t-esc="user.name"/> )</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center c" style="font-size: 15px;padding-left:550px;">ผู้วางบิล</td></tr>
+                </table>
+            </div>
+        </div>
+    </template>
+
+
+    <!-- ===== โครงรายงานหลัก ===== -->
+    <template id="report_office_rent_billing_sheet">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.basic_layout">
+                    <table class="width :100%" border="1">
+                        <tr>
+                            <td>
+                                <t t-call="pfb_npd_office_rent_billing_sheet.report_header"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <t t-call="pfb_npd_office_rent_billing_sheet.report_footer"/>
+                            </td>
+                        </tr>
+                    </table>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>
