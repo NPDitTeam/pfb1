@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ดึงข้อมูลจาก Google Sheet อัตโนมัติ (เปิด/ปิดได้ที่ฟิลด์ Auto Sync ในหน้าตั้งค่า) -->
+    <record id="ir_cron_npd_scb_cashflow_sync" model="ir.cron">
+        <field name="name">SCB Cash Flow: Sync from Google Sheet</field>
+        <field name="model_id" ref="model_npd_scb_cashflow"/>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_refresh()</field>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="active" eval="True"/>
+        <field name="doall" eval="False"/>
+    </record>
+</odoo>

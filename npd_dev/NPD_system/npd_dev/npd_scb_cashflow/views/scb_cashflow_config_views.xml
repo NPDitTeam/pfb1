@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Config form -->
+    <record id="view_npd_scb_cashflow_config_form" model="ir.ui.view">
+        <field name="name">npd.scb.cashflow.config.form</field>
+        <field name="model">npd.scb.cashflow.config</field>
+        <field name="arch" type="xml">
+            <form string="ตั้งค่ากระแสเงินสดธนาคาร">
+                <header>
+                    <button name="action_sync_now" type="object" string="Sync Now"
+                            class="btn-primary" icon="fa-refresh"/>
+                </header>
+                <sheet>
+                    <div class="alert alert-secondary" role="alert" style="margin-bottom:12px;">
+                        ดึงจากสเปรดชีตเดียวกัน 3 แท็บ: <b>SCB</b>, <b>Kbank</b>, <b>กรุงไทย</b>
+                        (แยกเป็น 3 เมนูใต้ Reporting ▸ กระแสเงินสดธนาคาร)
+                    </div>
+                    <group>
+                        <group string="Google Sheet">
+                            <field name="spreadsheet_id"/>
+                            <field name="data_range"/>
+                            <field name="auto_sync"/>
+                        </group>
+                        <group string="สถานะ">
+                            <field name="last_sync" readonly="1"/>
+                            <field name="service_account_email" readonly="1"/>
+                            <field name="last_error" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Service Account JSON">
+                        <field name="service_account_json" nolabel="1"
+                               placeholder="วางเนื้อหาไฟล์ JSON key ทั้งไฟล์ที่นี่..."/>
+                    </group>
+                    <div class="alert alert-info" role="alert" style="margin-bottom:0px;">
+                        <b>วิธีตั้งค่า:</b>
+                        <ol style="margin-bottom:0px;">
+                            <li>สร้าง Service Account ใน Google Cloud Console แล้วสร้าง Key แบบ JSON</li>
+                            <li>เปิด Google Sheets API ให้กับโปรเจกต์</li>
+                            <li>วางเนื้อหา JSON ทั้งไฟล์ในช่องด้านบน แล้วบันทึก</li>
+                            <li>แชร์ Google Sheet ให้กับอีเมล Service Account (ช่อง Service Account Email ด้านบน) สิทธิ์ <b>Viewer</b> ก็เพียงพอ</li>
+                            <li>กด <b>Sync Now</b></li>
+                        </ol>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- เปิดหน้าตั้งค่า (singleton) -->
+    <record id="action_npd_scb_cashflow_config" model="ir.actions.server">
+        <field name="name">ตั้งค่ากระแสเงินสดธนาคาร</field>
+        <field name="model_id" ref="model_npd_scb_cashflow_config"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_config()</field>
+    </record>
+</odoo>
