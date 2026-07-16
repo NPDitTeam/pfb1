@@ -33,23 +33,27 @@ class GenerateHRWTCert(models.TransientModel):
         updated_count = 0
 
         for employee in employee_ids:
-            # Sum net_salary for all months of this employee in this year
-            emp_payrolls = payrolls.filtered(
-                lambda p: p.employee_id == employee
-            )
-            total_net = sum(emp_payrolls.mapped("net_salary"))
-            if not total_net:
+            # ดึงเงินได้ + ภาษี จากรายงาน ภ.ง.ด.1 (จับคู่จากเลขบัตร + บริษัท ปีนี้)
+            income_total, tax_total = Cert._get_pnd1_totals(
+                employee.id_card_number, employee.company, self.year)
+            # fallback: ถ้ายังไม่มีข้อมูลใน ภ.ง.ด.1 → net_salary × 3% (เหมือนเดิม)
+            if not income_total and not tax_total:
+                emp_payrolls = payrolls.filtered(
+                    lambda p: p.employee_id == employee
+                )
+                income_total = sum(emp_payrolls.mapped("net_salary"))
+                tax_total = income_total * 3.0 / 100
+            if not income_total:
                 continue
 
-            wt_percent = 3.0
-            amount = total_net * wt_percent / 100
+            wt_percent = (tax_total / income_total * 100) if income_total else 0.0
 
             line_vals = {
                 "wt_cert_income_type": "1",
                 "wt_cert_income_desc": "เงินเดือน ค่าจ้าง เบี้ยเลี้ยง โบนัส ฯลฯ 40(1)",
-                "base": total_net,
+                "base": income_total,
                 "wt_percent": wt_percent,
-                "amount": amount,
+                "amount": tax_total,
             }
 
             # Check if cert already exists for this employee + year

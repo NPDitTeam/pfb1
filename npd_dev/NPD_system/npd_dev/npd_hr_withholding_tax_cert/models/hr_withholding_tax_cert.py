@@ -66,10 +66,16 @@ class HRWithholdingTaxCert(models.Model):
         tracking=True,
     )
     total_net_salary = fields.Float(
-        string="เงินสุทธิรวมทั้งปี",
+        string="เงินได้รวมทั้งปี (จาก ภ.ง.ด.1)",
         compute="_compute_total_net_salary",
-        store=True,
         readonly=True,
+        help="รวมยอด 'จำนวนเงินได้' จากรายงาน ภ.ง.ด.1 ของเลขบัตรนี้ในปีที่ระบุ",
+    )
+    total_tax = fields.Float(
+        string="ภาษีรวมทั้งปี (จาก ภ.ง.ด.1)",
+        compute="_compute_total_net_salary",
+        readonly=True,
+        help="รวมยอด 'ภาษีที่ต้องหัก' จากรายงาน ภ.ง.ด.1 ของเลขบัตรนี้ในปีที่ระบุ",
     )
     employee_id = fields.Many2one(
         comodel_name="employee.salary",
@@ -210,17 +216,50 @@ class HRWithholdingTaxCert(models.Model):
                     rec.employee_lastname or "")).strip()
             rec.pnd1_full_name = name
 
-    @api.depends("employee_id", "report_year")
+    @api.model
+    def _pnd1_gregorian_year(self, report_year):
+        """แปลงปีที่กรอก (ค.ศ. หรือ พ.ศ.) เป็นปี ค.ศ. (int) — คืน 0 ถ้าแปลงไม่ได้"""
+        try:
+            y = int(report_year)
+        except (TypeError, ValueError):
+            return 0
+        return y - 543 if y >= 2500 else y
+
+    @api.model
+    def _get_pnd1_totals(self, taxid, company, report_year):
+        """รวม 'จำนวนเงินได้' + 'ภาษีที่ต้องหัก' จากรายงาน ภ.ง.ด.1 (pnd1.line)
+        ของเลขบัตรนี้ในปีที่ระบุ — จับคู่จากเลขบัตร (+ บริษัท ถ้ามี),
+        กรองปีจากวันที่จ่าย (pay_date). คืนค่า (เงินได้รวม, ภาษีรวม)"""
+        taxid = taxid or ""
+        if not taxid:
+            return 0.0, 0.0
+        domain = [("id_card_number", "=", taxid)]
+        if company:
+            domain.append(("company", "=", company))
+        y = self._pnd1_gregorian_year(report_year)
+        if y:
+            domain += [("pay_date", ">=", "%04d-01-01" % y),
+                       ("pay_date", "<=", "%04d-12-31" % y)]
+        lines = self.env["pnd1.line"].search(domain)
+        return sum(lines.mapped("income")), sum(lines.mapped("tax"))
+
+    @api.depends("employee_id", "employee_id.id_card_number", "employee_id.company",
+                 "report_year")
     def _compute_total_net_salary(self):
         for rec in self:
-            if rec.employee_id and rec.report_year:
+            income, tax = rec._get_pnd1_totals(
+                rec.employee_id.id_card_number, rec.employee_id.company, rec.report_year)
+            # fallback: ถ้ายังไม่มีข้อมูลใน ภ.ง.ด.1 → ใช้เงินสุทธิจากระบบเงินเดือน × 3%
+            # (ให้ตรงกับยอดที่ wizard/onchange ใช้สร้าง wt_line เมื่อไม่มีข้อมูล ภ.ง.ด.1)
+            if not income and not tax and rec.employee_id and rec.report_year:
                 payrolls = self.env["payroll.salary"].search([
                     ("employee_id", "=", rec.employee_id.id),
                     ("year", "=", rec.report_year),
                 ])
-                rec.total_net_salary = sum(payrolls.mapped("net_salary"))
-            else:
-                rec.total_net_salary = 0.0
+                income = sum(payrolls.mapped("net_salary"))
+                tax = income * 3.0 / 100
+            rec.total_net_salary = income
+            rec.total_tax = tax
 
     @api.model
     def create(self, vals):
@@ -233,17 +272,21 @@ class HRWithholdingTaxCert(models.Model):
 
     @api.onchange("employee_id", "report_year")
     def _onchange_employee_year(self):
-        """เมื่อเลือกพนักงาน หรือเปลี่ยนปี → รวม net_salary ทั้งปี → สร้าง line อัตโนมัติ"""
+        """เลือกพนักงาน/เปลี่ยนปี → ดึงเงินได้+ภาษีจากรายงาน ภ.ง.ด.1 → สร้าง line อัตโนมัติ"""
         if self.employee_id and self.report_year:
-            payrolls = self.env["payroll.salary"].search([
-                ("employee_id", "=", self.employee_id.id),
-                ("year", "=", self.report_year),
-            ])
-            total_net = sum(payrolls.mapped("net_salary"))
+            income, tax = self._get_pnd1_totals(
+                self.employee_id.id_card_number, self.employee_id.company, self.report_year)
+            # fallback: ถ้ายังไม่มีข้อมูลใน ภ.ง.ด.1 → net_salary × 3% (เหมือนเดิม)
+            if not income and not tax:
+                payrolls = self.env["payroll.salary"].search([
+                    ("employee_id", "=", self.employee_id.id),
+                    ("year", "=", self.report_year),
+                ])
+                income = sum(payrolls.mapped("net_salary"))
+                tax = income * 3.0 / 100
             self.wt_line = [(5, 0, 0)]
-            if total_net:
-                wt_percent = 3.0
-                amount = total_net * wt_percent / 100
+            if income:
+                wt_percent = (tax / income * 100) if income else 0.0
                 self.wt_line = [
                     (
                         0,
@@ -251,9 +294,9 @@ class HRWithholdingTaxCert(models.Model):
                         {
                             "wt_cert_income_type": "1",
                             "wt_cert_income_desc": "เงินเดือน ค่าจ้าง เบี้ยเลี้ยง โบนัส ฯลฯ 40(1)",
-                            "base": total_net,
+                            "base": income,
                             "wt_percent": wt_percent,
-                            "amount": amount,
+                            "amount": tax,
                         },
                     )
                 ]

@@ -53,6 +53,7 @@
                         <group string="References">
                             <field name="report_year"/>
                             <field name="total_net_salary"/>
+                            <field name="total_tax"/>
                             <field name="date"/>
                             <field name="currency_id" invisible="1"/>
                             <field name="company_id" invisible="1"/>
