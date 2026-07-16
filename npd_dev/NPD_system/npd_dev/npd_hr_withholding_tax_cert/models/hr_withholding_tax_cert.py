@@ -238,8 +238,14 @@ class HRWithholdingTaxCert(models.Model):
             domain.append(("company", "=", company))
         y = self._pnd1_gregorian_year(report_year)
         if y:
-            domain += [("pay_date", ">=", "%04d-01-01" % y),
-                       ("pay_date", "<=", "%04d-12-31" % y)]
+            # นับทั้งปี ค.ศ. (y) และ พ.ศ. (y+543) ของปีภาษีเดียวกัน
+            # เพราะบางแถว (เช่น นำเข้าจาก excel) วันที่ถูกเก็บเป็น พ.ศ.
+            yb = y + 543
+            domain += [
+                "|",
+                "&", ("pay_date", ">=", "%04d-01-01" % y), ("pay_date", "<=", "%04d-12-31" % y),
+                "&", ("pay_date", ">=", "%04d-01-01" % yb), ("pay_date", "<=", "%04d-12-31" % yb),
+            ]
         lines = self.env["pnd1.line"].search(domain)
         return sum(lines.mapped("income")), sum(lines.mapped("tax"))
 
