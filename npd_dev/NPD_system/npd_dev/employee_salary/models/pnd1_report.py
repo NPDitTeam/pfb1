@@ -96,4 +96,41 @@ class Pnd1Line(models.Model):
                     "[PND1] ข้ามพนักงานที่ไม่มีบริษัท %d คน: %s",
                     len(skipped), ", ".join(skipped))
             _logger.info("[PND1] sync period %s → สร้าง %d บรรทัด", prd.display_name, len(vals_list))
+        # เติมชื่อจากระบบให้แถว excel ที่เลขบัตรตรงกัน (ทำครั้งเดียวแบบ global)
+        self._apply_system_names_to_excel()
         return created
+
+    @api.model
+    def _apply_system_names_to_excel(self):
+        """ใช้ชื่อจากระบบแทนชื่อพิมพ์เองในแถว 'เข้าผ่าน excel' เมื่อเลขบัตรตรงกัน
+
+        ชื่อที่นำเข้าจาก excel เป็นข้อความพิมพ์เอง รูปแบบมักไม่ตรงกับในระบบ
+        → ถ้าเลขบัตรตรงกับพนักงานในระบบ (แถว source_type='system') ให้ทับด้วยชื่อจากระบบ
+        เพื่อให้ชื่อสม่ำเสมอก่อนนำไปออกหนังสือรับรองหัก ณ ที่จ่าย (hr.withholding.tax.cert)
+        อัพเดตผ่าน SQL เพื่อความเร็ว แล้ว invalidate cache ให้ ORM เห็นค่าล่าสุด
+        คืนค่า: จำนวนบรรทัดที่ถูกแก้ชื่อ
+        """
+        # ให้ค่าที่เพิ่งสร้าง/แก้ผ่าน ORM ลง DB ก่อน แล้ว SQL จะเห็นข้อมูลล่าสุด
+        self.env['pnd1.line'].flush(['source_type', 'id_card_number', 'full_name'])
+        self.env.cr.execute("""
+            UPDATE pnd1_line AS e
+               SET full_name = s.full_name
+              FROM (
+                    SELECT DISTINCT ON (btrim(id_card_number))
+                           btrim(id_card_number) AS id_card,
+                           full_name
+                      FROM pnd1_line
+                     WHERE source_type = 'system'
+                       AND btrim(COALESCE(id_card_number, '')) <> ''
+                       AND btrim(COALESCE(full_name, '')) <> ''
+                     ORDER BY btrim(id_card_number), id DESC
+                   ) AS s
+             WHERE e.source_type = 'excel'
+               AND btrim(COALESCE(e.id_card_number, '')) = s.id_card
+               AND COALESCE(e.full_name, '') <> s.full_name
+        """)
+        updated = self.env.cr.rowcount
+        if updated:
+            self.env['pnd1.line'].invalidate_cache(['full_name'])
+            _logger.info("[PND1] เติมชื่อจากระบบให้แถว excel %d บรรทัด", updated)
+        return updated

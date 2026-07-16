@@ -103,6 +103,12 @@ class HRWithholdingTaxCert(models.Model):
         store=True,
         readonly=True,
     )
+    pnd1_full_name = fields.Char(
+        string="ชื่อ-นามสกุล (จากรายงาน ภ.ง.ด.1)",
+        compute="_compute_pnd1_full_name",
+        help="ดึงชื่อจากรายงาน ภ.ง.ด.1 (pnd1.line) โดยจับคู่จากเลขบัตรประชาชน "
+             "ถ้าไม่พบใช้ชื่อจากข้อมูลพนักงานแทน",
+    )
     company_name = fields.Char(
         string="บริษัท",
         compute="_compute_company_name",
@@ -182,6 +188,27 @@ class HRWithholdingTaxCert(models.Model):
         )
         for rec in self:
             rec.branch_id = branch.id if branch else False
+
+    @api.depends("employee_id", "employee_id.id_card_number",
+                 "employee_firstname", "employee_lastname")
+    def _compute_pnd1_full_name(self):
+        """ใช้ชื่อจากรายงาน ภ.ง.ด.1 (pnd1.line) แทนชื่อจากหน้าทำเงินเดือน
+        จับคู่จากเลขบัตรประชาชนของพนักงาน — ถ้าไม่พบ fallback เป็นชื่อ+นามสกุลเดิม"""
+        Pnd1 = self.env["pnd1.line"]
+        for rec in self:
+            name = ""
+            taxid = rec.employee_id.id_card_number or ""
+            if taxid:
+                line = Pnd1.search(
+                    [("id_card_number", "=", taxid), ("full_name", "!=", False)],
+                    order="pay_date desc, id desc", limit=1,
+                )
+                name = (line.full_name or "").strip()
+            if not name:
+                name = ("%s %s" % (
+                    rec.employee_firstname or "",
+                    rec.employee_lastname or "")).strip()
+            rec.pnd1_full_name = name
 
     @api.depends("employee_id", "report_year")
     def _compute_total_net_salary(self):

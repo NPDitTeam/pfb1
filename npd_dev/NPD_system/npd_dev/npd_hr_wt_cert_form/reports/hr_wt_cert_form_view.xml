@@ -128,7 +128,7 @@
             </div>
             <div class="supplier_name">
                 <p>
-                    <span t-esc="(o.employee_firstname or '') + ' ' + (o.employee_lastname or '')" />
+                    <span t-esc="o.pnd1_full_name or ((o.employee_firstname or '') + ' ' + (o.employee_lastname or ''))" />
                 </p>
             </div>
             <div class="supplier_address">
