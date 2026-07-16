@@ -31,6 +31,7 @@
         'views/allowance_management_views.xml',
         'views/saturday_leave_config_views.xml',
         'views/menu_items.xml',
+        'views/pnd1_report_views.xml',
         'reports/payslip_report.xml',
         'data/payroll_cron.xml',
         'data/leave_entitlement_cron.xml',

@@ -73,3 +73,5 @@ access_allowance_management_reject_wizard,allowance.management.reject.wizard,mod
 
 access_saturday_leave_config,saturday.leave.config,model_saturday_leave_config,base.group_user,1,1,1,1
 access_saturday_leave_employee,saturday.leave.employee,model_saturday_leave_employee,base.group_user,1,1,1,1
+
+access_pnd1_line,pnd1.line,model_pnd1_line,base.group_user,1,1,1,1

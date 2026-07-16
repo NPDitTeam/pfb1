@@ -22,3 +22,4 @@ from . import other_income
 from . import work_security_deposit
 from . import allowance_management
 from . import saturday_leave_config
+from . import pnd1_report

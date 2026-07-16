@@ -556,6 +556,9 @@ class PayrollPeriod(models.Model):
             'log': new_log,
         })
 
+        # อัพเดทรายงาน ภ.ง.ด.1 (system) อัตโนมัติหลังอัพเดตข้อมูลเงินเดือน
+        self._sync_pnd1_safe()
+
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
@@ -688,3 +691,14 @@ class PayrollPeriod(models.Model):
             'view_mode': 'tree,form',
             'domain': [('period_id', '=', self.id)],
         }
+
+    # ════════════════════════ รายงาน ภ.ง.ด.1 ════════════════════════
+    def _sync_pnd1_safe(self):
+        """ดึงข้อมูล ภ.ง.ด.1 (system) จากรอบนี้ — ใช้ savepoint กันไม่ให้พังงานเงินเดือน
+        เรียกจาก action_refresh_payrolls (อัพเดตข้อมูลเงินเดือน) ซึ่ง cron จะรันให้เองทุกวัน"""
+        for rec in self:
+            try:
+                with rec.env.cr.savepoint():
+                    rec.env['pnd1.line'].sync_from_period(rec)
+            except Exception as e:
+                _logger.exception("[PND1] sync ล้มเหลวสำหรับรอบ %s: %s", rec.display_name, e)

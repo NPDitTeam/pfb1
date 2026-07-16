@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- ========================= Tree View ========================= -->
+        <!-- แก้ไขได้เฉพาะบรรทัดที่นำเข้าจาก excel; บรรทัด 'ดึงจากในระบบ' แก้ไม่ได้ -->
+        <record id="pnd1_line_tree_view" model="ir.ui.view">
+            <field name="name">pnd1.line.tree</field>
+            <field name="model">pnd1.line</field>
+            <field name="arch" type="xml">
+                <tree string="รายงาน ภ.ง.ด.1" editable="bottom"
+                      decoration-muted="source_type=='system'">
+                    <field name="id_card_number"
+                           attrs="{'readonly': [('source_type', '=', 'system')]}"/>
+                    <field name="full_name"
+                           attrs="{'readonly': [('source_type', '=', 'system')]}"/>
+                    <field name="pay_date"
+                           attrs="{'readonly': [('source_type', '=', 'system')]}"/>
+                    <field name="income" sum="รวมเงินได้"
+                           attrs="{'readonly': [('source_type', '=', 'system')]}"/>
+                    <field name="tax" sum="รวมภาษี"
+                           attrs="{'readonly': [('source_type', '=', 'system')]}"/>
+                    <field name="source_type" string="ประเภทการลงข้อมูล" readonly="1"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- ========================= Form View ========================= -->
+        <record id="pnd1_line_form_view" model="ir.ui.view">
+            <field name="name">pnd1.line.form</field>
+            <field name="model">pnd1.line</field>
+            <field name="arch" type="xml">
+                <form string="รายงาน ภ.ง.ด.1">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="company"/>
+                                <field name="id_card_number"
+                                       attrs="{'readonly': [('source_type', '=', 'system')]}"/>
+                                <field name="full_name"
+                                       attrs="{'readonly': [('source_type', '=', 'system')]}"/>
+                            </group>
+                            <group>
+                                <field name="pay_date"
+                                       attrs="{'readonly': [('source_type', '=', 'system')]}"/>
+                                <field name="income"
+                                       attrs="{'readonly': [('source_type', '=', 'system')]}"/>
+                                <field name="tax"
+                                       attrs="{'readonly': [('source_type', '=', 'system')]}"/>
+                                <field name="source_type" readonly="1"/>
+                            </group>
+                        </group>
+                        <group string="อ้างอิงระบบ (เฉพาะข้อมูลที่ดึงจากในระบบ)"
+                               attrs="{'invisible': [('source_type', '!=', 'system')]}">
+                            <field name="employee_id" readonly="1"/>
+                            <field name="payroll_id" readonly="1"/>
+                            <field name="period_id" readonly="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ========================= Search View ========================= -->
+        <record id="pnd1_line_search_view" model="ir.ui.view">
+            <field name="name">pnd1.line.search</field>
+            <field name="model">pnd1.line</field>
+            <field name="arch" type="xml">
+                <search string="ค้นหา ภ.ง.ด.1">
+                    <field name="id_card_number"/>
+                    <field name="full_name"/>
+                    <filter name="filter_excel" string="เข้าผ่าน excel"
+                            domain="[('source_type', '=', 'excel')]"/>
+                    <filter name="filter_system" string="ดึงจากในระบบ"
+                            domain="[('source_type', '=', 'system')]"/>
+                    <group expand="0" string="จัดกลุ่ม">
+                        <filter name="group_source" string="ประเภทการลงข้อมูล"
+                                context="{'group_by': 'source_type'}"/>
+                        <filter name="group_period" string="รอบทำเงินเดือน"
+                                context="{'group_by': 'period_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- ========================= Actions (แยกตามบริษัท) ========================= -->
+        <record id="pnd1_action_esgroup" model="ir.actions.act_window">
+            <field name="name">นภดลเอสกรุ๊ปจำกัด</field>
+            <field name="res_model">pnd1.line</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('company', '=', 'นภดลเอสกรุ๊ปจำกัด')]</field>
+            <field name="context">{'default_company': 'นภดลเอสกรุ๊ปจำกัด', 'default_source_type': 'excel'}</field>
+        </record>
+
+        <record id="pnd1_action_steeltech" model="ir.actions.act_window">
+            <field name="name">เอ็นพีดีสตีลเทคจำกัด</field>
+            <field name="res_model">pnd1.line</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('company', '=', 'เอ็นพีดีสตีลเทคจำกัด')]</field>
+            <field name="context">{'default_company': 'เอ็นพีดีสตีลเทคจำกัด', 'default_source_type': 'excel'}</field>
+        </record>
+
+        <record id="pnd1_action_logistics" model="ir.actions.act_window">
+            <field name="name">เอ็นพีดีโลจิสติกส์จำกัด</field>
+            <field name="res_model">pnd1.line</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('company', '=', 'เอ็นพีดีโลจิสติกส์จำกัด')]</field>
+            <field name="context">{'default_company': 'เอ็นพีดีโลจิสติกส์จำกัด', 'default_source_type': 'excel'}</field>
+        </record>
+
+        <record id="pnd1_action_bangkok" model="ir.actions.act_window">
+            <field name="name">นภดลกรุงเทพจำกัด</field>
+            <field name="res_model">pnd1.line</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('company', '=', 'นภดลกรุงเทพจำกัด')]</field>
+            <field name="context">{'default_company': 'นภดลกรุงเทพจำกัด', 'default_source_type': 'excel'}</field>
+        </record>
+
+        <record id="pnd1_action_intertrading" model="ir.actions.act_window">
+            <field name="name">นภดลอินเตอร์เทรดดิ้งจำกัด</field>
+            <field name="res_model">pnd1.line</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('company', '=', 'นภดลอินเตอร์เทรดดิ้งจำกัด')]</field>
+            <field name="context">{'default_company': 'นภดลอินเตอร์เทรดดิ้งจำกัด', 'default_source_type': 'excel'}</field>
+        </record>
+
+        <!-- ========================= Menus ========================= -->
+        <!-- เมนูหลัก: รายงาน ภ.ง.ด.1 (อยู่ใต้เมนูเงินเดือนพนักงาน) -->
+        <menuitem id="menu_pnd1_report_root"
+                  name="รายงาน ภ.ง.ด.1"
+                  parent="main_employee_salary_menu"
+                  sequence="90"/>
+
+        <menuitem id="menu_pnd1_esgroup"
+                  name="นภดลเอสกรุ๊ปจำกัด"
+                  parent="menu_pnd1_report_root"
+                  action="pnd1_action_esgroup"
+                  sequence="10"/>
+
+        <menuitem id="menu_pnd1_steeltech"
+                  name="เอ็นพีดีสตีลเทคจำกัด"
+                  parent="menu_pnd1_report_root"
+                  action="pnd1_action_steeltech"
+                  sequence="20"/>
+
+        <menuitem id="menu_pnd1_logistics"
+                  name="เอ็นพีดีโลจิสติกส์จำกัด"
+                  parent="menu_pnd1_report_root"
+                  action="pnd1_action_logistics"
+                  sequence="30"/>
+
+        <menuitem id="menu_pnd1_bangkok"
+                  name="นภดลกรุงเทพจำกัด"
+                  parent="menu_pnd1_report_root"
+                  action="pnd1_action_bangkok"
+                  sequence="40"/>
+
+        <menuitem id="menu_pnd1_intertrading"
+                  name="นภดลอินเตอร์เทรดดิ้งจำกัด"
+                  parent="menu_pnd1_report_root"
+                  action="pnd1_action_intertrading"
+                  sequence="50"/>
+    </data>
+</odoo>
