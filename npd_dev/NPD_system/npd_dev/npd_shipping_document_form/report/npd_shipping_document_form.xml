@@ -13,7 +13,7 @@
         <field name="format">A4</field>
         <field name="orientation">Portrait</field>
         <field name="margin_top">75</field>
-        <field name="margin_bottom">70</field>
+        <field name="margin_bottom">85</field>
         <field name="margin_left">5</field>
         <field name="margin_right">5</field>
         <field name="header_line" eval="False"/>
@@ -34,15 +34,23 @@
 
     <template id="so_form_header">
         <style>
+            h2 {
+            font-size: 18px;
+            }
+            h4 {
+            font-size: 14px;
+            margin-top: 0;
+            margin-bottom: 4px;
+            }
             .font_weight {
             font-weight: 800;
             }
             .address-line {
-            font-size: 11px;
+            font-size: 10px;
             margin-top: 5px;
             }
             .tax-id {
-            font-size: 11px;
+            font-size: 10px;
             margin-top: -10px;
             display: block;
             }
@@ -59,14 +67,14 @@
             <!--                margin-left: -20px;-->
             }
             .text-rent {
-            font-size: 8px;
+            font-size: 7px;
             margin-top: -10px
             }
             .date-info {
             margin-top: -10px;
             }
             .doc-post {
-            font-size: 9px;
+            font-size: 8px;
             }
         </style>
         <div class="row">
@@ -80,10 +88,10 @@
                         <span t-esc="user.branch_id.company_id.name if user.branch_id and user.branch_id.company_id else 'สำนักงานใหญ่'"/>
                     </strong>
                 </h2>
-                <p t-if="user.branch_id and user.branch_id.address" style="white-space: pre-line;">
+                <p t-if="user.branch_id and user.branch_id.address" style="white-space: pre-line; font-size: 13px;">
                     <t t-raw="user.branch_id.address"/>
                 </p>
-                <p t-else="">
+                <p t-else="" style="font-size: 13px;">
                     ไม่มีที่อยู่
                 </p>
 
@@ -130,6 +138,7 @@
             border: 1px solid black;
             padding: 10px;
             vertical-align: top;
+            font-size: 12px;
             }
             .text-left {
             text-align: left;
@@ -208,10 +217,10 @@
                             <strong>ค่าขนส่งสินค้า</strong>
                         </h4>
 
-<!--                        <span class="bold" style="font-size: 17px;">-->
+<!--                        <span class="bold" style="font-size: 14px;">-->
 <!--                            <span t-esc="doc.sale_id.shipping_cost"/>-->
 <!--                        </span>-->
-                        <span class="bold" style="font-size: 17px;">
+                        <span class="bold" style="font-size: 14px;">
 <!--    <span t-if="doc.sale_id.shipping_cost_m" t-esc="doc.sale_id.shipping_cost_m"/>-->
 <!--    <span t-else="" t-esc="doc.sale_id.shipping_cost"/>-->
                             <!-- แสดงค่าขนส่งตามเงื่อนไข -->
@@ -286,65 +295,13 @@
                             <strong>ระยะทาง (กิโลเมตร)</strong>
                         </h4>
 
-                        <span class="bold" style="font-size: 17px;">
+                        <span class="bold" style="font-size: 14px;">
                             <span t-esc="doc.sale_id.distance_km"/>
                         </span>
                     </td>
                 </tr>
             </table>
         </div>
-        <br/>
-        <table width="100%">
-            <thead>
-                <tr style="border-bottom: 1px solid black !important;">
-                    <th width="5%" class="text-center line-distance small-font number-col border_report" style="padding: 10px;">ลำดับ</th>
-                    <th width="50%" class="text-left line-distance small-font list-col border_report">รายการสินค้า</th>
-                    <th width="9%" class="text-right line-distance small-font weight-col border_report">จำนวน</th>
-                    <th width="9%" class="text-right line-distance small-font adjusted-col border_report">
-                        น้ำหนัก/หน่วย
-                    </th>
-                    <th width="11%" class="text-right line-distance small-font repair-col border_report">น้ำหนักรวม</th>
-
-                </tr>
-            </thead>
-            <tbody>
-
-                <t t-set="total_weight"
-                   t-value="sum((l.total_weight or 0.0) for l in (doc.sale_id.order_line or []) if l.price_subtotal >= 0)"/>
-
-                <t t-foreach="doc.sale_id.order_line" t-as="l">
-                    <t t-if="l.price_subtotal &gt;= 0">
-
-                        <tr>
-                            <td class="text-center line-distance number-col" style="padding: 5px;">
-                                <span t-esc="l_index + 1"/>
-                            </td>
-                            <td class="text-left line-distance list-col">
-                                <span t-esc="l.name"/>
-                            </td>
-                            <td class="text-right line-distance weight-col">
-                                <span t-esc="'{0:,.2f}'.format(l.pfb_quantity)"/>
-                            </td>
-
-                            <!-- คอลัมน์ adjusted-col สำหรับ analytic_tag 'L' -->
-                            <td class="text-right line-distance weight-col">
-                                <span t-esc="'{0:,.2f}'.format(l.second_uom_qty)"/>
-                            </td>
-
-                            <!-- คอลัมน์ repair-col สำหรับ analytic_tag 'D' -->
-                            <td class="text-right line-distance weight-col">
-                                <span t-esc="'{0:,.2f}'.format(l.total_weight)"/>
-                            </td>
-
-
-                        </tr>
-                    </t>
-                </t>
-
-
-            </tbody>
-
-        </table>
     </template>
 
     <template id="so_form_detail_top">
@@ -363,8 +320,8 @@
 
     <template id="so_form_footer">
         <style>
-            .footer {
-            margin-top: 140px; /* เพิ่มระยะห่างด้านบน */
+            .doc-footer {
+            margin-top: 10px; /* เพิ่มระยะห่างด้านบน */
             <!--        padding-bottom: 90px; /* เพิ่มระยะห่างด้านล่าง */-->
             }
         </style>
@@ -372,7 +329,7 @@
 
         <t t-set="total_weight"
            t-value="sum((l.total_weight or 0.0) for l in (doc.sale_id.order_line or []) if l.price_subtotal >= 0)"/>
-        <div id="simple_footer" class="footer">
+        <div class="footer">
             <div class="row">
                 <div class="col-6">
                 </div>
@@ -405,46 +362,32 @@
                                     <b>หมายเหตุ:</b>
                                     <span t-if="doc.note" t-esc="doc.note"/>
                                     <br/>
-                                    กำหนดชำระค่าขนส่งวันที่ <span t-esc="doc._get_formatted_order_date()"/>
+                                    <b>กำหนดชำระค่าขนส่งวันที่ <span t-esc="doc._get_formatted_order_date()"/></b>
                                     <br/>
-                                    อ้างอิงสัญญาเช่าเลขที่ <span t-esc="doc._get_rental_contract_display()"/> - ใบกำกับการเช่าเลขที่ <span t-esc="doc.sale_id.name"/>
+                                    <b>อ้างอิงสัญญาเช่าเลขที่ <span t-esc="doc._get_rental_contract_display()"/> - ใบกำกับการเช่าเลขที่ <span t-esc="doc.sale_id.name"/></b>
                                 </td>
                             </tr>
 
 
                         </table>
                         <br/>
-                        <br/>
                         <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
 
 
                             <tr>
-                                <td width="50%" style="font-size: 12px;">
-                                    <b>วิธีการชำระเงิน โอนเงินเข้าบัญชี</b>
+                                <td width="70%" style="vertical-align: top;">
+                                    <div style="font-size: 12px;">
+                                        <b>วิธีการชำระเงิน โอนเงินเข้าบัญชี</b>
+                                    </div>
+                                    <div style="font-size: 12px; padding-left: 30px;">
+                                        <b>บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6</b>
+                                    </div>
+                                </td>
+                                <td width="30%" style="text-align: right; vertical-align: top;">
+                                    <img src="/npd_shipping_document_form/static/src/img/qr_payment.png"
+                                         style="width: 90px; height: auto;"/>
                                 </td>
 
-                            </tr>
-
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-
-
-            <div class="row">
-                <div class="col-11">
-                    <div>
-
-                        <table width="100%" style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;">
-
-                            <tr>
-                                <td width="7%" style="font-size: 12px;">
-
-                                </td>
-                                <td width="50%" style="font-size: 12px;">
-                                    บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6
-                                </td>
                             </tr>
 
                         </table>
@@ -457,8 +400,8 @@
                 .signature-table {
                 width: 100%;
                 border-collapse: collapse;
-                margin-top: 20px;
-                font-size: 11px;
+                margin-top: 10px;
+                font-size: 13px;
                 }
 
                 .signature-table td {
@@ -467,6 +410,7 @@
                 padding-top: 10px;
                 padding-bottom: 10px;
                 width: 25%;
+                font-weight: bold;
                 min-height: 50px; /*
                 display: flex;
                 flex-direction: column;
@@ -557,7 +501,43 @@
                         </table>
 
                     </div>
-                    <t t-call="npd_shipping_document_form.so_form_detail_top"/>
+                    <t t-set="lines" t-value="doc.sale_id.order_line.filtered(lambda l: l.price_subtotal &gt;= 0)"/>
+                    <t t-set="rows_per_page" t-value="18"/>
+                    <t t-foreach="range(0, len(lines), rows_per_page)" t-as="page_start">
+                        <table width="100%" style="font-size: 13px;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid black !important;">
+                                    <th width="5%" class="text-center line-distance small-font number-col border_report" style="padding: 10px;">ลำดับ</th>
+                                    <th width="50%" class="text-left line-distance small-font list-col border_report">รายการสินค้า</th>
+                                    <th width="9%" class="text-right line-distance small-font weight-col border_report">จำนวน</th>
+                                    <th width="9%" class="text-right line-distance small-font adjusted-col border_report">น้ำหนัก/หน่วย</th>
+                                    <th width="11%" class="text-right line-distance small-font repair-col border_report">น้ำหนักรวม</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="lines[page_start:page_start + rows_per_page]" t-as="l">
+                                    <tr>
+                                        <td class="text-center line-distance number-col" style="padding: 5px;">
+                                            <span t-esc="page_start + l_index + 1"/>
+                                        </td>
+                                        <td class="text-left line-distance list-col">
+                                            <span t-esc="l.name"/>
+                                        </td>
+                                        <td class="text-right line-distance weight-col">
+                                            <span t-esc="'{0:,.2f}'.format(l.pfb_quantity)"/>
+                                        </td>
+                                        <td class="text-right line-distance weight-col">
+                                            <span t-esc="'{0:,.2f}'.format(l.second_uom_qty)"/>
+                                        </td>
+                                        <td class="text-right line-distance weight-col">
+                                            <span t-esc="'{0:,.2f}'.format(l.total_weight)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                        <div t-if="page_start + rows_per_page &lt; len(lines)" style="page-break-after: always;"/>
+                    </t>
                     <t t-call="npd_shipping_document_form.so_form_footer"/>
 
                 </t>
