@@ -487,13 +487,17 @@ class SaleOrderCancelDocumentWizard(models.TransientModel):
                 now_thai.strftime('%d/%m/%Y %H:%M:%S'))
             return messages
 
-        # คืนแล้วจริง = รับเข้า done ทุกใบ (นับด้วยจำนวนจริง กันเบิ้ล)
+        # คืนแล้วจริง = 'ใบคืน' (move ที่อ้างอิงใบตัดผ่าน origin_returned_move_id) ทุกใบ
+        # นับด้วยจำนวนจริง กันเบิ้ล — ไม่พึ่ง picking_type code เพราะคลังสาขา
+        # ตั้ง return_picking_type_id ไม่ตรงกัน (บางใบคืนไม่ได้เป็น 'incoming')
+        # ต้องใช้เกณฑ์เดียวกับฝั่ง cut_pickings (origin_returned_move_id) ไม่งั้น
+        # จะมองไม่เห็นใบคืนเดิม แล้วสร้างใบคืนซ้ำ ทำให้สต๊อกเบิ้ล
         returned = {}
-        for p in order.picking_ids.filtered(
-                lambda p: p.state == 'done'
-                and p.picking_type_id.code == 'incoming'):
+        for p in order.picking_ids.filtered(lambda p: p.state == 'done'):
             for m in p.move_lines.filtered(
-                    lambda m: m.state == 'done' and m.quantity_done > 0):
+                    lambda m: m.state == 'done'
+                    and m.quantity_done > 0
+                    and m.origin_returned_move_id):
                 returned[m.product_id.id] = \
                     returned.get(m.product_id.id, 0.0) + m.quantity_done
 

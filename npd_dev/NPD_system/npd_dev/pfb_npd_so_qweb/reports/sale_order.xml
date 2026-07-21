@@ -35,7 +35,7 @@
                 .column130{
                 color: #090909;
                 width:130px;
-                font-size:13px;
+                font-size:16px;
                 }
                 .column120 {
                 color: #090909;
@@ -350,7 +350,7 @@
                         .column130{
                         color: black;
                         width:130px;
-                        font-size:13px;
+                        font-size:16px;
                         }
                         .column120 {
                         color: black;
@@ -420,7 +420,7 @@
                         width:50px;
                         }
                         .header_text {
-                        font-size:13px;
+                        font-size:16px;
                         }
                         .header {
                         border: 1px solid #000000;
@@ -444,14 +444,14 @@
                         }
                         .line_ids {
                         border-right: 1px solid black !important;
-                        font-size: 20px !important;
+                        font-size: 16px !important;
                         }
                         .line_ids_right {
                         border-right: 1px solid black !important;}
 
-                        /* กำหนด font-size 18px สำหรับส่วนเนื้อหา */
+                        /* กำหนด font-size 16px สำหรับส่วนเนื้อหา */
                         .page {
-                        font-size: 18px !important;
+                        font-size: 16px !important;
                         }
                         .page table,
                         .page td,
@@ -459,14 +459,14 @@
                         .page span,
                         .page strong,
                         .page b {
-                        font-size: 18px !important;
+                        font-size: 16px !important;
                         }
 
                     </style>
                     <div class="page">
                         <br/>
                         <table class="table_asset table table-sm table-condensed"
-                               style="font-size: 13px; line-height:1.2; color:black;">
+                               style="font-size: 16px; line-height:1.2; color:black;">
                             <thead>
                                 <tr>
                                     <td class="column65 header3 text-left"
@@ -517,7 +517,7 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td class=" header4 text-left" style="vertical-align: middle; color:black;font-size:13px;">
+                                    <td class=" header4 text-left" style="vertical-align: middle; color:black;font-size:16px;">
                                         <strong>Tax ID :</strong>
                                     </td>
                                     <td class=" header4 text-left" style="vertical-align: middle; color:black;">
@@ -532,7 +532,7 @@
                                         </span>
                                     </td>
                                     <td colspan="2" class=" text-left header4"
-                                        style="vertical-align: middle; border-right: hidden !important; color:black;font-size:13px;">
+                                        style="vertical-align: middle; border-right: hidden !important; color:black;font-size:16px;">
                                         <strong>เงื่อนไขการชำระเงิน</strong>
                                     </td>
                                     <td colspan="3" class=" text-left header4"
@@ -541,7 +541,7 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td class=" header4 text-left" style="vertical-align: middle; color:black;font-size:13px;">
+                                    <td class=" header4 text-left" style="vertical-align: middle; color:black;font-size:16px;">
                                         <strong>เบอร์โทร</strong>
                                     </td>
                                     <td class=" header4 text-left" style="vertical-align: middle; color:black;">
@@ -550,7 +550,7 @@
                                         </span>
                                     </td>
                                     <td colspan="2" class=" text-left header4"
-                                        style="vertical-align: middle; border-right: hidden !important;font-size:13px;">
+                                        style="vertical-align: middle; border-right: hidden !important;font-size:16px;">
                                         <span/>
                                     </td>
                                     <td colspan="3" class=" text-left header4" style="vertical-align: middle;">
@@ -558,8 +558,8 @@
                                 </tr>
                                 <tr>
                                     <td class=" header4 text-left"
-                                        style="vertical-align: middle;border-bottom: 1px solid black !important; color:black;font-size:13px;">
-                                        <strong style="font-size:13px">ชื่อผู้ติดต่อ</strong>
+                                        style="vertical-align: middle;border-bottom: 1px solid black !important; color:black;font-size:16px;">
+                                        <strong style="font-size:16px">ชื่อผู้ติดต่อ</strong>
                                     </td>
                                     <td class=" header4 text-left"
                                         style="vertical-align: middle;border-bottom: 1px solid black !important; color:black;">
@@ -584,25 +584,25 @@
                                     </td>
                                 </tr>
                                 <tr style="border: 1px solid black !important; color:black;">
-                                    <td class="header3" style="vertical-align: middle;font-size: 13px;width:15px;"  >
+                                    <td class="header3" style="vertical-align: middle;font-size: 16px;width:15px;"  >
                                         <strong>ลำดับ</strong>
                                     </td>
                                     <td class="column200 header3" style="vertical-align: middle;">
                                         <strong>รายการ</strong>
                                     </td>
-                                    <td class="column60 text-center header3" style="vertical-align: middle;font-size: 13px;">
+                                    <td class="column60 text-center header3" style="vertical-align: middle;font-size: 16px;">
                                         <strong>จำนวน</strong>
                                     </td>
-                                    <td class="column30 text-center header3" style="vertical-align: middle;font-size: 13px;">
+                                    <td class="column30 text-center header3" style="vertical-align: middle;font-size: 16px;">
                                         <strong>หน่วย</strong>
                                     </td>
-                                    <td class="column70 text-center header3" style="vertical-align: middle;font-size: 13px;">
+                                    <td class="column70 text-center header3" style="vertical-align: middle;font-size: 16px;">
                                         <strong>หน่วยละ</strong>
                                     </td>
-                                    <td class="column35 text-center header3" style="vertical-align: middle;font-size: 13px;">
+                                    <td class="column35 text-center header3" style="vertical-align: middle;font-size: 16px;">
                                         <strong>ส่วนลด(%)</strong>
                                     </td>
-                                    <td class=" text-center header3" style="vertical-align: middle;font-size: 13px;width:90px;">
+                                    <td class=" text-center header3" style="vertical-align: middle;font-size: 16px;width:90px;">
                                         <strong>ราคารวม</strong>
                                     </td>
                                 </tr>
@@ -616,26 +616,26 @@
                                     <t t-set="count_line" t-value="count_line + 1"/>
                                     <tr>
                                         <t t-if="not line.display_type">
-                                            <td class="text-center line_ids" style="vertical-align: middle;font-size:13px;">
-                                                <span style="font-size:13px;" t-esc="line_index+1"/>
+                                            <td class="text-center line_ids" style="vertical-align: middle;font-size:16px;">
+                                                <span style="font-size:16px;" t-esc="line_index+1"/>
                                             </td>
-                                            <td class="text-left line_ids" style="vertical-align: middle;font-size: 13px;" >
-                                                <span style="font-size:13px;" t-esc="line.name"/>
+                                            <td class="text-left line_ids" style="vertical-align: middle;font-size: 16px;" >
+                                                <span style="font-size:16px;" t-esc="line.name"/>
                                             </td>
-                                            <td class="text-center line_ids" style="vertical-align: middle;font-size:13px;">
-                                                <span style="font-size:13px;" t-esc="line.product_uom_qty"/>
+                                            <td class="text-center line_ids" style="vertical-align: middle;font-size:16px;">
+                                                <span style="font-size:16px;" t-esc="line.product_uom_qty"/>
                                             </td>
-                                            <td class="text-center line_ids" style="vertical-align: middle;font-size:13px;">
-                                                <span style="font-size:13px;" t-esc="line.product_uom.name"/>
+                                            <td class="text-center line_ids" style="vertical-align: middle;font-size:16px;">
+                                                <span style="font-size:16px;" t-esc="line.product_uom.name"/>
                                                 <!--                                            <t t-if="len(line.product_uom.name) > 8">-->
                                                 <!--                                                <t t-set="count_line" t-value="count_line + 1"/>-->
                                                 <!--                                            </t>-->
 
                                             </td>
-                                            <td class="text-center line_ids" style="vertical-align: middle;font-size:13px;">
-                                                <span style="font-size:13px;" t-esc="'{0:,.2f}'.format(line.price_unit)"/>
+                                            <td class="text-center line_ids" style="vertical-align: middle;font-size:16px;">
+                                                <span style="font-size:16px;" t-esc="'{0:,.2f}'.format(line.price_unit)"/>
                                             </td>
-                                            <td class="text-right line_ids" style="vertical-align: middle;font-size:13px;">
+                                            <td class="text-right line_ids" style="vertical-align: middle;font-size:16px;">
                                                 <t t-set="line_discount" t-value="0"/>
                                                 <t t-foreach="line.tax_id" t-as="tax">
                                                     <t t-if="tax.price_include == True">
@@ -648,15 +648,15 @@
                                                     </t>
 
                                                     <t t-if="line_discount > 0">
-                                                        <span style="font-size:13px;" t-esc="'{0:,.2f}'.format(line_discount)"/>
+                                                        <span style="font-size:16px;" t-esc="'{0:,.2f}'.format(line_discount)"/>
                                                     </t>
                                                     <t t-else="">
-                                                        <span style="font-size:13px;" t-esc="'{0:,.2f}'.format(0)"/>
+                                                        <span style="font-size:16px;" t-esc="'{0:,.2f}'.format(0)"/>
                                                     </t>
                                                 </t>
                                             </td>
-                                            <td class="text-right line_ids" style="vertical-align: middle;font-size:13px;">
-                                                <span style="font-size:13px;" t-esc="'{0:,.2f}'.format(line.price_subtotal)"/>
+                                            <td class="text-right line_ids" style="vertical-align: middle;font-size:16px;">
+                                                <span style="font-size:16px;" t-esc="'{0:,.2f}'.format(line.price_subtotal)"/>
                                                 <t t-set="discount"
                                                    t-value="discount +((line.product_qty*line.price_unit)-line.price_subtotal)"/>
                                             </td>
@@ -708,11 +708,11 @@
                                     </tr>
                                 </t>
                                 <tr style="border: 1px solid !important;">
-                                    <td colspan="4" rowspan="2" class="text-left" style="font-size: 13px;">
+                                    <td colspan="4" rowspan="2" class="text-left" style="font-size: 16px;">
                                         <strong>หมายเหตุ :</strong><br/>
-                                                    <span style="font-size: 13px;" t-field="o.note"/>
+                                                    <span style="font-size: 16px;" t-field="o.note"/>
 
-                                                    <span style="font-size:17px !important;">1. กรณีชำระเงินโดยเช็คกรุณาสั่งจ่ายเช็คขีดคร่อมในนาม "
+                                                    <span style="font-size:16px !important;">1. กรณีชำระเงินโดยเช็คกรุณาสั่งจ่ายเช็คขีดคร่อมในนาม "
 
                                                         <t t-if="request.db == 'NPD_S_Group_New'">
                                                             บริษัท นภดล เอส กรุ๊ป จำกัด
@@ -730,8 +730,8 @@
                                                             บริษัท นภดล กรุงเทพ จำกัด
                                                                 </t>
                                                         " เท่านั้น</span><br/>
-                                                    <span style="font-size:17px !important;">2. สินค้าตามรายการข้างต้นแม้จะได้ส่งมอบให้แก่ผู้ซื้อแล้วก็ยังคงเป็นทรัพย์สินของผู้ขายจนกว่าผู้ซื้อจะได้ชำระเงินเรียบร้อยแล้ว</span><br/>
-                                                    <span style="font-size:17px !important;">3. บริษัทฯ ขอสงวนสิทธิ์ในการแก้ไขใบกำกับภาษีภายใน 7 วัน นับจากวันที่ระบุในใบกำกับภาษี</span><br/>
+                                                    <span style="font-size:16px !important;">2. สินค้าตามรายการข้างต้นแม้จะได้ส่งมอบให้แก่ผู้ซื้อแล้วก็ยังคงเป็นทรัพย์สินของผู้ขายจนกว่าผู้ซื้อจะได้ชำระเงินเรียบร้อยแล้ว</span><br/>
+                                                    <span style="font-size:16px !important;">3. บริษัทฯ ขอสงวนสิทธิ์ในการแก้ไขใบกำกับภาษีภายใน 7 วัน นับจากวันที่ระบุในใบกำกับภาษี</span><br/>
 
                                                     <strong>การชำระเงิน</strong> <input type="checkbox" style="list-style-type: none; padding: 0; margin-left: 31px;"/> เงินสด<br/>
                                                     <input type="checkbox" style="list-style-type: none; padding: 0; margin-left: 93px;"/> โอนเงิน
@@ -754,32 +754,32 @@
                                                     <input type="checkbox" style="list-style-type: none; padding: 0; margin-left: 93px;"/> เช็ค
 
                                     </td>
-                                    <td colspan="2" class="text-center" style="border: 1px solid black !important;font-size: 13px;">
+                                    <td colspan="2" class="text-center" style="border: 1px solid black !important;font-size: 16px;">
                                         <strong>
                                             รวมเงิน
                                         </strong>
                                     </td>
-                                    <td class="text-right" style="font-size: 13px;">
+                                    <td class="text-right" style="font-size: 16px;">
                                         <span t-esc="'{0:,.2f}'.format(o.amount_untaxed)"/>
                                     </td>
                                 </tr>
                                 <tr style="border: 1px solid black !important;">
-                                    <td colspan="2" class="text-center" style="border: 1px solid black !important;font-size: 13px;">
-                                        <strong style="font-size: 13px;">
+                                    <td colspan="2" class="text-center" style="border: 1px solid black !important;font-size: 16px;">
+                                        <strong style="font-size: 16px;">
                                             VAT 7%
                                         </strong>
                                     </td>
-                                    <td class="text-right" style="border: 1px solid black !important;font-size: 13px;">
+                                    <td class="text-right" style="border: 1px solid black !important;font-size: 16px;">
                                         <span t-esc="'{0:,.2f}'.format(o.amount_tax)"/>
                                     </td>
                                 </tr>
                                 <tr style="border: 1px solid black !important;">
-                                    <td class="text-center" style="border: 1px solid black !important;font-size: 13px;">
+                                    <td class="text-center" style="border: 1px solid black !important;font-size: 16px;">
                                         <strong>
                                             ตัวอักษร
                                         </strong>
                                     </td>
-                                    <td colspan="3" class="text-center" style="border: 1px solid black !important;font-size: 13px;">
+                                    <td colspan="3" class="text-center" style="border: 1px solid black !important;font-size: 16px;">
                                         (
                                         <t t-esc="amount_to_text_custom(o.amount_total)"/>
                                         )
@@ -787,12 +787,12 @@
 
 
 
-                                    <td colspan="2" class="text-center" style="border: 1px solid black !important;font-size: 13px;">
+                                    <td colspan="2" class="text-center" style="border: 1px solid black !important;font-size: 16px;">
                                         <strong>
                                             จำนวนเงินรวม
                                         </strong>
                                     </td>
-                                    <td class="text-right" style="border: 1px solid black !important;font-size: 13px;">
+                                    <td class="text-right" style="border: 1px solid black !important;font-size: 16px;">
                                         <span t-esc="'{0:,.2f}'.format(o.amount_total)"/>
                                     </td>
                                 </tr>
