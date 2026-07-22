@@ -10,6 +10,10 @@ except ImportError:
 
 _logger = logging.getLogger(__name__)
 
+# เริ่มดึงข้อมูลหนี้ตั้งแต่ปี 2026 เป็นต้นไป (ข้อมูลปีต่ำกว่า 2026 จะไม่ถูกดึง/ถูกล้างออก)
+DEBT_START_DATE = date(2026, 1, 1)
+DEBT_START_STR = '2026-01-01'
+
 
 class NpdDebtSummary(models.Model):
     _name = 'npd.debt.summary'
@@ -225,6 +229,7 @@ class NpdDebtSummary(models.Model):
             ('state', '=', 'posted'),
             ('payment_state', 'in', ('not_paid', 'partial')),
             ('amount_residual', '>', 0),
+            ('invoice_date', '>=', DEBT_START_STR),
         ])
         partner_ids = set()
         for inv in invoices:
@@ -267,6 +272,25 @@ class NpdDebtSummary(models.Model):
                 rec = self.create({'customer_id': pid})
             rec._populate_customer_data()
         # หมายเหตุ: ไม่ลบลูกค้าที่จ่ายครบแล้ว — เก็บไว้และแสดงสถานะ "ชำระแล้ว" แทน
+        # แต่ล้างลูกค้าที่ไม่มีรายการเหลือเลย (เช่น มีแต่หนี้ปีเก่าต่ำกว่า 2026)
+        self._remove_empty_records()
+
+    @api.model
+    def _remove_empty_records(self):
+        """ลบ record ที่ไม่มีรายการหนี้ทั้ง 4 ประเภทเลย
+        (ลูกค้าที่มีเฉพาะข้อมูลปีต่ำกว่า 2026 จะถูกล้างออกหลังกรองข้อมูล)"""
+        empty = self.search([]).filtered(
+            lambda r: not (r.customer_invoice_line_ids or r.customer_penalty_line_ids
+                           or r.customer_damage_line_ids or r.customer_tax_line_ids))
+        if empty:
+            empty.unlink()
+
+    @api.model
+    def action_clear_old_data(self):
+        """ล้างข้อมูลหนี้ปีเก่า (ต่ำกว่า 2026) ออกทั้งหมด แล้วดึงข้อมูลใหม่ตั้งแต่ปี 2026
+        เรียกครั้งเดียวเพื่อล้างข้อมูลเดิมที่มีอยู่ในระบบ"""
+        self._refresh_all_records()
+        return True
 
     def action_refresh_one(self):
         """ปุ่มอัพเดทข้อมูลลูกค้ารายนี้"""
@@ -290,10 +314,13 @@ class NpdDebtSummary(models.Model):
             ('move_type', '=', 'out_invoice'),
             ('state', '=', 'posted'),
             ('amount_residual', '>', 0),
+            ('invoice_date', '>=', DEBT_START_STR),
         ])
+        # กรองเฉพาะปี 2026 เป็นต้นไป (ใบเดิมที่เก็บไว้แต่เป็นปีเก่าจะถูกตัดออก = ล้างข้อมูลเก่า)
         invoices = self.env['account.move'].browse(
             sorted(existing_inv_ids | set(unpaid_invoices.ids))).exists().filtered(
-            lambda m: m.move_type == 'out_invoice')
+            lambda m: m.move_type == 'out_invoice'
+            and m.invoice_date and m.invoice_date >= DEBT_START_DATE)
         inv_lines = [(5, 0, 0)]
         total_residual = 0.0
         for inv in invoices:
@@ -329,8 +356,10 @@ class NpdDebtSummary(models.Model):
             ('state', '=', 'posted'),
             ('amount_residual', '>', 0),
             ('reason_code_id', '=', lost_reason.id),
+            ('invoice_date', '>=', DEBT_START_STR),
         ]).ids) if lost_reason else set()
-        penalty_invoices = self.env['account.move'].browse(sorted(existing_pen_ids | new_pen_ids)).exists()
+        penalty_invoices = self.env['account.move'].browse(sorted(existing_pen_ids | new_pen_ids)).exists().filtered(
+            lambda m: m.invoice_date and m.invoice_date >= DEBT_START_DATE)
         if penalty_invoices:
             for pinv in penalty_invoices:
                 pinv.invalidate_cache(['amount_residual'], [pinv.id])
@@ -375,8 +404,10 @@ class NpdDebtSummary(models.Model):
             ('state', '=', 'posted'),
             ('amount_residual', '>', 0),
             ('reason_code_id', '=', damage_reason.id),
+            ('invoice_date', '>=', DEBT_START_STR),
         ]).ids) if damage_reason else set()
-        damage_invoices = self.env['account.move'].browse(sorted(existing_dmg_ids | new_dmg_ids)).exists()
+        damage_invoices = self.env['account.move'].browse(sorted(existing_dmg_ids | new_dmg_ids)).exists().filtered(
+            lambda m: m.invoice_date and m.invoice_date >= DEBT_START_DATE)
         if damage_invoices:
             for dinv in damage_invoices:
                 dinv.invalidate_cache(['amount_residual'], [dinv.id])
@@ -419,6 +450,7 @@ class NpdDebtSummary(models.Model):
             ('partner_id', 'child_of', commercial.id),
             ('move_type', '=', 'out_invoice'),
             ('state', '=', 'posted'),
+            ('invoice_date', '>=', DEBT_START_STR),
         ])
         for tinv in candidate_invoices:
             payment_inv_lines = self.env['account.payment.invoice'].search([
