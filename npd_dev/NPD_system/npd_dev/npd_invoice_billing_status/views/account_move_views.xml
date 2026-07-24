@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- เพิ่มฟิลด์ต่อจาก "ประเภทการรับชำระหนี้" (debt_payment_type) บนใบแจ้งหนี้ -->
+        <record id="account_move_form_view_inherited_billing_status" model="ir.ui.view">
+            <field name="name">account.move.form.billing.status</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id"
+                   ref="npd_print_select_account.account_move_form_view_inherited_check_print"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='debt_payment_type']" position="after">
+                    <!-- สถานะวางบิล -->
+                    <field name="billing_status"
+                           widget="selection"
+                           options="{'horizontal': True}"/>
+                    <!-- วางบิลให้ลูกค้าผ่านช่องทาง (แสดง+บังคับกรอก เมื่อวางบิลแล้ว) -->
+                    <field name="billing_channel"
+                           widget="selection"
+                           options="{'horizontal': True}"
+                           attrs="{'invisible': [('billing_status', '!=', 'billed')],
+                                   'required': [('billing_status', '=', 'billed')]}"/>
+                    <!-- แนบหลักฐานการวางบิล (แสดง+บังคับกรอก เมื่อวางบิลแล้ว) -->
+                    <field name="billing_evidence_filename" invisible="1"/>
+                    <field name="billing_evidence"
+                           filename="billing_evidence_filename"
+                           attrs="{'invisible': [('billing_status', '!=', 'billed')],
+                                   'required': [('billing_status', '=', 'billed')]}"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
