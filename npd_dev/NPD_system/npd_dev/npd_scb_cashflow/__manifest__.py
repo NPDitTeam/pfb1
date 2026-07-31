@@ -13,7 +13,7 @@ NPD SCB Cash Flow Report
 - Scheduled Action (cron) ดึงอัตโนมัติทุก 15 นาที (เปิด/ปิดได้)
 - ไม่ต้องใช้ Google Apps Script
 """,
-    'version': '14.0.1.0.0',
+    'version': '14.0.2.1.0',
     'author': 'PP',
     'category': 'Accounting',
     'license': 'AGPL-3',
@@ -27,6 +27,7 @@ NPD SCB Cash Flow Report
         'data/cron.xml',
         'wizard/cashflow_summary_views.xml',
         'views/scb_cashflow_views.xml',
+        'views/scb_bank_statement_views.xml',
         'views/scb_cashflow_config_views.xml',
         'views/menu_views.xml',
     ],

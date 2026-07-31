@@ -1,0 +1,9 @@
+// ไอคอนแจ้งเตือนบน navbar (systray) ถูกถอดออกจากโมดูลแล้ว
+//
+// ไฟล์นี้เก็บไว้ "ชั่วคราว" เพราะฐานข้อมูลที่ยังไม่ได้อัปเกรดโมดูล จะยังมี template
+// npd_scb_auto_payment.assets_backend ค้างอยู่ และชี้มาที่ไฟล์นี้ — ถ้าไม่มีไฟล์
+// Odoo จะฟ้อง "Could not get content for ... defined in bundle 'web.assets_backend'"
+// แล้ว CSS ของทั้งระบบพัง
+//
+// หลังอัปเกรดโมดูล (-u npd_scb_auto_payment) template จะถูกลบ
+// -> ลบโฟลเดอร์ static/ นี้ทิ้งได้เลย
