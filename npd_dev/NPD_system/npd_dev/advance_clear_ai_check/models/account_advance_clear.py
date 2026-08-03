@@ -449,7 +449,15 @@ class AccountAdvanceClearAI(models.Model):
         # Cash bills — count when new check passes
         # บวกยอดบิลเงินสดที่ลงทะเบียนเมื่อจับคู่ Detail ได้ (ไม่ผูกกับ AI required)
         _cb_total_re = self._registered_cash_bill_total(result)
-        ac_data['pass'] = self._amount_matches(new_receipt_total + _sub_re['amount_to_count'] + _cb_total_re, s_total) if s_total > 0 else True
+        _combined_new = round(new_receipt_total + _sub_re['amount_to_count'] + _cb_total_re, 2)
+        _amount_ok_new = self._amount_matches(_combined_new, s_total) if s_total > 0 else True
+        ac_data['pass'] = _amount_ok_new
+        # อัปเดตค่าที่เหลือใน amount_check ให้สอดคล้องกัน — ไม่งั้น combined_total/matches/
+        # message ของ AI จากรอบแรกจะค้างอยู่ใน ai_parsed_result แล้วถูกนำไปแสดงผลผิด
+        ac_data['combined_total'] = _combined_new
+        ac_data['cash_bill_total'] = _cb_total_re
+        ac_data['matches'] = _amount_ok_new
+        ac_data['message'] = ''
 
         # Check analytic (Python check)
         analytic_pass, analytic_missing = self._check_analytic_account()
@@ -2529,24 +2537,25 @@ class AccountAdvanceClearAI(models.Model):
             if _untaxed_d > 0:
                 s_total = _untaxed_d + _tax_d
 
-        # Resolve cash bill total from registered_total when check passed
-        # ใช้ cash_bill_ok (logic ใหม่) แทน AI's pass
-        if cbc.get('required', False) and cash_bill_ok:
-            # ใช้ผลรวม cash_bill_ids ที่ user ลงทะเบียน (มากกว่า AI's registered_total ที่อาจ stale)
-            reg_total_val = sum((cb.amount or 0) + (cb.vat_amount or 0) for cb in self.cash_bill_ids)
-            if not reg_total_val:
-                reg_total_val = cbc.get('registered_total', 0)
-            if isinstance(reg_total_val, (int, float)) and reg_total_val > 0:
-                cb_total = reg_total_val
+        # ยอดบิลเงินสดที่นับเข้า combined — ใช้ตัวเดียวกับที่ใช้ตัดสิน is_pass
+        # (_registered_cash_bill_total: ลงทะเบียนแล้วและจับคู่ price_unit ใน Detail ได้ครบ)
+        # ไม่ผูกกับ cash_bill_check.required ของ AI และไม่ใช้ registered_total ที่อาจ stale
+        if self.cash_bill_ids:
+            cb_total = self._registered_cash_bill_total(result)
 
         # Receipt substitute certificates — auto-decide if their amount counts
         sub_resolution = self._resolve_receipt_substitutes(result, r_total, s_total)
         sub_total = sub_resolution['amount_to_count']
 
-        # Recompute combined when AI didn't provide it, when Python overrode r_total,
-        # or when there are receipt substitutes to add
-        if (r_total > 0 or cb_total > 0 or sub_total > 0) and (combined == 0 or _py_overrode_r_total or sub_total > 0):
+        # คำนวณ combined ใหม่เสมอจากค่าฝั่ง Python (ใบเสร็จ + บิลเงินสด + ใบรับรองฯ)
+        # ห้ามใช้ combined_total ของ AI เป็นค่าตั้งต้น เพราะเป็นค่าตอนรอบแรก:
+        # ถ้าผู้ใช้แก้ยอดใบเสร็จ / ลงทะเบียนบิลเงินสดเพิ่มทีหลัง ค่าเดิมจะค้าง
+        # ทำให้ Section 2 ขึ้น ✗ ทั้งที่ is_pass (ซึ่งคำนวณเองอยู่แล้ว) = ผ่าน
+        _combined_ai = combined
+        _combined_recomputed = False
+        if r_total > 0 or cb_total > 0 or sub_total > 0:
             combined = round(r_total + cb_total + sub_total, 2)
+            _combined_recomputed = abs(combined - _combined_ai) > 0.01
 
         # Re-check matches with combined_total (เผื่อ WHT ด้วย)
         if combined > 0 and s_total > 0:
@@ -2608,8 +2617,11 @@ class AccountAdvanceClearAI(models.Model):
             html += '<p style="color: #6c757d; font-size: 0.9em;">* ใช้ Untaxed + Tax แทน Total เนื่องจากมีภาษีหัก ณ ที่จ่าย %.2f บาท</p>' % _wht_display
         else:
             html += '<p>ยอดในระบบ: <strong>%s บาท</strong></p>' % s_total_str
+        # ข้อความของ AI ใช้ได้เฉพาะตอนที่ยอดยังไม่ถูกคำนวณใหม่ — ถ้าผู้ใช้แก้ยอดใบเสร็จ
+        # หรือลงทะเบียนบิลเงินสดเพิ่ม ข้อความเดิมจะขัดกับตัวเลขจริง (เช่น "บิลเงินสด 0.00
+        # เนื่องจากไม่ผ่านการตรวจสอบ" ทั้งที่ลงทะเบียนผ่านแล้ว) จึงไม่แสดง
         ac_msg = ac.get('message', '')
-        if ac_msg:
+        if ac_msg and not _combined_recomputed:
             html += '<p>%s</p>' % ac_msg
 
         # --- Comparison table: AI receipt amounts vs system unit prices ---
