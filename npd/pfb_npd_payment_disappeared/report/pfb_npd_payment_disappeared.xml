@@ -183,7 +183,10 @@
                             <td class="text-left"><span t-esc="l.product_id.name.replace('(R)', '')"/></td>
                             <td colspan="1" class="text-right"><span t-esc="'{0:,.2f}'.format(l.price_unit)"/></td>
                             <td colspan="1" class="text-center"><span t-esc="'{0:,.0f}'.format(l.quantity)"/></td>
-                            <td colspan="1" class="text-right"><span t-esc="'{0:,.2f}'.format(l.lost_item_amount)"/></td>
+                            <!-- ยอดเต็มก่อนหักส่วนลด (price_unit × quantity) ให้ผลรวมตรงกับ "รวมเป็นเงิน"
+                                 ด้านล่างซึ่งใช้ amount_price_total_full — เดิมใช้ lost_item_amount
+                                 ซึ่งเป็นยอด "หลัง" หักส่วนลดแล้ว -->
+                            <td colspan="1" class="text-right"><span t-esc="'{0:,.2f}'.format(l.price_unit * l.quantity)"/></td>
                         </tr>
                     </t>
                 </t>
