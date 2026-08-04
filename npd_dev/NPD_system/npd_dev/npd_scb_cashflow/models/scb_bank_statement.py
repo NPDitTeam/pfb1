@@ -244,6 +244,32 @@ class ScbBankStatement(models.Model):
                   if t and t not in _COMPANY_STOPWORDS and not t.isdigit()]
         return ''.join(tokens)
 
+    @staticmethod
+    def _digit_runs(value, min_len=3):
+        u"""ท่อนตัวเลขที่ "มองเห็นได้" จากเลขบัญชีที่ถูกมาสก์"""
+        return [r for r in re.findall(r'\d+', value or '') if len(r) >= min_len]
+
+    @api.model
+    def _account_matches(self, slip_account, bank_account):
+        u"""เทียบเลขบัญชีผู้โอน ทั้งที่แต่ละธนาคารมาสก์คนละแบบ
+
+        สลิปกรุงเทพ '644-0-xxx205' เห็นแค่ท้าย 205
+        statement เขียน 'BBL x3205' เห็น 3205
+        -> ถือว่าตรงกัน เพราะ 3205 ลงท้ายด้วย 205
+
+        ตัวอย่างอื่น: 'xxx-x-x1838-x' vs '1838' | 'XXX-X-46107-X' vs '46107'
+        ใช้เป็น "สัญญาณยืนยัน" เท่านั้น (ยกคะแนนขึ้น ไม่เคยหักคะแนน) และใช้กับ
+        รายการที่ยอด+วันที่ตรงอยู่แล้ว โอกาสชนกันมั่วจึงต่ำมาก
+        """
+        bank_runs = self._digit_runs(bank_account)
+        if not bank_runs:
+            return False
+        for slip_run in self._digit_runs(slip_account):
+            for bank_run in bank_runs:
+                if slip_run.endswith(bank_run) or bank_run.endswith(slip_run):
+                    return True
+        return False
+
     @api.model
     def _name_score(self, slip_name, bank_name):
         u"""คะแนนความเหมือน 0-1 ระหว่างชื่อจากสลิป กับชื่อจากรายการธนาคาร
@@ -326,7 +352,7 @@ class ScbBankStatement(models.Model):
         if not by_amount_date:
             return result
 
-        hint = re.sub(r'\D', '', account_hint or '')[-4:] if account_hint else ''
+        hint = (account_hint or '').strip()
         # ชื่อจากสลิปอาจมีทั้งไทยและอังกฤษคั่นด้วย " / " — แยกเทียบทีละท่อนด้วย
         # เพราะธนาคารบันทึกไว้ภาษาเดียว การเทียบทั้งก้อนจะไม่มีทางตรง
         clean_names = []
@@ -343,8 +369,9 @@ class ScbBankStatement(models.Model):
             for sn in clean_names:
                 for bn in bank_names:
                     score = max(score, self._name_score(sn, bn))
-            # เลขบัญชี 4 หลักท้ายตรงกัน = สัญญาณยืนยันตัวตนที่หนักแน่น
-            if hint and rec.counterparty_acc and rec.counterparty_acc[-4:] == hint:
+            # เลขบัญชีผู้โอนตรงกัน = สัญญาณยืนยันตัวตนที่หนักแน่นกว่าชื่อ
+            # (ใช้ได้แม้ชื่อในสลิปเป็นไทยแต่ธนาคารบันทึกเป็นอังกฤษ)
+            if hint and self._account_matches(hint, rec.counterparty_acc):
                 score = max(score, 1.0)
             if score > best_score:
                 best_score, best_rec = score, rec

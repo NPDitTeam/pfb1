@@ -73,6 +73,24 @@ class ScbPaymentSettings(models.TransientModel):
         ('ktb', 'กรุงไทย'),
     ], string="สมุดรายวันค่าประกัน → ตรวจกับ", default='kbank', required=True,
         help="เงินค่าประกันเข้าบัญชีธนาคารไหน")
+    verify_skip_journal_keywords = fields.Char(
+        string="สมุดรายวันที่ไม่ต้องตรวจ (คั่นด้วย ,)", default="ลดหนี้",
+        help="ถ้าชื่อสมุดรายวันมีคำเหล่านี้ ระบบจะข้ามการตรวจสอบไปเลย "
+             "(สถานะ = 'ไม่ต้องตรวจสอบ')\n"
+             "ใช้กับสมุดรายวันที่เป็นการตัดหนี้ในระบบ ไม่ได้รับโอนเงินจริง "
+             "เช่น 'สมุดรายวันรับชำระลดหนี้' — statement ของธนาคารไม่มีทางมีรายการนี้ "
+             "ตรวจไปก็ขึ้น 'ไม่สำเร็จ' เปล่า ๆ\n"
+             "ใส่ได้หลายคำ คั่นด้วยเครื่องหมายจุลภาค เช่น: ลดหนี้,ปรับปรุง")
+    verify_skip_slip_keywords = fields.Char(
+        string="เลขอ้างอิงในสลิปที่ไม่ต้องตรวจ (คั่นด้วย ,)", default="REF",
+        help="ถ้าเลขอ้างอิงในสลิปมีคำเหล่านี้ ระบบจะข้ามการตรวจสอบ "
+             "(สถานะ = 'ไม่ต้องตรวจสอบ')\n"
+             "ใช้กับ 'สลิปจ่ายบิล' ที่มีเลขอ้างอิงอย่าง REF001 — ธนาคารบันทึกรายการ "
+             "พวกนี้ว่า 'รับชำระค่าสินค้าและบริการ' โดยไม่ระบุชื่อผู้โอน "
+             "จึงไม่มีชื่อให้เทียบกับสลิปตั้งแต่แรก\n"
+             "ระบบดูเฉพาะช่องเลขอ้างอิง (Reference 1 / เลขที่รายการ) ไม่ได้สแกนทั้งสลิป\n"
+             "เว้นว่าง = ไม่ข้าม ตรวจทุกใบตามปกติ\n"
+             "หมายเหตุ: ต้องอ่านสลิปด้วย AI ก่อนถึงจะรู้ จึงยังใช้โควตา 1 ครั้ง")
     verify_bank_default = fields.Selection([
         ('scb', 'SCB (statement_SCB)'),
         ('kbank', 'Kbank (Statement_Kbank)'),
@@ -172,6 +190,10 @@ class ScbPaymentSettings(models.TransientModel):
             start if not _empty(start) else fields.Date.today() + timedelta(days=1))
         res['verify_deposit_journal_keyword'] = icp.get_param(
             PREFIX + 'verify_deposit_journal_keyword', default=u'ค่าประกัน')
+        res['verify_skip_journal_keywords'] = icp.get_param(
+            PREFIX + 'verify_skip_journal_keywords', default=u'ลดหนี้')
+        res['verify_skip_slip_keywords'] = icp.get_param(
+            PREFIX + 'verify_skip_slip_keywords', default=u'REF')
         res['verify_bank_deposit'] = icp.get_param(
             PREFIX + 'verify_bank_deposit') or 'kbank'
         res['verify_bank_default'] = icp.get_param(
@@ -204,6 +226,10 @@ class ScbPaymentSettings(models.TransientModel):
         mapping = [
             ('verify_deposit_journal_keyword',
              (self.verify_deposit_journal_keyword or '').strip()),
+            ('verify_skip_journal_keywords',
+             (self.verify_skip_journal_keywords or '').strip()),
+            ('verify_skip_slip_keywords',
+             (self.verify_skip_slip_keywords or '').strip()),
             ('verify_bank_deposit', self.verify_bank_deposit or 'kbank'),
             ('verify_bank_default', self.verify_bank_default or 'scb'),
         ]

@@ -47,6 +47,11 @@ DEFAULTS = {
     'verify_bank_default': 'scb',
     'verify_bank_deposit': 'kbank',
     'verify_deposit_journal_keyword': u'ค่าประกัน',
+    # สมุดรายวันที่ "ไม่มีเงินโอนเข้าจริง" (ตัดหนี้ในระบบ) -> ข้ามการตรวจไปเลย
+    'verify_skip_journal_keywords': u'ลดหนี้',
+    # คำในเลขอ้างอิงของสลิป ที่บอกว่าเป็น "จ่ายบิล" -> ข้ามการตรวจ
+    # (ธนาคารบันทึกเป็น "รับชำระค่าสินค้าและบริการ" ไม่มีชื่อผู้โอนให้เทียบ)
+    'verify_skip_slip_keywords': u'REF',
     'verify_amount_tolerance': 0.0,   # 0 = จำนวนเงินต้องตรงกันเป๊ะระดับสตางค์
     'verify_date_tolerance': 0,
     'verify_name_threshold': 0.6,
@@ -71,6 +76,7 @@ class AccountPayment(models.Model):
         ('waiting', u'รอข้อมูลจากธนาคาร'),
         ('success', u'โอนสำเร็จ'),
         ('failed', u'ไม่สำเร็จ'),
+        ('skipped', u'ไม่ต้องตรวจสอบ'),
     ], string=u"สถานะการโอน (ธนาคาร)", default='to_check', copy=False, index=True,
         readonly=True,
         help=u"ผลการจับคู่สลิปที่แนบไว้ กับรายการเดินบัญชีจริงของธนาคาร")
@@ -141,6 +147,51 @@ class AccountPayment(models.Model):
         except (ValueError, TypeError):
             return None
 
+    @api.model
+    def _scb_skip_keywords(self):
+        u"""คำในชื่อสมุดรายวันที่แปลว่า "ไม่มีเงินโอนเข้าจริง" -> ไม่ต้องตรวจ"""
+        raw = self._scb_param('verify_skip_journal_keywords') or ''
+        return [k.strip() for k in raw.split(',') if k.strip()]
+
+    def _scb_slip_skip_reason(self):
+        u"""คืน (คำที่เจอ, ค่าที่เจอคำนั้น) ถ้าสลิปเป็นการ "จ่ายบิล" ที่ไม่ต้องตรวจ
+
+        สลิปจ่ายบิลจะมีเลขอ้างอิงอย่าง "REF001" และฝั่งธนาคารบันทึกแค่
+        "รับชำระค่าสินค้าและบริการ" โดยไม่มีชื่อผู้โอน — เทียบชื่อไม่ได้อยู่แล้ว
+        ดูเฉพาะช่องเลขอ้างอิง ไม่สแกนทั้งก้อน เพื่อไม่ให้ชื่อบริษัทที่บังเอิญมีคำนี้
+        ถูกข้ามไปด้วย
+        """
+        self.ensure_one()
+        raw_keywords = self._scb_param('verify_skip_slip_keywords') or ''
+        keywords = [k.strip() for k in raw_keywords.split(',') if k.strip()]
+        if not keywords:
+            return '', ''
+        refs = [self.scb_slip_ref or '']
+        if self.scb_slip_raw:
+            try:
+                data = json.loads(self.scb_slip_raw) or {}
+                refs += [str(data.get('bill_ref') or ''), str(data.get('reference') or '')]
+            except (ValueError, TypeError):
+                pass
+        for value in refs:
+            for keyword in keywords:
+                if keyword.lower() in value.lower():
+                    return keyword, value
+        return '', ''
+
+    def _scb_skip_reason(self):
+        u"""คืนคำที่ทำให้ใบนี้ถูกข้าม หรือ '' ถ้าต้องตรวจตามปกติ
+
+        เช่น "สมุดรายวันรับชำระลดหนี้" = การตัดหนี้ในระบบ ไม่ได้รับโอนเงินจริง
+        statement ของธนาคารจึงไม่มีทางมีรายการนี้ ตรวจไปก็ขึ้น "ไม่สำเร็จ" เปล่า ๆ
+        """
+        self.ensure_one()
+        journal_name = self.journal_id.name or ''
+        for keyword in self._scb_skip_keywords():
+            if keyword in journal_name:
+                return keyword
+        return ''
+
     @api.depends('journal_id', 'payment_type', 'partner_type')
     def _compute_scb_verify_bank(self):
         u"""ธนาคารที่ใช้เทียบ — เลือกจาก "สมุดรายวัน" ของใบรับชำระ
@@ -155,11 +206,15 @@ class AccountPayment(models.Model):
         keyword = (self._scb_param('verify_deposit_journal_keyword') or '').strip()
         deposit_bank = self._scb_param('verify_bank_deposit')
         default_bank = self._scb_param('verify_bank_default')
+        skip_words = self._scb_skip_keywords()
         for payment in self:
-            if payment.payment_type != 'inbound' or payment.partner_type != 'customer':
+            journal_name = payment.journal_id.name or ''
+            if (payment.payment_type != 'inbound'
+                    or payment.partner_type != 'customer'
+                    or any(w in journal_name for w in skip_words)):
+                # สมุดรายวันที่ไม่มีเงินโอนเข้าจริง -> ไม่มีธนาคารให้เทียบ
                 payment.scb_verify_bank = False
                 continue
-            journal_name = payment.journal_id.name or ''
             payment.scb_verify_bank = (
                 deposit_bank if (keyword and keyword in journal_name) else default_bank)
 
@@ -327,7 +382,11 @@ class AccountPayment(models.Model):
             u"  - เลขบัญชีตอบตามที่เห็น มาสก์ก็ได้ (เช่น 'xxx-x-x1838-x', "
             u"'XXX-XXX360-3', '037-7-xxx204')\n"
             u"  - เลขอ้างอิง = 'เลขที่รายการ' / 'Transaction ID' / 'รหัสอ้างอิง' / "
-            u"'หมายเลขอ้างอิง' / 'รหัสทำรายการ' / 'เลขอ้างอิง'\n\n"
+            u"'หมายเลขอ้างอิง' / 'รหัสทำรายการ' / 'เลขอ้างอิง'\n"
+            u"  - **เลขอ้างอิงบิล (bill_ref)** = 'เลขที่อ้างอิง 1' / 'Reference 1' / "
+            u"'Ref 1' / บรรทัดสั้น ๆ ใต้ชื่อผู้รับในสลิปจ่ายบิล เช่น 'REF001'\n"
+            u"    ถ้าเป็นสลิปจ่ายบิล (Bill Payment / Biller ID / พร้อมเพย์บิล) "
+            u"ให้ตั้ง is_bill_payment = true และตอบ bill_ref ตามที่เห็นเสมอ\n\n"
         )
         if our_names:
             prompt += (
@@ -354,6 +413,8 @@ class AccountPayment(models.Model):
             u'  "recipient_account": "เลขบัญชีผู้รับ",\n'
             u'  "recipient_matches_company": true,\n'
             u'  "reference": "เลขอ้างอิง",\n'
+            u'  "bill_ref": "เลขที่อ้างอิง 1 ของสลิปจ่ายบิล เช่น REF001",\n'
+            u'  "is_bill_payment": false,\n'
             u'  "is_transfer_slip": true\n'
             u"}\n\n"
             u"ถ้าเอกสารไม่ใช่สลิป/หลักฐานการโอนเงิน ให้ตั้ง is_transfer_slip = false\n"
@@ -417,7 +478,7 @@ class AccountPayment(models.Model):
         })
         return {'ok': True, 'date': slip_date, 'amounts': amounts, 'raw': result}
 
-    def _scb_ai_same_company(self, slip_name, bank_names):
+    def _scb_ai_same_company(self, slip_name, bank_names, slip_account=None):
         u"""ถามความเห็น AI ว่า "ชื่อในสลิป" กับ "ชื่อในรายการธนาคาร" เป็นเจ้าเดียวกันไหม
 
         ใช้เป็นตัวช่วยเมื่อเทียบตัวอักษรแล้วไม่ผ่าน — เพราะธนาคารมักตัดชื่อให้สั้น
@@ -428,19 +489,32 @@ class AccountPayment(models.Model):
         if not slip_name or not names:
             return None
         listing = u''.join(u"  %d. %s\n" % (i, n) for i, n in enumerate(names))
+        extra = u''
+        if slip_account:
+            extra = u"เลขบัญชีผู้โอนที่เห็นในสลิป (ถูกมาสก์บางส่วน): %s\n" % slip_account
         prompt = (
-            u"เทียบว่า 'ชื่อในสลิปโอนเงิน' กับ 'ชื่อที่ธนาคารบันทึกไว้' เป็นบุคคล/บริษัท "
+            u"เทียบว่า 'ชื่อในสลิปโอนเงิน' กับ 'ชื่อที่ธนาคารบันทึกไว้' เป็นคนหรือบริษัท "
             u"เดียวกันหรือไม่\n\n"
-            u"ชื่อในสลิป: %s\n\n"
+            u"**จำนวนเงินและวันที่ตรงกันแล้ว** เหลือแค่ยืนยันชื่อ — รายการเหล่านี้คือเงิน "
+            u"ที่เข้าบัญชีจริงในวันและยอดเดียวกับสลิปเป๊ะ ๆ\n\n"
+            u"ชื่อในสลิป: %s\n%s\n"
             u"ชื่อที่ธนาคารบันทึกไว้ (เลือกได้อย่างมาก 1 ข้อ):\n%s\n"
             u"กฎ:\n"
-            u"- ถือว่าเป็นเจ้าเดียวกันได้แม้เป็นคนละภาษา (ไทย/อังกฤษ) เช่น "
-            u"'P.M.E.C METAL WORK CO.,LTD' = 'บจก. พี.เอ็ม.อี.ซี เมทัลเวิร์ค'\n"
-            u"- ธนาคารมักตัดชื่อให้สั้น/ไม่ครบ ถ้าเป็นคำขึ้นต้นที่ตรงกันถือว่าเป็นเจ้าเดียวกัน\n"
-            u"- มี/ไม่มีคำว่า บริษัท/หจก/จำกัด/CO.,LTD/(สำนักงานใหญ่) ไม่ทำให้ต่างกัน\n"
-            u"- ถ้าไม่มีข้อใดตรงจริง ๆ ให้ตอบ match_index = -1 (ห้ามเดา)\n\n"
+            u"- **ไทย vs อังกฤษให้ถอดเสียงเทียบกัน** ถือว่าเป็นคนเดียวกัน เช่น\n"
+            u"    'นาย สาธิต' = 'SATHIT NAKSUWAN'      (ชื่อต้นถอดเสียงตรงกัน)\n"
+            u"    'น.ส. สุรีย์ลักษณ์' = 'SUREELAK ...'\n"
+            u"    'บจก. พี.เอ็ม.อี.ซี เมทัลเวิร์ค' = 'P.M.E.C METAL WORK CO.,LTD'\n"
+            u"- **สลิปมักแสดงแค่ชื่อต้น ไม่มีนามสกุล** (ธนาคารกรุงเทพ/K+ ปิดบังไว้) "
+            u"ถ้าชื่อต้นถอดเสียงตรงกัน ให้ถือว่าตรงกัน ไม่ต้องรอให้นามสกุลตรงด้วย\n"
+            u"- ธนาคารมักตัดชื่อให้สั้น/ไม่ครบ (มี ++ หรือหายไปกลางคัน) "
+            u"ถ้าเป็นคำขึ้นต้นที่ตรงกันถือว่าเป็นเจ้าเดียวกัน\n"
+            u"- คำนำหน้า (นาย/นาง/น.ส./MR/MISS) และรูปแบบบริษัท "
+            u"(บริษัท/หจก/จำกัด/CO.,LTD/สำนักงานใหญ่) ไม่ทำให้ต่างกัน\n"
+            u"- ถ้ามีเลขบัญชีผู้โอนให้ดู ใช้เป็นตัวช่วยยืนยันได้ (เลขท้ายตรงกัน = คนเดียวกัน)\n"
+            u"- ตอบ match_index = -1 เฉพาะเมื่อ **ชื่อคนละคนชัดเจน** เท่านั้น "
+            u"(ชื่อต้นถอดเสียงแล้วคนละเสียงกัน) — ไม่ใช่เพราะข้อมูลไม่ครบ\n\n"
             u'ตอบ JSON: {"match_index": 0, "confident": true}'
-        ) % (slip_name, listing)
+        ) % (slip_name, extra, listing)
         try:
             res = self._scb_gemini_call([{"text": prompt}], max_tokens=256)
         except UserError as e:
@@ -608,6 +682,17 @@ class AccountPayment(models.Model):
                 u"ใบรับชำระยังไม่ได้ลงบันทึก — ระบบจะเริ่มตรวจสอบการโอน "
                 u"หลังกด \"ลงบันทึก\" แล้วเท่านั้น"))
 
+        # ---- 0.5) สมุดรายวันที่ไม่มีเงินโอนเข้าจริง -> ข้ามถาวร ----
+        # เช่น "สมุดรายวันรับชำระลดหนี้" คือการตัดหนี้ในระบบ ไม่ได้รับโอนเงิน
+        # statement ของธนาคารไม่มีทางมีรายการนี้ ตรวจไปก็ขึ้น "ไม่สำเร็จ" เปล่า ๆ
+        skip_word = self._scb_skip_reason()
+        if skip_word:
+            return finish('skipped', _(
+                u"ไม่ต้องตรวจสอบการโอน — สมุดรายวัน \"%s\" เป็นการตัดหนี้ในระบบ "
+                u"(เข้าเงื่อนไขคำว่า \"%s\") ไม่ได้มีการรับโอนเงินจริง "
+                u"จึงไม่มีรายการในบัญชีธนาคารให้เทียบ"
+            ) % (self.journal_id.name or '-', skip_word))
+
         sources = self._scb_verify_sources()
         if not sources:
             return finish('waiting', _(
@@ -625,6 +710,18 @@ class AccountPayment(models.Model):
                     return finish('no_slip', read['error'])
                 # retry=True -> ยังตรวจไม่ได้ ให้กลับมาตรวจใหม่ได้ (ไม่ใช่ "ไม่สำเร็จ")
                 return finish('waiting' if read.get('retry') else 'failed', read['error'])
+
+        # ---- 1.5) สลิปจ่ายบิล (มีเลขอ้างอิงอย่าง REF001) -> ข้ามการตรวจ ----
+        # ธนาคารบันทึกรายการพวกนี้ว่า "รับชำระค่าสินค้าและบริการ" โดยไม่ระบุชื่อผู้โอน
+        # จึงไม่มีชื่อให้เทียบตั้งแต่แรก
+        slip_keyword, slip_ref_value = self._scb_slip_skip_reason()
+        if slip_keyword:
+            return finish('skipped', _(
+                u"ไม่ต้องตรวจสอบการโอน — สลิปนี้เป็นการ \"จ่ายบิล\" "
+                u"(พบคำว่า \"%s\" ในเลขอ้างอิง: %s)\n"
+                u"ธนาคารบันทึกรายการจ่ายบิลว่า \"รับชำระค่าสินค้าและบริการ\" "
+                u"โดยไม่ระบุชื่อผู้โอน จึงเทียบชื่อกับสลิปไม่ได้"
+            ) % (slip_keyword, slip_ref_value))
 
         slip_sender = self.scb_slip_sender or ''
         raw = {}
@@ -758,8 +855,10 @@ class AccountPayment(models.Model):
         # พบรายการที่ตรงยอด+วันที่ แต่ชื่อไม่ผ่าน -> ให้ AI ช่วยเทียบข้ามภาษาอีกที
         named = candidates.filtered(lambda r: r.counterparty)
         if slip_sender and named and self._scb_param('verify_ai_name_fallback'):
-            bank_names = [r.counterparty for r in named]
-            idx = self._scb_ai_same_company(slip_sender, bank_names)
+            # ส่ง description เต็ม (มีรหัสธนาคาร + เลขบัญชีย่อ) ให้ AI ใช้ประกอบ
+            bank_names = [r.description or r.counterparty for r in named]
+            idx = self._scb_ai_same_company(
+                slip_sender, bank_names, slip_account=self.scb_slip_sender_acc)
             if idx is not None:
                 rec = named[idx]
                 notes.append(_(u"ชื่อผู้โอนยืนยันโดย AI (เทียบข้ามภาษา/ชื่อถูกตัดท้าย)"))

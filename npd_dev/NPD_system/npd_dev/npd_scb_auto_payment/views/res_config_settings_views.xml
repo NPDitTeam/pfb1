@@ -34,9 +34,15 @@
                             <field name="verify_batch_limit"/>
                         </group>
                         <group string="เลือก statement ตามสมุดรายวันของใบรับชำระ">
+                            <field name="verify_skip_journal_keywords"/>
+                            <field name="verify_skip_slip_keywords"/>
                             <field name="verify_deposit_journal_keyword"/>
                             <field name="verify_bank_deposit"/>
                             <field name="verify_bank_default"/>
+                            <div colspan="2" class="text-muted">
+                                ไล่ตรวจตามลำดับ: เข้าเงื่อนไข <b>ไม่ต้องตรวจ</b> ก่อน →
+                                <b>ค่าประกัน</b> → ที่เหลือใช้ธนาคารเริ่มต้น
+                            </div>
                         </group>
                         <div colspan="2" class="alert alert-secondary" role="alert">
                             <b>ช่วงใบรับชำระที่ระบบจะตรวจให้อัตโนมัติ</b> — ยึด "วันที่" ในหน้ารับชำระ
