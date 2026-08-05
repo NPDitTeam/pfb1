@@ -443,6 +443,33 @@ class ScbBankStatement(models.Model):
         u"""รหัสธนาคารทั้งหมดที่ระบบดึง statement มาเก็บไว้"""
         return list(STATEMENT_CODES)
 
+    def belongs_to_company(self, names, account_numbers=None):
+        u"""แถวนี้เป็น "บัญชีของบริษัทเรา" หรือเป็นบัญชีบริษัทอื่นในเครือ
+
+        Google Sheet รวม statement ของทุกบริษัทในเครือไว้ด้วยกัน ถ้าลูกค้าโอน
+        เข้าบัญชีบริษัทอื่น เงินเข้าจริงก็จริง แต่เข้าผิดบริษัท ต้องแยกให้ออก
+
+        เทียบแบบ "ตรงตัวหลังตัดคำนำหน้า/ต่อท้ายนิติบุคคล" ไม่ใช้คะแนนความคล้าย
+        เพราะชื่อบริษัทในเครือคล้ายกันมาก (นภดล กรุงเทพ / นภดล เอส กรุ๊ป)
+        ถ้าเทียบแบบคล้ายจะปนกันจนแยกไม่ออก
+
+        :return: True = บัญชีเรา, False = บัญชีบริษัทอื่น
+                 (ถ้าไม่มีข้อมูลให้ตัดสิน จะคืน True เพื่อไม่กล่าวหาเกินจริง)
+        """
+        self.ensure_one()
+        digits = {re.sub(r'\D', '', n) for n in (account_numbers or []) if n}
+        digits.discard('')
+        own_no = re.sub(r'\D', '', self.account_no or '')
+        if digits and own_no:
+            return own_no in digits
+
+        keys = {self._normalize_name(n) for n in (names or []) if n}
+        keys.discard('')
+        own = self._normalize_name(self.account_name or '')
+        if not keys or not own:
+            return True
+        return own in keys
+
     @api.model
     def find_incoming_match(self, amount, date, names, sources=None,
                             amount_tol=0.0, day_tol=0, name_threshold=0.6,

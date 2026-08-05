@@ -40,12 +40,22 @@
                             <field name="verify_bank_deposit"/>
                             <field name="verify_bank_default"/>
                             <field name="verify_cross_bank_fallback"/>
+                            <field name="verify_check_own_account"/>
+                            <field name="verify_own_account_names"
+                                   placeholder="เว้นว่าง = ใช้ชื่อบริษัทใน Odoo"
+                                   attrs="{'invisible': [('verify_check_own_account', '=', False)]}"/>
+                            <field name="verify_own_account_numbers"
+                                   placeholder="เช่น 1862247739 (เว้นว่าง = เทียบด้วยชื่อ)"
+                                   attrs="{'invisible': [('verify_check_own_account', '=', False)]}"/>
                             <div colspan="2" class="text-muted">
                                 ไล่ตรวจตามลำดับ: เข้าเงื่อนไข <b>ไม่ต้องตรวจ</b> ก่อน →
                                 <b>ค่าประกัน</b> → ที่เหลือใช้ธนาคารเริ่มต้น
                                 <div>• ธนาคารที่เดาจากสมุดรายวันเป็นแค่ <b>ที่น่าจะใช่</b> —
                                      ลูกค้าโอนเข้าบัญชีไหนก็ได้ ถ้าหาไม่เจอระบบจะ
                                      ขยายไปหาอีกธนาคารให้เอง แล้วบันทึกไว้ในเหตุผล</div>
+                                <div>• Google Sheet รวม statement ของ <b>ทุกบริษัทในเครือ</b> ไว้ด้วยกัน
+                                     ถ้าลูกค้าโอนเข้าบัญชีบริษัทอื่น จะขึ้นสถานะ
+                                     <b>"สำเร็จ แต่โอนคนละบริษัท"</b> เพื่อให้ตามไปปรับบัญชีระหว่างกัน</div>
                             </div>
                         </group>
                         <div colspan="2" class="alert alert-secondary" role="alert">

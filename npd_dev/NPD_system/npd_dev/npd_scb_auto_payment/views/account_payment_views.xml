@@ -18,7 +18,7 @@
                         attrs="{'invisible': ['|', '|',
                                               ('state', '!=', 'posted'),
                                               ('payment_type', '!=', 'inbound'),
-                                              ('scb_verify_state', 'in', ('success', 'skipped'))]}"/>
+                                              ('scb_verify_state', 'in', ('success', 'other_company', 'skipped'))]}"/>
                 <button name="action_scb_verify_transfer_again" type="object"
                         string="ตรวจสอบการโอนใหม่" icon="fa-refresh"
                         groups="account.group_account_invoice"
@@ -40,6 +40,12 @@
                      attrs="{'invisible': [('scb_verify_state', '!=', 'failed')]}">
                     <i class="fa fa-times-circle mr-1"/>
                     <b>ตรวจสอบการโอนไม่สำเร็จ</b>
+                    <field name="scb_verify_summary" readonly="1" nolabel="1" class="mb-0"/>
+                </div>
+                <div class="alert alert-warning mb-0" role="alert"
+                     attrs="{'invisible': [('scb_verify_state', '!=', 'other_company')]}">
+                    <i class="fa fa-exchange mr-1"/>
+                    <b>เงินเข้าแล้ว แต่โอนคนละบริษัท</b>
                     <field name="scb_verify_summary" readonly="1" nolabel="1" class="mb-0"/>
                 </div>
                 <div class="alert alert-warning mb-0" role="alert"
@@ -75,7 +81,7 @@
                                              ('payment_type', '!=', 'inbound')]}"
                        decoration-success="scb_verify_state == 'success'"
                        decoration-danger="scb_verify_state == 'failed'"
-                       decoration-warning="scb_verify_state in ['waiting', 'no_slip']"
+                       decoration-warning="scb_verify_state in ['waiting', 'no_slip', 'other_company']"
                        decoration-info="scb_verify_state == 'to_check'"
                        decoration-muted="scb_verify_state == 'skipped'"/>
             </xpath>
@@ -238,7 +244,7 @@
         <field name="arch" type="xml">
             <tree string="ผลตรวจสอบการโอน" create="0"
                   decoration-danger="scb_verify_state == 'failed'"
-                  decoration-warning="scb_verify_state == 'no_slip'"
+                  decoration-warning="scb_verify_state in ['no_slip', 'other_company']"
                   decoration-muted="scb_verify_state in ['waiting', 'skipped']">
                 <field name="date"/>
                 <field name="name"/>
@@ -258,7 +264,7 @@
                 <field name="scb_verify_state" widget="badge"
                        decoration-success="scb_verify_state == 'success'"
                        decoration-danger="scb_verify_state == 'failed'"
-                       decoration-warning="scb_verify_state in ['waiting', 'no_slip']"
+                       decoration-warning="scb_verify_state in ['waiting', 'no_slip', 'other_company']"
                        decoration-info="scb_verify_state == 'to_check'"
                        decoration-muted="scb_verify_state == 'skipped'"/>
                 <field name="state" widget="badge" optional="show"/>
@@ -281,6 +287,8 @@
                 <field name="amount"/>
                 <filter name="scb_failed" string="ไม่สำเร็จ"
                         domain="[('scb_verify_state', '=', 'failed')]"/>
+                <filter name="scb_other_company" string="โอนคนละบริษัท"
+                        domain="[('scb_verify_state', '=', 'other_company')]"/>
                 <filter name="scb_no_slip" string="ยังไม่แนบสลิป"
                         domain="[('scb_verify_state', '=', 'no_slip')]"/>
                 <filter name="scb_waiting" string="รอข้อมูลธนาคาร"
@@ -314,7 +322,7 @@
         <field name="view_mode">tree,form</field>
         <!-- นับเฉพาะใบที่ลงบันทึกแล้ว (ตรงกับเงื่อนไขที่ระบบใช้ตรวจสอบ) -->
         <field name="domain">[('payment_type', '=', 'inbound'), ('partner_type', '=', 'customer'), ('state', '=', 'posted')]</field>
-        <field name="context">{'search_default_scb_failed': 1, 'search_default_scb_no_slip': 1, 'search_default_scb_waiting': 1}</field>
+        <field name="context">{'search_default_scb_failed': 1, 'search_default_scb_other_company': 1, 'search_default_scb_no_slip': 1, 'search_default_scb_waiting': 1}</field>
         <field name="search_view_id" ref="view_account_payment_search_scb_verify"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">ยังไม่มีรายการที่ต้องตรวจสอบ</p>

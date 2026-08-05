@@ -119,6 +119,21 @@ class ScbPaymentSettings(models.TransientModel):
     verify_name_threshold = fields.Float(
         string="เกณฑ์ความเหมือนของชื่อ (0-1)", default=0.6,
         help="คะแนนขั้นต่ำที่ถือว่าชื่อผู้โอนในสลิป ตรงกับชื่อในรายการของธนาคาร")
+    verify_check_own_account = fields.Boolean(
+        string="แยกสถานะเมื่อเงินเข้าบัญชีบริษัทอื่น", default=True,
+        help="Google Sheet รวม statement ของทุกบริษัทในเครือไว้ด้วยกัน "
+             "ถ้าลูกค้าโอนเข้าบัญชีบริษัทอื่น เงินเข้าจริงแต่เข้าผิดบริษัท "
+             "ระบบจะขึ้นสถานะ \"สำเร็จ แต่โอนคนละบริษัท\" แทน \"โอนสำเร็จ\"")
+    verify_own_account_names = fields.Char(
+        string="ชื่อเจ้าของบัญชีของบริษัทเรา",
+        help="เว้นว่าง = ใช้ชื่อบริษัทใน Odoo (ตัดคำว่าบริษัท/จำกัดออกก่อนเทียบ "
+             "จึงรองรับทั้ง \"บริษัท นภดล กรุงเทพ จำกัด\" และ \"นภดล กรุงเทพ\") "
+             "ถ้าธนาคารเขียนชื่อต่างจากนี้ ให้ใส่เพิ่มคั่นด้วยเครื่องหมายจุลภาค")
+    verify_own_account_numbers = fields.Char(
+        string="เลขบัญชีของบริษัทเรา",
+        help="ถ้าใส่ไว้จะใช้เลขบัญชีตัดสินแทนการเทียบชื่อ (แม่นกว่า) "
+             "คั่นหลายเลขด้วยเครื่องหมายจุลภาค — ใช้ได้เฉพาะธนาคารที่ statement "
+             "มีเลขบัญชีมาด้วย (SCB มี / Kbank ไม่มี)")
     verify_cross_bank_fallback = fields.Boolean(
         string="หาไม่เจอให้ข้ามไปหาอีกธนาคารด้วย", default=True,
         help="ธนาคารที่เดาจากสมุดรายวันเป็นแค่ค่าตั้งต้น ลูกค้าโอนเข้าบัญชีไหนก็ได้ "
@@ -220,6 +235,12 @@ class ScbPaymentSettings(models.TransientModel):
             icp.get_param(PREFIX + 'verify_ai_name_fallback'), default=True)
         res['verify_cross_bank_fallback'] = _b(
             icp.get_param(PREFIX + 'verify_cross_bank_fallback'), default=True)
+        res['verify_check_own_account'] = _b(
+            icp.get_param(PREFIX + 'verify_check_own_account'), default=True)
+        res['verify_own_account_names'] = icp.get_param(
+            PREFIX + 'verify_own_account_names') or ''
+        res['verify_own_account_numbers'] = icp.get_param(
+            PREFIX + 'verify_own_account_numbers') or ''
         res['verify_allow_no_name'] = _b(
             icp.get_param(PREFIX + 'verify_allow_no_name'), default=True)
         res['verify_second_pass'] = _b(
@@ -266,6 +287,12 @@ class ScbPaymentSettings(models.TransientModel):
                       'True' if self.verify_ai_name_fallback else 'False')
         icp.set_param(PREFIX + 'verify_cross_bank_fallback',
                       'True' if self.verify_cross_bank_fallback else 'False')
+        icp.set_param(PREFIX + 'verify_check_own_account',
+                      'True' if self.verify_check_own_account else 'False')
+        icp.set_param(PREFIX + 'verify_own_account_names',
+                      (self.verify_own_account_names or '').strip())
+        icp.set_param(PREFIX + 'verify_own_account_numbers',
+                      (self.verify_own_account_numbers or '').strip())
         icp.set_param(PREFIX + 'verify_allow_no_name',
                       'True' if self.verify_allow_no_name else 'False')
         icp.set_param(PREFIX + 'verify_second_pass',

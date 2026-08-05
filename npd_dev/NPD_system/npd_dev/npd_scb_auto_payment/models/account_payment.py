@@ -50,6 +50,11 @@ DEFAULTS = {
     # ...แต่เป็นแค่ "ที่น่าจะใช่" ลูกค้าโอนเข้าบัญชีไหนก็ได้ ถ้าหาในธนาคารที่
     # คาดไว้ไม่เจอ ให้ขยายไปหาอีกธนาคารด้วย (ไม่งั้นจะขึ้นไม่สำเร็จทั้งที่เงินเข้าแล้ว)
     'verify_cross_bank_fallback': True,
+    # Google Sheet รวม statement ของทุกบริษัทในเครือ ถ้าลูกค้าโอนเข้าบัญชี
+    # บริษัทอื่น ให้แยกเป็นสถานะ "สำเร็จ แต่โอนคนละบริษัท" ไม่ปนกับ "โอนสำเร็จ"
+    'verify_check_own_account': True,
+    'verify_own_account_names': '',    # เว้นว่าง = ใช้ชื่อบริษัทใน Odoo
+    'verify_own_account_numbers': '',  # ตั้งไว้จะแม่นกว่าเทียบชื่อ
     # สมุดรายวันที่ "ไม่มีเงินโอนเข้าจริง" (ตัดหนี้ในระบบ) -> ข้ามการตรวจไปเลย
     'verify_skip_journal_keywords': u'ลดหนี้',
     # คำในเลขอ้างอิงของสลิป ที่บอกว่าเป็น "จ่ายบิล" -> ข้ามการตรวจ
@@ -81,6 +86,9 @@ class AccountPayment(models.Model):
         ('no_slip', u'ยังไม่แนบสลิป'),
         ('waiting', u'รอข้อมูลจากธนาคาร'),
         ('success', u'โอนสำเร็จ'),
+        # เงินเข้าจริง จับคู่ได้ครบ แต่เข้าบัญชีของบริษัทอื่นในเครือ
+        # ไม่ใช่ "ไม่สำเร็จ" (เงินมาแล้ว) และไม่ใช่ "สำเร็จ" (บัญชีบริษัทเราไม่ได้รับ)
+        ('other_company', u'สำเร็จ แต่โอนคนละบริษัท'),
         ('failed', u'ไม่สำเร็จ'),
         ('skipped', u'ไม่ต้องตรวจสอบ'),
     ], string=u"สถานะการโอน (ธนาคาร)", default='to_check', copy=False, index=True,
@@ -793,6 +801,16 @@ class AccountPayment(models.Model):
             if shared:
                 summary += u"\n" + shared
             statement = matched[0].statement_id if len(matched) == 1 else None
+            # เงินเข้าจริงแล้ว แต่เข้าบัญชีบริษัทอื่นในเครือหรือเปล่า
+            foreign = self._scb_foreign_accounts(matched)
+            if foreign:
+                summary += u"\n\n" + _(
+                    u"เงินเข้าบัญชีของ %s ซึ่งไม่ใช่บัญชีของ %s — "
+                    u"ต้องโอนต่อ/ปรับบัญชีระหว่างกันเอง"
+                ) % (u', '.join(foreign), self.company_id.name)
+                return finish('other_company',
+                              u"%s\n%s\n\n%s" % (header, summary, detail),
+                              statement)
             return finish('success', u"%s\n%s\n\n%s" % (header, summary, detail),
                           statement)
 
@@ -805,6 +823,45 @@ class AccountPayment(models.Model):
         return finish('failed', _(
             u"%s\n\nจับคู่ได้ %s จาก %s สลิป — ยังเหลือ %s สลิปที่ยังไม่พบรายการ\n\n%s"
         ) % (header, len(matched), len(active), pending, detail))
+
+    def _scb_own_account_names(self):
+        u"""ชื่อเจ้าของบัญชีที่ถือว่าเป็น "บัญชีของบริษัทเรา"
+
+        ค่าเริ่มต้นใช้ชื่อบริษัทใน Odoo (statement เขียนชื่อไม่เหมือนกันทุกธนาคาร
+        เช่น SCB = "บริษัท นภดล กรุงเทพ จำกัด" / Kbank = "นภดล กรุงเทพ"
+        แต่ตัดคำว่าบริษัท/จำกัดออกแล้วเท่ากัน) ถ้าธนาคารเขียนชื่อต่างจากนี้
+        ให้เพิ่มเองได้ที่หน้าตั้งค่า
+        """
+        self.ensure_one()
+        names = [self.company_id.name, self.company_id.partner_id.name]
+        extra = self._scb_param('verify_own_account_names') or ''
+        names += re.split(r'[,\n|]', extra)
+        return [n.strip() for n in names if n and n.strip()]
+
+    def _scb_own_account_numbers(self):
+        u"""เลขบัญชีของบริษัทเรา (ถ้าตั้งไว้ จะใช้แทนการเทียบชื่อ แม่นกว่า)"""
+        self.ensure_one()
+        extra = self._scb_param('verify_own_account_numbers') or ''
+        return [n.strip() for n in re.split(r'[,\n|]', extra) if n.strip()]
+
+    def _scb_foreign_accounts(self, lines):
+        u"""ชื่อเจ้าของบัญชีที่ "ไม่ใช่บริษัทเรา" ในบรรดารายการที่จับคู่ได้
+
+        Google Sheet รวม statement ของทุกบริษัทในเครือ ลูกค้าจึงอาจโอนเข้า
+        บัญชีบริษัทอื่นได้ เงินเข้าจริงแต่เข้าผิดบริษัท
+        """
+        self.ensure_one()
+        if not self._scb_param('verify_check_own_account'):
+            return []
+        names = self._scb_own_account_names()
+        numbers = self._scb_own_account_numbers()
+        foreign = []
+        for st in lines.mapped('statement_id'):
+            if not st.belongs_to_company(names, numbers):
+                label = st.account_name or st.account_no or '-'
+                if label not in foreign:
+                    foreign.append(label)
+        return foreign
 
     def _scb_bank_portion(self):
         u"""ยอดที่ "เข้าบัญชีธนาคารจริง" ของใบรับชำระนี้
@@ -843,7 +900,8 @@ class AccountPayment(models.Model):
                 ('state', '=', 'matched'),
                 ('payment_id', '!=', self.id),
             ]).mapped('payment_id').filtered(
-                lambda p: p.scb_verify_state == 'success')
+                # นับ other_company ด้วย — เงินก้อนนั้นถูกตัดไปแล้วเหมือนกัน
+                lambda p: p.scb_verify_state in ('success', 'other_company'))
             if not others:
                 continue
             allocated = mine + sum(p._scb_bank_portion() for p in others)
@@ -1138,6 +1196,8 @@ class AccountPayment(models.Model):
         """
         return {
             'success': _(u"โอนสำเร็จ — ตรวจสอบกับรายการเดินบัญชีของธนาคารแล้ว"),
+            'other_company': _(u"เงินเข้าแล้ว แต่เข้าบัญชีของบริษัทอื่นในเครือ "
+                               u"— กรุณาแจ้งฝ่ายบัญชีปรับบัญชีระหว่างกัน"),
             'failed': _(u"ตรวจสอบไม่ผ่าน — กรุณาแจ้งฝ่ายบัญชีตรวจสอบ"),
             'waiting': _(u"รอข้อมูลจากธนาคาร ระบบจะตรวจให้อัตโนมัติอีกครั้ง"),
             'no_slip': _(u"ยังไม่ได้แนบสลิปการโอนเงิน"),
@@ -1182,7 +1242,8 @@ class AccountPayment(models.Model):
                 'title': _(u"ผลตรวจสอบการโอน: %s") % state_label,
                 'message': message,
                 'type': 'success' if res['state'] == 'success' else (
-                    'warning' if res['state'] == 'waiting' else 'danger'),
+                    'warning' if res['state'] in ('waiting', 'other_company')
+                    else 'danger'),
                 'sticky': res['state'] != 'success',
                 'next': {'type': 'ir.actions.client', 'tag': 'reload'},
             },
