@@ -108,7 +108,7 @@
                               decoration-success="state == 'matched'"
                               decoration-danger="state == 'not_found'"
                               decoration-warning="state == 'waiting'"
-                              decoration-muted="state in ['skipped', 'not_slip']">
+                              decoration-muted="state in ['skipped', 'not_slip', 'duplicate']">
                             <field name="attachment_name"/>
                             <field name="slip_date"/>
                             <field name="slip_time" optional="show"/>
@@ -122,7 +122,7 @@
                                    decoration-success="state == 'matched'"
                                    decoration-danger="state == 'not_found'"
                                    decoration-warning="state == 'waiting'"
-                                   decoration-muted="state in ['skipped', 'not_slip']"/>
+                                   decoration-muted="state in ['skipped', 'not_slip', 'duplicate']"/>
                             <field name="currency_id" invisible="1"/>
                         </tree>
                         <form string="ผลตรวจสลิป">
@@ -207,7 +207,7 @@
                           decoration-success="state == 'matched'"
                           decoration-danger="state == 'not_found'"
                           decoration-warning="state == 'waiting'"
-                          decoration-muted="state in ['skipped', 'not_slip']">
+                          decoration-muted="state in ['skipped', 'not_slip', 'duplicate']">
                         <field name="attachment_name"/>
                         <field name="slip_date"/>
                         <field name="slip_time"/>
@@ -218,7 +218,7 @@
                                decoration-success="state == 'matched'"
                                decoration-danger="state == 'not_found'"
                                decoration-warning="state == 'waiting'"
-                               decoration-muted="state in ['skipped', 'not_slip']"/>
+                               decoration-muted="state in ['skipped', 'not_slip', 'duplicate']"/>
                         <field name="currency_id" invisible="1"/>
                     </tree>
                 </field>

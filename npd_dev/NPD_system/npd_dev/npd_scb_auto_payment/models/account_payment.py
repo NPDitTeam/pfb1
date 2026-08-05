@@ -838,8 +838,10 @@ class AccountPayment(models.Model):
             if line.statement_id:
                 claimed.add(line.statement_id.id)
 
+        self._scb_mark_duplicate_slips(lines)
         self._scb_update_slip_summary(lines)
-        active = lines.filtered(lambda l: l.state not in ('skipped', 'not_slip'))
+        active = lines.filtered(
+            lambda l: l.state not in ('skipped', 'not_slip', 'duplicate'))
         header = _(u"ตรวจสลิป %s ไฟล์ (เทียบกับ statement ของ %s ตามสมุดรายวัน \"%s\")") % (
             len(lines), u'/'.join(bank_labels.get(s, s) for s in sources),
             self.journal_id.name or '-')
@@ -848,6 +850,11 @@ class AccountPayment(models.Model):
             header += _(u"\nข้าม %s ไฟล์ที่ไม่ใช่สลิปการโอน: %s") % (
                 len(not_slip),
                 u', '.join(l.attachment_name or '-' for l in not_slip))
+        duplicate = lines.filtered(lambda l: l.state == 'duplicate')
+        if duplicate:
+            header += _(u"\nข้าม %s ไฟล์ที่เป็นสลิปใบเดิมแนบซ้ำ: %s") % (
+                len(duplicate),
+                u', '.join(l.attachment_name or '-' for l in duplicate))
         detail = u'\n\n'.join(
             u"[%s] %s — %s\n%s" % (
                 dict(line._fields['state'].selection).get(line.state, line.state),
@@ -898,6 +905,49 @@ class AccountPayment(models.Model):
         return finish('failed', _(
             u"%s\n\nจับคู่ได้ %s จาก %s สลิป — ยังเหลือ %s สลิปที่ยังไม่พบรายการ\n\n%s"
         ) % (header, len(matched), len(active), pending, detail))
+
+    def _scb_mark_duplicate_slips(self, lines):
+        u"""หาสลิปใบเดิมที่ถูกแนบซ้ำ แล้วเปลี่ยนจาก "ไม่พบรายการ" เป็น "สลิปซ้ำ"
+
+        พนักงานมักแนบสลิปใบเดียวกันสองรอบ (ถ่ายใหม่ / ได้มาทั้งทางไลน์และอีเมล)
+        ใบหลังจะจับคู่ไม่ได้เพราะรายการเดินบัญชีถูกใบแรกจับจองไปแล้ว ผลคือทั้งใบ
+        รับชำระขึ้น "ไม่สำเร็จ" และยอดรวมถูกนับซ้ำสองเท่า
+
+        เช็คหลังจับคู่เสร็จแล้วเท่านั้น จึงปลอดภัยกว่าเดาตั้งแต่ต้น:
+        ถ้าลูกค้าโอนยอดเท่ากันสองครั้งจริง ธนาคารจะมีสองรายการ สลิปทั้งคู่จะ
+        จับคู่ได้เอง ไม่มีใบไหนตกมาถึงตรงนี้
+        """
+        self.ensure_one()
+        matched = lines.filtered(lambda l: l.state == 'matched')
+        pending = lines.filtered(lambda l: l.state == 'not_found')
+        if not matched or not pending:
+            return
+
+        def key(line):
+            return (line.slip_date, (line.slip_time or '').strip(),
+                    round(line.slip_amount or 0.0, 2))
+
+        twins = {}
+        for line in matched:
+            twins.setdefault(key(line), line)
+
+        for line in pending:
+            date, time, amount = key(line)
+            if not date or not amount:
+                continue
+            twin = twins.get((date, time, amount))
+            if not twin:
+                continue
+            # เลขอ้างอิงต่างกัน = คนละรายการจริง ไม่ใช่สลิปซ้ำ
+            ref, twin_ref = (line.slip_ref or '').strip(), (twin.slip_ref or '').strip()
+            if ref and twin_ref and ref != twin_ref:
+                continue
+            line.sudo().write({'state': 'duplicate', 'reason': _(
+                u"สลิปใบนี้ซ้ำกับ \"%s\" (วันที่ %s เวลา %s ยอด %s เหมือนกัน) "
+                u"ซึ่งจับคู่กับรายการเดินบัญชีไปแล้ว — ธนาคารมีเงินเข้าก้อนเดียว "
+                u"จึงไม่นับซ้ำ"
+            ) % (twin.attachment_name or '-', date, time or '-',
+                 '{:,.2f}'.format(amount))})
 
     def _scb_own_account_names(self):
         u"""ชื่อเจ้าของบัญชีที่ถือว่าเป็น "บัญชีของบริษัทเรา"
@@ -1231,7 +1281,7 @@ class AccountPayment(models.Model):
         self.ensure_one()
         # ไฟล์ที่ไม่ใช่สลิป (50 ทวิ / ใบกำกับภาษี) มียอดกับวันที่เหมือนกัน
         # ถ้าเอามารวมด้วย ยอดกับชื่อผู้โอนที่หัวใบจะเพี้ยน
-        lines = lines.filtered(lambda l: l.state != 'not_slip')
+        lines = lines.filtered(lambda l: l.state not in ('not_slip', 'duplicate'))
         dates = [l.slip_date for l in lines if l.slip_date]
         senders = []
         for line in lines:
