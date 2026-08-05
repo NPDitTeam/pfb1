@@ -590,7 +590,9 @@ class AccountPayment(models.Model):
         by_attachment = {l.attachment_id.id: l for l in lines}
         for attachment in attachments:
             line = by_attachment.get(attachment.id)
-            if line and not force_reread:
+            # 'unreadable' อาจเกิดจาก AI ล่มชั่วคราว/JSON ถูกตัด ต้องลองอ่านใหม่
+            # ส่วนสถานะอื่นอ่านสำเร็จแล้ว ไม่ต้องเปลืองโควตาอ่านซ้ำ
+            if line and not force_reread and line.state != 'unreadable':
                 continue
             # ชื่อไฟล์บอกได้ว่าไม่ใช่สลิป -> ข้ามไปเลย ไม่ต้องเปลืองโควตา AI
             keyword = self._scb_file_skip_reason(attachment)
