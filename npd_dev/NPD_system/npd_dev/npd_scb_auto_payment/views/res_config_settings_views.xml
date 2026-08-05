@@ -80,6 +80,7 @@
                         <group>
                             <field name="verify_amount_tolerance"/>
                             <field name="verify_date_tolerance"/>
+                            <field name="verify_time_tolerance_min"/>
                             <field name="verify_name_threshold"/>
                         </group>
                         <group>

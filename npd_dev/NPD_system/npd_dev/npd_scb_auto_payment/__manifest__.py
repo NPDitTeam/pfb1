@@ -3,7 +3,7 @@
     # ชื่อทางเทคนิคยังเป็น npd_scb_auto_payment ตามเดิม (เปลี่ยนไม่ได้ ผูกกับ DB)
     # แต่ชื่อที่ผู้ใช้เห็นเปลี่ยนให้ตรงกับงานจริง = ตรวจสอบการโอน ไม่ใช่สร้างใบรับชำระ
     'name': 'NPD ตรวจสอบการโอนเงิน',
-    'version': '14.0.3.2.0',
+    'version': '14.0.4.0.0',
     'summary': 'ตรวจสอบการโอนเงินของใบรับชำระ โดยให้ AI อ่านสลิปแล้วเทียบกับรายการเดินบัญชีจริง',
     'description': """
 NPD ตรวจสอบการโอนเงิน
@@ -36,6 +36,7 @@ NPD ตรวจสอบการโอนเงิน
         'security/ir.model.access.csv',
         'data/scb_verify_cron.xml',
         'views/account_payment_views.xml',
+        'views/scb_counterparty_alias_views.xml',
         'views/res_config_settings_views.xml',
     ],
     # ตอนติดตั้งใหม่ ตั้ง "วันที่เริ่มตรวจสอบ" = วันที่ติดตั้ง

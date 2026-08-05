@@ -101,6 +101,63 @@ _COMPANY_STOPWORDS = {
 # แล้วถือว่าตรงกัน — กันชื่อสั้น ๆ อย่าง "นภดล" ไปแมตช์บริษัทพี่น้องกันเอง
 _TRUNCATED_PREFIX_MIN = 6
 
+# ---------------------------------------------------------------------------
+# ถอดเสียงไทย <-> อังกฤษ สำหรับเทียบชื่อข้ามภาษา
+#
+# สลิปมักเขียนชื่อไทย แต่ธนาคารบันทึกเป็นอังกฤษ (หรือกลับกัน) เทียบตัวอักษรตรง ๆ
+# ได้คะแนน ~0 เสมอ เช่น "ศิรพิชญา" vs "SIRAPICHAYA"
+#
+# วิธีที่ใช้: ลดทั้งสองฝั่งเหลือ "โครงพยัญชนะ" (สระถูกตัดทิ้ง) เพราะสระไทย
+# ถอดเป็นอังกฤษได้หลายแบบ (ิ -> i/ee, ั -> a/u) แต่พยัญชนะค่อนข้างคงที่
+#   ศิรพิชญา     -> ศ ร พ ช ญ -> s r p c y  -> "srpcy"
+#   SIRAPICHAYA -> ตัดสระ     -> s r p c y  -> "srpcy"
+# ---------------------------------------------------------------------------
+_THAI_CONSONANT_MAP = {
+    u'ก': 'k', u'ข': 'k', u'ฃ': 'k', u'ค': 'k', u'ฅ': 'k', u'ฆ': 'k',
+    u'ง': 'g',
+    u'จ': 'c', u'ฉ': 'c', u'ช': 'c', u'ฌ': 'c',
+    u'ซ': 's', u'ศ': 's', u'ษ': 's', u'ส': 's',
+    u'ญ': 'y', u'ย': 'y',
+    u'ฎ': 'd', u'ด': 'd',
+    u'ฏ': 't', u'ต': 't',
+    u'ฐ': 't', u'ฑ': 't', u'ฒ': 't', u'ถ': 't', u'ท': 't', u'ธ': 't',
+    u'ณ': 'n', u'น': 'n',
+    u'บ': 'b',
+    u'ป': 'p', u'ผ': 'p', u'พ': 'p', u'ภ': 'p',
+    u'ฝ': 'f', u'ฟ': 'f',
+    u'ม': 'm',
+    u'ร': 'r', u'ฤ': 'r',      # ฤ ออกเสียง "ริ/รึ" มีเสียง r เช่น ฤทธิ์ = RIT
+    u'ล': 'l', u'ฬ': 'l', u'ฦ': 'l',
+    u'ว': 'w',
+    u'ห': 'h', u'ฮ': 'h',
+    # อ เป็นตัวพาสระ ไม่ออกเสียงพยัญชนะ -> ข้าม
+}
+_THAI_THANTHAKHAT = u'์'   # ไม้ทัณฑฆาต — ทำให้พยัญชนะตัวหน้าไม่ออกเสียง
+# อักษรนำที่ออกเสียงไม่ตรงตัว ต้องแทนก่อนแปลงทีละตัว
+#   ทร ต้นคำออกเสียง "ซ" เช่น ทรัพย์ = SAP (ไม่ใช่ TRAP)
+_THAI_PRE_SUBS = [
+    (u'ทร', u'ซ'),     # ทร ต้นคำออกเสียง "ซ" เช่น ทรัพย์ = SAP (ไม่ใช่ TRAP)
+    (u'รร', u'ั'),     # ร หัน ออกเสียงเป็นสระ "อะ" ไม่ใช่ ร สองตัว
+                       # เช่น วรรณา = WANNA (ไม่ใช่ WARRANA)
+]
+# คำนำหน้าชื่อไทย ที่มักเขียนติดกับชื่อ ("นายศิรพิชญา") หรือมีจุดคั่น ("น.ส.")
+# ต้องตัดก่อน tokenize ไม่งั้นจะกลายเป็นส่วนหนึ่งของชื่อแล้วเทียบข้ามภาษาไม่ตรง
+_THAI_TITLE_PREFIXES = [u'นางสาว', u'น.ส.', u'นส.', u'นาง', u'นาย',
+                        u'ด.ช.', u'ด.ญ.', u'ดร.', u'คุณ']
+# โครงพยัญชนะเป็นข้อมูลที่สูญเสียรายละเอียดไปมาก การเทียบแบบ "คล้ายกัน" จึงให้
+# คะแนนเฟ้อง่าย — ยอมรับเฉพาะกรณีที่คล้ายกันสูงมากเท่านั้น
+_SKELETON_RATIO_MIN = 0.85
+_THAI_RANGE = re.compile(u'[฀-๿]')
+# คู่ตัวอักษรอังกฤษที่ออกเสียงเดียวกับพยัญชนะไทยตัวเดียว (ต้องแทนก่อนตัดสระ)
+_LATIN_DIGRAPHS = [('ch', 'c'), ('sh', 'c'), ('ph', 'p'), ('th', 't'),
+                   ('kh', 'k'), ('ng', 'g'),
+                   # จ ถอดเป็น j (Jaidee) หรือ ch (Chan) แล้วแต่คน -> ยุบให้เหลือ c
+                   ('j', 'c')]
+# โครงพยัญชนะสั้นกว่าข้อความจริงมาก จึงใช้เกณฑ์ความยาวต่ำกว่าตอนเทียบตัวอักษร
+# 3 พยัญชนะพอสำหรับ "ชื่อต้นอย่างเดียว" ที่สลิปมักแสดง (สาธิต -> stt)
+# ความเสี่ยงต่ำเพราะใช้กับรายการที่ยอด+วันที่ตรงเป๊ะอยู่แล้ว
+_SKELETON_PREFIX_MIN = 3
+
 
 class ScbBankStatement(models.Model):
     _name = 'npd.scb.bank.statement'
@@ -237,12 +294,46 @@ class ScbBankStatement(models.Model):
         u"""ย่อชื่อให้เหลือแก่นชื่อ: ตัดคำนำหน้า/รูปแบบทางกฎหมาย/วรรคตอน/ตัวเลข"""
         if not name:
             return ''
-        s = name.lower()
+        s = name
+        # ตัดคำนำหน้าชื่อไทยก่อน เพราะมักเขียนติดกับชื่อจนแยก token ไม่ออก
+        for title in _THAI_TITLE_PREFIXES:
+            s = s.replace(title, ' ')
+        s = s.lower()
         s = re.sub(r'[.,()\[\]{}\-_/\\&"\'`:;|+*]', ' ', s)
         s = re.sub(r'\s+', ' ', s).strip()
         tokens = [t for t in s.split(' ')
                   if t and t not in _COMPANY_STOPWORDS and not t.isdigit()]
         return ''.join(tokens)
+
+    @staticmethod
+    def _time_to_minutes(value):
+        u"""แปลงเวลาเป็นจำนวนนาทีจากเที่ยงคืน — รองรับ '16:00', '9.59', '13:15 น.'
+
+        คืน None ถ้าอ่านไม่ได้
+        """
+        m = re.search(r'(\d{1,2})\s*[:.]\s*(\d{2})', str(value or ''))
+        if not m:
+            return None
+        hour, minute = int(m.group(1)), int(m.group(2))
+        if hour > 23 or minute > 59:
+            return None
+        return hour * 60 + minute
+
+    @api.model
+    def _time_matches(self, slip_time, bank_time, tolerance_min=5):
+        u"""เวลาบนสลิปกับเวลาที่ธนาคารบันทึกตรงกันไหม (เผื่อคลาดกันได้ไม่กี่นาที)
+
+        เป็นสัญญาณที่แข็งแรงมาก เพราะการที่คนละคนโอนยอดเดียวกัน วันเดียวกัน
+        และ "นาทีเดียวกัน" แทบเป็นไปไม่ได้
+        """
+        a = self._time_to_minutes(slip_time)
+        b = self._time_to_minutes(bank_time)
+        if a is None or b is None:
+            return False
+        diff = abs(a - b)
+        # เผื่อกรณีคร่อมเที่ยงคืน (23:58 กับ 00:02)
+        diff = min(diff, 24 * 60 - diff)
+        return diff <= max(0, tolerance_min)
 
     @staticmethod
     def _digit_runs(value, min_len=3):
@@ -270,22 +361,76 @@ class ScbBankStatement(models.Model):
                     return True
         return False
 
+    @staticmethod
+    def _has_thai(text):
+        return bool(_THAI_RANGE.search(text or ''))
+
+    @api.model
+    def _name_skeleton(self, name):
+        u"""ลดชื่อเหลือ "โครงพยัญชนะ" เพื่อเทียบข้ามภาษาไทย/อังกฤษ
+
+        "ศิรพิชญา"    -> "srpcy"
+        "SIRAPICHAYA" -> "srpcy"
+        "สาธิต"       -> "stt"   |  "SATHIT" -> "stt"
+        """
+        text = self._normalize_name(name)
+        if not text:
+            return ''
+        if self._has_thai(text):
+            for pair, single in _THAI_PRE_SUBS:
+                text = text.replace(pair, single)
+            out = []
+            for char in text:
+                if char == _THAI_THANTHAKHAT:
+                    # ไม้ทัณฑฆาต: พยัญชนะตัวหน้าไม่ออกเสียง เช่น สุรีย์ -> s r
+                    if out:
+                        out.pop()
+                    continue
+                mapped = _THAI_CONSONANT_MAP.get(char)
+                if mapped:
+                    out.append(mapped)
+            return ''.join(out)
+        # ฝั่งอักษรโรมัน: ยุบคู่ตัวอักษรที่ออกเสียงเดียวกันก่อน แล้วค่อยตัดสระ
+        text = text.lower()
+        for pair, single in _LATIN_DIGRAPHS:
+            text = text.replace(pair, single)
+        return re.sub(r'[^a-z]|[aeiou]', '', text)
+
     @api.model
     def _name_score(self, slip_name, bank_name):
         u"""คะแนนความเหมือน 0-1 ระหว่างชื่อจากสลิป กับชื่อจากรายการธนาคาร
 
         รายละเอียดของธนาคารมักถูก "ตัดท้าย" (เช่น "พี.เอ็ม.อี.ซี เม") จึงให้คะแนนเต็ม
         เมื่อชื่อฝั่งที่สั้นกว่าเป็น "คำขึ้นต้น" ของอีกฝั่ง และยาวพอที่จะระบุตัวตนได้
+
+        ถ้าสองฝั่งคนละภาษา (สลิปไทย / ธนาคารอังกฤษ) จะเทียบ "โครงพยัญชนะ" ให้อีกชั้น
+        เพราะเทียบตัวอักษรตรง ๆ ได้ ~0 เสมอ
         """
         a = self._normalize_name(slip_name)
         b = self._normalize_name(bank_name)
         if not a or not b:
             return 0.0
+        score = self._compare_text(a, b, _TRUNCATED_PREFIX_MIN)
+        # คนละสคริปต์เท่านั้นถึงเทียบโครงพยัญชนะ — ถ้าภาษาเดียวกันการตัดสระทิ้ง
+        # จะหลวมเกินไปจนคนละชื่อกลายเป็นเหมือนกันได้
+        if score < 1.0 and self._has_thai(a) != self._has_thai(b):
+            sa, sb = self._name_skeleton(slip_name), self._name_skeleton(bank_name)
+            if sa and sb:
+                skeleton = self._compare_text(sa, sb, _SKELETON_PREFIX_MIN)
+                # กันคะแนนเฟ้อจากการเทียบ "คล้ายกัน" บนโครงพยัญชนะสั้น ๆ
+                # (เช่น นภดลอินเตอร์เทรดดิ้ง vs NOPPADOL S GROUP ได้ 0.63)
+                if skeleton >= _SKELETON_RATIO_MIN:
+                    score = max(score, skeleton)
+        return score
+
+    @staticmethod
+    def _compare_text(a, b, prefix_min):
+        u"""เทียบสองสตริง: ตรงกันเป๊ะ / ฝั่งสั้นเป็นคำขึ้นต้น / เป็นส่วนหนึ่ง / คล้ายกัน"""
         if a == b:
             return 1.0
         shorter, longer = (a, b) if len(a) <= len(b) else (b, a)
-        # ธนาคารตัดชื่อท้าย -> ชื่อสั้นเป็นคำขึ้นต้นของชื่อยาว
-        if len(shorter) >= _TRUNCATED_PREFIX_MIN and longer.startswith(shorter):
+        # อีกฝั่งถูกตัดท้าย -> ชื่อสั้นเป็นคำขึ้นต้นของชื่อยาว
+        if len(shorter) >= prefix_min and longer.startswith(shorter):
             return 1.0
         contain = (len(shorter) / float(len(longer))) if shorter in longer else 0.0
         return max(SequenceMatcher(None, a, b).ratio(), contain)
@@ -296,7 +441,7 @@ class ScbBankStatement(models.Model):
     @api.model
     def find_incoming_match(self, amount, date, names, sources=None,
                             amount_tol=0.0, day_tol=0, name_threshold=0.6,
-                            account_hint=None):
+                            account_hint=None, time_hint=None, time_tol=5):
         u"""หาแถว "เงินเข้า" ที่ตรงกับ จำนวนเงิน + วันที่ + ชื่อบริษัท
 
         :param amount: จำนวนเงินจากสลิป (หรือ list ของจำนวนเงินที่เป็นไปได้)
@@ -304,7 +449,8 @@ class ScbBankStatement(models.Model):
         :param names: list ชื่อผู้โอนที่ยอมรับได้ (จากสลิป / จากลูกค้าใน Odoo)
         :param sources: list รหัสธนาคารที่จะค้น (None = ทุกธนาคารที่ตั้งค่าไว้)
         :param amount_tol: ผลต่างจำนวนเงินที่ยอมรับ (0 = ต้องตรงเป๊ะระดับสตางค์)
-        :param account_hint: เลขบัญชีผู้โอน (ใช้เทียบ 4 หลักท้ายเป็นสัญญาณเสริม)
+        :param account_hint: เลขบัญชีผู้โอน (ใช้เทียบเลขท้ายเป็นสัญญาณเสริม)
+        :param time_hint: เวลาบนสลิป (ใช้เทียบกับเวลาที่ธนาคารบันทึกเป็นสัญญาณเสริม)
         :return: dict {
             'matched': bool, 'statement': record|empty, 'score': float,
             'amount_date_candidates': recordset,   # ตรงยอด+วันที่ (ยังไม่เช็คชื่อ)
@@ -372,6 +518,10 @@ class ScbBankStatement(models.Model):
             # เลขบัญชีผู้โอนตรงกัน = สัญญาณยืนยันตัวตนที่หนักแน่นกว่าชื่อ
             # (ใช้ได้แม้ชื่อในสลิปเป็นไทยแต่ธนาคารบันทึกเป็นอังกฤษ)
             if hint and self._account_matches(hint, rec.counterparty_acc):
+                score = max(score, 1.0)
+            # เวลาตรงกันถึงระดับนาที = ยืนยันได้เช่นกัน ใช้กับกรณีที่ธนาคาร
+            # ถอดชื่อไทยเป็นอังกฤษแบบไม่เป็นมาตรฐานจนเทียบชื่อไม่ได้
+            elif time_hint and self._time_matches(time_hint, rec.time, time_tol):
                 score = max(score, 1.0)
             if score > best_score:
                 best_score, best_rec = score, rec

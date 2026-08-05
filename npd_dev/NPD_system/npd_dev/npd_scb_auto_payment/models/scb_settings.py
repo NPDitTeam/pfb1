@@ -108,6 +108,14 @@ class ScbPaymentSettings(models.TransientModel):
         string="ผลต่างวันที่ที่ยอมรับ (วัน)", default=0,
         help="0 = วันที่ต้องตรงกันพอดี\n1 = ยอมให้ธนาคารลงบัญชีคลาดไป 1 วัน "
              "(เช่น โอนดึกแล้วธนาคารลงวันถัดไป)")
+    verify_time_tolerance_min = fields.Integer(
+        string="ผลต่างเวลาที่ยอมรับ (นาที)", default=5,
+        help="เวลาบนสลิปกับเวลาที่ธนาคารบันทึก คลาดกันได้กี่นาที\n"
+             "ใช้เป็นตัวยืนยันเมื่อ 'ชื่อผู้โอนเทียบไม่ได้' — เช่นธนาคารถอดชื่อไทย "
+             "เป็นอังกฤษแบบไม่เป็นมาตรฐาน (ธราธร -> THATAROTH GHEER)\n"
+             "การที่คนละคนโอนยอดเดียวกัน วันเดียวกัน และนาทีเดียวกัน แทบเป็นไปไม่ได้ "
+             "จึงใช้ยืนยันตัวตนแทนชื่อได้\n"
+             "0 = ต้องตรงนาทีพอดี | ค่าเริ่มต้น 5 นาที เผื่อธนาคารลงบัญชีช้ากว่าสลิปเล็กน้อย")
     verify_name_threshold = fields.Float(
         string="เกณฑ์ความเหมือนของชื่อ (0-1)", default=0.6,
         help="คะแนนขั้นต่ำที่ถือว่าชื่อผู้โอนในสลิป ตรงกับชื่อในรายการของธนาคาร")
@@ -201,6 +209,8 @@ class ScbPaymentSettings(models.TransientModel):
         res['verify_amount_tolerance'] = _f(
             icp.get_param(PREFIX + 'verify_amount_tolerance'), 0.0)
         res['verify_date_tolerance'] = _i(icp.get_param(PREFIX + 'verify_date_tolerance'), 0)
+        res['verify_time_tolerance_min'] = _i(
+            icp.get_param(PREFIX + 'verify_time_tolerance_min'), 5)
         res['verify_name_threshold'] = _f(icp.get_param(PREFIX + 'verify_name_threshold'), 0.6)
         res['verify_ai_name_fallback'] = _b(
             icp.get_param(PREFIX + 'verify_ai_name_fallback'), default=True)
@@ -242,6 +252,8 @@ class ScbPaymentSettings(models.TransientModel):
         icp.set_param(PREFIX + 'verify_amount_tolerance',
                       str(abs(self.verify_amount_tolerance or 0.0)))
         icp.set_param(PREFIX + 'verify_date_tolerance', str(max(0, self.verify_date_tolerance)))
+        icp.set_param(PREFIX + 'verify_time_tolerance_min',
+                      str(max(0, self.verify_time_tolerance_min or 0)))
         icp.set_param(PREFIX + 'verify_name_threshold',
                       str(min(1.0, max(0.0, self.verify_name_threshold or 0.6))))
         icp.set_param(PREFIX + 'verify_ai_name_fallback',

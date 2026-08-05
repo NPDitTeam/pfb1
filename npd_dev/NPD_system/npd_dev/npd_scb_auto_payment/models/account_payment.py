@@ -58,6 +58,9 @@ DEFAULTS = {
     'verify_ai_name_fallback': True,
     'verify_allow_no_name': True,
     'verify_batch_limit': 100,
+    # เวลาบนสลิปเทียบกับเวลาที่ธนาคารบันทึก คลาดกันได้กี่นาที
+    # ใช้ยืนยันกรณีที่ชื่อผู้โอนถอดเป็นอังกฤษแบบไม่เป็นมาตรฐานจนเทียบไม่ได้
+    'verify_time_tolerance_min': 5,
     'verify_second_pass': True,
     'verify_second_pass_days': 3,
     'verify_retry_failed': 3,
@@ -87,8 +90,14 @@ class AccountPayment(models.Model):
     ], string=u"ธนาคารที่ตรวจ", compute='_compute_scb_verify_bank', store=True,
         help=u"statement ของธนาคารที่ระบบใช้เทียบกับใบรับชำระใบนี้ "
              u"— เลือกจากสมุดรายวัน (ตั้งกฎได้ที่หน้าตั้งค่า)")
+    scb_verify_summary = fields.Char(
+        string=u"ผลตรวจ", readonly=True, copy=False,
+        help=u"ข้อความสั้นที่ทุกคนเห็น — ไม่บอกเกณฑ์การตรวจ")
+    # รายละเอียดเต็มบอกว่าระบบเทียบอะไรบ้างและได้คะแนนเท่าไร ถ้าพนักงานทั่วไปเห็น
+    # จะรู้ว่าต้องทำสลิปให้ "ผ่าน" อย่างไร จึงจำกัดให้เฉพาะผู้จัดการบัญชี
     scb_verify_reason = fields.Text(
-        string=u"เหตุผล / รายละเอียดผลตรวจ", readonly=True, copy=False)
+        string=u"รายละเอียดผลตรวจ (ภายใน)", readonly=True, copy=False,
+        groups="account.group_account_manager")
     scb_verify_datetime = fields.Datetime(
         string=u"ตรวจสอบเมื่อ", readonly=True, copy=False)
     scb_verify_attempts = fields.Integer(
@@ -99,7 +108,14 @@ class AccountPayment(models.Model):
              u"สถานะ 'รอข้อมูลจากธนาคาร' ไม่นับ และจะถูกตรวจซ้ำเรื่อย ๆ")
     scb_statement_id = fields.Many2one(
         'npd.scb.bank.statement', string=u"รายการเดินบัญชีที่จับคู่ได้",
-        readonly=True, copy=False, ondelete='set null', index=True)
+        readonly=True, copy=False, ondelete='set null', index=True,
+        help=u"ใช้เมื่อมีสลิปใบเดียว — ถ้าแนบหลายสลิป ดูรายการที่จับคู่ได้ของแต่ละใบ "
+             u"ในตาราง \"ผลตรวจรายสลิป\"")
+    scb_slip_ids = fields.One2many(
+        'npd.scb.payment.slip', 'payment_id', string=u"ผลตรวจรายสลิป",
+        readonly=True, copy=False,
+        help=u"ลูกค้ามักโอนไม่ครบในครั้งเดียว พนักงานจึงแนบหลายสลิป "
+             u"ระบบอ่านและจับคู่ให้ทีละไฟล์")
 
     # ---- ค่าที่ AI อ่านได้จากสลิป (เก็บไว้ไม่ต้องเรียก AI ซ้ำตอนตรวจรอบถัดไป) ----
     scb_slip_read = fields.Boolean(
@@ -110,7 +126,8 @@ class AccountPayment(models.Model):
     scb_slip_sender = fields.Char(string=u"ชื่อผู้โอน (จากสลิป)", readonly=True, copy=False)
     scb_slip_sender_acc = fields.Char(string=u"บัญชีผู้โอน (จากสลิป)", readonly=True, copy=False)
     scb_slip_ref = fields.Char(string=u"เลขอ้างอิงจากสลิป", readonly=True, copy=False)
-    scb_slip_raw = fields.Text(string=u"ข้อมูลดิบจาก AI", readonly=True, copy=False)
+    # หมายเหตุ: ข้อมูลดิบจาก AI ย้ายไปเก็บรายสลิปที่ npd.scb.payment.slip.raw แล้ว
+    # เพราะใบรับชำระใบเดียวมีได้หลายสลิป
 
     # ------------------------------------------------------------------
     # การตั้งค่า
@@ -153,23 +170,23 @@ class AccountPayment(models.Model):
         raw = self._scb_param('verify_skip_journal_keywords') or ''
         return [k.strip() for k in raw.split(',') if k.strip()]
 
-    def _scb_slip_skip_reason(self):
-        u"""คืน (คำที่เจอ, ค่าที่เจอคำนั้น) ถ้าสลิปเป็นการ "จ่ายบิล" ที่ไม่ต้องตรวจ
+    @api.model
+    def _scb_slip_skip_reason(self, line):
+        u"""คืน (คำที่เจอ, ค่าที่เจอคำนั้น) ถ้าสลิปใบนี้เป็นการ "จ่ายบิล" ที่ไม่ต้องตรวจ
 
         สลิปจ่ายบิลจะมีเลขอ้างอิงอย่าง "REF001" และฝั่งธนาคารบันทึกแค่
         "รับชำระค่าสินค้าและบริการ" โดยไม่มีชื่อผู้โอน — เทียบชื่อไม่ได้อยู่แล้ว
         ดูเฉพาะช่องเลขอ้างอิง ไม่สแกนทั้งก้อน เพื่อไม่ให้ชื่อบริษัทที่บังเอิญมีคำนี้
         ถูกข้ามไปด้วย
         """
-        self.ensure_one()
         raw_keywords = self._scb_param('verify_skip_slip_keywords') or ''
         keywords = [k.strip() for k in raw_keywords.split(',') if k.strip()]
         if not keywords:
             return '', ''
-        refs = [self.scb_slip_ref or '']
-        if self.scb_slip_raw:
+        refs = [line.slip_ref or '']
+        if line.raw:
             try:
-                data = json.loads(self.scb_slip_raw) or {}
+                data = json.loads(line.raw) or {}
                 refs += [str(data.get('bill_ref') or ''), str(data.get('reference') or '')]
             except (ValueError, TypeError):
                 pass
@@ -330,7 +347,11 @@ class AccountPayment(models.Model):
             u"  '27/07/2026' | '27 ก.ค. 2569' | '27 ก.ค. 69' | '27 ก.ค. 2026' |\n"
             u"  '25-ก.ค.-2569' | '25 Jul 26' | '13 Jun 26 11:45 AM' | "
             u"'24 ก.ค. 2569 08:44:43'\n"
-            u"  - ตัดเวลาทิ้งเสมอ ('11:45 AM', '13.23 น.', ':44')\n"
+            u"  - ตัดเวลาทิ้งเสมอจากช่อง date ('11:45 AM', '13.23 น.', ':44')\n"
+            u"    **แต่ให้ตอบเวลาแยกไว้ในช่อง time ด้วย** รูปแบบ 24 ชั่วโมง 'HH:MM'\n"
+            u"    (เวลาของวันที่ที่เลือกตามข้อ ก-ง เช่น '4 ส.ค. 69 08:45 น.' -> '08:45',\n"
+            u"     '13:15 น.' -> '13:15', '11:45 AM' -> '11:45', '1:05 PM' -> '13:05')\n"
+            u"    ถ้าไม่มีเวลาในสลิป ให้ตอบค่าว่าง\n"
             u"  - เดือนอังกฤษ (Jan..Dec) หรือไทย (ม.ค...ธ.ค. / มกราคม..ธันวาคม) -> 01-12\n"
             u"  - ปี 2 หลัก: ลอง 2000+YY ก่อน ถ้าเป็นอนาคตให้ตีเป็น พ.ศ. = (2500+YY)-543\n"
             u"    เช่น '69' -> 2569 พ.ศ. -> 2026 ค.ศ.  |  '26' -> 2026 ค.ศ.\n"
@@ -403,6 +424,7 @@ class AccountPayment(models.Model):
             u'  "found": true,\n'
             u'  "date": "DD/MM/YYYY",\n'
             u'  "date_candidates": ["DD/MM/YYYY"],\n'
+            u'  "time": "HH:MM",\n'
             u'  "amount": 21550.00,\n'
             u'  "amount_candidates": [21550.00],\n'
             u'  "sender_name": "ชื่อผู้โอน (ไทย / อังกฤษ)",\n'
@@ -423,60 +445,98 @@ class AccountPayment(models.Model):
         )
         return prompt
 
-    def _scb_slip_parts(self):
-        u"""แปลงไฟล์แนบเป็น parts ของ Gemini (ใช้ทั้งรอบแรกและรอบสอง)"""
+    @staticmethod
+    def _scb_attachment_part(attachment):
+        u"""แปลงไฟล์แนบ 1 ไฟล์เป็น inline_data ของ Gemini"""
+        data = attachment.datas
+        return {"inline_data": {
+            "mime_type": attachment.mimetype or 'image/jpeg',
+            "data": data.decode('utf-8') if isinstance(data, bytes) else data,
+        }}
+
+    def _scb_slip_parts(self, attachments=None):
+        u"""แปลงไฟล์แนบเป็น parts ของ Gemini (ใช้ตอนตรวจซ้ำรอบสอง)"""
         self.ensure_one()
         parts = []
-        for idx, att in enumerate(self._scb_get_slip_attachments(), 1):
-            data = att.datas
+        for idx, att in enumerate(attachments or self._scb_get_slip_attachments(), 1):
             parts.append({"text": u"[ไฟล์ที่ %d] ชื่อไฟล์: %s" % (idx, att.name or '-')})
-            parts.append({"inline_data": {
-                "mime_type": att.mimetype or 'image/jpeg',
-                "data": data.decode('utf-8') if isinstance(data, bytes) else data,
-            }})
+            parts.append(self._scb_attachment_part(att))
         return parts
 
-    def _scb_read_slip(self):
-        u"""ให้ AI อ่านสลิปที่แนบไว้ แล้วบันทึกค่าลงฟิลด์ scb_slip_* — คืน dict ผลลัพธ์"""
+    def _scb_read_one_slip(self, attachment):
+        u"""ให้ AI อ่านสลิป "1 ไฟล์" -> คืน dict ค่าที่จะเขียนลง npd.scb.payment.slip
+
+        อ่านทีละไฟล์เสมอ เพราะลูกค้ามักโอนไม่ครบในครั้งเดียว แล้วพนักงานแนบหลายสลิป
+        ถ้าส่งรวมกันไปทีเดียว AI จะตอบค่าชุดเดียวและปนกันจนใช้ไม่ได้
+        """
         self.ensure_one()
-        attachments = self._scb_get_slip_attachments()
-        if not attachments:
-            # ยังไม่แนบสลิป = ยังตรวจไม่ได้ (ไม่ใช่ "ไม่สำเร็จ") ระบบจะกลับมาตรวจให้ใหม่
-            # และไม่เสียโควตา AI เพราะยังไม่ได้ยิงไปเลย
-            return {'error': _(
-                u"ยังไม่ได้แนบสลิปการโอนเงินในเอกสารแนบ — กรุณาแนบไฟล์สลิป "
-                u"(รูปภาพหรือ PDF) ที่หน้ารับชำระ แล้วระบบจะตรวจสอบให้อัตโนมัติ"),
-                'retry': True, 'no_slip': True}
-
-        parts = self._scb_slip_parts()
-        parts.append({"text": self._scb_slip_prompt()})
-
+        parts = [
+            {"text": u"ชื่อไฟล์: %s" % (attachment.name or '-')},
+            self._scb_attachment_part(attachment),
+            {"text": self._scb_slip_prompt()},
+        ]
         result = self._scb_gemini_call(parts, max_tokens=2048)
         if not result:
-            return {'error': _(u"AI อ่านสลิปไม่สำเร็จ (ไม่ได้ข้อมูลกลับมา)")}
+            return {'state': 'unreadable',
+                    'reason': _(u"AI อ่านสลิปไม่สำเร็จ (ไม่ได้ข้อมูลกลับมา)")}
         if result.get('is_transfer_slip') is False:
-            return {'error': _(u"ไฟล์ที่แนบไม่ใช่สลิป/หลักฐานการโอนเงิน")}
+            return {'state': 'unreadable', 'raw': json.dumps(result, ensure_ascii=False),
+                    'reason': _(u"ไฟล์นี้ไม่ใช่สลิป/หลักฐานการโอนเงิน")}
 
         date_str = (result.get('date') or '').strip()
         # ใช้ตัวแปลงวันที่ชุดเดียวกับปุ่ม "ใช้วันที่จากสลิป" (รองรับ พ.ศ./เดือนไทย)
         slip_date = self._parse_slip_date(date_str) if date_str else None
-
         amounts = []
         for val in [result.get('amount')] + list(result.get('amount_candidates') or []):
             amt = self._scb_to_float(val)
             if amt > 0 and amt not in amounts:
                 amounts.append(amt)
+        return {
+            'state': 'to_check',
+            'slip_date': slip_date or False,
+            'slip_time': (result.get('time') or '').strip() or False,
+            'slip_amount': amounts[0] if amounts else 0.0,
+            'slip_sender': (result.get('sender_name') or '').strip() or False,
+            'slip_sender_acc': (result.get('sender_account') or '').strip() or False,
+            'slip_ref': (result.get('reference') or '').strip() or False,
+            'raw': json.dumps(result, ensure_ascii=False, indent=2),
+            'reason': False,
+        }
 
-        self.sudo().write({
-            'scb_slip_read': True,
-            'scb_slip_date': slip_date or False,
-            'scb_slip_amount': amounts[0] if amounts else 0.0,
-            'scb_slip_sender': (result.get('sender_name') or '').strip() or False,
-            'scb_slip_sender_acc': (result.get('sender_account') or '').strip() or False,
-            'scb_slip_ref': (result.get('reference') or '').strip() or False,
-            'scb_slip_raw': json.dumps(result, ensure_ascii=False, indent=2),
-        })
-        return {'ok': True, 'date': slip_date, 'amounts': amounts, 'raw': result}
+    def _scb_sync_slip_lines(self, force_reread=False):
+        u"""สร้าง/อัปเดตบรรทัดผลตรวจให้ครบทุกไฟล์แนบ แล้วคืน recordset ของบรรทัด
+
+        - ไฟล์ที่เคยอ่านแล้วจะไม่เรียก AI ซ้ำ (เว้นแต่สั่ง force_reread)
+        - ไฟล์แนบที่ถูกลบไป บรรทัดของมันจะถูกลบตาม
+        """
+        self.ensure_one()
+        Slip = self.env['npd.scb.payment.slip'].sudo()
+        attachments = self._scb_get_slip_attachments()
+        lines = Slip.search([('payment_id', '=', self.id)])
+
+        stale = lines.filtered(lambda l: l.attachment_id not in attachments)
+        if stale:
+            stale.unlink()
+            lines -= stale
+
+        by_attachment = {l.attachment_id.id: l for l in lines}
+        for attachment in attachments:
+            line = by_attachment.get(attachment.id)
+            if line and not force_reread:
+                continue
+            try:
+                vals = self._scb_read_one_slip(attachment)
+            except UserError as e:
+                vals = {'state': 'unreadable',
+                        'reason': _(u"อ่านสลิปไม่สำเร็จ: %s") % e}
+            vals.setdefault('statement_id', False)
+            if line:
+                line.write(vals)
+            else:
+                vals.update(payment_id=self.id, attachment_id=attachment.id)
+                by_attachment[attachment.id] = Slip.create(vals)
+
+        return Slip.search([('payment_id', '=', self.id)])
 
     def _scb_ai_same_company(self, slip_name, bank_names, slip_account=None):
         u"""ถามความเห็น AI ว่า "ชื่อในสลิป" กับ "ชื่อในรายการธนาคาร" เป็นเจ้าเดียวกันไหม
@@ -528,7 +588,7 @@ class AccountPayment(models.Model):
             return idx
         return None
 
-    def _scb_second_opinion(self, dates, amounts, sources):
+    def _scb_second_opinion(self, line, dates, amounts, sources):
         u"""รอบสอง — ให้ AI ดู "รูปสลิป" คู่กับ "รายการเงินเข้าจริงในบัญชี" แล้วชี้เอง
 
         ใช้เมื่อรอบแรกจับคู่ไม่ได้ ซึ่งสาเหตุที่เจอบ่อยคือ
@@ -567,7 +627,7 @@ class AccountPayment(models.Model):
                 r.description or u'(ธนาคารไม่ระบุรายละเอียด)')
             for i, r in enumerate(rows, 1))
 
-        parts = self._scb_slip_parts()
+        parts = self._scb_slip_parts(line.attachment_id)
         parts.append({"text": (
             u"งานนี้คือ **ตรวจทานรอบสอง** ระบบอ่านสลิปรอบแรกแล้วจับคู่กับบัญชีไม่ได้\n"
             u"สาเหตุที่พบบ่อยคือ อ่าน 'วันที่' ผิด หรือ 'ชื่อผู้โอน' เป็นคนละภาษากับ"
@@ -644,25 +704,9 @@ class AccountPayment(models.Model):
         now = fields.Datetime.now()
 
         def finish(state, reason, statement=None):
-            # เงินเข้าธนาคาร 1 รายการ ต้องผูกกับใบรับชำระได้ใบเดียวเท่านั้น
-            # ถ้ามีใบอื่นจับคู่รายการนี้ไปแล้ว แปลว่าน่าจะบันทึกรับชำระซ้ำ
-            if state == 'success' and statement:
-                twin = self.sudo().search([
-                    ('id', '!=', self.id),
-                    ('scb_statement_id', '=', statement.id),
-                    ('scb_verify_state', '=', 'success'),
-                ], limit=1)
-                if twin:
-                    state = 'failed'
-                    statement = None
-                    reason = _(
-                        u"รายการเงินเข้าของธนาคารรายการนี้ ถูกจับคู่กับใบรับชำระ "
-                        u"%s ไปแล้ว\n"
-                        u"เงินเข้า 1 รายการผูกได้กับใบรับชำระเดียวเท่านั้น — "
-                        u"กรุณาตรวจสอบว่าบันทึกรับชำระซ้ำหรือไม่"
-                    ) % (twin.display_name or twin.name or twin.id)
             vals = {
                 'scb_verify_state': state,
+                'scb_verify_summary': self._scb_public_summary(state),
                 'scb_verify_reason': reason,
                 'scb_verify_datetime': now,
                 'scb_statement_id': statement.id if statement else False,
@@ -699,52 +743,177 @@ class AccountPayment(models.Model):
                 u"ยังไม่ได้เลือกธนาคารที่จะตรวจสอบ — ตั้งค่าที่เมนู "
                 u"ตรวจสอบการโอนเงิน > ตั้งค่า"))
 
-        # ---- 1) อ่านสลิปด้วย AI (ใช้ค่าที่เคยอ่านไว้ ถ้ามี เพื่อไม่เปลืองโควตา) ----
-        if force_reread or not self.scb_slip_read:
-            try:
-                read = self._scb_read_slip()
-            except UserError as e:
-                return finish('waiting', _(u"อ่านสลิปไม่สำเร็จ: %s") % e)
-            if read.get('error'):
-                if read.get('no_slip'):
-                    return finish('no_slip', read['error'])
-                # retry=True -> ยังตรวจไม่ได้ ให้กลับมาตรวจใหม่ได้ (ไม่ใช่ "ไม่สำเร็จ")
-                return finish('waiting' if read.get('retry') else 'failed', read['error'])
+        # ---- 1) อ่านสลิป "ทีละไฟล์" (ลูกค้าอาจโอนหลายครั้ง แนบหลายสลิป) ----
+        try:
+            lines = self._scb_sync_slip_lines(force_reread)
+        except UserError as e:
+            return finish('waiting', _(u"อ่านสลิปไม่สำเร็จ: %s") % e)
+        if not lines:
+            return finish('no_slip', _(
+                u"ยังไม่ได้แนบสลิปการโอนเงินในเอกสารแนบ — กรุณาแนบไฟล์สลิป "
+                u"(รูปภาพหรือ PDF) ที่หน้ารับชำระ แล้วระบบจะตรวจสอบให้อัตโนมัติ"))
 
-        # ---- 1.5) สลิปจ่ายบิล (มีเลขอ้างอิงอย่าง REF001) -> ข้ามการตรวจ ----
-        # ธนาคารบันทึกรายการพวกนี้ว่า "รับชำระค่าสินค้าและบริการ" โดยไม่ระบุชื่อผู้โอน
-        # จึงไม่มีชื่อให้เทียบตั้งแต่แรก
-        slip_keyword, slip_ref_value = self._scb_slip_skip_reason()
-        if slip_keyword:
-            return finish('skipped', _(
-                u"ไม่ต้องตรวจสอบการโอน — สลิปนี้เป็นการ \"จ่ายบิล\" "
-                u"(พบคำว่า \"%s\" ในเลขอ้างอิง: %s)\n"
-                u"ธนาคารบันทึกรายการจ่ายบิลว่า \"รับชำระค่าสินค้าและบริการ\" "
-                u"โดยไม่ระบุชื่อผู้โอน จึงเทียบชื่อกับสลิปไม่ได้"
-            ) % (slip_keyword, slip_ref_value))
+        # ---- 2) ตรวจทีละสลิป แล้วค่อยสรุปรวม ----
+        bank_labels = dict(Statement._fields['source'].selection)
+        claimed = set()          # รายการธนาคารที่สลิปใบก่อนหน้าจับจองไปแล้ว
+        for line in lines:
+            self._scb_match_slip_line(line, sources, claimed)
+            if line.statement_id:
+                claimed.add(line.statement_id.id)
 
-        slip_sender = self.scb_slip_sender or ''
+        self._scb_update_slip_summary(lines)
+        active = lines.filtered(lambda l: l.state != 'skipped')
+        header = _(u"ตรวจสลิป %s ไฟล์ (เทียบกับ statement ของ %s ตามสมุดรายวัน \"%s\")") % (
+            len(lines), u'/'.join(bank_labels.get(s, s) for s in sources),
+            self.journal_id.name or '-')
+        detail = u'\n\n'.join(
+            u"[%s] %s — %s\n%s" % (
+                dict(line._fields['state'].selection).get(line.state, line.state),
+                line.attachment_name or '-',
+                '{:,.2f}'.format(line.slip_amount or 0.0),
+                line.reason or '-')
+            for line in lines)
+
+        if not active:
+            return finish('skipped', header + u'\n\n' + detail)
+
+        matched = active.filtered(lambda l: l.state == 'matched')
+        if len(matched) == len(active):
+            over, shared = self._scb_check_shared_statements(matched)
+            if over:
+                return finish('failed', u"%s\n\n%s\n\n%s" % (header, over, detail))
+            total = sum(matched.mapped('slip_amount'))
+            summary = _(u"จับคู่ครบทุกสลิป (%s ไฟล์) รวมเป็นเงิน %s") % (
+                len(matched), '{:,.2f}'.format(total))
+            if shared:
+                summary += u"\n" + shared
+            statement = matched[0].statement_id if len(matched) == 1 else None
+            return finish('success', u"%s\n%s\n\n%s" % (header, summary, detail),
+                          statement)
+
+        # ยังมีสลิปที่รอข้อมูลธนาคาร และไม่มีใบไหนที่ "ไม่พบ" -> รอต่อ
+        waiting = active.filtered(lambda l: l.state == 'waiting')
+        if waiting and not active.filtered(lambda l: l.state in ('not_found', 'unreadable')):
+            return finish('waiting', header + u'\n\n' + detail)
+
+        pending = len(active) - len(matched)
+        return finish('failed', _(
+            u"%s\n\nจับคู่ได้ %s จาก %s สลิป — ยังเหลือ %s สลิปที่ยังไม่พบรายการ\n\n%s"
+        ) % (header, len(matched), len(active), pending, detail))
+
+    def _scb_bank_portion(self):
+        u"""ยอดที่ "เข้าบัญชีธนาคารจริง" ของใบรับชำระนี้
+
+        ยอดในใบรับชำระอาจรวมภาษีหัก ณ ที่จ่ายไว้ด้วย (Payment Multi) เช่น
+        ใบ 7,259.74 = เงินโอน 6,920.50 + ภาษีหัก ณ ที่จ่าย 339.24
+        การเทียบกับเงินเข้าธนาคารต้องใช้เฉพาะบรรทัดที่เป็นเงินโอน/เงินสด
+        """
+        self.ensure_one()
+        if getattr(self, 'is_payment_multi', False) and getattr(self, 'paid_ids', False):
+            bank_lines = self.paid_ids.filtered(
+                lambda l: l.payment_method_id.type in ('bank', 'cash'))
+            if bank_lines:
+                return sum(bank_lines.mapped('total'))
+        return abs(self.amount)
+
+    def _scb_check_shared_statements(self, lines):
+        u"""ตรวจว่าเงินเข้าก้อนเดียวถูกตัดไปเกินตัวหรือไม่
+
+        ลูกค้ามัก "โอนรวมมาก้อนเดียว" แล้วเอาไปตัดหลายใบรับชำระ เช่น
+        เงินเข้า 124.47 = ใบ 51.85 + ใบ 72.62 — กรณีนี้ถูกต้อง ไม่ใช่บันทึกซ้ำ
+        เกณฑ์ที่ใช้จึงไม่ใช่ "ห้ามใช้ซ้ำ" แต่เป็น
+            ผลรวมยอดโอนของทุกใบที่ตัดเงินก้อนนี้  <=  เงินที่เข้าจริง
+
+        คืน (ข้อความเตือนถ้าเกิน, ข้อความหมายเหตุถ้าใช้ร่วมกันแบบถูกต้อง)
+        """
+        self.ensure_one()
+        Slip = self.env['npd.scb.payment.slip'].sudo()
+        tol = max(self._scb_param('verify_amount_tolerance'), 0.01)
+        mine = self._scb_bank_portion()
+        over_messages, shared_messages = [], []
+
+        for statement in lines.mapped('statement_id'):
+            others = Slip.search([
+                ('statement_id', '=', statement.id),
+                ('state', '=', 'matched'),
+                ('payment_id', '!=', self.id),
+            ]).mapped('payment_id').filtered(
+                lambda p: p.scb_verify_state == 'success')
+            if not others:
+                continue
+            allocated = mine + sum(p._scb_bank_portion() for p in others)
+            names = u', '.join(p.display_name or str(p.id) for p in others)
+            if allocated > statement.deposit + tol:
+                over_messages.append(_(
+                    u"เงินเข้า %s (%s) ถูกตัดไปแล้วโดย %s รวมกับใบนี้เป็น %s "
+                    u"ซึ่ง **เกิน** ยอดที่เข้าจริง — กรุณาตรวจสอบว่าบันทึกรับชำระซ้ำหรือไม่"
+                ) % ('{:,.2f}'.format(statement.deposit), statement.date, names,
+                     '{:,.2f}'.format(allocated)))
+            else:
+                shared_messages.append(_(
+                    u"ลูกค้าโอนรวมมาก้อนเดียว %s แล้วตัดหลายใบ — ใบนี้ %s "
+                    u"ร่วมกับ %s (รวม %s)"
+                ) % ('{:,.2f}'.format(statement.deposit), '{:,.2f}'.format(mine),
+                     names, '{:,.2f}'.format(allocated)))
+
+        return u'\n'.join(over_messages), u'\n'.join(shared_messages)
+
+    def _scb_match_slip_line(self, line, sources, claimed):
+        u"""จับคู่ "สลิป 1 ใบ" กับรายการเดินบัญชี แล้วเขียนผลลงบรรทัดนั้น
+
+        :param claimed: set ของ statement id ที่สลิปใบอื่นในใบรับชำระเดียวกัน
+                        จับจองไปแล้ว — กันไม่ให้สลิป 2 ใบชี้รายการเงินเข้าอันเดียวกัน
+        """
+        self.ensure_one()
+        Statement = self.env['npd.scb.bank.statement'].sudo()
+
+        Alias = self.env['npd.scb.counterparty.alias'].sudo()
+
+        def done(state, reason, statement=None):
+            line.sudo().write({
+                'state': state,
+                'reason': reason,
+                'statement_id': statement.id if statement else False,
+            })
+            # จับคู่ได้แล้ว -> จำไว้ว่าชื่อผู้โอนที่ธนาคารบันทึก = ลูกค้ารายนี้
+            # ครั้งหน้าที่ลูกค้าคนเดิมโอนมาจะเทียบได้ทันที ไม่ต้องพึ่ง AI อีก
+            if state == 'matched' and statement:
+                Alias.remember(self.partner_id, statement, payment=self)
+            return state
+
+        if line.state == 'unreadable':
+            return done('unreadable', line.reason or _(u"อ่านสลิปไม่ได้"))
+
+        # สลิปจ่ายบิล (เลขอ้างอิงอย่าง REF001) -> ไม่ต้องตรวจ
+        # ธนาคารบันทึกว่า "รับชำระค่าสินค้าและบริการ" โดยไม่ระบุชื่อผู้โอน
+        keyword, ref_value = self._scb_slip_skip_reason(line)
+        if keyword:
+            return done('skipped', _(
+                u"สลิปนี้เป็นการ \"จ่ายบิล\" (พบคำว่า \"%s\" ในเลขอ้างอิง: %s) — "
+                u"ธนาคารไม่ระบุชื่อผู้โอน จึงเทียบไม่ได้"
+            ) % (keyword, ref_value))
+
         raw = {}
-        if self.scb_slip_raw:
+        if line.raw:
             try:
-                raw = json.loads(self.scb_slip_raw) or {}
+                raw = json.loads(line.raw) or {}
             except (ValueError, TypeError):
                 raw = {}
 
         amounts = []
-        if self.scb_slip_amount:
-            amounts.append(round(self.scb_slip_amount, 2))
+        if line.slip_amount:
+            amounts.append(round(line.slip_amount, 2))
         # ยอดสำรองจากสลิป (เช่น ยอดก่อน/หลังค่าธรรมเนียม) ที่ AI อ่านไว้
         for val in (raw.get('amount_candidates') or []):
             amt = self._scb_to_float(val)
             if amt > 0 and amt not in amounts:
                 amounts.append(amt)
 
-        # วันที่สำรองจากสลิป — สลิปโอนข้ามธนาคาร (IPP/SMART) มัก "วันที่หักบัญชี"
+        # วันที่สำรอง — สลิปโอนข้ามธนาคาร (IPP/SMART) มัก "วันที่หักบัญชี"
         # กับ "วันที่เงินเข้าบัญชี" คนละวัน จึงลองจับคู่ทุกวันที่ที่ AI อ่านได้
         dates = []
-        if self.scb_slip_date:
-            dates.append(self.scb_slip_date)
+        if line.slip_date:
+            dates.append(line.slip_date)
         for val in (raw.get('date_candidates') or []):
             d = self._parse_slip_date(str(val)) if val else None
             if d and d not in dates:
@@ -752,105 +921,101 @@ class AccountPayment(models.Model):
 
         notes = []
         if not amounts:
-            amounts = [round(abs(self.amount), 2)]
-            notes.append(_(u"AI อ่านจำนวนเงินจากสลิปไม่ได้ — ใช้ยอดในใบรับชำระแทน"))
+            return done('not_found', _(
+                u"AI อ่านจำนวนเงินจากสลิปใบนี้ไม่ได้ — ตรวจสอบไม่ได้"))
         if not dates:
             if not self.date:
-                return finish('failed', _(
+                return done('not_found', _(
                     u"ไม่มีวันที่ให้ใช้ตรวจสอบ (ทั้งในสลิปและในใบรับชำระ)"))
             dates = [self.date]
             notes.append(_(u"AI อ่านวันที่จากสลิปไม่ได้ — ใช้วันที่ในใบรับชำระแทน"))
-        elif self.date and dates[0] != self.date:
-            notes.append(_(u"วันที่ในสลิป (%s) ไม่ตรงกับวันที่ในใบรับชำระ (%s)")
-                         % (dates[0], self.date))
         if len(dates) > 1:
-            notes.append(_(u"สลิปมีหลายวันที่ (%s) — ระบบลองจับคู่ให้ทุกวัน")
+            notes.append(_(u"สลิปมีหลายวันที่ (%s) — ลองจับคู่ให้ทุกวัน")
                          % u', '.join(str(d) for d in dates))
-        slip_date = dates[0]
 
-        # ---- 2) ยังไม่ถึงเวลาตรวจ (ข้อมูลธนาคารมาช้ากว่าจริง 1 วัน) ----
-        # ใช้วันที่ล่าสุดในบรรดาวันที่ที่เป็นไปได้ เพื่อรอให้ข้อมูลของวันนั้นเข้ามาครบ
+        # ยังไม่ถึงเวลาตรวจ (ข้อมูลธนาคารมาช้ากว่าจริง)
         lag = self._scb_param('verify_lag_days')
-        today = fields.Date.context_today(self)
         ready_date = max(dates) + timedelta(days=lag)
-        if today < ready_date:
-            return finish('waiting', _(
+        if fields.Date.context_today(self) < ready_date:
+            return done('waiting', _(
                 u"ข้อมูลการโอนของธนาคารมาช้ากว่าจริง %s วัน — "
                 u"รายการวันที่ %s จะตรวจสอบได้ตั้งแต่วันที่ %s"
             ) % (lag, max(dates), ready_date))
 
-        # ---- 3) จับคู่กับรายการเดินบัญชีจริง (ลองทุกวันที่ที่เป็นไปได้) ----
-        bank_labels = dict(Statement._fields['source'].selection)
-        notes.append(_(u"เทียบกับ statement ของ %s (ตามสมุดรายวัน \"%s\")")
-                     % (u'/'.join(bank_labels.get(s, s) for s in sources),
-                        self.journal_id.name or '-'))
-        names = [n for n in [slip_sender, self.partner_id.name] if n]
+        slip_sender = line.slip_sender or ''
+        # ชื่อที่ยอมรับได้ = ชื่อในสลิป + ชื่อลูกค้าใน Odoo + ชื่อที่ระบบเคยจำไว้
+        # ตัวสุดท้ายคือทางออกของชื่อที่ธนาคารถอดเสียงแบบไม่เป็นมาตรฐาน
+        known = Alias.names_for_partner(self.partner_id)
+        if known:
+            notes.append(_(u"ใช้ชื่อที่ระบบจำไว้ประกอบ %s รายการ") % len(known))
         match_kwargs = {
             'amount': amounts,
-            'names': names,
+            'names': [n for n in [slip_sender, self.partner_id.name] + known if n],
             'sources': sources,
             'amount_tol': self._scb_param('verify_amount_tolerance'),
             'day_tol': self._scb_param('verify_date_tolerance'),
             'name_threshold': self._scb_param('verify_name_threshold'),
-            'account_hint': self.scb_slip_sender_acc,
+            'account_hint': line.slip_sender_acc,
+            'time_hint': line.slip_time,
+            'time_tol': self._scb_param('verify_time_tolerance_min'),
         }
         amount_label = u' / '.join('{:,.2f}'.format(a) for a in amounts)
 
-        match = None
+        def usable(records):
+            u"""ตัดรายการที่สลิปใบอื่นในใบรับชำระเดียวกันจับจองไปแล้วออก"""
+            return records.filtered(lambda r: r.id not in claimed)
+
+        match, slip_date = None, dates[0]
         for d in dates:
             result = Statement.find_incoming_match(date=d, **match_kwargs)
-            if result['matched']:
+            if result['matched'] and result['statement'].id not in claimed:
                 if d != dates[0]:
                     notes.append(_(u"จับคู่ได้ด้วยวันที่สำรองจากสลิป (%s)") % d)
-                return finish('success', self._scb_success_reason(
+                return done('matched', self._scb_success_reason(
                     result['statement'], amount_label, d, slip_sender, notes),
                     result['statement'])
-            # เก็บผลที่ "มีข้อมูลให้ดูมากที่สุด" ไว้ใช้อธิบายเหตุผลตอนไม่ผ่าน
-            if match is None or (result['amount_date_candidates']
-                                 and not match['amount_date_candidates']):
+            if match is None or (usable(result['amount_date_candidates'])
+                                 and not usable(match['amount_date_candidates'])):
                 match, slip_date = result, d
 
-        candidates = match['amount_date_candidates']
+        candidates = usable(match['amount_date_candidates'])
 
-        # ---- 3.5) รอบสอง: ให้ AI ดูสลิปเทียบกับรายการในบัญชีโดยตรง ----
-        # แก้ปัญหาที่เจอบ่อย: อ่านวันที่ผิด / ชื่อคนละภาษา — ถ้ารอบแรกไม่ผ่าน
-        # ให้ AI กลับไปอ่านสลิปใหม่พร้อมเห็นรายการจริงประกอบ
+        # รอบสอง: ให้ AI ดูสลิปใบนี้เทียบกับรายการในบัญชีโดยตรง
         if self._scb_param('verify_second_pass'):
-            second = self._scb_second_opinion(dates, amounts, sources)
-            if second and second.get('statement'):
-                rec = second['statement']
+            second = self._scb_second_opinion(line, dates, amounts, sources)
+            rec = (second or {}).get('statement')
+            if rec is not None and rec and rec.id not in claimed:
                 ai = second.get('ai') or {}
-                self._scb_apply_second_pass(ai)
+                self._scb_apply_second_pass(line, ai)
                 notes.append(_(
-                    u"รอบแรกจับคู่ไม่ได้ — ยืนยันโดย AI รอบสอง (อ่านสลิปซ้ำพร้อมเทียบ"
-                    u"รายการจริงในบัญชี): %s") % (ai.get('reason') or '-'))
-                return finish('success', self._scb_success_reason(
+                    u"รอบแรกจับคู่ไม่ได้ — ยืนยันโดย AI รอบสอง: %s")
+                    % (ai.get('reason') or '-'))
+                return done('matched', self._scb_success_reason(
                     rec, '{:,.2f}'.format(rec.deposit), rec.date,
-                    self.scb_slip_sender or slip_sender, notes), rec)
+                    line.slip_sender or slip_sender, notes), rec)
             if second and (second.get('ai') or {}).get('reason'):
                 notes.append(_(u"ตรวจซ้ำรอบสองแล้วยังไม่พบรายการที่ตรง: %s")
                              % second['ai']['reason'])
 
-        # ไม่พบรายการที่ตรงยอด+วันที่
         if not candidates:
             if not match['has_data_for_date']:
-                return finish('waiting', _(
+                return done('waiting', _(
                     u"ยังไม่มีข้อมูลเดินบัญชีของวันที่ %s ในระบบ "
                     u"(ธนาคารส่งข้อมูลช้ากว่าจริง) — ระบบจะตรวจให้อัตโนมัติอีกครั้ง"
                 ) % slip_date + self._scb_notes_text(notes))
             reason = _(
-                u"ไม่พบรายการเงินเข้าที่ตรงกับสลิป\n"
+                u"ไม่พบรายการเงินเข้าที่ตรงกับสลิปใบนี้\n"
                 u"• จำนวนเงินจากสลิป: %s\n"
                 u"• วันที่: %s\n"
                 u"• ผู้โอน: %s"
             ) % (amount_label, slip_date, slip_sender or '-')
-            other = match['amount_candidates']
+            other = usable(match['amount_candidates'])
             if other:
                 reason += _(u"\n\nพบรายการที่ยอดตรงกันแต่คนละวัน: %s") % u', '.join(
                     u'%s (%s)' % (r.date, r.description or '-') for r in other[:5])
             else:
                 reason += _(u"\n\nไม่พบรายการเงินเข้ายอดนี้ในบัญชีเลย")
-            return finish('failed', reason + self._scb_notes_text(notes))
+            return done('not_found', reason + self._scb_notes_text(notes))
 
         # พบรายการที่ตรงยอด+วันที่ แต่ชื่อไม่ผ่าน -> ให้ AI ช่วยเทียบข้ามภาษาอีกที
         named = candidates.filtered(lambda r: r.counterparty)
@@ -858,11 +1023,11 @@ class AccountPayment(models.Model):
             # ส่ง description เต็ม (มีรหัสธนาคาร + เลขบัญชีย่อ) ให้ AI ใช้ประกอบ
             bank_names = [r.description or r.counterparty for r in named]
             idx = self._scb_ai_same_company(
-                slip_sender, bank_names, slip_account=self.scb_slip_sender_acc)
+                slip_sender, bank_names, slip_account=line.slip_sender_acc)
             if idx is not None:
                 rec = named[idx]
                 notes.append(_(u"ชื่อผู้โอนยืนยันโดย AI (เทียบข้ามภาษา/ชื่อถูกตัดท้าย)"))
-                return finish('success', self._scb_success_reason(
+                return done('matched', self._scb_success_reason(
                     rec, amount_label, slip_date, slip_sender, notes), rec)
 
         # ธนาคารไม่ระบุชื่อผู้โอน (เช่น จ่ายผ่านบิลเพย์เมนต์/CrossBank)
@@ -872,10 +1037,10 @@ class AccountPayment(models.Model):
                 notes.append(_(
                     u"ธนาคารไม่ได้ระบุชื่อผู้โอนในรายการนี้ (เช่น ชำระผ่านบิลเพย์เมนต์) — "
                     u"ยืนยันด้วยจำนวนเงินและวันที่"))
-                return finish('success', self._scb_success_reason(
+                return done('matched', self._scb_success_reason(
                     candidates[0], amount_label, slip_date, slip_sender, notes),
                     candidates[0])
-            return finish('failed', _(
+            return done('not_found', _(
                 u"พบรายการเงินเข้า %s รายการที่ยอด %s วันที่ %s ตรงกัน "
                 u"แต่ชื่อผู้โอนไม่ตรง/ธนาคารไม่ได้ระบุชื่อ จึงชี้ชัดไม่ได้ว่าเป็นรายการใด "
                 u"— กรุณาตรวจสอบด้วยตนเอง\n"
@@ -887,7 +1052,7 @@ class AccountPayment(models.Model):
 
         bank_names_txt = u', '.join(
             u'"%s"' % (r.counterparty or r.description or '-') for r in candidates[:5])
-        return finish('failed', _(
+        return done('not_found', _(
             u"ชื่อผู้โอนไม่ตรงกับรายการของธนาคาร\n"
             u"• ชื่อในสลิป: %s\n"
             u"• ชื่อในรายการธนาคาร: %s\n"
@@ -897,26 +1062,64 @@ class AccountPayment(models.Model):
              match['score'], self._scb_param('verify_name_threshold'))
             + self._scb_notes_text(notes))
 
-    def _scb_apply_second_pass(self, ai):
-        u"""เขียนค่าที่ AI อ่านใหม่ในรอบสองทับของเดิม
+    def _scb_update_slip_summary(self, lines):
+        u"""สรุปค่าจากทุกสลิปมาไว้ที่หัวใบรับชำระ (ใช้แสดงในตาราง/ค้นหา)
+
+        จำนวนเงิน = ผลรวมทุกสลิป เพราะลูกค้าอาจโอนแยกหลายครั้ง
+        """
+        self.ensure_one()
+        dates = [l.slip_date for l in lines if l.slip_date]
+        senders = []
+        for line in lines:
+            name = (line.slip_sender or '').strip()
+            if name and name not in senders:
+                senders.append(name)
+        self.sudo().write({
+            'scb_slip_read': bool(lines),
+            'scb_slip_date': max(dates) if dates else False,
+            'scb_slip_amount': sum(lines.mapped('slip_amount')),
+            'scb_slip_sender': u' / '.join(senders) or False,
+            'scb_slip_sender_acc': lines[0].slip_sender_acc if lines else False,
+            'scb_slip_ref': u' / '.join(
+                l.slip_ref for l in lines if l.slip_ref) or False,
+        })
+
+    def _scb_apply_second_pass(self, line, ai):
+        u"""เขียนค่าที่ AI อ่านใหม่ในรอบสองทับของเดิม (ระดับสลิป)
 
         รอบสองได้เห็นรายการจริงในบัญชีประกอบ ค่าที่อ่านได้จึงน่าเชื่อถือกว่ารอบแรก
         (โดยเฉพาะ "วันที่" ที่รอบแรกมักอ่านผิดจากสลิปที่มีหลายวันที่)
         """
-        self.ensure_one()
         vals = {}
         raw_date = (ai.get('slip_date') or '').strip() if ai.get('slip_date') else ''
         parsed = self._parse_slip_date(raw_date) if raw_date else None
-        if parsed and parsed != self.scb_slip_date:
-            vals['scb_slip_date'] = parsed
+        if parsed and parsed != line.slip_date:
+            vals['slip_date'] = parsed
         amount = self._scb_to_float(ai.get('slip_amount'))
-        if amount > 0 and round(amount, 2) != round(self.scb_slip_amount or 0.0, 2):
-            vals['scb_slip_amount'] = round(amount, 2)
+        if amount > 0 and round(amount, 2) != round(line.slip_amount or 0.0, 2):
+            vals['slip_amount'] = round(amount, 2)
         sender = (ai.get('slip_sender_name') or '').strip()
-        if sender and sender != (self.scb_slip_sender or ''):
-            vals['scb_slip_sender'] = sender
+        if sender and sender != (line.slip_sender or ''):
+            vals['slip_sender'] = sender
         if vals:
-            self.sudo().write(vals)
+            line.sudo().write(vals)
+
+    @api.model
+    def _scb_public_summary(self, state):
+        u"""ข้อความสั้นที่พนักงานทั่วไปเห็น — บอกว่าต้องทำอะไรต่อ แต่ไม่บอกเกณฑ์
+
+        เจตนา: ไม่เปิดเผยว่าระบบเทียบอะไรบ้าง (ชื่อ/ยอด/วันที่/เวลา/เลขบัญชี)
+        และไม่บอกคะแนน เพื่อไม่ให้เดาได้ว่าต้องทำสลิปอย่างไรจึงจะ "ผ่าน"
+        รายละเอียดเต็มดูได้เฉพาะผู้จัดการบัญชี
+        """
+        return {
+            'success': _(u"โอนสำเร็จ — ตรวจสอบกับรายการเดินบัญชีของธนาคารแล้ว"),
+            'failed': _(u"ตรวจสอบไม่ผ่าน — กรุณาแจ้งฝ่ายบัญชีตรวจสอบ"),
+            'waiting': _(u"รอข้อมูลจากธนาคาร ระบบจะตรวจให้อัตโนมัติอีกครั้ง"),
+            'no_slip': _(u"ยังไม่ได้แนบสลิปการโอนเงิน"),
+            'skipped': _(u"รายการนี้ไม่ต้องตรวจสอบการโอน"),
+            'to_check': _(u"รอตรวจสอบ"),
+        }.get(state, '')
 
     @staticmethod
     def _scb_notes_text(notes):
@@ -945,12 +1148,15 @@ class AccountPayment(models.Model):
         self.ensure_one()
         res = self._scb_verify_one(force_reread=self.env.context.get('scb_force_reread', False))
         state_label = dict(self._fields['scb_verify_state'].selection).get(res['state'])
+        # พนักงานทั่วไปเห็นเฉพาะข้อความสรุป ไม่เห็นเกณฑ์การตรวจ
+        message = res['reason'] if self.env.user.has_group(
+            'account.group_account_manager') else self._scb_public_summary(res['state'])
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': _(u"ผลตรวจสอบการโอน: %s") % state_label,
-                'message': res['reason'],
+                'message': message,
                 'type': 'success' if res['state'] == 'success' else (
                     'warning' if res['state'] == 'waiting' else 'danger'),
                 'sticky': res['state'] != 'success',
@@ -1089,12 +1295,19 @@ class AccountPayment(models.Model):
             return 0.0
 
     def action_draft(self):
-        u"""กลับเป็นร่าง = ต้องตรวจสอบการโอนใหม่"""
+        u"""กลับเป็นร่าง = ต้องตรวจสอบการโอนใหม่
+
+        ล้างผลจับคู่ของทุกสลิปด้วย เพื่อปล่อยรายการเงินเข้าที่เคยจับจองไว้
+        แต่ยังเก็บค่าที่ AI อ่านได้ไว้ จะได้ไม่ต้องเรียก AI ซ้ำตอนตรวจใหม่
+        """
         res = super(AccountPayment, self).action_draft()
         self.sudo().write({
             'scb_verify_state': 'to_check',
             'scb_verify_reason': False,
             'scb_statement_id': False,
             'scb_verify_attempts': 0,
+        })
+        self.mapped('scb_slip_ids').sudo().write({
+            'state': 'to_check', 'reason': False, 'statement_id': False,
         })
         return res
