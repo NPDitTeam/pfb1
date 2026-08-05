@@ -10,7 +10,11 @@ u"""ชื่อผู้โอนที่ธนาคารบันทึก 
 ครั้งต่อไปที่ลูกค้าคนเดิมโอนมา ระบบเทียบได้ทันทีโดยไม่ต้องเรียก AI อีก
 — ธุรกิจให้เช่าเป็นลูกค้าประจำ โอนซ้ำทุกเดือน จึงคุ้มมาก
 """
+import logging
+
 from odoo import models, fields, api
+
+_logger = logging.getLogger(__name__)
 
 
 class ScbCounterpartyAlias(models.Model):
@@ -76,22 +80,34 @@ class ScbCounterpartyAlias(models.Model):
         u"""จดจำว่า "ชื่อคู่ค้าในรายการธนาคารนี้" คือลูกค้ารายนี้
 
         เรียกทุกครั้งที่จับคู่สำเร็จ ถ้าจำไว้แล้วจะไม่สร้างซ้ำ
+
+        ครอบด้วย savepoint เพราะการจดจำเป็นแค่ของแถม ถ้าล้มเหลว (เช่นชน unique
+        constraint) ต้องไม่ทำให้ transaction ของ "การตรวจสอบการโอน" พังไปด้วย
         """
         if not partner or not statement or not statement.counterparty:
             return self.browse()
         key = self._key(statement.counterparty)
         if not key:
             return self.browse()
-        existing = self.search([
+        # active_test=False สำคัญ — ถ้ามีรายการที่ถูก archive ไว้ search ปกติจะมองไม่เห็น
+        # แล้วไปสร้างใหม่จนชน unique constraint (partner_id, name_key)
+        existing = self.with_context(active_test=False).search([
             ('partner_id', '=', partner.id), ('name_key', '=', key),
         ], limit=1)
         if existing:
             return existing
-        return self.create({
-            'partner_id': partner.id,
-            'name': statement.counterparty,
-            'source': statement.source,
-            'account_digits': statement.counterparty_acc or False,
-            'origin': 'auto',
-            'payment_id': payment.id if payment else False,
-        })
+        try:
+            with self.env.cr.savepoint():
+                return self.create({
+                    'partner_id': partner.id,
+                    'name': statement.counterparty,
+                    'source': statement.source,
+                    'account_digits': statement.counterparty_acc or False,
+                    'origin': 'auto',
+                    'payment_id': payment.id if payment else False,
+                })
+        except Exception:  # noqa: BLE001 - จดจำไม่ได้ก็ไม่เป็นไร
+            _logger.warning(
+                "SCB: จดจำชื่อผู้โอน %r ของลูกค้า %s ไม่สำเร็จ",
+                statement.counterparty, partner.display_name, exc_info=True)
+            return self.browse()

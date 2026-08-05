@@ -260,7 +260,9 @@ class AccountPayment(models.Model):
     # ------------------------------------------------------------------
     # เรียก Gemini (ตัวเดียวกับปุ่ม "ใช้วันที่จากสลิป")
     # ------------------------------------------------------------------
-    def _scb_gemini_call(self, parts, max_tokens=1024):
+    # gemini-2.5-flash นับ "thinking tokens" รวมใน maxOutputTokens ด้วย
+    # ถ้าตั้งน้อยเกินไป JSON จะถูกตัดกลางคัน (เจอจริงในรอบสอง: '{"match_no": -1, ...' ค้าง)
+    def _scb_gemini_call(self, parts, max_tokens=4096):
         u"""ยิงคำขอไป Gemini แล้วคืน dict ที่ parse จาก JSON ที่ตอบกลับมา"""
         api_key = self._get_gemini_api_key()
         payload = {
@@ -475,7 +477,7 @@ class AccountPayment(models.Model):
             self._scb_attachment_part(attachment),
             {"text": self._scb_slip_prompt()},
         ]
-        result = self._scb_gemini_call(parts, max_tokens=2048)
+        result = self._scb_gemini_call(parts, max_tokens=4096)
         if not result:
             return {'state': 'unreadable',
                     'reason': _(u"AI อ่านสลิปไม่สำเร็จ (ไม่ได้ข้อมูลกลับมา)")}
@@ -576,7 +578,7 @@ class AccountPayment(models.Model):
             u'ตอบ JSON: {"match_index": 0, "confident": true}'
         ) % (slip_name, extra, listing)
         try:
-            res = self._scb_gemini_call([{"text": prompt}], max_tokens=256)
+            res = self._scb_gemini_call([{"text": prompt}], max_tokens=1024)
         except UserError as e:
             _logger.warning("SCB verify: AI name match failed: %s", e)
             return None
@@ -666,7 +668,7 @@ class AccountPayment(models.Model):
         ) % listing})
 
         try:
-            res = self._scb_gemini_call(parts, max_tokens=1024)
+            res = self._scb_gemini_call(parts, max_tokens=4096)
         except UserError as e:
             _logger.warning("SCB verify: second opinion failed: %s", e)
             return None
@@ -1164,6 +1166,24 @@ class AccountPayment(models.Model):
             },
         }
 
+    def action_scb_show_detail(self):
+        u"""ไอคอนในตาราง "ผลตรวจสอบการโอน" -> เปิด popup ดูรายละเอียดผลตรวจ
+
+        รายละเอียดเต็ม (เกณฑ์/คะแนน) ถูกจำกัดด้วย groups ที่ตัวฟิลด์อยู่แล้ว
+        พนักงานทั่วไปจึงเห็นแค่สรุปกับผลรายสลิป ไม่เห็นว่าระบบเทียบอะไร
+        """
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _(u"ผลตรวจสอบการโอน — %s") % (self.name or ''),
+            'res_model': 'account.payment',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'views': [(self.env.ref(
+                'npd_scb_auto_payment.view_account_payment_scb_detail_form').id, 'form')],
+            'target': 'new',
+        }
+
     def action_scb_verify_selected(self):
         u"""ตรวจสอบการโอนของใบที่ติ๊กเลือกไว้ (เรียกจากเมนู Action ของตาราง)
 
@@ -1180,10 +1200,15 @@ class AccountPayment(models.Model):
                     or payment.state != 'posted'):
                 skipped += 1
                 continue
+            # ต้องครอบด้วย savepoint ไม่งั้นถ้าใบใดพังระดับฐานข้อมูล
+            # PostgreSQL จะ abort ทั้ง transaction แล้วใบที่เหลือ (รวมถึงใบที่
+            # จับคู่สำเร็จ) จะเขียนลงไม่ได้เลย — savepoint จะ rollback เฉพาะใบที่พัง
             try:
-                res = payment._scb_verify_one()
+                with self.env.cr.savepoint():
+                    res = payment._scb_verify_one()
                 tally[res['state']] = tally.get(res['state'], 0) + 1
             except Exception:  # noqa: BLE001 - ใบเดียวพังต้องไม่ล้มทั้งชุด
+                self.env.clear()   # ทิ้ง cache ที่ค้างจากใบที่ถูก rollback
                 _logger.exception("SCB verify: ตรวจใบรับชำระ id=%s ไม่สำเร็จ", payment.id)
                 errors += 1
 
@@ -1266,18 +1291,27 @@ class AccountPayment(models.Model):
                                       order='date asc, id asc', limit=limit)
         _logger.info("SCB verify: เริ่มตรวจสอบ %s ใบรับชำระ", len(payments))
         for payment in payments:
+            # savepoint กันไม่ให้ใบที่พังทำ transaction ทั้งก้อนใช้ต่อไม่ได้
             try:
-                payment._scb_verify_one()
+                with self.env.cr.savepoint():
+                    payment._scb_verify_one()
                 self.env.cr.commit()
             except Exception as e:  # noqa: BLE001 - หนึ่งใบพังต้องไม่ล้มทั้ง cron
-                self.env.cr.rollback()
+                self.env.clear()
                 _logger.exception("SCB verify: ตรวจสอบใบรับชำระ id=%s ไม่สำเร็จ", payment.id)
-                payment.sudo().write({
-                    'scb_verify_state': 'waiting',
-                    'scb_verify_reason': _(u"ตรวจสอบไม่สำเร็จ: %s") % e,
-                    'scb_verify_datetime': fields.Datetime.now(),
-                })
-                self.env.cr.commit()
+                try:
+                    with self.env.cr.savepoint():
+                        payment.sudo().write({
+                            'scb_verify_state': 'waiting',
+                            'scb_verify_summary': self._scb_public_summary('waiting'),
+                            'scb_verify_reason': _(u"ตรวจสอบไม่สำเร็จ: %s") % e,
+                            'scb_verify_datetime': fields.Datetime.now(),
+                        })
+                    self.env.cr.commit()
+                except Exception:  # noqa: BLE001
+                    self.env.cr.rollback()
+                    _logger.exception(
+                        "SCB verify: บันทึกสถานะของ id=%s ไม่สำเร็จ", payment.id)
 
     # ------------------------------------------------------------------
     # Utils
