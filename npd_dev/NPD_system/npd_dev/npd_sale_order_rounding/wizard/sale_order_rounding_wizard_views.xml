@@ -13,13 +13,17 @@
                         <field name="preview_total"/>
                     </group>
                     <group>
-                        <field name="method"/>
+                        <field name="method"
+                               attrs="{'invisible': [('step_preset', '=', 'custom')]}"/>
                         <field name="step_preset"/>
                         <field name="custom_step"
-                               attrs="{'invisible': [('step_preset', '!=', 'custom')],
-                                       'required': [('step_preset', '=', 'custom')]}"/>
+                               attrs="{'invisible': [('step_preset', '!=', 'custom')]}"/>
                     </group>
                 </group>
+                <div class="text-muted" attrs="{'invisible': [('step_preset', '!=', 'custom')]}">
+                    ใส่จำนวนเงินที่ต้องการปรับจากยอดรวม — ค่าบวก = เพิ่ม, ค่าลบ = ลด
+                    (เช่น <b>-0.01</b> คือลด 1 สตางค์)
+                </div>
                 <footer>
                     <button name="action_apply" type="object" string="ปัดเศษ" class="btn-primary"/>
                     <button string="ยกเลิก" class="btn-secondary" special="cancel"/>
