@@ -1395,6 +1395,51 @@ class AccountPayment(models.Model):
             },
         }
 
+    def action_scb_reset_verify(self):
+        u"""ล้างผลตรวจของใบที่เลือก ให้กลับไปเป็น "รอตรวจสอบ"
+
+        ใช้เมื่อผลเก่าค้างอยู่จนแก้ไม่ตก เช่น ตรวจไม่สำเร็จจนครบเพดานแล้ว cron
+        เลิกตรวจให้ หรือค่าที่ AI เคยอ่านไว้ผิดจนจับคู่ไม่ได้สักที
+
+        ลบเฉพาะ "ผลตรวจ" เท่านั้น — ใบรับชำระ ไฟล์แนบ และรายการทางบัญชี
+        ไม่ถูกแตะต้อง รอบถัดไประบบจะให้ AI อ่านสลิปใหม่แล้วตรวจให้เอง
+        """
+        Slip = self.env['npd.scb.payment.slip'].sudo()
+        lines = Slip.search([('payment_id', 'in', self.ids)])
+        line_count = len(lines)
+        lines.unlink()
+        self.sudo().write({
+            'scb_verify_state': 'to_check',
+            'scb_verify_summary': self._scb_public_summary('to_check'),
+            'scb_verify_reason': False,
+            'scb_verify_datetime': False,
+            'scb_verify_attempts': 0,
+            'scb_statement_id': False,
+            'scb_slip_read': False,
+            'scb_slip_date': False,
+            'scb_slip_amount': 0.0,
+            'scb_slip_sender': False,
+            'scb_slip_sender_acc': False,
+            'scb_slip_ref': False,
+        })
+        _logger.info(u"SCB: ล้างผลตรวจ %s ใบ (ลบผลรายสลิป %s บรรทัด) โดย %s",
+                     len(self), line_count, self.env.user.display_name)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _(u"ล้างผลตรวจเรียบร้อย"),
+                'message': _(
+                    u"ล้างผลตรวจ %s ใบ (ลบผลรายสลิป %s บรรทัด) — "
+                    u"ระบบจะตรวจให้ใหม่ในรอบถัดไป หรือกด "
+                    u"\"ตรวจสอบการโอนอีกครั้ง\" เพื่อตรวจทันที"
+                ) % (len(self), line_count),
+                'type': 'success',
+                'sticky': False,
+                'next': {'type': 'ir.actions.client', 'tag': 'reload'},
+            },
+        }
+
     def action_scb_verify_transfer_again(self):
         u"""ตรวจใหม่ทั้งหมด — บังคับให้ AI อ่านสลิปซ้ำ (ใช้เมื่อเปลี่ยนไฟล์แนบ)
 
