@@ -119,6 +119,12 @@ class ScbPaymentSettings(models.TransientModel):
     verify_name_threshold = fields.Float(
         string="เกณฑ์ความเหมือนของชื่อ (0-1)", default=0.6,
         help="คะแนนขั้นต่ำที่ถือว่าชื่อผู้โอนในสลิป ตรงกับชื่อในรายการของธนาคาร")
+    verify_skip_file_keywords = fields.Char(
+        string="ชื่อไฟล์ที่ไม่ใช่สลิป (ข้ามไปเลย)",
+        help="พนักงานมักแนบเอกสารอื่นปนมา เช่น 50 ทวิ / ใบกำกับภาษี "
+             "ถ้าชื่อไฟล์มีคำเหล่านี้ ระบบจะข้ามโดยไม่เรียก AI (ประหยัดโควตา) "
+             "คั่นหลายคำด้วยเครื่องหมายจุลภาค — ส่วนไฟล์ที่ชื่อไม่บอกอะไร "
+             "เช่น S__123.jpg ยังให้ AI ดูรูปแล้วตัดสินเองอีกชั้น")
     verify_check_own_account = fields.Boolean(
         string="แยกสถานะเมื่อเงินเข้าบัญชีบริษัทอื่น", default=True,
         help="Google Sheet รวม statement ของทุกบริษัทในเครือไว้ด้วยกัน "
@@ -235,6 +241,10 @@ class ScbPaymentSettings(models.TransientModel):
             icp.get_param(PREFIX + 'verify_ai_name_fallback'), default=True)
         res['verify_cross_bank_fallback'] = _b(
             icp.get_param(PREFIX + 'verify_cross_bank_fallback'), default=True)
+        res['verify_skip_file_keywords'] = icp.get_param(
+            PREFIX + 'verify_skip_file_keywords',
+            default=self.env['account.payment']._scb_param(
+                'verify_skip_file_keywords'))
         res['verify_check_own_account'] = _b(
             icp.get_param(PREFIX + 'verify_check_own_account'), default=True)
         res['verify_own_account_names'] = icp.get_param(
@@ -287,6 +297,8 @@ class ScbPaymentSettings(models.TransientModel):
                       'True' if self.verify_ai_name_fallback else 'False')
         icp.set_param(PREFIX + 'verify_cross_bank_fallback',
                       'True' if self.verify_cross_bank_fallback else 'False')
+        icp.set_param(PREFIX + 'verify_skip_file_keywords',
+                      (self.verify_skip_file_keywords or '').strip())
         icp.set_param(PREFIX + 'verify_check_own_account',
                       'True' if self.verify_check_own_account else 'False')
         icp.set_param(PREFIX + 'verify_own_account_names',

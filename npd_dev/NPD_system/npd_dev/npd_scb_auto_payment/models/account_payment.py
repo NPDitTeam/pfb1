@@ -60,6 +60,11 @@ DEFAULTS = {
     # คำในเลขอ้างอิงของสลิป ที่บอกว่าเป็น "จ่ายบิล" -> ข้ามการตรวจ
     # (ธนาคารบันทึกเป็น "รับชำระค่าสินค้าและบริการ" ไม่มีชื่อผู้โอนให้เทียบ)
     'verify_skip_slip_keywords': u'REF',
+    # ชื่อไฟล์ที่บอกได้เลยว่าไม่ใช่สลิป (พนักงานมักแนบ 50 ทวิ / ใบกำกับภาษี ปนมา)
+    # ใช้กรองก่อนเรียก AI จะได้ไม่เปลืองโควตา ส่วนไฟล์ที่ชื่อไม่บอกอะไร
+    # ให้ AI ดูรูปแล้วตัดสินจาก is_transfer_slip อีกชั้น
+    'verify_skip_file_keywords': u'ทวิ,ภงด,ภ.ง.ด,หัก ณ ที่จ่าย,wht,'
+                                 u'ใบกำกับ,ใบเสร็จ,ใบแจ้งหนี้,ใบวางบิล,invoice',
     'verify_amount_tolerance': 0.0,   # 0 = จำนวนเงินต้องตรงกันเป๊ะระดับสตางค์
     'verify_date_tolerance': 0,
     'verify_name_threshold': 0.6,
@@ -311,9 +316,23 @@ class AccountPayment(models.Model):
                 if not text:
                     continue
                 try:
-                    return json.loads(text)
+                    data = json.loads(text)
                 except (json.JSONDecodeError, TypeError):
                     _logger.warning("SCB verify: Gemini ตอบไม่ใช่ JSON: %s", text[:500])
+                    continue
+                # บางครั้ง (เอกสารหลายรายการในรูปเดียว) Gemini ตอบเป็น array
+                # ของ object แทนที่จะเป็น object เดียว — หยิบตัวแรกที่ใช้ได้
+                if isinstance(data, list):
+                    data = next((d for d in data if isinstance(d, dict)), None)
+                    if data is None:
+                        _logger.warning(
+                            "SCB verify: Gemini ตอบเป็น list ที่ไม่มี object: %s",
+                            text[:500])
+                        continue
+                if isinstance(data, dict):
+                    return data
+                _logger.warning("SCB verify: Gemini ตอบชนิดข้อมูลที่ใช้ไม่ได้: %s",
+                                text[:500])
         return {}
 
     def _scb_slip_prompt(self):
@@ -450,9 +469,25 @@ class AccountPayment(models.Model):
             u'  "reference": "เลขอ้างอิง",\n'
             u'  "bill_ref": "เลขที่อ้างอิง 1 ของสลิปจ่ายบิล เช่น REF001",\n'
             u'  "is_bill_payment": false,\n'
-            u'  "is_transfer_slip": true\n'
+            u'  "is_transfer_slip": true,\n'
+            u'  "doc_type": "ประเภทเอกสาร ถ้าไม่ใช่สลิปโอนเงิน"\n'
             u"}\n\n"
-            u"ถ้าเอกสารไม่ใช่สลิป/หลักฐานการโอนเงิน ให้ตั้ง is_transfer_slip = false\n"
+            u"########## เอกสารที่ไม่ใช่สลิปโอนเงิน ##########\n"
+            u"พนักงานมักแนบเอกสารอื่นปนมาด้วย ถ้าเป็นเอกสารประเภทนี้ให้ตั้ง\n"
+            u"**is_transfer_slip = false** แล้วตอบ doc_type ว่าเป็นเอกสารอะไร\n"
+            u"  - หนังสือรับรองการหักภาษี ณ ที่จ่าย (50 ทวิ / ภ.ง.ด.3 / ภ.ง.ด.53)\n"
+            u"  - ใบกำกับภาษี / ใบเสร็จรับเงิน / ใบแจ้งหนี้ / ใบวางบิล / ใบสั่งซื้อ\n"
+            u"  - สัญญา, บัตรประชาชน, ทะเบียนบ้าน, หนังสือรับรองบริษัท, ภพ.20\n"
+            u"  - เช็ค, ใบนำฝากเช็ค, รูปสินค้า, รูปหน้างาน, เอกสารเปล่า/อ่านไม่ออก\n"
+            u"**ระวังสับสน:** หนังสือรับรองการหักภาษี ณ ที่จ่าย มี 'จำนวนเงินที่จ่าย', "
+            u"'ภาษีที่หัก' และ 'วัน เดือน ปี ที่จ่าย' หน้าตาคล้ายสลิปมาก "
+            u"แต่**ไม่ใช่หลักฐานการโอนเงิน** สังเกตหัวเอกสารว่าเขียนว่า "
+            u"'หนังสือรับรองการหักภาษี ณ ที่จ่าย' / 'ตามมาตรา 50 ทวิ' / "
+            u"'ผู้มีหน้าที่หักภาษี ณ ที่จ่าย' -> ต้องตั้ง is_transfer_slip = false\n"
+            u"สลิปโอนเงินจริงต้องมีลักษณะอย่างน้อยข้อหนึ่ง: ระบุว่าโอนสำเร็จ, "
+            u"มีเลขที่รายการ/รหัสอ้างอิงของธนาคาร, มีบัญชีต้นทาง-ปลายทาง, "
+            u"หรือเป็นรายงานการโอนเงินที่ออกโดยธนาคาร\n\n"
+
             u"ถ้าอ่านค่าใดไม่ได้ ให้ใส่ค่าว่าง \"\" หรือ 0 และตั้ง *_found = false "
             u"(ห้ามเดา ห้ามแต่งค่าขึ้นมาเอง)"
         )
@@ -492,9 +527,14 @@ class AccountPayment(models.Model):
         if not result:
             return {'state': 'unreadable',
                     'reason': _(u"AI อ่านสลิปไม่สำเร็จ (ไม่ได้ข้อมูลกลับมา)")}
+        # ไม่ใช่สลิป (พนักงานมักแนบ 50 ทวิ / ใบกำกับภาษี ปนมา) -> ข้ามไฟล์นี้
+        # ต้องไม่ใช่ 'unreadable' ไม่งั้นจะลากทั้งใบไปเป็น "ไม่สำเร็จ"
         if result.get('is_transfer_slip') is False:
-            return {'state': 'unreadable', 'raw': json.dumps(result, ensure_ascii=False),
-                    'reason': _(u"ไฟล์นี้ไม่ใช่สลิป/หลักฐานการโอนเงิน")}
+            doc = (result.get('doc_type') or '').strip()
+            return {'state': 'not_slip', 'raw': json.dumps(result, ensure_ascii=False),
+                    'reason': _(u"ไฟล์นี้ไม่ใช่สลิป/หลักฐานการโอนเงิน%s "
+                                u"— ไม่ต้องนำมาตรวจสอบ")
+                    % (_(u" (%s)") % doc if doc else u'')}
 
         date_str = (result.get('date') or '').strip()
         # ใช้ตัวแปลงวันที่ชุดเดียวกับปุ่ม "ใช้วันที่จากสลิป" (รองรับ พ.ศ./เดือนไทย)
@@ -515,6 +555,21 @@ class AccountPayment(models.Model):
             'raw': json.dumps(result, ensure_ascii=False, indent=2),
             'reason': False,
         }
+
+    def _scb_file_skip_reason(self, attachment):
+        u"""คืนคำที่ทำให้รู้ว่าไฟล์นี้ไม่ใช่สลิป โดยดูจากชื่อไฟล์อย่างเดียว
+
+        เป็นตัวกรองราคาถูกไว้ก่อนเรียก AI (พนักงานที่ตั้งชื่อไฟล์ว่า "50ทวิ.pdf"
+        ไม่ต้องเสียโควตา AI) ส่วนไฟล์ที่ชื่อไม่บอกอะไร เช่น S__123.jpg
+        ยังต้องให้ AI ดูรูปแล้วตัดสินอยู่ดี
+        """
+        raw = self._scb_param('verify_skip_file_keywords') or ''
+        keywords = [k.strip().lower() for k in raw.split(',') if k.strip()]
+        name = (attachment.name or '').lower()
+        for keyword in keywords:
+            if keyword in name:
+                return keyword
+        return ''
 
     def _scb_sync_slip_lines(self, force_reread=False):
         u"""สร้าง/อัปเดตบรรทัดผลตรวจให้ครบทุกไฟล์แนบ แล้วคืน recordset ของบรรทัด
@@ -537,11 +592,18 @@ class AccountPayment(models.Model):
             line = by_attachment.get(attachment.id)
             if line and not force_reread:
                 continue
-            try:
-                vals = self._scb_read_one_slip(attachment)
-            except UserError as e:
-                vals = {'state': 'unreadable',
-                        'reason': _(u"อ่านสลิปไม่สำเร็จ: %s") % e}
+            # ชื่อไฟล์บอกได้ว่าไม่ใช่สลิป -> ข้ามไปเลย ไม่ต้องเปลืองโควตา AI
+            keyword = self._scb_file_skip_reason(attachment)
+            if keyword:
+                vals = {'state': 'not_slip',
+                        'reason': _(u"ชื่อไฟล์มีคำว่า \"%s\" — ไม่ใช่สลิปการโอน "
+                                    u"จึงไม่ได้นำมาตรวจสอบ") % keyword}
+            else:
+                try:
+                    vals = self._scb_read_one_slip(attachment)
+                except UserError as e:
+                    vals = {'state': 'unreadable',
+                            'reason': _(u"อ่านสลิปไม่สำเร็จ: %s") % e}
             vals.setdefault('statement_id', False)
             if line:
                 line.write(vals)
@@ -775,10 +837,15 @@ class AccountPayment(models.Model):
                 claimed.add(line.statement_id.id)
 
         self._scb_update_slip_summary(lines)
-        active = lines.filtered(lambda l: l.state != 'skipped')
+        active = lines.filtered(lambda l: l.state not in ('skipped', 'not_slip'))
         header = _(u"ตรวจสลิป %s ไฟล์ (เทียบกับ statement ของ %s ตามสมุดรายวัน \"%s\")") % (
             len(lines), u'/'.join(bank_labels.get(s, s) for s in sources),
             self.journal_id.name or '-')
+        not_slip = lines.filtered(lambda l: l.state == 'not_slip')
+        if not_slip:
+            header += _(u"\nข้าม %s ไฟล์ที่ไม่ใช่สลิปการโอน: %s") % (
+                len(not_slip),
+                u', '.join(l.attachment_name or '-' for l in not_slip))
         detail = u'\n\n'.join(
             u"[%s] %s — %s\n%s" % (
                 dict(line._fields['state'].selection).get(line.state, line.state),
@@ -788,6 +855,12 @@ class AccountPayment(models.Model):
             for line in lines)
 
         if not active:
+            # แนบมาแต่ไม่มีไฟล์ไหนเป็นสลิปเลย = ยังไม่ได้แนบสลิป ต้องให้ไปแนบเพิ่ม
+            # (ต่างจาก "ไม่ต้องตรวจ" ซึ่งแปลว่ารายการนี้ไม่ต้องตรวจตั้งแต่แรก)
+            if lines.filtered(lambda l: l.state == 'not_slip'):
+                return finish('no_slip', _(
+                    u"%s\n\nไฟล์ที่แนบมาไม่มีไฟล์ไหนเป็นสลิป/หลักฐานการโอนเงินเลย "
+                    u"— กรุณาแนบสลิปการโอนเพิ่ม\n\n%s") % (header, detail))
             return finish('skipped', header + u'\n\n' + detail)
 
         matched = active.filtered(lambda l: l.state == 'matched')
@@ -943,6 +1016,10 @@ class AccountPayment(models.Model):
             if state == 'matched' and statement:
                 Alias.remember(self.partner_id, statement, payment=self)
             return state
+
+        # ไฟล์ที่ไม่ใช่หลักฐานการโอน -> ข้ามไปเลย ไม่นับว่าตรวจไม่ผ่าน
+        if line.state == 'not_slip':
+            return done('not_slip', line.reason or _(u"ไฟล์นี้ไม่ใช่สลิปการโอน"))
 
         if line.state == 'unreadable':
             return done('unreadable', line.reason or _(u"อ่านสลิปไม่ได้"))
@@ -1150,6 +1227,9 @@ class AccountPayment(models.Model):
         จำนวนเงิน = ผลรวมทุกสลิป เพราะลูกค้าอาจโอนแยกหลายครั้ง
         """
         self.ensure_one()
+        # ไฟล์ที่ไม่ใช่สลิป (50 ทวิ / ใบกำกับภาษี) มียอดกับวันที่เหมือนกัน
+        # ถ้าเอามารวมด้วย ยอดกับชื่อผู้โอนที่หัวใบจะเพี้ยน
+        lines = lines.filtered(lambda l: l.state != 'not_slip')
         dates = [l.slip_date for l in lines if l.slip_date]
         senders = []
         for line in lines:

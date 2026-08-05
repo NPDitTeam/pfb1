@@ -36,6 +36,7 @@
                         <group string="เลือก statement ตามสมุดรายวันของใบรับชำระ">
                             <field name="verify_skip_journal_keywords"/>
                             <field name="verify_skip_slip_keywords"/>
+                            <field name="verify_skip_file_keywords"/>
                             <field name="verify_deposit_journal_keyword"/>
                             <field name="verify_bank_deposit"/>
                             <field name="verify_bank_default"/>
