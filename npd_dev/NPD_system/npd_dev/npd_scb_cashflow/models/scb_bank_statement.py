@@ -439,6 +439,11 @@ class ScbBankStatement(models.Model):
     # ค้นหารายการเงินเข้าที่ตรงกับสลิป
     # ------------------------------------------------------------------
     @api.model
+    def statement_codes(self):
+        u"""รหัสธนาคารทั้งหมดที่ระบบดึง statement มาเก็บไว้"""
+        return list(STATEMENT_CODES)
+
+    @api.model
     def find_incoming_match(self, amount, date, names, sources=None,
                             amount_tol=0.0, day_tol=0, name_threshold=0.6,
                             account_hint=None, time_hint=None, time_tol=5):

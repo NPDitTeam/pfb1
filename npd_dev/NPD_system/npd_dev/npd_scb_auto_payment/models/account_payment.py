@@ -47,6 +47,9 @@ DEFAULTS = {
     'verify_bank_default': 'scb',
     'verify_bank_deposit': 'kbank',
     'verify_deposit_journal_keyword': u'ค่าประกัน',
+    # ...แต่เป็นแค่ "ที่น่าจะใช่" ลูกค้าโอนเข้าบัญชีไหนก็ได้ ถ้าหาในธนาคารที่
+    # คาดไว้ไม่เจอ ให้ขยายไปหาอีกธนาคารด้วย (ไม่งั้นจะขึ้นไม่สำเร็จทั้งที่เงินเข้าแล้ว)
+    'verify_cross_bank_fallback': True,
     # สมุดรายวันที่ "ไม่มีเงินโอนเข้าจริง" (ตัดหนี้ในระบบ) -> ข้ามการตรวจไปเลย
     'verify_skip_journal_keywords': u'ลดหนี้',
     # คำในเลขอ้างอิงของสลิป ที่บอกว่าเป็น "จ่ายบิล" -> ข้ามการตรวจ
@@ -967,18 +970,37 @@ class AccountPayment(models.Model):
             u"""ตัดรายการที่สลิปใบอื่นในใบรับชำระเดียวกันจับจองไปแล้วออก"""
             return records.filtered(lambda r: r.id not in claimed)
 
+        # ธนาคารที่เดาจากสมุดรายวันเป็นแค่ "ที่น่าจะใช่" — ลูกค้าโอนเข้าบัญชีไหน
+        # ก็ได้ (เจอจริง: ใบสมุดรายวันค่าประกันแต่เงินเข้า SCB และกลับกัน)
+        # จึงค้นในธนาคารที่คาดไว้ก่อน ถ้าไม่เจอค่อยขยายไปธนาคารอื่นที่ตั้งค่าไว้
+        search_sets = [sources]
+        if self._scb_param('verify_cross_bank_fallback'):
+            wider = sources + [s for s in Statement.statement_codes()
+                               if s not in sources]
+            if len(wider) > len(sources):
+                search_sets.append(wider)
+
         match, slip_date = None, dates[0]
-        for d in dates:
-            result = Statement.find_incoming_match(date=d, **match_kwargs)
-            if result['matched'] and result['statement'].id not in claimed:
-                if d != dates[0]:
-                    notes.append(_(u"จับคู่ได้ด้วยวันที่สำรองจากสลิป (%s)") % d)
-                return done('matched', self._scb_success_reason(
-                    result['statement'], amount_label, d, slip_sender, notes),
-                    result['statement'])
-            if match is None or (usable(result['amount_date_candidates'])
-                                 and not usable(match['amount_date_candidates'])):
-                match, slip_date = result, d
+        for srcs in search_sets:
+            match_kwargs['sources'] = srcs
+            for d in dates:
+                result = Statement.find_incoming_match(date=d, **match_kwargs)
+                if result['matched'] and result['statement'].id not in claimed:
+                    if d != dates[0]:
+                        notes.append(_(u"จับคู่ได้ด้วยวันที่สำรองจากสลิป (%s)") % d)
+                    if result['statement'].source not in sources:
+                        notes.append(_(
+                            u"เงินเข้าบัญชี %s ไม่ใช่ %s ที่คาดจากสมุดรายวัน"
+                        ) % (result['statement'].source.upper(),
+                             u'/'.join(s.upper() for s in sources)))
+                    return done('matched', self._scb_success_reason(
+                        result['statement'], amount_label, d, slip_sender, notes),
+                        result['statement'])
+                if match is None or (usable(result['amount_date_candidates'])
+                                     and not usable(match['amount_date_candidates'])):
+                    match, slip_date = result, d
+        # ขั้นถัดไป (AI รอบสอง / เทียบชื่อ) ให้ใช้ชุดที่กว้างที่สุดที่ค้นไปแล้ว
+        sources = match_kwargs['sources']
 
         candidates = usable(match['amount_date_candidates'])
 

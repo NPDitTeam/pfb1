@@ -119,6 +119,10 @@ class ScbPaymentSettings(models.TransientModel):
     verify_name_threshold = fields.Float(
         string="เกณฑ์ความเหมือนของชื่อ (0-1)", default=0.6,
         help="คะแนนขั้นต่ำที่ถือว่าชื่อผู้โอนในสลิป ตรงกับชื่อในรายการของธนาคาร")
+    verify_cross_bank_fallback = fields.Boolean(
+        string="หาไม่เจอให้ข้ามไปหาอีกธนาคารด้วย", default=True,
+        help="ธนาคารที่เดาจากสมุดรายวันเป็นแค่ค่าตั้งต้น ลูกค้าโอนเข้าบัญชีไหนก็ได้ "
+             "ถ้าปิดข้อนี้ ใบที่ลูกค้าโอนข้ามบัญชีจะขึ้น \"ไม่สำเร็จ\" ทั้งที่เงินเข้าแล้ว")
     verify_ai_name_fallback = fields.Boolean(
         string="ให้ AI ช่วยเทียบชื่อข้ามภาษา", default=True,
         help="ถ้าเทียบตัวอักษรไม่ผ่าน ให้ถาม AI อีกครั้งว่าเป็นบริษัทเดียวกันหรือไม่ "
@@ -214,6 +218,8 @@ class ScbPaymentSettings(models.TransientModel):
         res['verify_name_threshold'] = _f(icp.get_param(PREFIX + 'verify_name_threshold'), 0.6)
         res['verify_ai_name_fallback'] = _b(
             icp.get_param(PREFIX + 'verify_ai_name_fallback'), default=True)
+        res['verify_cross_bank_fallback'] = _b(
+            icp.get_param(PREFIX + 'verify_cross_bank_fallback'), default=True)
         res['verify_allow_no_name'] = _b(
             icp.get_param(PREFIX + 'verify_allow_no_name'), default=True)
         res['verify_second_pass'] = _b(
@@ -258,6 +264,8 @@ class ScbPaymentSettings(models.TransientModel):
                       str(min(1.0, max(0.0, self.verify_name_threshold or 0.6))))
         icp.set_param(PREFIX + 'verify_ai_name_fallback',
                       'True' if self.verify_ai_name_fallback else 'False')
+        icp.set_param(PREFIX + 'verify_cross_bank_fallback',
+                      'True' if self.verify_cross_bank_fallback else 'False')
         icp.set_param(PREFIX + 'verify_allow_no_name',
                       'True' if self.verify_allow_no_name else 'False')
         icp.set_param(PREFIX + 'verify_second_pass',
