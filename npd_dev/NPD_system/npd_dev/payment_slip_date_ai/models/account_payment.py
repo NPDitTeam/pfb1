@@ -113,9 +113,12 @@ class AccountPaymentSlipDate(models.Model):
             "   (ก) 'วันที่ทำรายการ' หรือ 'Transaction Date' — ใช้ค่านี้เป็นอันดับแรกเสมอ\n"
             "   (ข) ถ้าไม่มี (ก) ใช้ 'Received Date' หรือวันที่ใต้หัวข้อ 'Transfer Completed' "
             "/ 'โอนเงินสำเร็จ' (สลิป KBIZ/K BANK/K PLUS/K+)\n"
-            "       *** สลิป K+ (K PLUS) วันที่อยู่ใต้ 'Transfer Completed' ด้านบน "
-            "รูปแบบ 'DD Mon YY HH:MM AM/PM' เช่น '13 Jun 26 11:45 AM' → ใช้วันที่ '13 Jun 26' "
-            "(ตัดเวลา 11:45 AM ทิ้ง) นี่คือวันที่ทำรายการ ให้ set found=true เสมอ ***\n"
+            "       *** สลิป K+ (K PLUS) วันที่อยู่ใต้ 'Transfer Completed' / 'โอนเงินสำเร็จ' "
+            "ด้านบน อาจเป็นภาษาอังกฤษหรือไทยก็ได้ ให้ใช้เป็นวันที่ทำรายการเสมอ (set found=true):\n"
+            "         - อังกฤษ รูปแบบ 'DD Mon YY HH:MM AM/PM' เช่น '13 Jun 26 11:45 AM' → '13 Jun 26'\n"
+            "         - ไทย รูปแบบ 'D ด.ย. YY HH:MM น.' เช่น '9 ก.ค. 69 10:47 น.' → '9 ก.ค. 69' "
+            "(ก.ค.=เดือน 07, ปี 69 เป็น พ.ศ. 2569 = ค.ศ. 2026 → ตอบ '09/07/2026')\n"
+            "         (ตัดเวลาทิ้งทุกกรณี) ***\n"
             "   (ค) ถ้าไม่มี (ก)(ข) ค่อยใช้ 'วันที่' / 'Date' ทั่วไป\n"
             "   (ง) ถ้าสลิปแสดงว่าทำรายการสำเร็จ/โอนเงินมีผลทันที (เช่น 'ทำรายการเสร็จสมบูรณ์', "
             "'โอนต่างธนาคารมีผลทันที', สลิปกรุงไทย/KTB/พร้อมเพย์) และมีเพียง 'วันที่มีผล' "
@@ -172,8 +175,14 @@ class AccountPaymentSlipDate(models.Model):
             "contents": [{"parts": parts}],
             "generationConfig": {
                 "temperature": 0,
-                "maxOutputTokens": 1024,
+                # gemini-2.5-flash เป็น thinking model — token ที่ใช้ "คิด" นับรวมใน
+                # maxOutputTokens ด้วย ถ้าตั้งไว้น้อย (เดิม 1024) thinking อาจกินหมด
+                # จน finishReason=MAX_TOKENS ไม่มี JSON ออกมา → parse fail → found=false
+                # จึงเพิ่มโควตา และปิด thinking (thinkingBudget=0) เพราะงานนี้เป็น OCR
+                # อ่านค่าตรง ๆ ไม่ต้องใช้การให้เหตุผลหลายขั้น
+                "maxOutputTokens": 2048,
                 "responseMimeType": "application/json",
+                "thinkingConfig": {"thinkingBudget": 0},
             },
         }
 
@@ -187,16 +196,39 @@ class AccountPaymentSlipDate(models.Model):
 
             candidates = result.get('candidates', [])
             if candidates:
+                finish_reason = candidates[0].get('finishReason', '')
                 content = candidates[0].get('content', {})
                 parts_resp = content.get('parts', [])
                 if parts_resp:
                     text_result = parts_resp[0].get('text', '')
-                    _logger.info("Gemini slip info response: %s", text_result)
+                    _logger.info(
+                        "Gemini slip info response (finishReason=%s): %s",
+                        finish_reason, text_result,
+                    )
                     try:
                         parsed = json.loads(text_result)
                         return parsed
                     except (json.JSONDecodeError, TypeError):
-                        _logger.warning("Failed to parse Gemini response as JSON: %s", text_result)
+                        _logger.warning(
+                            "Failed to parse Gemini response as JSON "
+                            "(finishReason=%s): %s", finish_reason, text_result,
+                        )
+                else:
+                    # ไม่มีส่วน text กลับมา (เช่น finishReason=MAX_TOKENS จาก thinking
+                    # กินโควตาหมด หรือโดน safety block) — log ให้เห็นสาเหตุจริง
+                    _logger.warning(
+                        "Gemini returned no text part (finishReason=%s). "
+                        "usageMetadata=%s safetyRatings=%s",
+                        finish_reason,
+                        result.get('usageMetadata'),
+                        candidates[0].get('safetyRatings'),
+                    )
+            else:
+                # ไม่มี candidate เลย — มักโดน promptFeedback block ที่ระดับ prompt
+                _logger.warning(
+                    "Gemini returned no candidates. promptFeedback=%s",
+                    result.get('promptFeedback'),
+                )
 
             return {'date': '', 'found': False, 'recipient_name': '', 'recipient_found': False}
 
