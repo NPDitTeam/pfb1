@@ -13,4 +13,19 @@
         <field name="active" eval="True"/>
         <field name="doall" eval="False"/>
     </record>
+
+    <!-- ดึง "รายการเดินบัญชี" (statement_*) อัตโนมัติ ทุก 2 ชั่วโมง
+         ข้อมูลธนาคารมาช้ากว่าจริง ~1 วันอยู่แล้ว ตั้งถี่กว่านี้ไม่ได้ช่วยอะไร -->
+    <record id="ir_cron_npd_scb_bank_statement_sync" model="ir.cron">
+        <field name="name">SCB Cash Flow: Sync Bank Statement from Google Sheet</field>
+        <field name="model_id" ref="model_npd_scb_bank_statement"/>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_sync_statements()</field>
+        <field name="interval_number">2</field>
+        <field name="interval_type">hours</field>
+        <field name="numbercall">-1</field>
+        <field name="active" eval="True"/>
+        <field name="doall" eval="False"/>
+    </record>
 </odoo>

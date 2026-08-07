@@ -30,6 +30,12 @@
               action="action_npd_scb_cashflow_ktb"
               sequence="30"/>
 
+    <menuitem id="menu_npd_bank_statement"
+              name="รายการเดินบัญชี (Statement)"
+              parent="menu_npd_bank_cashflow_root"
+              action="action_npd_scb_bank_statement"
+              sequence="40"/>
+
     <!-- เมนูตั้งค่า: Accounting/Invoicing > Configuration > ตั้งค่ากระแสเงินสดธนาคาร -->
     <menuitem id="menu_npd_scb_cashflow_config"
               name="ตั้งค่ากระแสเงินสดธนาคาร"
