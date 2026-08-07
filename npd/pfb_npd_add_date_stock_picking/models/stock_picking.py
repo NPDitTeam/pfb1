@@ -156,20 +156,58 @@ class StockPicking(models.Model):
         # print(f"Action Assign called for Picking ID(s): {self.ids}")
         self.update_location_from_branch()
 
-        # 🔔 ตรวจสอบสินค้าที่จองไม่ได้
+        # 🔔 ตรวจสอบจากยอดคงเหลือจริง (on-hand) ของสาขา แทนการเช็คการจอง (reservation)
+        #    - ไม่สนใจว่าใบอื่นจองไว้หรือไม่ (ตัดปัญหาการจองชนกันชั่วคราว + rollback ทั้งใบ)
+        #    - บล็อกเฉพาะกรณีสินค้าไม่มีของอยู่จริงในสาขา
+        #    - สต็อกจะถูกตัดตอนส่งมอบ (validate OUT) และคืนตอนรับคืน (validate IN) ตามปกติ
         if self.env.cr.dbname != 'NPD_Logistics_New':
             for picking in self:
                 out_of_stock = []
                 branch_name = picking.branch_id.name or 'ไม่ทราบสาขา'
                 for move in picking.move_lines:
-                    if move.state == 'confirmed' and move.reserved_availability <= 0:
+                    # ข้าม move ที่จบแล้ว/ยกเลิก และข้ามใบรับคืน (ต้นทางไม่ใช่ location ภายใน)
+                    if move.state in ('done', 'cancel'):
+                        continue
+                    if move.location_id.usage != 'internal':
+                        continue
+
+                    # จำนวนที่ต้องใช้จริง (หน่วยอ้างอิงของสินค้า)
+                    #   ใบเช่า: product_uom_qty = จำนวนสินค้า x จำนวนวันที่เช่า (ใช้คิดค่าเช่า)
+                    #   จำนวนของที่ต้องหยิบออกจากคลังจริง ๆ คือ pfb_quantity เท่านั้น
+                    need_qty = move.product_qty
+                    line = move.sale_line_id if 'sale_line_id' in move._fields else False
+                    if line and 'pfb_quantity' in line._fields and 'pfb_so_type' in line.order_id._fields:
+                        if line.order_id.pfb_so_type == 'rent' and line.pfb_quantity:
+                            need_qty = line.product_uom._compute_quantity(
+                                line.pfb_quantity, move.product_id.uom_id
+                            )
+
+                    # หา location ของสาขาที่อยู่ "ภายใต้" location ต้นทางของ move
+                    #   - เจอ  -> นับเฉพาะสต็อกสาขานั้น (ไม่รวมสาขาอื่นที่อยู่ใต้ location แม่เดียวกัน)
+                    #   - ไม่เจอ -> ใช้ location เดิมตามพฤติกรรมก่อนหน้า
+                    src_location = move.location_id
+                    if picking.branch_id:
+                        branch_location = self.env['stock.location'].search([
+                            ('branch_id', '=', picking.branch_id.id),
+                            ('usage', '=', 'internal'),
+                            ('id', 'child_of', move.location_id.id),
+                        ], limit=1)
+                        if branch_location:
+                            src_location = branch_location
+
+                    # ยอดคงเหลือจริง ณ location ต้นทางของสาขา (รวม sub-location) ในหน่วยอ้างอิงของสินค้า
+                    onhand = move.product_id.with_context(
+                        location=src_location.id
+                    ).qty_available
+                    if onhand < need_qty:
                         out_of_stock.append(
-                            f"- {move.product_id.display_name} ({move.product_uom_qty} {move.product_uom.name}) ❌ สาขา: {branch_name}"
+                            f"- {move.product_id.display_name}: ต้องการ {need_qty} {move.product_id.uom_id.name} "
+                            f"แต่คงเหลือจริง {onhand} ❌ สาขา: {branch_name}"
                         )
 
                 if out_of_stock:
                     msg = "\n".join(out_of_stock)
-                    raise UserError(f"❌ พบสินค้าที่ไม่มีสต็อกในสาขา ไม่สามารถจองได้:\n\n{msg}")
+                    raise UserError(f"❌ สินค้าคงเหลือในสาขาไม่พอ:\n\n{msg}")
 
         return res
 
