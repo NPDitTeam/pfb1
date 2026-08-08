@@ -326,7 +326,11 @@
                                 </td>
 
                                 <td class="text-right line-distance" style="padding: 1px 3px;">
-                                    <span t-esc="'{0:,.2f}'.format(l.price_unit)"/>
+                                    <!-- ใช้ price_unit_no_vat (ถอด VAT) ให้ตรงกับคอลัมน์ "ราคาต่อหน่วย"
+                                         บนหน้าจอ SO ซึ่งถูก npd_rent_price_round สวมทับ price_unit เดิม
+                                         (เหมือนใบเสนอราคาเช่า/ใบส่งของ) ส่วน "รวมเป็นเงิน" ยังคงเป็น
+                                         ยอดรวม VAT เพื่อให้สอดคล้องกับยอดท้ายเอกสารที่อิง amount_total -->
+                                    <span t-esc="'{0:,.2f}'.format(l.price_unit_no_vat)"/>
                                 </td>
 
                                 <td class="text-right line-distance" style="padding: 1px 3px;">
