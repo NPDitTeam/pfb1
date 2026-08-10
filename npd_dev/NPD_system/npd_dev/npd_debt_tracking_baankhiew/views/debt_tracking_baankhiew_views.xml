@@ -94,6 +94,7 @@
                             <field name="amount_lost_residual" string="ค้างชำระค่าปรับหาย" readonly="1"/>
                             <field name="amount_tax_residual" string="ค้างชำระค่า Tax" readonly="1"/>
                             <field name="amount_grand_total" string="ยอดรวม" readonly="1"/>
+                            <field name="debt_start_date" string="วันที่เริ่มเป็นหนี้" readonly="1"/>
                             <field name="currency_id" invisible="1"/>
                         </group>
                     </group>

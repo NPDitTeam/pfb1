@@ -106,6 +106,14 @@ class NpdDebtTrackingBaankhiew(models.Model):
     amount_tax_total = fields.Float(string='รวมค่า Tax', compute='_compute_amounts', store=True)
     amount_tax_residual = fields.Float(string='ค้างชำระค่า Tax', compute='_compute_amounts', store=True)
     amount_grand_total = fields.Float(string='ยอดรวม', compute='_compute_amounts', store=True)
+    debt_start_date = fields.Date(string='วันที่เริ่มเป็นหนี้', compute='_compute_debt_start_date', store=True)
+
+    @api.depends('debt_line_ids', 'debt_line_ids.arh_date')
+    def _compute_debt_start_date(self):
+        """วันที่เริ่มเป็นหนี้ = วันที่เริ่มหนี้ที่น้อยที่สุดในแท็บหนี้ค้างชำระค่าเช่า"""
+        for rec in self:
+            arh_dates = [d for d in rec.debt_line_ids.mapped('arh_date') if d]
+            rec.debt_start_date = min(arh_dates) if arh_dates else False
 
     @api.depends('debt_line_ids', 'debt_line_ids.total_debt', 'debt_line_ids.remaining_balance', 'debt_line_ids.total_paid',
                  'damage_line_ids', 'damage_line_ids.inv_amount', 'damage_line_ids.remaining_balance',
