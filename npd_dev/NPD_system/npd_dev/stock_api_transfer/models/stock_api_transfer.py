@@ -1,5 +1,6 @@
 from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
+from collections import defaultdict
 import requests
 import logging
 from datetime import date
@@ -213,15 +214,41 @@ class StockAPITransfer(models.Model):
             }
 
     def _find_local_product(self, default_code):
-        """ค้นหา product.product ใน local db จาก default_code"""
+        """ค้นหา product.product ใน local db จาก default_code
+        จับตรงตัวก่อน แล้วค่อย fallback เป็น ilike — กัน ilike ไปโดนรหัสอื่นที่มีรหัสนี้เป็นส่วนหนึ่ง"""
         if not default_code:
             return False
-        tmpl = self.env['product.template'].search([
-            ('default_code', 'ilike', default_code)
-        ], limit=1)
+        Template = self.env['product.template']
+        tmpl = Template.search([('default_code', '=', default_code)], limit=1)
+        if not tmpl:
+            tmpl = Template.search([('default_code', 'ilike', default_code)], limit=1)
         return tmpl.product_variant_id if tmpl else False
 
+    def _get_local_stock(self):
+        """ข้อมูลสต๊อกจาก DB ที่รันอยู่ ในรูปแบบเดียวกับที่ /api/get_stock คืนมา"""
+        quants = self.env['stock.quant'].sudo().search([
+            ('product_id.product_tmpl_id.route_ids.name', '=', 'ขอเบิก')
+        ])
+        total_quantities = defaultdict(float)
+        for q in quants:
+            total_quantities[q.product_id.id] += q.quantity
+
+        return [{
+            'product_id': q.product_id.id,
+            'product_name': q.product_id.name or '',
+            'location_id': q.location_id.id,
+            'location': q.location_id.complete_name or '',
+            'quantity': q.quantity,
+            'default_code': q.product_id.default_code or '',
+            'total_qty_all_locations': total_quantities[q.product_id.id],
+        } for q in quants]
+
     def _get_api_stock(self, db_name):
+        # DB เดียวกับที่รันอยู่ → อ่านจากเครื่องตรงๆ ไม่ต้องยิง HTTP
+        # (เดิมยิงไป npderp.com เสมอ ทำให้ "คงเหลือ" ที่โชว์เป็นตัวเลขของอีกเซิร์ฟเวอร์ ไม่ตรงกับ DB นี้)
+        if db_name == self.env.cr.dbname:
+            return self._get_local_stock()
+
         try:
             session = requests.Session()
             login_response = session.post("https://npderp.com/web/session/authenticate", json={
@@ -373,9 +400,121 @@ class StockAPITransfer(models.Model):
                 raise UserError("ไม่สามารถลบเอกสารที่ยืนยันแล้วได้")
         return super(StockAPITransfer, self).unlink()
 
+    # ------------------------------------------------------------------
+    # โยกสต๊อกภายใน DB ที่รันอยู่ (database_selection == cr.dbname)
+    # ------------------------------------------------------------------
+    def _get_onhand_qty(self, product, location):
+        """คงเหลือจริงของสินค้าที่คลังนั้น (อ่าน stock.quant ตรงๆ แบบเดียวกับที่ API get_stock ทำ)"""
+        if not product or not location:
+            return 0.0
+        quants = self.env['stock.quant'].sudo().search([
+            ('product_id', '=', product.id),
+            ('location_id', '=', location.id),
+        ])
+        return sum(quants.mapped('quantity'))
+
+    def _get_internal_picking_type(self, source_location):
+        """ประเภทการโอนแบบ internal ของบริษัทเดียวกับคลังต้นทาง
+        เลือกคลังสินค้าที่ครอบคลุมคลังต้นทางก่อน ถ้าไม่เจอค่อยใช้ตัวแรกของบริษัทนั้น"""
+        domain = [('code', '=', 'internal')]
+        if source_location.company_id:
+            domain.append(('company_id', '=', source_location.company_id.id))
+        picking_types = self.env['stock.picking.type'].sudo().search(domain)
+        src_path = source_location.parent_path or ''
+        for picking_type in picking_types:
+            view_path = picking_type.warehouse_id.view_location_id.parent_path or ''
+            if view_path and src_path.startswith(view_path):
+                return picking_type
+        return picking_types[:1]
+
+    def _create_internal_picking(self, product, source_location, dest_location, qty):
+        """สร้าง stock.picking แบบ internal แล้ว validate ทันที — คืน picking ที่เสร็จแล้ว"""
+        picking_type = self._get_internal_picking_type(source_location)
+        if not picking_type:
+            raise UserError("ไม่พบประเภทการโอน (internal) สำหรับบริษัทของคลัง %s"
+                            % source_location.complete_name)
+
+        picking = self.env['stock.picking'].sudo().create({
+            'picking_type_id': picking_type.id,
+            'location_id': source_location.id,
+            'location_dest_id': dest_location.id,
+            'origin': self.name,
+            'move_lines': [(0, 0, {
+                'name': product.display_name or self.name,
+                'product_id': product.id,
+                'product_uom_qty': qty,
+                'product_uom': product.uom_id.id,
+                'location_id': source_location.id,
+                'location_dest_id': dest_location.id,
+                'picking_type_id': picking_type.id,
+                'company_id': picking_type.company_id.id,
+            })],
+        })
+        picking.action_confirm()
+        picking.action_assign()
+        for move in picking.move_lines:
+            move.quantity_done = move.product_uom_qty
+        res = picking.with_context(skip_immediate=True, skip_backorder=True).button_validate()
+        if res is not True:
+            raise ValidationError(
+                "ไม่สามารถยืนยันใบโอน %s ได้อัตโนมัติ กรุณาตรวจสอบเอกสารในเมนูการดำเนินการ" % picking.name)
+        _logger.info("✅ สร้างและยืนยันใบโอน: %s", picking.name)
+        return picking
+
+    def _run_local_transfer(self, lines, reverse=False):
+        """โยกสต๊อกจริงใน DB ที่รันอยู่ (reverse=True คือคืนของ ปลายทาง → ต้นทาง)"""
+        if not self.location_id:
+            raise UserError("กรุณาเลือกคลังปลายทาง")
+
+        Location = self.env['stock.location'].sudo()
+        jobs = []
+        shortages = []
+        for line in lines:
+            src_location = Location.browse(line.location_id).exists()
+            if not src_location:
+                raise UserError("ไม่พบคลังต้นทาง (id=%s) ของ %s ในฐานข้อมูลนี้"
+                                % (line.location_id, line.product_name))
+            product = self._find_local_product(line.default_code)
+            if not product:
+                raise UserError("ไม่พบสินค้ารหัส %s ในฐานข้อมูลนี้" % line.default_code)
+
+            src, dest = (self.location_id, src_location) if reverse else (src_location, self.location_id)
+            if src == dest:
+                raise UserError("คลังต้นทางและคลังปลายทางเป็นคลังเดียวกัน (%s)" % dest.complete_name)
+
+            avail = self._get_onhand_qty(product, src)
+            if line.request_qty > avail:
+                shortages.append("• %s @ %s — ขอ %.2f / คงเหลือ %.2f"
+                                 % (product.display_name, src.complete_name, line.request_qty, avail))
+            jobs.append((line, product, src, dest, src_location))
+
+        if shortages:
+            raise UserError("สต๊อกไม่พอสำหรับ:\n" + "\n".join(shortages))
+
+        for line, product, src, dest, src_location in jobs:
+            picking = self._create_internal_picking(product, src, dest, line.request_qty)
+            line.write({
+                'status': 'รอดำเนินการ' if reverse else 'สำเร็จ',
+                'available_qty': self._get_onhand_qty(product, src_location),
+            })
+            _logger.info("📦 %s %s: %s → %s %.2f (%s)",
+                         "คืนของ" if reverse else "โอน", product.display_name,
+                         src.complete_name, dest.complete_name, line.request_qty, picking.name)
+
+    # ------------------------------------------------------------------
+    # Confirm
+    # ------------------------------------------------------------------
     def action_confirm(self):
+        self.ensure_one()
         if self.state != 'approved':
             raise UserError("ต้องได้รับการอนุมัติก่อนจึงจะยืนยันการโอนได้")
+
+        lines = self.line_ids.filtered(lambda l: l.request_qty > 0)
+        if not lines:
+            raise UserError("ไม่มีรายการที่ระบุจำนวนขอตัด")
+        if not self.location_id:
+            raise UserError("กรุณาเลือกคลังปลายทาง")
+
         if self.name == 'New':
             today = fields.Date.context_today(self)
             seq_date = today.strftime('%Y-%m-%d')  # ex. '2025-04-22'
@@ -383,21 +522,25 @@ class StockAPITransfer(models.Model):
                 ir_sequence_date=seq_date
             ).next_by_code('stock.api.transfer') or 'New'
 
-        self.write({"state": "confirmed"})
         # ดึงชื่อ database ปัจจุบันที่กำลังรัน Odoo ฝั่ง local
         current_db_name = self.env.cr.dbname
+        if self.database_selection == current_db_name:
+            # DB เดียวกับที่รันอยู่ → ทำในเครื่องตรงๆ ไม่ต้องยิง HTTP
+            # (เดิมโยนงานให้ npderp.com เสมอ แล้วข้ามการเขียน local เพราะถือว่า "DB เดียวกัน = API จัดการแล้ว"
+            #  ซึ่งจริงเฉพาะตอนโมดูลรันอยู่บน npderp.com — DB ชื่อเดียวกันบนเครื่องอื่นจึงไม่ถูกแตะเลย)
+            self._run_local_transfer(lines)
+        else:
+            self._confirm_via_api(lines)
 
-        transfers = []
-        for line in self.line_ids:
-            if line.request_qty > 0:
-                transfer_data = {
-                    'default_code': line.default_code,
-                    'source_location_id': line.location_id,
-                    'qty': line.request_qty
-                }
-                if self.database_selection == current_db_name:
-                    transfer_data['destination_location_id'] = line.destination_location_id.id
-                transfers.append(transfer_data)
+        self.write({"state": "confirmed"})
+
+    def _confirm_via_api(self, lines):
+        """โยกข้าม DB: ให้เซิร์ฟเวอร์ต้นทางตัดสต๊อกผ่าน API แล้วเติมสต๊อกปลายทางใน DB นี้"""
+        transfers = [{
+            'default_code': line.default_code,
+            'source_location_id': line.location_id,
+            'qty': line.request_qty,
+        } for line in lines]
 
         try:
             # 🔐 STEP 1: Login เพื่อรับ session_id
@@ -438,52 +581,70 @@ class StockAPITransfer(models.Model):
             result = response.json()
 
 
+            # JSON-RPC error (exception ฝั่งเซิร์ฟเวอร์) จะไม่มี key "result" เลย
+            if result.get("error"):
+                err = result["error"]
+                msg = (err.get("data") or {}).get("message") or err.get("message") or str(err)
+                raise ValidationError("❌ API ตอบกลับเป็น error: %s" % msg)
+
             # ✅ แก้จุดสำคัญ: เช็คสถานะภายใน "result"
-            status_code = result.get("result", {}).get("status", 0)
+            api_result = result.get("result", {})
+            status_code = api_result.get("status", 0)
             if status_code != 200:
                 _logger.error("❌ API Returned Error: %s", result)
                 raise ValidationError(
-                    result.get("result", {}).get("error", "❌ ไม่สามารถตัดสต๊อกได้ (ไม่พบสาเหตุจาก API)"))
+                    api_result.get("error", "❌ ไม่สามารถตัดสต๊อกได้ (ไม่พบสาเหตุจาก API)"))
 
-            _logger.info("✅ API TRANSFER SUCCESS: %s", result.get("result", {}).get("pickings"))
+            # API คืน key 'documents' (เวอร์ชันเก่าคืน 'pickings') — ถ้ามี key แต่ว่างเปล่า
+            # แปลว่าตอบ 200 ทั้งที่ไม่ได้สร้างเอกสารตัดสต๊อกเลย (เช่นหารหัสสินค้าที่ต้นทางไม่เจอ)
+            documents = api_result.get("documents", api_result.get("pickings"))
+            if documents is None:
+                _logger.warning("⚠️ API ไม่ได้คืนรายการเอกสาร ตรวจสอบไม่ได้ว่าตัดสต๊อกจริงหรือไม่: %s", result)
+            elif not documents:
+                raise ValidationError(
+                    "API ตอบสำเร็จแต่ไม่ได้สร้างเอกสารตัดสต๊อกเลย "
+                    "(มักเกิดจากหารหัสสินค้าที่ต้นทางไม่พบ) — ยกเลิกการโอน")
+            elif len(documents) != len(lines):
+                # controller ฝั่งต้นทางใช้ continue ข้ามบรรทัดที่มีปัญหาแล้วยังตอบ 200
+                # ถ้าปล่อยผ่าน จะเติมสต๊อกปลายทางครบทุกบรรทัดทั้งที่ต้นทางตัดไม่ครบ
+                raise ValidationError(
+                    "API ตัดสต๊อกได้ไม่ครบ (ขอ %d รายการ สำเร็จ %d รายการ: %s) — ยกเลิกการโอนทั้งใบ"
+                    % (len(lines), len(documents), documents))
+            else:
+                _logger.info("✅ API TRANSFER SUCCESS: %s", documents)
 
-            # ดึงชื่อ database ปัจจุบันที่กำลังรัน Odoo ฝั่ง local
-            current_db_name = self.env.cr.dbname
-            # ✅ อัปเดตสถานะรายการย่อย
-            for line in self.line_ids:
-                if line.request_qty > 0:
-                    new_qty = line.available_qty - line.request_qty
-                    line.write({
-                        'status': 'สำเร็จ',
-                        'available_qty': new_qty if new_qty >= 0 else 0.0  # ป้องกันติดลบ
+            # ✅ อัปเดตสถานะรายการย่อย + เติมสต๊อกฝั่งปลายทางใน DB นี้
+            for line in lines:
+                new_qty = line.available_qty - line.request_qty
+                line.write({
+                    'status': 'สำเร็จ',
+                    'available_qty': new_qty if new_qty >= 0 else 0.0  # ป้องกันติดลบ
+                })
+                product = self._find_local_product(line.default_code)
+                if not product:
+                    _logger.warning("⚠️ ไม่พบสินค้า local สำหรับ %s - ข้ามการเติมสต๊อก", line.default_code)
+                    continue
+
+                quant = self.env['stock.quant'].sudo().search([
+                    ('product_id', '=', product.id),
+                    ('location_id', '=', line.destination_location_id.id)
+                ], limit=1)
+
+                if quant:
+                    quant.quantity += line.request_qty
+                    _logger.info("📦 เติมสต๊อกที่คลังปลายทาง: %s เพิ่ม %.2f", line.product_name,
+                                 line.request_qty)
+                else:
+                    self.env['stock.quant'].sudo().create({
+                        'product_id': product.id,
+                        'location_id': line.destination_location_id.id,
+                        'quantity': line.request_qty,
                     })
-                    # ✅ เติมสต๊อกฝั่งปลายทาง "เฉพาะเมื่อฐานข้อมูลปลายทางต่างจากต้นทาง"
-                    if self.database_selection != current_db_name:
-                        product = self._find_local_product(line.default_code)
-                        if product:
-                            quant = self.env['stock.quant'].search([
-                                ('product_id', '=', product.id),
-                                ('location_id', '=', line.destination_location_id.id)
-                            ], limit=1)
+                    _logger.info("📦 สร้างและเติมสต๊อกใหม่ที่คลังปลายทาง: %s = %.2f", line.product_name,
+                                 line.request_qty)
 
-                            if quant:
-                                quant.quantity += line.request_qty
-                                _logger.info("📦 เติมสต๊อกที่คลังปลายทาง: %s เพิ่ม %.2f", line.product_name,
-                                             line.request_qty)
-                            else:
-                                self.env['stock.quant'].create({
-                                    'product_id': product.id,
-                                    'location_id': line.destination_location_id.id,
-                                    'quantity': line.request_qty,
-                                })
-                                _logger.info("📦 สร้างและเติมสต๊อกใหม่ที่คลังปลายทาง: %s = %.2f", line.product_name,
-                                             line.request_qty)
-                        else:
-                            _logger.warning("⚠️ ไม่พบสินค้า local สำหรับ %s - ข้ามการเติมสต๊อก", line.default_code)
-                    else:
-                        _logger.info("🔒 ข้ามการเติมสต๊อก เพราะ database_selection (%s) ตรงกับฐานข้อมูลที่ใช้อยู่ (%s)",
-                                     self.database_selection, current_db_name)
-
+        except ValidationError:
+            raise
         except Exception as e:
             _logger.error("❌ TRANSFER FAILED: %s", str(e))
             raise ValidationError("❌ ไม่สามารถตัดสต๊อกได้: %s" % str(e))
@@ -494,51 +655,24 @@ class StockAPITransfer(models.Model):
             raise UserError("เฉพาะผู้อนุมัติเท่านั้นที่สามารถยกเลิกได้")
         if self.state != "confirmed":
             return
+
+        lines = self.line_ids.filtered(lambda l: l.request_qty > 0)
         current_db_name = self.env.cr.dbname
-        rollback_data = []
-        for line in self.line_ids:
-            rd = {
-                "source_location_id": line.location_id,
-                "default_code": line.default_code,
-                "qty": line.request_qty,
-            }
-            if self.database_selection == current_db_name:
-                rd["destination_location_id"] = line.destination_location_id.id
-            rollback_data.append(rd)
+        if self.database_selection == current_db_name:
+            # DB เดียวกับที่รันอยู่ → คืนของด้วยใบโอนย้อนกลับ ปลายทาง → ต้นทาง
+            self._run_local_transfer(lines, reverse=True)
+        else:
+            self._cancel_via_api(lines)
 
         self.write({'state': 'draft'})
 
-        for line in self.line_ids:
-            restored_qty = line.available_qty + line.request_qty
-            line.write({
-                'status': 'รอดำเนินการ',
-                'available_qty': restored_qty
-            })
-            # ✅ เฉพาะกรณี multi-db ที่ต้อง rollback เพิ่ม stock กลับ
-            if self.database_selection != current_db_name:
-                if line.destination_location_id:
-                    product = self._find_local_product(line.default_code)
-                    if product:
-                        quant = self.env['stock.quant'].sudo().search([
-                            ('product_id', '=', product.id),
-                            ('location_id', '=', line.destination_location_id.id)
-                        ], limit=1)
-
-                        if quant:
-                            quant.quantity -= line.request_qty
-                            if quant.quantity < 0:
-                                quant.quantity = 0.0
-                            _logger.info("🔴 ลบ stock ปลายทาง: %s -%.2f", line.product_name, line.request_qty)
-                        else:
-                            _logger.warning("❌ ไม่พบ stock.quant สำหรับ %s", line.product_name)
-                    else:
-                        _logger.warning("⚠️ ไม่พบสินค้า local สำหรับ %s - ข้ามการ rollback", line.default_code)
-                else:
-                    _logger.warning("⚠️ ไม่มีคลังปลายทาง จึงไม่สามารถ rollback stock ได้สำหรับ %s",
-                                    line.product_name)
-            else:
-                _logger.info("🔒 ข้ามการเติมสต๊อกคืน เพราะ database_selection (%s) ตรงกับฐานข้อมูลปัจจุบัน (%s)",
-                             self.database_selection, current_db_name)
+    def _cancel_via_api(self, lines):
+        """คืนสต๊อกข้าม DB: ให้ API คืนของที่ต้นทาง แล้วตัดสต๊อกปลายทางออกจาก DB นี้"""
+        rollback_data = [{
+            "source_location_id": line.location_id,
+            "default_code": line.default_code,
+            "qty": line.request_qty,
+        } for line in lines]
 
         try:
             # STEP 1: Login เพื่อดึง session_id
@@ -581,19 +715,58 @@ class StockAPITransfer(models.Model):
             result = response.json()
             _logger.info("✅ API ROLLBACK RESPONSE: %s", result)
 
+            # JSON-RPC error (exception ฝั่งเซิร์ฟเวอร์) จะไม่มี key "result" เลย
+            if result.get("error"):
+                err = result["error"]
+                raise Exception((err.get("data") or {}).get("message") or err.get("message") or str(err))
+
             # ป้องกัน error จาก key ไม่ตรงหรือไม่มี status
-            status = result.get("status") or result.get("result", {}).get("status")
-            pickings = result.get("pickings") or result.get("result", {}).get("pickings")
+            api_result = result.get("result", {})
+            status = result.get("status") or api_result.get("status")
+            pickings = result.get("pickings") or api_result.get("pickings")
 
             if int(status or 0) != 200:
-                raise Exception(result.get("error", "Rollback failed"))
+                raise Exception(api_result.get("error") or result.get("error") or "Rollback failed")
+
+            # คืนของได้ไม่ครบทุกบรรทัด = ห้ามตัดสต๊อกปลายทางออก ไม่งั้นของหายทั้งสองฝั่ง
+            if pickings is not None and len(pickings) != len(lines):
+                raise Exception("คืนของได้ไม่ครบ (ขอ %d รายการ สำเร็จ %d รายการ: %s)"
+                                % (len(lines), len(pickings), pickings))
 
             _logger.info("🔄 ROLLBACK SUCCESS: %s", pickings)
-            self.write({'state': 'draft'})
 
         except Exception as e:
             _logger.error("❌ ROLLBACK FAILED: %s", str(e))
-            raise UserError("ยกเลิกสต๊อกไม่สำเร็จ กรุณาตรวจสอบ API หรือ log")
+            raise UserError("ยกเลิกสต๊อกไม่สำเร็จ: %s" % str(e))
+
+        # ✅ ตัดสต๊อกปลายทางที่เคยเติมไว้ใน DB นี้ออก
+        for line in lines:
+            line.write({
+                'status': 'รอดำเนินการ',
+                'available_qty': line.available_qty + line.request_qty,
+            })
+            if not line.destination_location_id:
+                _logger.warning("⚠️ ไม่มีคลังปลายทาง จึงไม่สามารถ rollback stock ได้สำหรับ %s",
+                                line.product_name)
+                continue
+
+            product = self._find_local_product(line.default_code)
+            if not product:
+                _logger.warning("⚠️ ไม่พบสินค้า local สำหรับ %s - ข้ามการ rollback", line.default_code)
+                continue
+
+            quant = self.env['stock.quant'].sudo().search([
+                ('product_id', '=', product.id),
+                ('location_id', '=', line.destination_location_id.id)
+            ], limit=1)
+
+            if quant:
+                quant.quantity -= line.request_qty
+                if quant.quantity < 0:
+                    quant.quantity = 0.0
+                _logger.info("🔴 ลบ stock ปลายทาง: %s -%.2f", line.product_name, line.request_qty)
+            else:
+                _logger.warning("❌ ไม่พบ stock.quant สำหรับ %s", line.product_name)
 
 
 class StockAPITransferProductName(models.Model):

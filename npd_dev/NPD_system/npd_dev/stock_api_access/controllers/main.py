@@ -9,6 +9,23 @@ _logger = logging.getLogger(__name__)
 
 class StockAPIController(http.Controller):
 
+    def _fail(self, message):
+        """ยกเลิกทุกอย่างที่ทำไปแล้วใน request นี้ แล้วคืน error
+
+        เดิมโค้ดใช้ `continue` ข้ามรายการที่มีปัญหาแล้วยังตอบ 200 ทำให้ฝั่งที่เรียก
+        เติมสต๊อกปลายทางครบทุกบรรทัดทั้งที่ต้นทางตัดไม่ครบ = ของงอก
+        """
+        request.env.cr.rollback()
+        _logger.error("❌ %s", message)
+        return {'status': 500, 'error': message}
+
+    def _onhand_qty(self, product, location_id):
+        quants = request.env['stock.quant'].sudo().search([
+            ('product_id', '=', product.id),
+            ('location_id', '=', location_id),
+        ])
+        return sum(quants.mapped('quantity'))
+
     @http.route('/api/get_stock', type='json', auth='user', methods=['POST'], csrf=False)
     def get_stock_info(self):
         try:
@@ -62,18 +79,19 @@ class StockAPIController(http.Controller):
                 qty = transfer.get('qty')
 
                 if not all([default_code, source_location_id, qty]):
-                    _logger.warning("⚠️ ข้อมูลไม่ครบ default_code=%s, source_location_id=%s, qty=%s",
-                                    default_code, source_location_id, qty)
-                    continue
+                    return self._fail(
+                        "ข้อมูลไม่ครบ: default_code=%s, source_location_id=%s, qty=%s"
+                        % (default_code, source_location_id, qty))
 
-                # ค้นหา product
-                product_template = request.env['product.template'].sudo().search([
-                    ('default_code', 'ilike', default_code)
-                ], limit=1)
+                # ค้นหา product — จับตรงตัวก่อน แล้วค่อย fallback เป็น ilike
+                # (ilike เป็น substring match อาจไปโดนรหัสอื่นที่มีรหัสนี้เป็นส่วนหนึ่ง)
+                ProductTemplate = request.env['product.template'].sudo()
+                product_template = ProductTemplate.search([('default_code', '=', default_code)], limit=1)
+                if not product_template:
+                    product_template = ProductTemplate.search([('default_code', 'ilike', default_code)], limit=1)
 
                 if not product_template or not product_template.product_variant_id:
-                    _logger.warning("❌ ไม่พบสินค้าใน product.template ที่ default_code ilike '%s'", default_code)
-                    continue
+                    return self._fail("ไม่พบสินค้ารหัส '%s' ในฐานข้อมูลต้นทาง" % default_code)
 
                 product = product_template.product_variant_id
 
@@ -109,11 +127,20 @@ class StockAPIController(http.Controller):
                         for move in picking.move_lines:
                             move.quantity_done = qty
                         picking.button_validate()
-                        _logger.info("✅ Picking validated: %s", picking.name)
-                        created_docs.append(picking.name)
                     except Exception as e:
                         _logger.error("❌ Error during validate picking_id %s: %s", picking.id, str(e))
-                        return {'status': 500, 'error': f'Validation Error: {str(e)}'}
+                        return self._fail('Validation Error: %s' % str(e))
+
+                    # button_validate อาจคืน wizard (immediate/backorder) แทนที่จะย้ายของจริง
+                    # ต้องเช็ค state เสมอ ห้ามถือว่าเรียกแล้วสำเร็จ
+                    if picking.state != 'done':
+                        return self._fail(
+                            "ใบโอน %s ไม่สำเร็จ (state=%s) — สต๊อก %s ที่คลัง id=%s มี %.2f แต่ขอ %.2f"
+                            % (picking.name, picking.state, product.default_code,
+                               source_location_id, self._onhand_qty(product, source_location_id), qty))
+
+                    _logger.info("✅ Picking validated: %s", picking.name)
+                    created_docs.append(picking.name)
 
                 # ❌ ไม่มี destination → ตัดสต๊อกด้วย scrap
                 else:
@@ -125,16 +152,32 @@ class StockAPIController(http.Controller):
                         'origin': f"API-SCRAP-{product.default_code}"
                     })
                     scrap.action_validate()
+
+                    # ⚠️ จุดที่ทำให้ของงอกมาตลอด: ถ้าของไม่พอ action_validate() จะคืน dict ของ
+                    # wizard "Insufficient Quantity To Scrap" โดยไม่ตัดของ แล้ว scrap ค้าง draft
+                    # ของเดิมไม่ได้เช็คค่านี้เลย เลยตอบ 200 ทั้งที่ต้นทางไม่ถูกตัด
+                    if scrap.state != 'done':
+                        return self._fail(
+                            "ตัดสต๊อก %s ไม่สำเร็จ (scrap state=%s) — คลัง id=%s มี %.2f แต่ขอ %.2f"
+                            % (product.default_code, scrap.state, source_location_id,
+                               self._onhand_qty(product, source_location_id), qty))
+
                     _logger.info("🗑️ Scrap created and validated for %s", product.display_name)
                     created_docs.append(scrap.name or f"Scrap-{product.default_code}")
+
+            if len(created_docs) != len(transfers):
+                return self._fail("สร้างเอกสารได้ไม่ครบ (ขอ %d รายการ ได้ %d รายการ)"
+                                  % (len(transfers), len(created_docs)))
 
             return {
                 'status': 200,
                 'message': 'Transfer/Scrap completed',
-                'documents': created_docs
+                'documents': created_docs,
+                'all_done': True,
             }
 
         except Exception as e:
+            request.env.cr.rollback()
             _logger.exception("❌ TRANSFER ERROR")
             return {'status': 500, 'error': str(e)}
 
@@ -163,17 +206,16 @@ class StockAPIController(http.Controller):
                 destination_location_id = original_source if original_dest else None
 
                 if not all([default_code, source_location_id, qty]):
-                    _logger.warning("⚠️ ข้อมูลไม่ครบ: default_code=%s, source=%s, qty=%s",
-                                    default_code, source_location_id, qty)
-                    continue
+                    return self._fail("ข้อมูลไม่ครบ: default_code=%s, source=%s, qty=%s"
+                                      % (default_code, source_location_id, qty))
 
-                # ✅ หา product จาก default_code
-                product_template = request.env['product.template'].sudo().search([
-                    ('default_code', 'ilike', default_code)
-                ], limit=1)
+                # ✅ หา product จาก default_code — จับตรงตัวก่อน แล้วค่อย fallback เป็น ilike
+                ProductTemplate = request.env['product.template'].sudo()
+                product_template = ProductTemplate.search([('default_code', '=', default_code)], limit=1)
+                if not product_template:
+                    product_template = ProductTemplate.search([('default_code', 'ilike', default_code)], limit=1)
                 if not product_template or not product_template.product_variant_id:
-                    _logger.warning("❌ ไม่พบสินค้า: %s", default_code)
-                    continue
+                    return self._fail("ไม่พบสินค้ารหัส '%s' ในฐานข้อมูลต้นทาง" % default_code)
 
                 product = product_template.product_variant_id
 
@@ -209,41 +251,77 @@ class StockAPIController(http.Controller):
                         for move in picking.move_lines:
                             move.quantity_done = qty
                         picking.button_validate()
-                        _logger.info("✅ Picking Validated: %s", picking.name)
-                        rolled_back.append(picking.name)
                     except Exception as e:
                         _logger.error("❌ Validate Error for picking_id %s: %s", picking.id, str(e))
-                        return {'status': 500, 'error': f'Rollback Validation Error: {str(e)}'}
+                        return self._fail('Rollback Validation Error: %s' % str(e))
+
+                    if picking.state != 'done':
+                        return self._fail("ใบคืนของ %s ไม่สำเร็จ (state=%s)" % (picking.name, picking.state))
+
+                    _logger.info("✅ Picking Validated: %s", picking.name)
+                    rolled_back.append(picking.name)
 
                 else:
-                    # ❌ ไม่มีปลายทาง → เติม stock กลับต้นทางด้วย stock.quant
-                    quant = request.env['stock.quant'].sudo().search([
-                        ('product_id', '=', product.id),
-                        ('location_id', '=', source_location_id)
+                    # ❌ ไม่มีปลายทาง = ตอนโอนออกใช้ scrap → คืนของต้องดึงกลับจากคลัง Scrap
+                    # เดิมเขียน quant.quantity += qty ตรงๆ ทำให้ใบ scrap ยังค้างเป็นของเสีย
+                    # แต่ของกลับมาเต็มจำนวน = เสกของขึ้นมาใหม่ทุกครั้งที่กดยกเลิก
+                    scrap_location = request.env['stock.location'].sudo().search([
+                        ('scrap_location', '=', True),
+                        '|', ('company_id', '=', request.env.company.id), ('company_id', '=', False),
                     ], limit=1)
+                    if not scrap_location:
+                        return self._fail("ไม่พบคลัง Scrap สำหรับคืนของ")
 
-                    if quant:
-                        quant.quantity += qty
-                        _logger.info("🟢 เพิ่ม stock.quant: %s @ %s +%.2f", product.display_name,
-                                     quant.location_id.display_name, qty)
-                    else:
-                        request.env['stock.quant'].sudo().create({
+                    picking_name = f"ROLLBACK-SCRAP-{product.default_code or 'N/A'}-{uuid.uuid4().hex[:8].upper()}"
+                    picking = request.env['stock.picking'].sudo().create({
+                        'name': picking_name,
+                        'picking_type_id': picking_type.id,
+                        'location_id': scrap_location.id,
+                        'location_dest_id': source_location_id,
+                        'origin': f"ROLLBACK-SCRAP-{product.default_code or 'N/A'}",
+                        'move_lines': [(0, 0, {
+                            'name': product.display_name or 'Rollback Scrap',
                             'product_id': product.id,
-                            'location_id': source_location_id,
-                            'quantity': qty
-                        })
-                        _logger.info("🟢 สร้าง stock.quant ใหม่: %s @ %s +%.2f", product.display_name,
-                                     source_location_id, qty)
+                            'product_uom_qty': qty,
+                            'product_uom': product.uom_id.id,
+                            'location_id': scrap_location.id,
+                            'location_dest_id': source_location_id,
+                            'picking_type_id': picking_type.id,
+                            'company_id': request.env.company.id
+                        })]
+                    })
 
-                    rolled_back.append(f"quant-{product.default_code or product.id}")
+                    try:
+                        picking.action_confirm()
+                        picking.action_assign()
+                        for move in picking.move_lines:
+                            move.quantity_done = qty
+                        picking.button_validate()
+                    except Exception as e:
+                        _logger.error("❌ Validate Error for rollback-scrap picking %s: %s", picking.id, str(e))
+                        return self._fail('Rollback Validation Error: %s' % str(e))
+
+                    if picking.state != 'done':
+                        return self._fail("ใบคืนของจาก Scrap %s ไม่สำเร็จ (state=%s)"
+                                          % (picking.name, picking.state))
+
+                    _logger.info("🟢 คืนของจาก Scrap: %s +%.2f (%s)", product.display_name, qty, picking.name)
+                    rolled_back.append(picking.name)
+
+            if len(rolled_back) != len(transfers):
+                return self._fail("คืนของได้ไม่ครบ (ขอ %d รายการ ได้ %d รายการ)"
+                                  % (len(transfers), len(rolled_back)))
 
             return {
                 'status': 200,
                 'message': 'Rollback completed',
-                'pickings': rolled_back
+                'pickings': rolled_back,
+                'documents': rolled_back,
+                'all_done': True,
             }
 
         except Exception as e:
+            request.env.cr.rollback()
             _logger.exception("❌ ROLLBACK ERROR")
             return {'status': 500, 'error': str(e)}
 
