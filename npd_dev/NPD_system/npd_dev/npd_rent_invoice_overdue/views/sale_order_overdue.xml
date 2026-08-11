@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- ตารางบรรทัดหนี้ค้างชำระ (ใช้ในแท็บของใบสั่งเช่า)
+         editable="bottom" เพื่อไม่ให้คลิกแถวแล้วเด้ง dialog เปล่า ๆ
+         การไปหน้าอื่นใช้ปุ่มท้ายแถวแทน -->
+    <record id="view_npd_rent_overdue_line_tree" model="ir.ui.view">
+        <field name="name">npd.rent.overdue.line.tree</field>
+        <field name="model">npd.rent.overdue.line</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom" create="false" delete="false" edit="false">
+                <field name="sale_id" readonly="1" options="{'no_open': True, 'no_create': True}"/>
+                <field name="invoice_name" readonly="1"/>
+                <field name="invoice_date" readonly="1"/>
+                <field name="doc_type" readonly="1"/>
+                <field name="return_state" readonly="1"/>
+                <field name="amount_residual" sum="รวมยอดค้างชำระ" readonly="1"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="move_id" invisible="1"/>
+                <button name="action_open_sale" type="object"
+                        string="เปิดใบสั่งเช่า" icon="fa-file-text-o"
+                        help="ไปที่ใบสั่งเช่าใบนี้"/>
+                <button name="action_open_move" type="object"
+                        string="เปิดใบแจ้งหนี้" icon="fa-external-link"
+                        help="ไปที่ใบแจ้งหนี้ใบนี้"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- เพิ่มแท็บ 'สรุปยอดค้างชำระ' ต่อท้ายแท็บสุดท้าย (ปัจจุบันคือ 'การตลาด')
+         ใช้ priority สูงเพื่อให้ถูก apply ทีหลัง จะได้ต่อท้ายจริง
+         โดยไม่ต้องผูก depends กับโมดูลที่สร้างแท็บการตลาด -->
+    <record id="view_order_form_overdue_tab" model="ir.ui.view">
+        <field name="name">sale.order.form.overdue.summary</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="สรุปยอดค้างชำระ" name="npd_overdue_summary">
+                    <div class="alert alert-info" role="alert" style="margin-bottom: 8px;">
+                        ใบแจ้งหนี้และใบแจ้งหนี้ค่าประกันของลูกค้ารายนี้ที่ยังค้างชำระอยู่
+                        (ไม่นับใบสั่งเช่าใบนี้) กดปุ่มท้ายแถวเพื่อเปิดเอกสารนั้น
+                        <br/>
+                        รายการที่ "ยังไม่คืน" จะถูกดึงสินค้าไปแสดงในใบกำกับการเช่าหนี้ค้างชำระด้วย
+                        ส่วนที่ "คืนครบแล้ว" จะขึ้นเฉพาะยอดเงิน
+                    </div>
+                    <field name="overdue_line_ids" nolabel="1" readonly="1"
+                           context="{'tree_view_ref': 'npd_rent_invoice_overdue.view_npd_rent_overdue_line_tree'}"/>
+                    <group class="oe_subtotal_footer oe_right">
+                        <field name="overdue_count" invisible="1"/>
+                        <field name="overdue_total" widget="monetary"
+                               options="{'currency_field': 'currency_id'}"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

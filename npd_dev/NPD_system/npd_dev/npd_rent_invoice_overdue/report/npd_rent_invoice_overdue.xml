@@ -1,0 +1,686 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- ========================================================================
+         ใบกำกับการเช่าหนี้ค้างชำระ
+
+         คัดลอกโครงสร้างจาก pfb_npd_sale_form_rent_invoice "ฉบับที่ติดตั้งจริง"
+         (อ่านจาก ir_ui_view ไม่ใช่ไฟล์บนดิสก์ เพราะไฟล์บนดิสก์ใหม่กว่าที่ติดตั้ง
+          และใช้ค่าคนละชุด) จุดที่ต้องเหมือนเดิมไม่งั้นเลย์เอาต์ทับกัน:
+           - เรียก report_signature "นอก" div.header
+             (ถ้าอยู่ใน header odoo จะแยกไปเป็น page header ของ wkhtmltopdf
+              ทำให้ตารางในเนื้อหาไหลไปทับบล็อกลายเซ็น)
+         ขอบล่าง 15 มม. (ใบเดิมตั้ง 110 มม. ซึ่งเป็นที่ว่างเปล่า เพราะรายงานนี้
+         ไม่มี footer ที่มองเห็นได้ เหลือไว้เท่านั้นทำให้เสียพื้นที่ ~1 ใน 3 ของทุกหน้า)
+
+         การแบ่งหน้า: ไม่บังคับตัดหน้าเอง ปล่อยให้ wkhtmltopdf จัดตามเนื้อหาจริง
+         (วัดแล้ว 1 หน้าใส่ได้ ~26 บรรทัด และขึ้นหัวตารางใหม่ให้ทุกหน้าเพราะ
+          หัวตารางอยู่ใน thead) ส่วนตารางสรุป/บล็อกท้ายใบใส่ page-break-inside: avoid
+         กันถูกตัดครึ่งคาหน้า ถ้าที่ว่างไม่พอจะยกไปหน้าถัดไปทั้งบล็อก
+         ======================================================================== -->
+    <record id="paperformat_npd_rent_invoice_overdue" model="report.paperformat">
+        <field name="name">A4 Sample (ใบกำกับการเช่าหนี้ค้างชำระ)</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">60</field>
+        <field name="margin_bottom">15</field>
+        <field name="margin_left">10</field>
+        <field name="margin_right">10</field>
+        <field name="dpi">90</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">60</field>
+    </record>
+
+    <!-- ชื่อเมนูตอน print = ใบกำกับการเช่าหนี้ค้างชำระ -->
+    <report
+            id="action_rent_invoice_overdue"
+            string="ใบกำกับการเช่าหนี้ค้างชำระ"
+            name="npd_rent_invoice_overdue.report_npd_rent_invoice_overdue"
+            model="sale.order"
+            report_type="qweb-pdf"
+            print_report_name="'Sale - %s' %(object.name)"
+            paperformat="npd_rent_invoice_overdue.paperformat_npd_rent_invoice_overdue"
+    />
+
+    <template id="report_header">
+        <style>
+            .mt-1 {
+            margin-top: 1rem;
+            }
+            .mb-1 {
+            margin-bottom: 1rem;
+            }
+            .ml-45 {
+            margin-left: 50px;
+            }.ml-2 {
+            margin-left: 10px;
+            }
+        </style><br/>
+        <div class="row">
+            <div class="col-2 mr-1" style="margin-top: 14px;">
+                <img src="web/binary/company_logo" class="img-responsive"/>
+            </div>
+            <div class="col-7" style="margin-top: 15px;">
+                <table style="width: 100%;" class="ml-45">
+                    <tr>
+                        <td><strong class="ml-2" style="font-size: 22px;">ใบกำกับการเช่า<t t-if="'rental_contract_no' in doc._fields and doc._get_rental_doc_count() &gt;= 2">(เพิ่มเติม)</t></strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong class="ml-2" style="font-size: 16px;"><span t-esc="doc.company_id.name"/></strong></td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 10px;font-size: 14px;line-height: 1.0;">
+                            <span t-field="doc.branch_id.address" style="line-height: 1.0;font-size: 13px;margin: 0;"/><br/>
+                            เลขประจำตัวผู้เสียภาษี <span t-esc="doc.company_id.vat"/>
+                                    <span t-if="doc.branch_id.telephone == '00000'">(สำนักงานใหญ่)</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>        <!-- โลโก้บริษัท -->
+            <div class="col-3" style="margin-top: 15px;">
+                <table style="width: 100%;">
+<!--                    <tr>-->
+<!--                        <td class="text-center"><strong style="font-size: 18px;"></strong></td>-->
+<!--                    </tr>-->
+                    <tr>
+                        <td class="text-center">
+                            <strong style="font-size: 13px;">เลขที่ <span t-esc="doc.name"/></strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">
+                            <strong style="font-size: 13px;">วันที่ <span t-esc="doc.date_order.strftime('%d') + ' ' + {1: 'มกราคม', 2: 'กุมภาพันธ์', 3: 'มีนาคม', 4: 'เมษายน', 5: 'พฤษภาคม', 6: 'มิถุนายน', 7: 'กรกฎาคม', 8: 'สิงหาคม', 9: 'กันยายน', 10: 'ตุลาคม', 11: 'พฤศจิกายน', 12: 'ธันวาคม'}[int(doc.date_order.strftime('%m'))] + ' ' + str(int(doc.date_order.strftime('%Y')) + 543)"/></strong>
+                        </td>
+                    </tr>
+                    <tr t-if="'rental_contract_no' in doc._fields">
+                        <td class="text-center">
+                            <strong style="font-size: 13px;">สัญญา <span t-esc="doc.rental_contract_full"/></strong>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="text-center">
+                            <strong style="font-size: 13px;">อ้างอิงใบกำกับการเช่า</strong>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </template>
+
+    <template id="report_day">
+        <style>
+            .rounded-square {
+                border: 1px solid #000;
+                border-radius: 10px;
+                padding: 10px;
+                font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+<!--                margin: auto; /* Center align */-->
+            }
+            .text-left {
+                text-align: left;
+            }
+
+
+            .text-right {
+                text-align: right;
+            }
+
+            .mt-1 {
+                margin-top: 1rem;
+            }
+
+            .mb-1 {
+                margin-bottom: 1rem;
+            }
+
+            .mr-1 {
+                margin-right: 1rem;
+            }
+        </style>
+        <div class="row">
+            <div class="mb-1 rounded-square" style="display: block; width:900px;">
+                <div class="col-26">
+                    <table width="100%">
+                        <tr>
+                            <td class="text-left">
+                                <strong class="ml-1">
+                                    <span style="font-size: 13px;">เริ่มเช่าวันที่</span>
+                                    <span style="font-size: 13px;" t-esc="doc.start_rent_date.strftime('%d') + ' ' + {1: 'มกราคม', 2: 'กุมภาพันธ์', 3: 'มีนาคม', 4: 'เมษายน', 5: 'พฤษภาคม', 6: 'มิถุนายน', 7: 'กรกฎาคม', 8: 'สิงหาคม', 9: 'กันยายน', 10: 'ตุลาคม', 11: 'พฤศจิกายน', 12: 'ธันวาคม'}[int(doc.start_rent_date.strftime('%m'))] + ' ' + str(int(doc.start_rent_date.strftime('%Y')) + 543)"/>
+                                    <span style="font-size: 13px;" class="ml-1">ถึง</span>
+                                    <span style="font-size: 13px;" t-esc="doc.end_rent_date.strftime('%d') + ' ' + {1: 'มกราคม', 2: 'กุมภาพันธ์', 3: 'มีนาคม', 4: 'เมษายน', 5: 'พฤษภาคม', 6: 'มิถุนายน', 7: 'กรกฎาคม', 8: 'สิงหาคม', 9: 'กันยายน', 10: 'ตุลาคม', 11: 'พฤศจิกายน', 12: 'ธันวาคม'}[int(doc.end_rent_date.strftime('%m'))] + ' ' + str(int(doc.end_rent_date.strftime('%Y')) + 543)"/>
+                                </strong>
+                            </td>
+                            <td class="text-right" style="font-size: 13px;">
+                                <strong class="mr-1">รวม</strong>
+                                <strong class="mr-1"><span t-esc="doc.pfb_date_of_rent"/></strong>
+                                <strong>วัน</strong>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+<!--            <div style="position:fixed;  top: 165px; right: 60px;font-family: 'Kinnari' !important;font-size: 13px;">-->
+<!--                <span>เวลาออกเอกสาร</span>-->
+<!--                <span t-esc="confirmed_time"/>-->
+<!--                <t t-esc="doc.confirmed_time.strftime('%H:%M:%S') or 'N/A'"/>-->
+<!--            </div>-->
+        </div>
+    </template>
+
+    <template id="report_detail">
+        <style>
+            .table2t {
+            width: 100%;
+            border-collapse: collapse;
+            }
+
+            .table-right td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: right; /* จัดตำแหน่งเนื้อหาทางขวา */
+            }
+
+            .table-right h2 {
+            margin: 0;
+            text-align: right; /* จัดตำแหน่งหัวข้อทางขวา */
+            }
+            .preserve-whitespace
+            {
+            white-space: pre; /* Preserve leading and other white spaces */
+            }
+            .mt-1 {
+            margin-top: 1rem; /* ระยะห่างด้านบน */
+            }
+            .mb-1 {
+            margin-bottom: 1rem; /* ระยะห่างด้านล่าง */
+            }
+            .mr-1 {
+            margin-right: 1rem; /* ระยะห่างด้านขวา */
+            }
+            .ml-1 {
+            margin-left: 1em /* ระยะห่างด้านซ้าย */
+            }
+            .space{
+            margin-left: 1em; /* ช่องว่างด้านซ้ายเทียบเท่ากับขนาดของ 5 ตัวอักษร */
+            }
+            .space2{
+            margin-left: 2.4em; /* ช่องว่างด้านซ้ายเทียบเท่ากับขนาดของ 5 ตัวอักษร */
+            }
+            .space2-1{
+            margin-left: 2.6em; /* ช่องว่างด้านซ้ายเทียบเท่ากับขนาดของ 5 ตัวอักษร */
+            }
+            .space3{
+            margin-left: 5.2em; /* ช่องว่างด้านซ้ายเทียบเท่ากับขนาดของ 5 ตัวอักษร */
+            }
+            .m-1 {
+            margin: 1rem; /* ระยะห่างในทุกทิศทาง */
+            }
+        </style>
+        <!--         ส่วนของข้อมูล-->
+        <div class="row" style="mt-1">
+            <table class="width :100%">
+                <tr>
+                    <!--                        ชื่อผู้เช่า-->
+                    <strong class="space2" style="font-size: 13px;">ผู้เช่า :</strong>
+                </tr>
+                <tr>
+                    <td style="font-size: 13px;"><span class="ml-1" t-esc="doc.partner_id.name"/></td>
+                </tr>
+            </table>
+        </div>
+        <div class="row" style="mt-1">
+            <table style="width :100%">
+                <tr style="font-size: 13px;">
+                    <td style="font-size: 13px;">
+                        <strong class="space2-1">ที่อยู่ :</strong>
+                        <span class="ml-1" t-esc="doc.partner_id.street"/>
+                        <span class="ml-1" t-esc="doc.partner_id.street2"/>
+                        <span class="ml-1" t-esc="doc.partner_id.city"/>
+                        <span class="ml-1" t-esc="doc.partner_id.state_id.name"/>
+                        <span class="ml-1" t-esc="doc.partner_id.zip"/>
+                        <tb class="ml-1">[<span t-esc="doc.partner_id.phone"/>]</tb>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="row">
+            <table style="width :100%">
+                <tr>
+                    <td style="font-size: 13px;">
+                        <tb class="space3">ผู้ติดต่อ :</tb>
+                        <tb class="ml-1"><span t-esc="doc.partner_id.name"/></tb>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="row">
+            <table style="width :100%">
+                <tr>
+                    <td style="ml-1 font-size: 13px;">
+                        <strong class="space" style="font-size: 13px;">หน้างาน :</strong>
+<!--                        <span class="ml-1" t-esc="doc.partner_shipping_id.street"/>-->
+<!--                        <span class="ml-1" t-esc="doc.partner_shipping_id.street2"/>-->
+<!--                        <span class="ml-1" t-esc="doc.partner_shipping_id.city"/>-->
+<!--                        <span class="ml-1" t-esc="doc.partner_shipping_id.state_id.name"/>-->
+<!--                        <span class="ml-1" t-esc="doc.partner_shipping_id.zip"/>-->
+                        <span class="ml-1" style="font-size: 13px;" t-esc="doc.on_site"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </template>
+
+    <template id="report_overdue_summary">
+        <table width="100%" style="margin-top: 10px; page-break-inside: avoid;">
+            <thead>
+                <tr>
+                    <th colspan="5" style="text-align: left; font-size: 13px; padding: 2px 0;">
+                        <strong>สรุปยอดค้างชำระ</strong>
+                    </th>
+                </tr>
+                <tr style="border-bottom: 1px solid black !important;">
+                    <th width="20%" style="text-align: left; font-size: 13px;">เลขที่ใบสั่งเช่า</th>
+                    <th width="22%" style="text-align: left; font-size: 13px;">เลขที่ใบแจ้งหนี้</th>
+                    <th width="14%" style="text-align: center; font-size: 13px;">วันที่ใบแจ้งหนี้</th>
+                    <th width="26%" style="text-align: left; font-size: 13px;">ประเภท</th>
+                    <th width="18%" style="text-align: right; font-size: 13px;">ยอดค้างชำระ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <t t-foreach="ov_summary" t-as="s">
+                    <tr>
+                        <td style="text-align: left; font-size: 13px; border-bottom: hidden;"><span t-esc="s['so_name']"/></td>
+                        <td style="text-align: left; font-size: 13px; border-bottom: hidden;"><span t-esc="s['invoice_name']"/></td>
+                        <td style="text-align: center; font-size: 13px; border-bottom: hidden;"><span t-esc="s['invoice_date']"/></td>
+                        <td style="text-align: left; font-size: 13px; border-bottom: hidden;"><span t-esc="s['doc_type']"/></td>
+                        <td style="text-align: right; font-size: 13px; border-bottom: hidden;"><span t-esc="'{0:,.2f}'.format(s['amount'])"/></td>
+                    </tr>
+                </t>
+                <tr>
+                    <td colspan="4" style="text-align: right; font-size: 13px; border-top: 1px solid black; padding-top: 2px;">
+                        <strong>รวมยอดค้างชำระ</strong></td>
+                    <td style="text-align: right; font-size: 13px; border-top: 1px solid black; padding-top: 2px;">
+                        <strong><span t-esc="'{0:,.2f}'.format(ov_total)"/></strong></td>
+                </tr>
+            </tbody>
+        </table>
+</template>
+
+    <template id="report_table">
+        <style>
+            .page-break {
+                page-break-before: always;
+            }
+        </style>
+
+        <!-- ดึงข้อมูลครั้งเดียวต่อเอกสาร
+             rows = รายการของตัวเอง + รายการที่ดึงมาจาก SO ที่ค้างชำระ
+             ไม่บังคับตัดหน้าเอง ปล่อยให้ wkhtmltopdf จัดตามเนื้อหาจริง
+             (หัวตารางอยู่ใน thead จึงขึ้นซ้ำให้ทุกหน้าอัตโนมัติ) -->
+        <t t-set="ov" t-value="doc.get_overdue_rent_report_data()"/>
+        <t t-set="ov_rows" t-value="ov['rows']"/>
+        <t t-set="ov_summary" t-value="ov['summary']"/>
+        <t t-set="ov_total" t-value="ov['total']"/>
+
+        <table width="100%" style="mt-1">
+            <thead>
+                <tr style="border-bottom: 1px solid black !important; font-size: 13px;">
+                    <th width="3%" class="text-center border_report" style="font-size: 13px;">ลำดับ</th>
+                    <th width="18%" class="text-center border_report" style="font-size: 13px;">รายการสินค้า</th>
+                    <th width="13%" class="text-center border_report" style="padding: 0 4px;font-size: 13px;">อ้างอิง<br/>เลขเอกสาร</th>
+                    <th width="7%" class="text-right border_report" style="padding: 0 4px;font-size: 13px;">น้ำหนักสินค้า</th>
+                    <th width="6%" class="text-right border_report" style="font-size: 13px;">จำนวน</th>
+                    <th width="11%" class="text-right border_report" style="padding: 0 6px;font-size: 13px;">ค่าปรับเงินประกัน<br/>หลังหักค่าเสื่อมแล้ว</th>
+                    <th width="8%" class="text-right border_report" style="padding: 0 6px;font-size: 13px;">ค่าซ่อมแซม<br/>(B/ชิ้น)</th>
+                    <th width="8%" class="text-right border_report" style="padding: 0 4px;font-size: 13px;">ค่าเช่า<br/>ต่อหน่วย</th>
+                    <th width="10%" class="text-right border_report" style="padding: 0 4px;font-size: 13px;">รวมเป็นเงิน</th>
+                </tr>
+            </thead>
+            <tbody>
+                <t t-foreach="ov_rows" t-as="l">
+                    <tr>
+                        <td class="text-center" style="font-size: 13px;border-bottom:hidden;"><span t-esc="l_index + 1"/></td>
+                        <td class="text-left" style="font-size: 13px;border-bottom:hidden;">
+                            <span t-esc="l['name']"/></td>
+                        <!-- รายการของตัวเองเว้นว่าง / รายการที่ดึงมาแสดงเลขเอกสาร -->
+                        <td class="text-center" style="font-size: 12px;border-bottom:hidden;">
+                            <t t-if="not l['is_own']"><span t-esc="l['ref_doc']"/></t>
+                        </td>
+                        <td class="text-right" style="font-size: 13px; border-bottom: hidden;">
+                            <t t-if="l['is_own']"><span t-esc="'{0:,.2f}'.format(l['weight'])"/></t>
+                            <t t-else="">&#160;</t>
+                        </td>
+                        <td class="text-right" style="font-size: 13px;border-bottom:hidden;"><span t-esc="'{0:,.0f}'.format(l['qty'])"/></td>
+                        <!-- แถวที่ดึงมาจากเอกสารอื่นแสดงแค่ ชื่อสินค้า/เลขอ้างอิง/จำนวน
+                             ที่เหลือเว้นว่าง เพราะไม่ได้คิดเงินในใบนี้ ใส่ตัวเลขไว้จะเข้าใจผิด -->
+                        <td class="text-right" style="font-size: 13px;border-bottom:hidden;">
+                            <t t-if="l['is_own']"><span t-esc="'{0:,.2f}'.format(l['insurance'])"/></t>
+                            <t t-else="">&#160;</t>
+                        </td>
+                        <td class="text-right" style="font-size: 13px;border-bottom:hidden;">
+                            <t t-if="l['is_own']">ตามจริง</t>
+                            <t t-else="">&#160;</t>
+                        </td>
+                        <td class="text-right" style="font-size: 13px;border-bottom:hidden;">
+                            <t t-if="l['is_own']"><span t-esc="'{0:,.2f}'.format(l['price_unit'])"/></t>
+                            <t t-else="">&#160;</t>
+                        </td>
+                        <td class="text-right" style="font-size: 13px;border-bottom:hidden;">
+                            <t t-if="l['is_own']"><span t-esc="'{0:,.2f}'.format(l['subtotal'])"/></t>
+                            <t t-else="">&#160;</t>
+                        </td>
+                    </tr>
+                </t>
+            </tbody>
+        </table>
+
+        <!-- ตารางสรุปยอดค้างชำระ ต่อท้ายตารางสินค้า
+             ถ้าที่ว่างท้ายหน้าไม่พอ page-break-inside: avoid จะยกทั้งตารางไปหน้าถัดไป -->
+        <t t-if="ov_summary">
+            <t t-call="npd_rent_invoice_overdue.report_overdue_summary"/>
+        </t>
+</template>
+
+    <template id="report_signature">
+<!--        <div style="display: block; width: 900px; position: fixed; left: 10px; top: 980px;">-->
+            <div style="display: block; width: 100%; margin-top: 8px;">
+            <style>
+                .mt-1 {
+                margin-top: 1rem;
+                }
+                .mr-68 {
+                margin-right: 4em;
+                }
+                .rounded-square {
+                border: 1px solid #000;
+                border-radius: 5px;
+                padding: 5px 20px;
+                width: 100%;
+                font-family: 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+                }
+                .vertical {
+                float: left;
+                border-right: 2px solid darkcyan;
+                padding-right: 0.5rem;
+                margin-right: 0.5rem;
+                }
+                .mt-2 {
+                margin-top: 20px;
+                }
+                .mb-1 {
+                margin-bottom: 1rem;
+                }
+                .mb-2 {
+                margin-bottom: 10px;
+                }
+                .mr-99 {
+                margin-right: 20px;
+                }
+            </style>
+<t t-if="doc.contact_type == 'sale'">
+                  <strong class="text-left" style="font-size: 13px;">
+                    เจ้าหน้าที่ฝ่ายขาย:<span style="margin-left:10px;"/><t t-esc="doc.sales_contact.name"/>
+                </strong>
+
+                </t>
+            <div style="border-bottom: 1px solid black" class="mb-1"/>
+            <t t-set="subtotal_notax" t-value="sum([(l.pfb_quantity or 0) * (doc.pfb_date_of_rent or 0) * round((l.price_unit or 0) / 1.07, 2) for l in doc.order_line])"/>
+            <t t-set="vat_amount" t-value="round(subtotal_notax * 0.07, 2)"/>
+            <t t-set="total_with_vat" t-value="subtotal_notax + vat_amount"/>
+            <div style="page-break-inside: avoid;">
+            <div class="row">
+                <div class="col-6">
+                    <div class="rounded-square" style="height: 145px; position: relative;">
+                        <p class="text-left" style="font-size: 13px; margin: 0; max-height: 95px; overflow: hidden;">
+                            หมายเหตุ
+                            <span class="ml-1" t-raw="(doc.note or '').replace('&lt;p&gt;', '').replace('&lt;/p&gt;', '')"/>
+                        </p>
+                        <div style="position: absolute; bottom: 5px; left: 20px; right: 20px;">
+                            <p style="border-bottom: 1px solid black; margin: 0 0 4px 0;"/>
+                            <p class="text-left" style="font-size: 13px; margin: 0;">
+                                <strong class="mr-1">ค่าเช่า :</strong>เงินโอน(<span t-esc="'{0:,.2f}'.format(doc.amount_total)"/>)<span> | </span>
+                                <strong class="mr-1">ค่าประกัน :</strong>เงินโอน(<span t-esc="'{0:,.2f}'.format(doc.pfb_amount)"/>)</p>
+
+                            <p class="text-left" style="font-size: 13px; margin: 0;">
+                                <t t-set="sum_weight" t-value="sum([line.second_uom_qty * line.pfb_quantity for line in doc.order_line])"/>
+                                <strong class="mr-1">น้ำหนักรวมสินค้ารวมสุทธิ :</strong> <span t-esc="'{0:,.2f}'.format(sum_weight)"/> กก. </p>
+
+                        </div>
+
+                    </div>
+                </div>
+                <div class="col-6" style="margin-left: -30px;">
+                    <table width="100%">
+                        <tr>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong>ค่าเช่าสินค้าก่อนภาษี</strong></td>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(doc.amount_untaxed)"/></strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong>ภาษีมูลค่าเพิ่ม 7 %</strong></td>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(doc.amount_tax)"/></strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong>ค่าเช่าสินค้าสุทธิ</strong></td>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(doc.amount_total)"/></strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong>ค่าประกันสินค้า</strong></td>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(doc.pfb_amount)"/></strong></td>
+                        </tr>
+<!--                        <tr>-->
+<!--                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong>ค่าเช่าต่อวันรวม(vat)</strong></td>-->
+<!--                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(total_with_vat / (doc.pfb_date_of_rent or 1))"/></strong></td>-->
+<!--                        </tr>-->
+                        <tr>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong>ค่าเช่าต่อวันรวม(vat)</strong></td>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(doc.amount_total / (doc.pfb_date_of_rent or 1))"/></strong></td>
+                        </tr>
+
+
+                    </table>
+                </div>
+            </div>
+            <div class="rounded-square">
+                <div class="row">
+                    <div class="col-3">
+                        <p class="text-left"><strong style="font-size: 13px;"> ค่าเช่าเเละค่าประกันสุทธิ :</strong></p>
+                    </div>
+                    <div class="col-6">
+                        <p class="text-right mr-99" style="font-size: 13px;">(<span t-esc="doc.get_total_baht_text()"/>)
+                            <span> | </span>
+                        </p>
+                    </div>
+                    <div class="col-3">
+                        <p class="text-right">
+                            <strong style="font-size: 14px;"><b><span t-esc="'{0:,.2f}'.format(doc.pfb_amount + doc.amount_total)"/></b></strong></p>
+                    </div>
+                </div>
+            </div>
+            </div>
+            <!-- เงื่อนไข -->
+            <div class="mt-1" style="font-size: 13px; page-break-inside: avoid;">
+                <strong>เงื่อนไข:</strong>
+                <table style="width: 100%; margin-top: 5px; margin-left: 40px;">
+                    <tr>
+                        <td style="vertical-align: top; width: 30px;">1.</td>
+                        <td>"ค่าเช่าสินค้า"หรือ"การเช่าสินค้า" ตามใบเสนอราคาหรือใบสั่งเช่าสินค้านี้<br/>
+                            <span style="margin-left: 15px;">หมายถึง ค่าเช่าสินค้า ค่าซ่อมแซมสินค้า ค่าสินค้าเช่าที่ผู้เช่ายังไม่ได้ส่งคืน ค่าสินค้าชำรุดเสียหายใช้งานไม่ได้ ค่าสินค้าสูญหาย ค่าบริการขนส่งและหนี้อื่นๆที่เกิด</span><br/>
+                            <span style="margin-left: 15px;">จากการเช่าสินค้านี้</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">2.</td>
+                        <td>ชำระค่าซ่อมแซมตามจริง (ไม่รวมค่าสินค้าชำรุดเสียหายใช้งานไม่ได้)</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">3.</td>
+                        <td>ผู้เช่าต้องเช่าสินค้าเป็นระยะเวลาอย่างน้อย 30 วัน หลังจากนั้นคิดค่าเช่าสินค้าเป็นรายวัน</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">4.</td>
+                        <td>หากสินค้าที่ส่งคืนไม่สามารถซ่อมแซมได้ หรือสินค้าเช่าที่ผู้เช่ายังไม่ได้ส่งคืน ให้หักราคาค่าสินค้า ตามใบเสนอราคา/ใบสั่งเช่าสินค้าข้างต้น</td>
+                    </tr>
+
+                    <t t-if="request.db == 'NPD_Intertrading_New'">
+                    <tr>
+                        <td style="vertical-align: top;">5.</td>
+                        <td>ค่าประกันสินค้า โอนเงินเข้าบัญชี บช.บริษัท นภดล อินเตอร์เทรดดิ้ง จำกัด กสิกรไทย เลขที่บัญชี 033-885651-2</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">6.</td>
+                        <td>ค่าเช่าสินค้า โอนเงินเข้าบัญชี : บช.บริษัท นภดล อินเตอร์เทรดดิ้ง จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 408-546107-1</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">7.</td>
+                        <td>ค่าขนส่ง.สินค้า โอนเงินเข้าบัญชี : บช.บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6</td>
+                    </tr>
+                    </t>
+
+                    <t t-if="request.db == 'NPD_Bangkok_New'">
+                    <tr>
+                        <td style="vertical-align: top;">5.</td>
+                        <td>ค่าประกันสินค้า โอนเงินเข้าบัญชี บช.บริษัท นภดล กรุงเทพ จำกัด กสิกรไทย เลขที่บัญชี 025-290298-8</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">6.</td>
+                        <td>ค่าเช่าสินค้า โอนเงินเข้าบัญชี : บช.บริษัท นภดล กรุงเทพ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 186-224773-9</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">7.</td>
+                        <td>ค่าขนส่ง.สินค้า โอนเงินเข้าบัญชี : บช.บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6</td>
+                    </tr>
+                    </t>
+
+                    <t t-if="request.db == 'NPD_S_Group_New_V2'">
+                    <tr>
+                        <td style="vertical-align: top;">5.</td>
+                        <td>ค่าประกันสินค้า โอนเงินเข้าบัญชี บช.บริษัท นภดล เอส กรุ๊ป จํากัด กสิกรไทย เลขที่บัญชี 020-893777-4</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">6.</td>
+                        <td>ค่าเช่าสินค้า โอนเงินเข้าบัญชี : บช.บริษัท นภดล เอส กรุ๊ป จํากัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 186-222160-2</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">7.</td>
+                        <td>ค่าขนส่ง.สินค้า โอนเงินเข้าบัญชี : บช.บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6</td>
+                    </tr>
+                    </t>
+
+                    <t t-if="request.db == 'NPD_Steeltech_New'">
+                    <tr>
+                        <td style="vertical-align: top;">5.</td>
+                        <td>ค่าประกันสินค้า โอนเงินเข้าบัญชี บช.บริษัท เอ็นพีดี สตีลเทค จำกัด กสิกรไทย เลขที่บัญชี 035-1-39757-8</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">6.</td>
+                        <td>ค่าเช่าสินค้า โอนเงินเข้าบัญชี : บช.บริษัท เอ็นพีดี สตีลเทค จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 408-582058-4</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;">7.</td>
+                        <td>ค่าขนส่ง.สินค้า โอนเงินเข้าบัญชี : บช.บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6</td>
+                    </tr>
+                    </t>
+
+                    <t t-if="request.db == 'NPD_Logistics_New'">
+                    <tr>
+                        <td style="vertical-align: top;">5.</td>
+                        <td>ค่าประกันสินค้า โอนเงินเข้าบัญชี บช.บริษัท เอ็นพีดี โลจิสติกส์ จำกัด กสิกรไทย เลขที่บัญชี 117-1-78329-8</td>
+                    </tr>
+<!--                    <tr>-->
+<!--                        <td style="vertical-align: top;">6.</td>-->
+<!--                        <td>ค่าเช่าสินค้า โอนเงินเข้าบัญชี : บช.บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6</td>-->
+<!--                    </tr>-->
+                    <tr>
+                        <td style="vertical-align: top;">6.</td>
+                        <td>ค่าขนส่ง.สินค้า โอนเงินเข้าบัญชี : บช.บริษัท เอ็นพีดี โลจิสติกส์ จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 439-044811-6</td>
+                    </tr>
+                    </t>
+
+
+                </table>
+            </div>
+            <!-- ตารางลายเซ็น -->
+            <div class="mt-1" style="page-break-inside: avoid;">
+                <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
+                    <thead>
+                        <tr>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: center; width: 50%; font-size: 15px;"><br/>ผู้เช่า</th>
+                            <th style="border: 1px solid #000; padding: 6px; text-align: center; width: 50%; font-size: 15px;"><br/>ผู้ให้เช่า</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: bottom; height: 110px; font-size: 13px;">
+                                <br/>
+                                <table style="width: 100%; margin-top: 16px;">
+                                    <tr>
+                                        <td style="border: 0; width: 26%; text-align: center; vertical-align: bottom;">
+                                            <div style="border: 1px solid #999; color: #888; width: 100px; height: 46px; font-size: 11px; text-align: center; padding-top: 4px; display: inline-block;">ตราประทับผู้เช่า<br/>(ถ้ามี)</div>
+                                        </td>
+                                        <td style="border: 0; width: 48%; text-align: center; vertical-align: bottom;">...........................................................</td>
+                                        <td style="border: 0; width: 26%;"/>
+                                    </tr>
+                                </table>
+                                <br/>
+<!--                                <span t-esc="user.name"/><br/>-->
+                                <span t-esc="user.partner_id.phone or user.partner_id.mobile or ''"/><br/>
+                                <strong><span t-esc="doc.partner_id.name"/></strong>
+                            </td>
+                            <td style="border: 1px solid #000; padding: 8px; text-align: center; height: 110px; font-size: 13px;">
+                                <div style="height: 30px;"/>
+                                <table style="width: 100%;">
+                                    <tr>
+                                        <td style="border: 0; width: 26%;"/>
+                                        <td style="border: 0; width: 48%; text-align: center; vertical-align: bottom;">...........................................................</td>
+                                        <td style="border: 0; width: 26%; text-align: center; vertical-align: bottom;">
+                                            <div style="border: 1px solid #999; color: #888; width: 100px; height: 46px; font-size: 11px; text-align: center; padding-top: 4px; display: inline-block;">ตราประทับผู้ให้เช่า</div>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <br/>
+                                <div>(นายธีระพล รอดสาตร์)</div>
+                                <div style="border-top: 1px solid #000; margin-top: 4px; padding-top: 4px;">
+
+                                    <strong><span t-esc="doc.company_id.name"/></strong>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+<!--        <div class="printed-on"-->
+<!--             style="position:fixed;  top: 1360px; right: 50px;font-family: 'Kinnari' !important;font-size: 13px;">-->
+<!--            <strong style="font-size: 10px mr-1">วันที่พิมพ์เอกสาร :</strong>-->
+<!--            <strong style="font-size: 10px mr-1"><span t-esc="time.strftime('%d-%m-%Y')"/></strong>-->
+<!--            <strong style="font-size: 10px mr-1">เวลา :</strong>-->
+<!--            <strong style="font-size: 10px mr-1"><span t-esc="time.strftime('%H:%M:%S')"/></strong>-->
+<!--        </div>-->
+<!--        <div style="position:fixed;  top: 1290px; right: 95px;font-family: 'Kinnari' !important;font-size: 13px;">-->
+<!--            <t t-esc="doc.date_order.strftime('%d/%m/') + str(doc.date_order.year + 543)"/>-->
+
+<!--        </div>-->
+<!--        <div style="position: fixed; top: 1250px; right: 80px; font-family: 'Kinnari' !important; font-size: 13px; width: 160px; white-space: normal; word-wrap: break-word;">-->
+<!--    <t t-esc="doc.user_id.name"/>-->
+<!--</div>-->
+
+    </template>
+
+    <template id="report_npd_rent_invoice_overdue">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.basic_layout">
+                    <t t-set="number" t-vatue="0"/>
+                    <div class="header">
+                        <t t-call="npd_rent_invoice_overdue.report_header"/>
+                        <t t-call="npd_rent_invoice_overdue.report_day"/>
+                        <t t-call="npd_rent_invoice_overdue.report_detail"/>
+                    </div>
+                    <t t-call="npd_rent_invoice_overdue.report_table"/>
+                    <t t-call="npd_rent_invoice_overdue.report_signature"/>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
