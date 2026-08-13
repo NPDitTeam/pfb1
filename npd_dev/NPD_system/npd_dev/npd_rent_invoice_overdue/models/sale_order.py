@@ -422,4 +422,7 @@ class SaleOrder(models.Model):
             'summary': data['summary'],
             'total': data['total'],
             'has_overdue': bool(data['summary']),
+            # ไม่มีรายการที่ดึงมาเลย -> ซ่อนคอลัมน์อ้างอิงเลขเอกสาร
+            # เอาที่ว่างไปให้ชื่อสินค้าแทน
+            'has_ref': any(not r['is_own'] for r in rows),
         }

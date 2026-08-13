@@ -324,13 +324,17 @@
         <t t-set="ov_rows" t-value="ov['rows']"/>
         <t t-set="ov_summary" t-value="ov['summary']"/>
         <t t-set="ov_total" t-value="ov['total']"/>
+        <!-- ลูกค้ารายนี้ไม่มีสินค้าที่ดึงมาเลย -> ซ่อนคอลัมน์อ้างอิง
+             แล้วยกความกว้างไปให้ชื่อสินค้า -->
+        <t t-set="ov_has_ref" t-value="ov['has_ref']"/>
+        <t t-set="name_width" t-value="'18%' if ov_has_ref else '31%'"/>
 
         <table width="100%" style="mt-1">
             <thead>
                 <tr style="border-bottom: 1px solid black !important; font-size: 13px;">
                     <th width="3%" class="text-center border_report" style="font-size: 13px;">ลำดับ</th>
-                    <th width="18%" class="text-center border_report" style="font-size: 13px;">รายการสินค้า</th>
-                    <th width="13%" class="text-center border_report" style="padding: 0 4px;font-size: 13px;">อ้างอิง<br/>เลขเอกสาร</th>
+                    <th t-att-width="name_width" class="text-center border_report" style="font-size: 13px;">รายการสินค้า</th>
+                    <th t-if="ov_has_ref" width="13%" class="text-center border_report" style="padding: 0 4px;font-size: 13px;">อ้างอิง<br/>เลขเอกสาร</th>
                     <th width="7%" class="text-right border_report" style="padding: 0 4px;font-size: 13px;">น้ำหนักสินค้า</th>
                     <th width="6%" class="text-right border_report" style="font-size: 13px;">จำนวน</th>
                     <th width="11%" class="text-right border_report" style="padding: 0 6px;font-size: 13px;">ค่าปรับเงินประกัน<br/>หลังหักค่าเสื่อมแล้ว</th>
@@ -346,7 +350,7 @@
                         <td class="text-left" style="font-size: 13px;border-bottom:hidden;">
                             <span t-esc="l['name']"/></td>
                         <!-- รายการของตัวเองเว้นว่าง / รายการที่ดึงมาแสดงเลขเอกสาร -->
-                        <td class="text-center" style="font-size: 12px;border-bottom:hidden;">
+                        <td t-if="ov_has_ref" class="text-center" style="font-size: 12px;border-bottom:hidden;">
                             <t t-if="not l['is_own']"><span t-esc="l['ref_doc']"/></t>
                         </td>
                         <td class="text-right" style="font-size: 13px; border-bottom: hidden;">
