@@ -24,7 +24,11 @@ class NpdRentOverdueLine(models.TransientModel):
     move_id = fields.Many2one('account.move', string=u'เลขที่ใบแจ้งหนี้', readonly=True)
     invoice_name = fields.Char(string=u'เลขที่ใบแจ้งหนี้', readonly=True)
     invoice_date = fields.Date(string=u'วันที่ใบแจ้งหนี้', readonly=True)
-    doc_type = fields.Char(string=u'ประเภท', readonly=True)
+    pay_type = fields.Selection([
+        ('not_paid', u'ค้างชำระเต็มจำนวน'),
+        ('partial', u'ค้างชำระบางส่วน'),
+    ], string=u'ประเภทค้างชำระ', readonly=True)
+    doc_type = fields.Char(string=u'ประเภทการชำระ', readonly=True)
     amount_residual = fields.Monetary(
         string=u'ยอดค้างชำระ', currency_field='currency_id', readonly=True)
     currency_id = fields.Many2one('res.currency', readonly=True)

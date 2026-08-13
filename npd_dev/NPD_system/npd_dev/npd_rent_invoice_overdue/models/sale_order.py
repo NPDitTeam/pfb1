@@ -82,6 +82,8 @@ class SaleOrder(models.Model):
                         'move_id': item['move_id'],
                         'invoice_name': item['invoice_name'],
                         'invoice_date': item['invoice_date_raw'],
+                        'pay_type': ('partial' if item['payment_state'] == 'partial'
+                                     else 'not_paid'),
                         'doc_type': item['doc_type'],
                         'amount_residual': item['amount'],
                         'currency_id': order.currency_id.id,
@@ -235,6 +237,7 @@ class SaleOrder(models.Model):
                    am.id                AS move_id,
                    am.name              AS invoice_name,
                    am.invoice_date      AS invoice_date,
+                   am.payment_state     AS payment_state,
                    il.kind              AS kind,
                    {reason_col}         AS reason_name,
                    am.amount_residual   AS amount_residual,
@@ -317,6 +320,9 @@ class SaleOrder(models.Model):
                 'invoice_name': row['invoice_name'] or '',
                 'invoice_date_raw': row['invoice_date'],
                 'invoice_date': self._overdue_format_date(row['invoice_date']),
+                'payment_state': row['payment_state'],
+                'pay_type': (u'ค้างชำระบางส่วน' if row['payment_state'] == 'partial'
+                             else u'ค้างชำระเต็มจำนวน'),
                 'qty_outstanding': row['qty_outstanding'] or 0.0,
                 'is_debit': is_debit,
                 'doc_type': doc_type,

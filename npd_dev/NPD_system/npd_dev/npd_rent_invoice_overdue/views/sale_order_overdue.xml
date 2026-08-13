@@ -11,6 +11,7 @@
                 <field name="sale_id" readonly="1" options="{'no_open': True, 'no_create': True}"/>
                 <field name="invoice_name" readonly="1"/>
                 <field name="invoice_date" readonly="1"/>
+                <field name="pay_type" readonly="1"/>
                 <field name="doc_type" readonly="1"/>
                 <field name="return_state" readonly="1"/>
                 <field name="amount_residual" sum="รวมยอดค้างชำระ" readonly="1"/>

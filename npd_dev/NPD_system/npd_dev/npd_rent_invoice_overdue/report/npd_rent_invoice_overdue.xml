@@ -275,16 +275,17 @@
         <table width="100%" style="margin-top: 10px; page-break-inside: avoid;">
             <thead>
                 <tr>
-                    <th colspan="5" style="text-align: left; font-size: 13px; padding: 2px 0;">
+                    <th colspan="6" style="text-align: left; font-size: 13px; padding: 2px 0;">
                         <strong>สรุปยอดค้างชำระ</strong>
                     </th>
                 </tr>
                 <tr style="border-bottom: 1px solid black !important;">
-                    <th width="20%" style="text-align: left; font-size: 13px;">เลขที่ใบสั่งเช่า</th>
-                    <th width="22%" style="text-align: left; font-size: 13px;">เลขที่ใบแจ้งหนี้</th>
-                    <th width="14%" style="text-align: center; font-size: 13px;">วันที่ใบแจ้งหนี้</th>
-                    <th width="26%" style="text-align: left; font-size: 13px;">ประเภท</th>
-                    <th width="18%" style="text-align: right; font-size: 13px;">ยอดค้างชำระ</th>
+                    <th width="17%" style="text-align: left; font-size: 13px;">เลขที่ใบสั่งเช่า</th>
+                    <th width="20%" style="text-align: left; font-size: 13px;">เลขที่ใบแจ้งหนี้</th>
+                    <th width="12%" style="text-align: center; font-size: 13px;">วันที่ใบแจ้งหนี้</th>
+                    <th width="17%" style="text-align: left; font-size: 13px;">ประเภทค้างชำระ</th>
+                    <th width="19%" style="text-align: left; font-size: 13px;">ประเภทการชำระ</th>
+                    <th width="15%" style="text-align: right; font-size: 13px;">ยอดค้างชำระ</th>
                 </tr>
             </thead>
             <tbody>
@@ -293,12 +294,13 @@
                         <td style="text-align: left; font-size: 13px; border-bottom: hidden;"><span t-esc="s['so_name']"/></td>
                         <td style="text-align: left; font-size: 13px; border-bottom: hidden;"><span t-esc="s['invoice_name']"/></td>
                         <td style="text-align: center; font-size: 13px; border-bottom: hidden;"><span t-esc="s['invoice_date']"/></td>
+                        <td style="text-align: left; font-size: 13px; border-bottom: hidden;"><span t-esc="s['pay_type']"/></td>
                         <td style="text-align: left; font-size: 13px; border-bottom: hidden;"><span t-esc="s['doc_type']"/></td>
                         <td style="text-align: right; font-size: 13px; border-bottom: hidden;"><span t-esc="'{0:,.2f}'.format(s['amount'])"/></td>
                     </tr>
                 </t>
                 <tr>
-                    <td colspan="4" style="text-align: right; font-size: 13px; border-top: 1px solid black; padding-top: 2px;">
+                    <td colspan="5" style="text-align: right; font-size: 13px; border-top: 1px solid black; padding-top: 2px;">
                         <strong>รวมยอดค้างชำระ</strong></td>
                     <td style="text-align: right; font-size: 13px; border-top: 1px solid black; padding-top: 2px;">
                         <strong><span t-esc="'{0:,.2f}'.format(ov_total)"/></strong></td>
