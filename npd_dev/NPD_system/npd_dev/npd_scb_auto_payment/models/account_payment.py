@@ -1044,40 +1044,56 @@ class AccountPayment(models.Model):
         เกณฑ์ที่ใช้จึงไม่ใช่ "ห้ามใช้ซ้ำ" แต่เป็น
             ผลรวมยอดโอนของทุกใบที่ตัดเงินก้อนนี้  <=  เงินที่เข้าจริง
 
+        ต้องคิด "ทั้งกลุ่ม" ไม่ใช่ทีละก้อน เพราะความสัมพันธ์เป็นแบบหลายต่อหลาย
+        เงินเข้าก้อนหนึ่งถูกหลายใบตัดได้ และใบหนึ่งก็ตัดเงินหลายก้อนได้
+        ถ้าเทียบยอด "ทั้งใบ" กับเงินเข้า "ทีละก้อน" จะฟ้องว่าเกินทั้งที่ยอดตรง เช่น
+            เงินเข้า 233.00 + 2,084.83 = 2,317.83
+            ใบ A 2,200.00 + ใบ B 117.83 = 2,317.83  (พอดีเป๊ะ)
+        แต่พอเทียบใบ A (2,200) กับก้อน 233.00 ก้อนเดียวจะกลายเป็น "เกิน" ทันที
+
         คืน (ข้อความเตือนถ้าเกิน, ข้อความหมายเหตุถ้าใช้ร่วมกันแบบถูกต้อง)
         """
         self.ensure_one()
         Slip = self.env['npd.scb.payment.slip'].sudo()
         tol = max(self._scb_param('verify_amount_tolerance'), 0.01)
-        mine = self._scb_bank_portion()
-        over_messages, shared_messages = [], []
 
-        for statement in lines.mapped('statement_id'):
-            others = Slip.search([
-                ('statement_id', '=', statement.id),
-                ('state', '=', 'matched'),
-                ('payment_id', '!=', self.id),
+        # ไล่หากลุ่มที่เกี่ยวข้องกันจนครบ (ใบ <-> เงินเข้า สลับกันไปมา)
+        statements = lines.mapped('statement_id')
+        payments = self
+        for _round in range(10):    # กันวนไม่รู้จบ กลุ่มจริงเล็กมาก
+            linked = Slip.search([
+                ('statement_id', 'in', statements.ids), ('state', '=', 'matched'),
             ]).mapped('payment_id').filtered(
                 # นับ other_company ด้วย — เงินก้อนนั้นถูกตัดไปแล้วเหมือนกัน
-                lambda p: p.scb_verify_state in ('success', 'other_company'))
-            if not others:
-                continue
-            allocated = mine + sum(p._scb_bank_portion() for p in others)
-            names = u', '.join(p.display_name or str(p.id) for p in others)
-            if allocated > statement.deposit + tol:
-                over_messages.append(_(
-                    u"เงินเข้า %s (%s) ถูกตัดไปแล้วโดย %s รวมกับใบนี้เป็น %s "
-                    u"ซึ่ง **เกิน** ยอดที่เข้าจริง — กรุณาตรวจสอบว่าบันทึกรับชำระซ้ำหรือไม่"
-                ) % ('{:,.2f}'.format(statement.deposit), statement.date, names,
-                     '{:,.2f}'.format(allocated)))
-            else:
-                shared_messages.append(_(
-                    u"ลูกค้าโอนรวมมาก้อนเดียว %s แล้วตัดหลายใบ — ใบนี้ %s "
-                    u"ร่วมกับ %s (รวม %s)"
-                ) % ('{:,.2f}'.format(statement.deposit), '{:,.2f}'.format(mine),
-                     names, '{:,.2f}'.format(allocated)))
+                lambda p: p.id == self.id
+                or p.scb_verify_state in ('success', 'other_company'))
+            spread = Slip.search([
+                ('payment_id', 'in', payments.ids), ('state', '=', 'matched'),
+            ]).mapped('statement_id')
+            if not (linked - payments) and not (spread - statements):
+                break
+            payments |= linked
+            statements |= spread
 
-        return u'\n'.join(over_messages), u'\n'.join(shared_messages)
+        others = payments - self
+        if not others:
+            return u'', u''
+
+        total_in = sum(statements.mapped('deposit'))
+        allocated = sum(p._scb_bank_portion() for p in payments)
+        names = u', '.join(p.display_name or str(p.id) for p in others)
+        detail = _(u"เงินเข้า %s รายการ รวม %s / ตัดโดย %s ใบ รวม %s") % (
+            len(statements), '{:,.2f}'.format(total_in),
+            len(payments), '{:,.2f}'.format(allocated))
+
+        if allocated > total_in + tol:
+            return _(
+                u"เงินเข้าก้อนเดียวกันถูกตัดไปแล้วโดย %s — %s ซึ่ง **เกิน** "
+                u"ยอดที่เข้าจริง %s — กรุณาตรวจสอบว่าบันทึกรับชำระซ้ำหรือไม่"
+            ) % (names, detail, '{:,.2f}'.format(total_in)), u''
+        return u'', _(
+            u"ลูกค้าโอนรวมมาแล้วตัดหลายใบ — ใบนี้ %s ร่วมกับ %s (%s)"
+        ) % ('{:,.2f}'.format(self._scb_bank_portion()), names, detail)
 
     def _scb_match_slip_line(self, line, sources, claimed):
         u"""จับคู่ "สลิป 1 ใบ" กับรายการเดินบัญชี แล้วเขียนผลลงบรรทัดนั้น
