@@ -82,14 +82,15 @@ class ScbPaymentSettings(models.TransientModel):
              "ตรวจไปก็ขึ้น 'ไม่สำเร็จ' เปล่า ๆ\n"
              "ใส่ได้หลายคำ คั่นด้วยเครื่องหมายจุลภาค เช่น: ลดหนี้,ปรับปรุง")
     verify_skip_slip_keywords = fields.Char(
-        string="เลขอ้างอิงในสลิปที่ไม่ต้องตรวจ (คั่นด้วย ,)", default="REF",
+        string="เลขอ้างอิงในสลิปที่ไม่ต้องตรวจ (คั่นด้วย ,)", default="",
         help="ถ้าเลขอ้างอิงในสลิปมีคำเหล่านี้ ระบบจะข้ามการตรวจสอบ "
              "(สถานะ = 'ไม่ต้องตรวจสอบ')\n"
-             "ใช้กับ 'สลิปจ่ายบิล' ที่มีเลขอ้างอิงอย่าง REF001 — ธนาคารบันทึกรายการ "
-             "พวกนี้ว่า 'รับชำระค่าสินค้าและบริการ' โดยไม่ระบุชื่อผู้โอน "
-             "จึงไม่มีชื่อให้เทียบกับสลิปตั้งแต่แรก\n"
+             "เว้นว่างไว้ = ตรวจทุกใบตามปกติ (ค่าเริ่มต้นตอนนี้)\n"
+             "เดิมตั้งเป็น REF เพื่อข้ามสลิปจ่ายบิล เพราะ statement มีแต่แถวสรุป "
+             "ยอดรวมรายวัน ('รับชำระค่าสินค้าและบริการ CrossBank' เวลา 22:59) "
+             "ที่ไม่มีชื่อผู้โอนให้เทียบ — ตอนนี้ชีตมีรายการแยกรายคนพร้อมชื่อผู้โอน "
+             "แล้ว จึงเทียบได้ตามปกติ ไม่ต้องข้าม\n"
              "ระบบดูเฉพาะช่องเลขอ้างอิง (Reference 1 / เลขที่รายการ) ไม่ได้สแกนทั้งสลิป\n"
-             "เว้นว่าง = ไม่ข้าม ตรวจทุกใบตามปกติ\n"
              "หมายเหตุ: ต้องอ่านสลิปด้วย AI ก่อนถึงจะรู้ จึงยังใช้โควตา 1 ครั้ง")
     verify_bank_default = fields.Selection([
         ('scb', 'SCB (statement_SCB)'),
@@ -226,7 +227,7 @@ class ScbPaymentSettings(models.TransientModel):
         res['verify_skip_journal_keywords'] = icp.get_param(
             PREFIX + 'verify_skip_journal_keywords', default=u'ลดหนี้')
         res['verify_skip_slip_keywords'] = icp.get_param(
-            PREFIX + 'verify_skip_slip_keywords', default=u'REF')
+            PREFIX + 'verify_skip_slip_keywords', default=u'')
         res['verify_bank_deposit'] = icp.get_param(
             PREFIX + 'verify_bank_deposit') or 'kbank'
         res['verify_bank_default'] = icp.get_param(
