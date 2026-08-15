@@ -911,6 +911,30 @@ class AccountPayment(models.Model):
             u"%s\n\nจับคู่ได้ %s จาก %s สลิป — ยังเหลือ %s สลิปที่ยังไม่พบรายการ\n\n%s"
         ) % (header, len(matched), len(active), pending, detail))
 
+    def _scb_has_own_data(self, sources, date, day_tol=0):
+        u"""มีรายการเดินบัญชี "ของบัญชีบริษัทเรา" ในวันนั้นแล้วหรือยัง
+
+        ชีตรวม statement ของทุกบริษัทในเครือไว้ด้วยกัน และบางวันข้อมูลเข้ามา
+        ไม่ครบทุกบัญชี ถ้าดูแค่ "มีแถวของวันนั้นไหม" จะเจอแถวของบริษัทอื่นแล้ว
+        เข้าใจผิดว่าข้อมูลพร้อมแล้ว -> สรุปว่า "ไม่สำเร็จ" ทั้งที่ยังไม่มีอะไรให้เทียบ
+        พอนับครบเพดานที่ตั้งไว้ cron ก็เลิกตรวจถาวร แม้ชีตจะเติมข้อมูลทีหลัง
+        (เจอจริง: 12/08/2026 ทั้งชีตมี 3 แถว ซึ่งเป็นของอีกสองบริษัท
+         บัญชีของบริษัทเรา 0 แถว)
+        """
+        self.ensure_one()
+        rows = self.env['npd.scb.bank.statement'].sudo().search([
+            ('source', 'in', sources),
+            ('date', '>=', date - timedelta(days=day_tol)),
+            ('date', '<=', date + timedelta(days=day_tol)),
+        ])
+        if not rows:
+            return False
+        if not self._scb_param('verify_check_own_account'):
+            return True
+        names = self._scb_own_account_names()
+        numbers = self._scb_own_account_numbers()
+        return any(r.belongs_to_company(names, numbers) for r in rows)
+
     def _scb_bill_rows_available(self, sources, date):
         u"""บัญชีของบริษัทเรามีรายการจ่ายบิล "แยกรายคน" ของวันนั้นแล้วหรือยัง
 
@@ -1258,10 +1282,11 @@ class AccountPayment(models.Model):
                              % second['ai']['reason'])
 
         if not candidates:
-            if not match['has_data_for_date']:
+            if not match['has_data_for_date'] or not self._scb_has_own_data(
+                    sources, slip_date, self._scb_param('verify_date_tolerance')):
                 return done('waiting', _(
-                    u"ยังไม่มีข้อมูลเดินบัญชีของวันที่ %s ในระบบ "
-                    u"(ธนาคารส่งข้อมูลช้ากว่าจริง) — ระบบจะตรวจให้อัตโนมัติอีกครั้ง"
+                    u"ยังไม่มีรายการเดินบัญชีของบัญชีบริษัทเราในวันที่ %s "
+                    u"(ข้อมูลจากธนาคารยังมาไม่ครบ) — ระบบจะตรวจให้อัตโนมัติอีกครั้ง"
                 ) % slip_date + self._scb_notes_text(notes))
             # สลิปจ่ายบิล + บัญชีเรายังไม่มีรายการแยกรายคนของวันนั้น = เทียบไม่ได้
             # จริง ๆ ไม่ใช่ "ตรวจไม่ผ่าน" (ดูคำอธิบายใน _scb_bill_rows_available)
