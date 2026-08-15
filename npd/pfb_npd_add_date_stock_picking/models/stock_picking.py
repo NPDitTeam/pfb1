@@ -162,6 +162,20 @@ class StockPicking(models.Model):
         #    - สต็อกจะถูกตัดตอนส่งมอบ (validate OUT) และคืนตอนรับคืน (validate IN) ตามปกติ
         if self.env.cr.dbname != 'NPD_Logistics_New':
             for picking in self:
+                # บิลย้อนหลัง/ย้ายระบบ: ข้ามด่านเช็ก on-hand ทั้งใบ
+                #   ปล่อยให้จอง/ยืนยัน + สร้างใบตัด (OUT) / ใบคืน (IN) ได้ตามปกติ
+                #   แม้ยอดคงเหลือปัจจุบันของสาขาจะไม่พอ (เพราะเป็นบิลเก่าที่ไม่ควรอิงสต๊อกวันนี้)
+                #   หา SO แบบทนทาน: จาก move.sale_line_id ก่อน (ผูกตรง) ค่อย fallback ที่ origin
+                orders = picking.move_lines.sudo().mapped('sale_line_id.order_id')
+                if not orders and picking.origin:
+                    orders = self.env['sale.order'].sudo().search(
+                        [('name', '=', picking.origin)], limit=1)
+                if orders and any(
+                    hasattr(o, '_is_stock_skip_migrated') and o._is_stock_skip_migrated()
+                    for o in orders
+                ):
+                    continue
+
                 out_of_stock = []
                 branch_name = picking.branch_id.name or 'ไม่ทราบสาขา'
                 for move in picking.move_lines:
@@ -169,6 +183,10 @@ class StockPicking(models.Model):
                     if move.state in ('done', 'cancel'):
                         continue
                     if move.location_id.usage != 'internal':
+                        continue
+                    # ย้ายภายในสาขาเดียวกัน (ต้นทาง=ปลายทาง) เป็น net-zero ไม่ต้องเช็ก on-hand
+                    #   ใช้กับบิลย้อนหลังที่ตัด/คืนแบบ loopback (ไม่กระทบ quant)
+                    if move.location_id.id == move.location_dest_id.id:
                         continue
 
                     # จำนวนที่ต้องใช้จริง (หน่วยอ้างอิงของสินค้า)
@@ -185,24 +203,31 @@ class StockPicking(models.Model):
                     # หา location ของสาขาที่อยู่ "ภายใต้" location ต้นทางของ move
                     #   - เจอ  -> นับเฉพาะสต็อกสาขานั้น (ไม่รวมสาขาอื่นที่อยู่ใต้ location แม่เดียวกัน)
                     #   - ไม่เจอ -> ใช้ location เดิมตามพฤติกรรมก่อนหน้า
-                    src_location = move.location_id
+                    #   ⚠ หนึ่งสาขาอาจมีหลาย location (เช่น ปลวกแดง มี 2 คลัง) ต้องนับรวมทุกตัว
+                    #     ห้ามใช้ limit=1 เพราะจะไปเจอคลังที่ไม่มีของแล้วฟ้องว่าสต็อก 0
+                    src_locations = move.location_id
                     if picking.branch_id:
-                        branch_location = self.env['stock.location'].search([
+                        branch_locations = self.env['stock.location'].sudo().search([
                             ('branch_id', '=', picking.branch_id.id),
                             ('usage', '=', 'internal'),
                             ('id', 'child_of', move.location_id.id),
-                        ], limit=1)
-                        if branch_location:
-                            src_location = branch_location
+                        ])
+                        if branch_locations:
+                            src_locations = branch_locations
 
-                    # ยอดคงเหลือจริง ณ location ต้นทางของสาขา (รวม sub-location) ในหน่วยอ้างอิงของสินค้า
-                    onhand = move.product_id.with_context(
-                        location=src_location.id
-                    ).qty_available
+                    # ยอดคงเหลือจริงของทุก location ในสาขา (รวม sub-location) ในหน่วยอ้างอิงของสินค้า
+                    #   อ่านจาก stock.quant ตรง ๆ ด้วย sudo() กัน ir.rule ราย branch
+                    #   ทำให้ผู้ใช้ต่างสาขามองไม่เห็นสต็อกแล้วนับได้ 0
+                    quants = self.env['stock.quant'].sudo().search([
+                        ('product_id', '=', move.product_id.id),
+                        ('location_id', 'child_of', src_locations.ids),
+                    ])
+                    onhand = sum(quants.mapped('quantity'))
                     if onhand < need_qty:
+                        checked = ', '.join(src_locations.sudo().mapped('complete_name'))
                         out_of_stock.append(
                             f"- {move.product_id.display_name}: ต้องการ {need_qty} {move.product_id.uom_id.name} "
-                            f"แต่คงเหลือจริง {onhand} ❌ สาขา: {branch_name}"
+                            f"แต่คงเหลือจริง {onhand} ❌ สาขา: {branch_name} (ตรวจที่: {checked})"
                         )
 
                 if out_of_stock:
