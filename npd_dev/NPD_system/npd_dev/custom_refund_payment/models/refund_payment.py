@@ -93,6 +93,26 @@ class refundPayment(models.Model):
         string='รายการชำระเงิน'
     )
 
+    # ✅ สรุปข้อมูลรายการชำระเงิน เพื่อแสดงในมุมมองตาราง (list view)
+    payment_ref = fields.Char(
+        string='เลขที่การชำระเงิน',
+        compute='_compute_payment_summary',
+        store=True
+    )
+
+    total_amount = fields.Float(
+        string='จำนวนเงินรวม',
+        compute='_compute_payment_summary',
+        store=True
+    )
+
+    @api.depends('payment_lines', 'payment_lines.payment_name', 'payment_lines.amount')
+    def _compute_payment_summary(self):
+        for rec in self:
+            names = [l.payment_name for l in rec.payment_lines if l.payment_name]
+            rec.payment_ref = ', '.join(names)
+            rec.total_amount = sum(rec.payment_lines.mapped('amount'))
+
     @api.onchange('transfer_type')
     def _onchange_transfer_type_domain(self):
         for rec in self:
