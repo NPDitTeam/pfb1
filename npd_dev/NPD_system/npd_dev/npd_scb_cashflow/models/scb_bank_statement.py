@@ -526,7 +526,8 @@ class ScbBankStatement(models.Model):
     @api.model
     def find_incoming_match(self, amount, date, names, sources=None,
                             amount_tol=0.0, day_tol=0, name_threshold=0.6,
-                            account_hint=None, time_hint=None, time_tol=5):
+                            account_hint=None, time_hint=None, time_tol=5,
+                            own_names=None, own_numbers=None):
         u"""หาแถว "เงินเข้า" ที่ตรงกับ จำนวนเงิน + วันที่ + ชื่อบริษัท
 
         :param amount: จำนวนเงินจากสลิป (หรือ list ของจำนวนเงินที่เป็นไปได้)
@@ -536,6 +537,8 @@ class ScbBankStatement(models.Model):
         :param amount_tol: ผลต่างจำนวนเงินที่ยอมรับ (0 = ต้องตรงเป๊ะระดับสตางค์)
         :param account_hint: เลขบัญชีผู้โอน (ใช้เทียบเลขท้ายเป็นสัญญาณเสริม)
         :param time_hint: เวลาบนสลิป (ใช้เทียบกับเวลาที่ธนาคารบันทึกเป็นสัญญาณเสริม)
+        :param own_names/own_numbers: ชื่อ/เลขบัญชีของบริษัทเรา ใช้เป็นตัวตัดสิน
+            เมื่อมีหลายแถวได้คะแนนเท่ากัน ให้เลือกแถวที่เข้าบัญชีบริษัทเราก่อน
         :return: dict {
             'matched': bool, 'statement': record|empty, 'score': float,
             'amount_date_candidates': recordset,   # ตรงยอด+วันที่ (ยังไม่เช็คชื่อ)
@@ -593,7 +596,11 @@ class ScbBankStatement(models.Model):
                 if part and part not in clean_names:
                     clean_names.append(part)
 
-        best_rec, best_score = empty, 0.0
+        # เทียบด้วย tuple เพราะคะแนนชื่อเท่ากันได้บ่อย (ยอดเท่ากัน วันเดียวกัน
+        # และชื่อผ่านทั้งคู่) เดิมใช้ "คะแนนมากกว่า" อย่างเดียว แถวที่เจอก่อนจึงชนะ
+        # ทำให้หยิบรายการของบริษัทอื่นในเครือมาแทนรายการที่เข้าบัญชีเราเอง
+        # ลำดับตัวตัดสิน: คะแนนชื่อ -> เข้าบัญชีบริษัทเรา -> เวลาตรงกับสลิป
+        best_rec, best_key = empty, None
         for rec in by_amount_date:
             bank_names = [rec.counterparty, rec.description, rec.account_name]
             score = 0.0
@@ -608,11 +615,16 @@ class ScbBankStatement(models.Model):
             # ถอดชื่อไทยเป็นอังกฤษแบบไม่เป็นมาตรฐานจนเทียบชื่อไม่ได้
             elif time_hint and self._time_matches(time_hint, rec.time, time_tol):
                 score = max(score, 1.0)
-            if score > best_score:
-                best_score, best_rec = score, rec
+            is_own = 1 if (own_names or own_numbers) and rec.belongs_to_company(
+                own_names, own_numbers) else 0
+            same_time = 1 if time_hint and self._time_matches(
+                time_hint, rec.time, time_tol) else 0
+            key = (score, is_own, same_time)
+            if best_key is None or key > best_key:
+                best_key, best_rec = key, rec
 
-        result['score'] = best_score
-        if best_score >= name_threshold:
+        result['score'] = best_key[0] if best_key else 0.0
+        if best_key and best_key[0] >= name_threshold:
             result['matched'] = True
             result['statement'] = best_rec
         return result

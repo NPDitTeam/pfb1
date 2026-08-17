@@ -1278,7 +1278,13 @@ class AccountPayment(models.Model):
         known = Alias.names_for_partner(self.partner_id)
         if known:
             notes.append(_(u"ใช้ชื่อที่ระบบจำไว้ประกอบ %s รายการ") % len(known))
+        own_names = self._scb_own_account_names()
+        own_numbers = self._scb_own_account_numbers()
         match_kwargs = {
+            # ส่งไปเป็นตัวตัดสินเมื่อหลายแถวได้คะแนนเท่ากัน — เลือกแถวที่เข้า
+            # บัญชีบริษัทเราก่อน ไม่ใช่แถวที่บังเอิญเจอก่อน
+            'own_names': own_names,
+            'own_numbers': own_numbers,
             'amount': amounts,
             'names': [n for n in [slip_sender, self.partner_id.name] + known if n],
             'sources': sources,
@@ -1309,9 +1315,6 @@ class AccountPayment(models.Model):
         # เข้าบัญชีบริษัทอื่นก่อน ต้องค้นต่อให้ครบก่อนค่อยยอมรับตัวนั้น
         # (เจอจริง: ยอด 2,200 วันเดียวกันมีทั้งในบัญชีเราและบัญชีบริษัทอื่น
         #  ตัวที่เจอก่อนเป็นของบริษัทอื่น เลยจับคู่ผิดแล้วจำชื่อผิดไว้ด้วย)
-        own_names = self._scb_own_account_names()
-        own_numbers = self._scb_own_account_numbers()
-
         def accept(statement, matched_date):
             if matched_date != dates[0]:
                 notes.append(_(u"จับคู่ได้ด้วยวันที่สำรองจากสลิป (%s)") % matched_date)
