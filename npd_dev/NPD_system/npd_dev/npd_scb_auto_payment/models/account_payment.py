@@ -1200,7 +1200,10 @@ class AccountPayment(models.Model):
             })
             # จับคู่ได้แล้ว -> จำไว้ว่าชื่อผู้โอนที่ธนาคารบันทึก = ลูกค้ารายนี้
             # ครั้งหน้าที่ลูกค้าคนเดิมโอนมาจะเทียบได้ทันที ไม่ต้องพึ่ง AI อีก
-            if state == 'matched' and statement:
+            # จำเฉพาะรายการที่เข้าบัญชีของบริษัทเรา — ถ้าจำชื่อจากบัญชีบริษัทอื่น
+            # ด้วย การจับคู่ผิดครั้งเดียวจะกลายเป็นชื่อที่ระบบเชื่อถาวร แล้วผิดซ้ำ
+            if state == 'matched' and statement and statement.belongs_to_company(
+                    self._scb_own_account_names(), self._scb_own_account_numbers()):
                 Alias.remember(self.partner_id, statement, payment=self)
             return state
 
@@ -1302,27 +1305,45 @@ class AccountPayment(models.Model):
             if len(wider) > len(sources):
                 search_sets.append(wider)
 
+        # เงินเข้าที่เข้า "บัญชีของบริษัทเรา" น่าเชื่อถือกว่าเสมอ ถ้าเจอรายการที่
+        # เข้าบัญชีบริษัทอื่นก่อน ต้องค้นต่อให้ครบก่อนค่อยยอมรับตัวนั้น
+        # (เจอจริง: ยอด 2,200 วันเดียวกันมีทั้งในบัญชีเราและบัญชีบริษัทอื่น
+        #  ตัวที่เจอก่อนเป็นของบริษัทอื่น เลยจับคู่ผิดแล้วจำชื่อผิดไว้ด้วย)
+        own_names = self._scb_own_account_names()
+        own_numbers = self._scb_own_account_numbers()
+
+        def accept(statement, matched_date):
+            if matched_date != dates[0]:
+                notes.append(_(u"จับคู่ได้ด้วยวันที่สำรองจากสลิป (%s)") % matched_date)
+            if statement.source not in sources:
+                notes.append(_(
+                    u"เงินเข้าบัญชี %s ไม่ใช่ %s ที่คาดจากสมุดรายวัน"
+                ) % (statement.source.upper(),
+                     u'/'.join(s.upper() for s in sources)))
+            return done('matched', self._scb_success_reason(
+                statement, amount_label, matched_date, slip_sender, notes), statement)
+
         match, slip_date = None, dates[0]
+        foreign_hit = None      # รายการที่ตรงแต่เข้าบัญชีบริษัทอื่น (ไว้ใช้ทีหลัง)
         for srcs in search_sets:
             match_kwargs['sources'] = srcs
             for d in dates:
                 result = Statement.find_incoming_match(date=d, **match_kwargs)
-                if result['matched'] and result['statement'].id not in claimed:
-                    if d != dates[0]:
-                        notes.append(_(u"จับคู่ได้ด้วยวันที่สำรองจากสลิป (%s)") % d)
-                    if result['statement'].source not in sources:
-                        notes.append(_(
-                            u"เงินเข้าบัญชี %s ไม่ใช่ %s ที่คาดจากสมุดรายวัน"
-                        ) % (result['statement'].source.upper(),
-                             u'/'.join(s.upper() for s in sources)))
-                    return done('matched', self._scb_success_reason(
-                        result['statement'], amount_label, d, slip_sender, notes),
-                        result['statement'])
+                statement = result['statement']
+                if result['matched'] and statement.id not in claimed:
+                    if statement.belongs_to_company(own_names, own_numbers):
+                        return accept(statement, d)
+                    if foreign_hit is None:
+                        foreign_hit = (statement, d)
                 if match is None or (usable(result['amount_date_candidates'])
                                      and not usable(match['amount_date_candidates'])):
                     match, slip_date = result, d
         # ขั้นถัดไป (AI รอบสอง / เทียบชื่อ) ให้ใช้ชุดที่กว้างที่สุดที่ค้นไปแล้ว
         sources = match_kwargs['sources']
+
+        # ค้นครบแล้วไม่มีรายการที่เข้าบัญชีเราเลย จึงค่อยยอมรับของบริษัทอื่น
+        if foreign_hit is not None:
+            return accept(*foreign_hit)
 
         candidates = usable(match['amount_date_candidates'])
 
