@@ -1069,10 +1069,18 @@ class AccountPayment(models.Model):
         return [n.strip() for n in names if n and n.strip()]
 
     def _scb_own_account_numbers(self):
-        u"""เลขบัญชีของบริษัทเรา (ถ้าตั้งไว้ จะใช้แทนการเทียบชื่อ แม่นกว่า)"""
+        u"""เลขบัญชีของบริษัทเรา — ใช้ตัดสินแทนการเทียบชื่อ เพราะแม่นกว่า
+
+        ถ้าไม่ได้ตั้งค่าไว้ จะเดาเอาจากข้อมูลในชีต (ดู own_account_numbers)
+        เพราะคอลัมน์ชื่อเจ้าของบัญชีเขียนผิดบริษัทอยู่บ้างในบล็อกรายการจ่ายบิล
+        """
         self.ensure_one()
         extra = self._scb_param('verify_own_account_numbers') or ''
-        return [n.strip() for n in re.split(r'[,\n|]', extra) if n.strip()]
+        numbers = [n.strip() for n in re.split(r'[,\n|]', extra) if n.strip()]
+        if numbers:
+            return numbers
+        return list(self.env['npd.scb.bank.statement'].sudo()
+                    .own_account_numbers(self._scb_own_account_names()))
 
     def _scb_foreign_accounts(self, lines):
         u"""ชื่อเจ้าของบัญชีที่ "ไม่ใช่บริษัทเรา" ในบรรดารายการที่จับคู่ได้

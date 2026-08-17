@@ -460,6 +460,38 @@ class ScbBankStatement(models.Model):
         u"""รหัสธนาคารทั้งหมดที่ระบบดึง statement มาเก็บไว้"""
         return list(STATEMENT_CODES)
 
+    @api.model
+    def own_account_numbers(self, names):
+        u"""เลขบัญชีที่เป็นของบริษัทเรา — เดาจาก "ชื่อที่พบบ่อยที่สุด" ของแต่ละเลข
+
+        คอลัมน์ชื่อเจ้าของบัญชีในชีตเชื่อถือไม่ได้ทุกแถว บล็อกรายการจ่ายบิล
+        (channel CBBP) ใส่ชื่อผิดบริษัทราว 7-12% ของแถว ทั้งที่เลขบัญชีถูกเสมอ
+        เช่น 1862247739 เป็นบัญชีของนภดล กรุงเทพ แต่ 35 แถวเขียนว่าเอ็นพีดี
+        โลจิสติกส์ ถ้าตัดสินจากชื่อรายแถว เงินที่เข้าบัญชีเราจะถูกตีว่า
+        "เข้าคนละบริษัท" ทั้งที่เข้าถูกบัญชี
+
+        จึงยึดเลขบัญชีเป็นหลัก แล้วใช้ชื่อที่พบบ่อยที่สุดบอกว่าเลขนั้นเป็นของใคร
+        """
+        keys = {self._normalize_name(n) for n in (names or []) if n}
+        keys.discard('')
+        if not keys:
+            return set()
+        self.env.cr.execute("""
+            SELECT account_no, account_name, count(*)
+              FROM npd_scb_bank_statement
+             WHERE account_no IS NOT NULL AND account_no <> ''
+          GROUP BY account_no, account_name
+        """)
+        best = {}
+        for account_no, account_name, count in self.env.cr.fetchall():
+            digits = re.sub(r'\D', '', account_no or '')
+            if not digits:
+                continue
+            if digits not in best or count > best[digits][1]:
+                best[digits] = (account_name or '', count)
+        return {digits for digits, (name, _n) in best.items()
+                if self._normalize_name(name) in keys}
+
     def belongs_to_company(self, names, account_numbers=None):
         u"""แถวนี้เป็น "บัญชีของบริษัทเรา" หรือเป็นบัญชีบริษัทอื่นในเครือ
 
