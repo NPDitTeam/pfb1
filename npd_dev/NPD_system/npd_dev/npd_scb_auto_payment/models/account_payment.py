@@ -57,6 +57,9 @@ DEFAULTS = {
     'verify_own_account_numbers': '',  # ตั้งไว้จะแม่นกว่าเทียบชื่อ
     # สมุดรายวันที่ "ไม่มีเงินโอนเข้าจริง" (ตัดหนี้ในระบบ) -> ข้ามการตรวจไปเลย
     'verify_skip_journal_keywords': u'ลดหนี้',
+    # วิธีชำระที่ "ไม่มีเงินเข้าบัญชีจริง" เช่น หักจากเงินประกันที่วางไว้ก่อนแล้ว
+    # -> ข้ามเช่นกัน (ดูเฉพาะใบที่ใช้วิธีชำระเดียว)
+    'verify_skip_method_keywords': u'หักเงินประกัน',
     # คำในเลขอ้างอิงของสลิปที่จะข้ามการตรวจ — ตอนนี้ว่างไว้
     #
     # เดิมตั้งเป็น 'REF' เพื่อข้ามสลิปจ่ายบิล เพราะ statement ฝั่ง SCB มีแต่แถว
@@ -228,6 +231,28 @@ class AccountPayment(models.Model):
         for keyword in self._scb_skip_keywords():
             if keyword in journal_name:
                 return keyword
+        return ''
+
+    def _scb_skip_method_reason(self):
+        u"""คืนชื่อวิธีชำระ ถ้าใบนี้ไม่มีเงินโอนเข้าบัญชีจริง จึงไม่ต้องตรวจ
+
+        เช่น "หักเงินประกันค่าเช่า" คือการหักจากเงินประกันที่ลูกค้าวางไว้ก่อนแล้ว
+        ไม่มีเงินโอนเข้าบัญชีธนาคารในวันนั้นสักบาท statement จึงไม่มีทางมีรายการ
+        ให้เทียบ ตรวจไปก็ขึ้น "ไม่สำเร็จ" เปล่า ๆ
+
+        ดูเฉพาะใบที่ใช้วิธีชำระเดียว (payment_method_one_id) ส่วนใบที่แยกหลาย
+        วิธีชำระยังต้องตรวจ เพราะมีส่วนที่เป็นเงินโอนจริงปนอยู่ด้วย
+        """
+        self.ensure_one()
+        raw = self._scb_param('verify_skip_method_keywords') or ''
+        keywords = [k.strip() for k in raw.split(',') if k.strip()]
+        if not keywords or getattr(self, 'is_payment_multi', False):
+            return ''
+        method = getattr(self, 'payment_method_one_id', False)
+        name = (method.name or '') if method else ''
+        for keyword in keywords:
+            if keyword in name:
+                return name
         return ''
 
     @api.depends('journal_id', 'payment_type', 'partner_type')
@@ -785,6 +810,17 @@ class AccountPayment(models.Model):
         Statement = self.env['npd.scb.bank.statement'].sudo()
         now = fields.Datetime.now()
 
+        def release_slips(reason):
+            u"""ปลดผลจับคู่เดิมออก เมื่อสรุปได้ว่าใบนี้ไม่ต้องตรวจ
+
+            ถ้าปล่อยไว้ บรรทัดสลิปจะยังค้างว่า "จับคู่ได้" ทั้งที่หัวใบบอกว่า
+            ไม่ต้องตรวจ และยังไปนับเป็นผู้ตัดเงินก้อนนั้นในใบอื่นด้วย
+            """
+            lines = self.scb_slip_ids.filtered(lambda l: l.state != 'skipped')
+            if lines:
+                lines.sudo().write({'state': 'skipped', 'statement_id': False,
+                                    'reason': reason})
+
         def finish(state, reason, statement=None):
             vals = {
                 'scb_verify_state': state,
@@ -813,11 +849,23 @@ class AccountPayment(models.Model):
         # statement ของธนาคารไม่มีทางมีรายการนี้ ตรวจไปก็ขึ้น "ไม่สำเร็จ" เปล่า ๆ
         skip_word = self._scb_skip_reason()
         if skip_word:
+            release_slips(_(u"สมุดรายวัน \"%s\" ไม่ต้องตรวจการโอน")
+                          % (self.journal_id.name or '-'))
             return finish('skipped', _(
                 u"ไม่ต้องตรวจสอบการโอน — สมุดรายวัน \"%s\" เป็นการตัดหนี้ในระบบ "
                 u"(เข้าเงื่อนไขคำว่า \"%s\") ไม่ได้มีการรับโอนเงินจริง "
                 u"จึงไม่มีรายการในบัญชีธนาคารให้เทียบ"
             ) % (self.journal_id.name or '-', skip_word))
+
+        # ---- 0.6) วิธีชำระที่ไม่มีเงินเข้าบัญชีจริง -> ข้ามเช่นกัน ----
+        # เช่น "หักเงินประกันค่าเช่า" คือหักจากเงินประกันที่ลูกค้าวางไว้ก่อนแล้ว
+        method_name = self._scb_skip_method_reason()
+        if method_name:
+            release_slips(_(u"วิธีชำระ \"%s\" ไม่มีเงินเข้าบัญชีจริง") % method_name)
+            return finish('skipped', _(
+                u"ไม่ต้องตรวจสอบการโอน — วิธีชำระ \"%s\" ไม่ได้มีเงินโอนเข้าบัญชี "
+                u"ธนาคารจริง จึงไม่มีรายการเดินบัญชีให้เทียบ"
+            ) % method_name)
 
         sources = self._scb_verify_sources()
         if not sources:

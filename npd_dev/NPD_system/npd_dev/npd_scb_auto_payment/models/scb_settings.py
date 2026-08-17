@@ -120,6 +120,15 @@ class ScbPaymentSettings(models.TransientModel):
     verify_name_threshold = fields.Float(
         string="เกณฑ์ความเหมือนของชื่อ (0-1)", default=0.6,
         help="คะแนนขั้นต่ำที่ถือว่าชื่อผู้โอนในสลิป ตรงกับชื่อในรายการของธนาคาร")
+    verify_skip_method_keywords = fields.Char(
+        string="วิธีชำระที่ไม่ต้องตรวจ (คั่นด้วย ,)", default="หักเงินประกัน",
+        help="ถ้าช่อง Payment Method ของใบรับชำระมีคำเหล่านี้ ระบบจะข้ามการตรวจ "
+             "(สถานะ = 'ไม่ต้องตรวจสอบ')\n"
+             "ใช้กับวิธีชำระที่ไม่มีเงินโอนเข้าบัญชีจริง เช่น 'หักเงินประกันค่าเช่า' "
+             "ซึ่งเป็นการหักจากเงินประกันที่ลูกค้าวางไว้ก่อนแล้ว statement ของธนาคาร "
+             "จึงไม่มีทางมีรายการให้เทียบ\n"
+             "ดูเฉพาะใบที่ใช้วิธีชำระเดียว — ใบที่แยกหลายวิธีชำระยังตรวจตามปกติ "
+             "เพราะมีส่วนที่เป็นเงินโอนจริงปนอยู่")
     verify_skip_file_keywords = fields.Char(
         string="ชื่อไฟล์ที่ไม่ใช่สลิป (ข้ามไปเลย)",
         help="พนักงานมักแนบเอกสารอื่นปนมา เช่น 50 ทวิ / ใบกำกับภาษี "
@@ -242,6 +251,10 @@ class ScbPaymentSettings(models.TransientModel):
             icp.get_param(PREFIX + 'verify_ai_name_fallback'), default=True)
         res['verify_cross_bank_fallback'] = _b(
             icp.get_param(PREFIX + 'verify_cross_bank_fallback'), default=True)
+        res['verify_skip_method_keywords'] = icp.get_param(
+            PREFIX + 'verify_skip_method_keywords',
+            default=self.env['account.payment']._scb_param(
+                'verify_skip_method_keywords'))
         res['verify_skip_file_keywords'] = icp.get_param(
             PREFIX + 'verify_skip_file_keywords',
             default=self.env['account.payment']._scb_param(
@@ -298,6 +311,8 @@ class ScbPaymentSettings(models.TransientModel):
                       'True' if self.verify_ai_name_fallback else 'False')
         icp.set_param(PREFIX + 'verify_cross_bank_fallback',
                       'True' if self.verify_cross_bank_fallback else 'False')
+        icp.set_param(PREFIX + 'verify_skip_method_keywords',
+                      (self.verify_skip_method_keywords or '').strip())
         icp.set_param(PREFIX + 'verify_skip_file_keywords',
                       (self.verify_skip_file_keywords or '').strip())
         icp.set_param(PREFIX + 'verify_check_own_account',
