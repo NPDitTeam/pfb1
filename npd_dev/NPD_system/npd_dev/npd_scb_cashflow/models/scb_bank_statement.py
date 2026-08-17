@@ -439,6 +439,23 @@ class ScbBankStatement(models.Model):
     # ค้นหารายการเงินเข้าที่ตรงกับสลิป
     # ------------------------------------------------------------------
     @api.model
+    def _time_key(self, value):
+        u"""ย่อเวลาให้เหลือรูปแบบเดียว สำหรับใช้เป็นส่วนหนึ่งของคีย์แถว
+
+        ชีตเขียนเวลาของรายการเดียวกันได้หลายแบบ ("14:18" กับ "14:18:00")
+        ถ้าเอาข้อความดิบมาทำคีย์ รายการเดียวกันจะถูกเก็บซ้ำเป็นสองแถว
+        แล้วยอดเงินเข้าจะงอกขึ้นมาเป็นเท่าตัว (เจอจริง 180 แถว 1.33 ล้านบาท)
+
+        "14:18" / "14:18:00" / "2:05" -> "02:18" ... คือได้ HH:MM เสมอ
+        """
+        parts = re.findall(r'\d+', value or '')
+        if not parts:
+            return ''
+        hour = int(parts[0]) % 24
+        minute = int(parts[1]) % 60 if len(parts) > 1 else 0
+        return '%02d:%02d' % (hour, minute)
+
+    @api.model
     def statement_codes(self):
         u"""รหัสธนาคารทั้งหมดที่ระบบดึง statement มาเก็บไว้"""
         return list(STATEMENT_CODES)
@@ -594,7 +611,7 @@ class ScbBankStatement(models.Model):
         raw = u'|'.join([
             text('account_no'),
             date.isoformat() if date else '',
-            text('time'),
+            self._time_key(text('time')),
             text('tr_code'),
             '%.2f' % money('withdrawal'),
             '%.2f' % money('deposit'),
