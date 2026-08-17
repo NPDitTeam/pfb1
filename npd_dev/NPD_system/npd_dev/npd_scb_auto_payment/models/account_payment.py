@@ -1048,16 +1048,22 @@ class AccountPayment(models.Model):
     def _scb_bank_portion(self):
         u"""ยอดที่ "เข้าบัญชีธนาคารจริง" ของใบรับชำระนี้
 
-        ยอดในใบรับชำระอาจรวมภาษีหัก ณ ที่จ่ายไว้ด้วย (Payment Multi) เช่น
-        ใบ 7,259.74 = เงินโอน 6,920.50 + ภาษีหัก ณ ที่จ่าย 339.24
-        การเทียบกับเงินเข้าธนาคารต้องใช้เฉพาะบรรทัดที่เป็นเงินโอน/เงินสด
+        ใบรับชำระใบเดียวอาจรวมหลายวิธีชำระไว้ด้วยกัน (Payment Multi) เช่น
+            11,271.92 = เงินโอนธนาคาร SCB 7,386.86 + หักเงินประกันค่าเช่า 3,885.06
+        การเทียบกับเงินเข้าธนาคารต้องนับเฉพาะบรรทัดที่เป็น **เงินโอนธนาคาร**
+
+        ห้ามนับ type='cash' ด้วย เพราะวิธีชำระอย่าง "หักเงินประกันค่าเช่า" ถูก
+        ตั้ง type เป็น cash ไว้ ทั้งที่ไม่มีเงินเข้าบัญชีจริงสักบาท ถ้านับรวมจะ
+        ทำให้ยอดพองแล้วไปฟ้องว่า "ตัดเงินเข้าเกิน" ทั้งที่ไม่ได้เกิน
+        (ภาษีหัก ณ ที่จ่ายก็ถูกกันออกด้วยหลักเดียวกัน — type='other')
+
+        ใบที่ไม่ได้แยกวิธีชำระ ถือว่าเป็นเงินโอนทั้งใบตามเดิม
         """
         self.ensure_one()
         if getattr(self, 'is_payment_multi', False) and getattr(self, 'paid_ids', False):
             bank_lines = self.paid_ids.filtered(
-                lambda l: l.payment_method_id.type in ('bank', 'cash'))
-            if bank_lines:
-                return sum(bank_lines.mapped('total'))
+                lambda l: l.payment_method_id.type == 'bank')
+            return sum(bank_lines.mapped('total'))
         return abs(self.amount)
 
     def _scb_check_shared_statements(self, lines):
