@@ -18,7 +18,7 @@
          กันถูกตัดครึ่งคาหน้า ถ้าที่ว่างไม่พอจะยกไปหน้าถัดไปทั้งบล็อก
          ======================================================================== -->
     <record id="paperformat_npd_rent_invoice_overdue" model="report.paperformat">
-        <field name="name">A4 Sample (ใบกำกับการเช่าหนี้ค้างชำระ)</field>
+        <field name="name">A4 Sample (ใบกำกับการเช่า)</field>
         <field name="default" eval="False"/>
         <field name="format">A4</field>
         <field name="orientation">Portrait</field>
@@ -34,7 +34,7 @@
     <!-- ชื่อเมนูตอน print = ใบกำกับการเช่าหนี้ค้างชำระ -->
     <report
             id="action_rent_invoice_overdue"
-            string="ใบกำกับการเช่าหนี้ค้างชำระ"
+            string="ใบกำกับการเช่า/หนี้ค้างชำระ"
             name="npd_rent_invoice_overdue.report_npd_rent_invoice_overdue"
             model="sale.order"
             report_type="qweb-pdf"
