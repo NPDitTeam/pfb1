@@ -22,6 +22,10 @@
 
   และ **ไม่นับ SO ใบที่กำลังพิมพ์อยู่** (ตามที่ผู้ใช้ระบุ: ค้างชำระจะไม่มองใบล่าสุดที่ print)
 
+  **นับเฉพาะ SO สาขาเดียวกับใบที่กำลังเปิด/พิมพ์** (18 ส.ค. 2026)
+  ใบที่ไม่ได้ระบุสาขาจะใช้สาขาของผู้ใช้แทน -- ดู _overdue_branch()
+  เหตุผล: พนักงานเห็น SO ได้เฉพาะสาขาตัวเอง ถ้าดึงข้ามสาขาจะเด้ง AccessError
+
   รายการสินค้าของ SO เหล่านั้นถูกดึงมาแสดงต่อท้ายตารางสินค้า พร้อมคอลัมน์
   'อ้างอิงเลขเอกสาร' (แสดงเฉพาะเลขเอกสาร ไม่แสดงช่วงวันที่)
   และ **ไม่ถูกนำไปคิดยอดรวม** ของใบกำกับนี้
@@ -133,6 +137,20 @@ class SaleOrder(models.Model):
         """, (table, column))
         return bool(self._cr.fetchone())
 
+    def _overdue_branch(self):
+        """สาขาที่ใช้กรองหนี้ค้างชำระ
+
+        ใบสั่งเช่าที่กำลังเปิด/พิมพ์เป็นตัวตั้ง ถ้าใบนั้นไม่ได้ระบุสาขา
+        ค่อยใช้สาขาของผู้ใช้ที่ล็อกอินอยู่ (ไม่มีทั้งคู่ = ไม่กรองสาขา)
+        คืน recordset ว่างถ้าไม่ได้ติดตั้งโมดูล branch
+        """
+        self.ensure_one()
+        branch = self.branch_id if 'branch_id' in self._fields else False
+        if not branch:
+            user = self.env.user
+            branch = user.branch_id if 'branch_id' in user._fields else False
+        return branch
+
     def _overdue_has_table(self, table):
         self._cr.execute("""
             SELECT 1 FROM information_schema.tables WHERE table_name = %s LIMIT 1
@@ -171,6 +189,19 @@ class SaleOrder(models.Model):
         # กัน DB ที่ไม่มีคอลัมน์ pfb_so_type -> ไม่กรองประเภทเช่า
         rent_filter = ("AND so.pfb_so_type = 'rent'"
                        if self._overdue_has_column('sale_order', 'pfb_so_type') else "")
+
+        # กรองเฉพาะสาขาเดียวกับใบที่กำลังเปิด/พิมพ์ (18 ส.ค. 2026)
+        # พนักงานส่วนใหญ่ติด record rule 'Personal Orders' / 'All Branch Orders'
+        # ที่ให้เห็นเฉพาะ SO ของสาขาตัวเอง ถ้าดึงหนี้ข้ามสาขามาแสดง
+        # พอ ORM อ่าน SO ใบนั้นจะเด้ง "การเข้าถึงผิดพลาด"
+        # ใช้สาขาของใบที่กำลังเปิดเป็นหลัก (ใบไม่มีสาขา -> ใช้สาขาของผู้ใช้)
+        branch = self._overdue_branch()
+        if branch and self._overdue_has_column('sale_order', 'branch_id'):
+            branch_filter = "AND so.branch_id = %s"
+            branch_params = (branch.id,)
+        else:
+            branch_filter = ""
+            branch_params = ()
 
         sql = """
             WITH inv_link AS (
@@ -249,6 +280,7 @@ class SaleOrder(models.Model):
          LEFT JOIN not_returned nr ON nr.so_id = so.id
              WHERE so.partner_id = %s
                AND so.id <> %s
+               {branch_filter}
                AND so.state IN ('sale', 'done')
                {rent_filter}
                AND am.state = 'posted'
@@ -256,9 +288,11 @@ class SaleOrder(models.Model):
                AND am.amount_residual >= %s
              ORDER BY so.name, il.kind DESC, am.invoice_date, am.name
         """.format(deposit_union=deposit_union, rent_filter=rent_filter,
-                   reason_join=reason_join, reason_col=reason_col)
+                   reason_join=reason_join, reason_col=reason_col,
+                   branch_filter=branch_filter)
 
-        return sql, (self.partner_id.id, self.id, RESIDUAL_MIN)
+        # ลำดับ params ต้องตรงกับลำดับ %s ในประโยค WHERE ด้านบน
+        return sql, (self.partner_id.id, self.id) + branch_params + (RESIDUAL_MIN,)
 
     # ------------------------------------------------------------------
     # API สำหรับรายงาน

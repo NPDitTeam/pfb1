@@ -27,19 +27,31 @@
         </field>
     </record>
 
-    <!-- เพิ่มแท็บ 'สรุปยอดค้างชำระ' ต่อท้ายแท็บสุดท้าย (ปัจจุบันคือ 'การตลาด')
-         ใช้ priority สูงเพื่อให้ถูก apply ทีหลัง จะได้ต่อท้ายจริง
-         โดยไม่ต้องผูก depends กับโมดูลที่สร้างแท็บการตลาด -->
+    <!-- แท็บ 'สรุปยอดค้างชำระ' บนฟอร์มใบสั่งเช่า
+
+         เคยปิดไปเมื่อ 18 ส.ค. 2026 เพราะแท็บดึงหนี้ข้ามสาขามาแสดง
+         แล้วพนักงานที่ติด record rule 'Personal Orders' / 'All Branch Orders'
+         เด้ง "การเข้าถึงผิดพลาด" (ตัวอย่าง SO-26081300011 id=8941)
+
+         เปิดกลับแล้วในวันเดียวกัน หลังจากไปกรองสาขาที่ต้นทาง (SQL ใน
+         _overdue_related_so_sql -> so.branch_id) แท็บจึงเห็นเฉพาะหนี้
+         ของสาขาตัวเอง ไม่มีแถวข้ามสาขาให้ชน record rule อีก
+         รายงาน 'ใบกำกับการเช่า/หนี้ค้างชำระ' ใช้ข้อมูลชุดเดียวกัน จึงกรองสาขาตามไปด้วย -->
     <record id="view_order_form_overdue_tab" model="ir.ui.view">
         <field name="name">sale.order.form.overdue.summary</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="priority">99</field>
+        <!-- ต้องสั่ง active=True ตรง ๆ ห้ามลบบรรทัดนี้ทิ้งเฉย ๆ
+             เพราะเคยตั้ง active=False ไว้ใน DB การเอาฟิลด์ออกจาก XML
+             ไม่ได้เปิด view กลับให้ ค่าเดิมใน DB จะค้างเป็น False -->
+        <field name="active" eval="True"/>
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
                 <page string="สรุปยอดค้างชำระ" name="npd_overdue_summary">
                     <div class="alert alert-info" role="alert" style="margin-bottom: 8px;">
                         ใบแจ้งหนี้และใบแจ้งหนี้ค่าประกันของลูกค้ารายนี้ที่ยังค้างชำระอยู่
+                        เฉพาะสาขาเดียวกับใบนี้
                         (ไม่นับใบสั่งเช่าใบนี้) กดปุ่มท้ายแถวเพื่อเปิดเอกสารนั้น
                         <br/>
                         รายการที่ "ยังไม่คืน" จะถูกดึงสินค้าไปแสดงในใบกำกับการเช่าหนี้ค้างชำระด้วย
