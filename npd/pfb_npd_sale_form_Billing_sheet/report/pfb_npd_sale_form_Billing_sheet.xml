@@ -126,109 +126,91 @@
             </div>
         </div>
         <p class="c" style="font-size: 15px ;color : white">.</p>
-        <div class="row">
-            <div class="col-2_report">
-                <table width="100%">
-                    <tr>
-                        <td class="text-right text_bold b" style="font-size: 14px; padding-left: 25px;padding-right: 0;">
-                            <span>ชื่อลูกค้า :</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-right text_bold b" style="font-size: 14px; padding-left: 25px;padding-right: 0;">
-                            <span>ที่อยู่ :</span>
-
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="font-size: 10px ;color : white">.</td>
-                    </tr>
-                    <tr>
-                        <td class="text-right text_bold b" style="font-size: 14px; padding-left: 25px;padding-right: 0;">
-                            <span>เบอร์โทรศัพท์ :</span>
-
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-right text_bold b" style="font-size: 14px; padding-left: 25px;padding-right: 0;">
-                            <span>เลขที่ผู้เสียภาษี :</span>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            <div class="col-7_report">
-                <table width="100%">
-                    <tr>
-                        <td class="text-left b" style="font-size: 14px; padding-left: 0; padding-right: 150px;"><span
-                                class="ml-1" t-esc="doc.partner_id.name"/></td>
-                    </tr>
-                    <tr>
-                        <td class="text-left b" style="font-size: 14px; padding-left: 0; padding-right: 150px;">
-                            <span class="ml-1" t-esc="doc.partner_id.street"/>
-                            <span class="ml-1" t-esc="doc.partner_id.street2"/>
-                            <span class="ml-1" t-esc="doc.partner_id.city"/>
-                            <span class="ml-1" t-esc="doc.partner_id.state_id.name"/>
-                            <span class="ml-1" t-esc="doc.partner_id.zip"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="font-size: 10px ;color : white">.</td>
-                    </tr>
-                    <tr>
-                        <td class="text-left b" style="font-size: 14px; padding-left: 0px; padding-right: 150px;">
-                            <span class="ml-1" t-esc="doc.partner_id.phone"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-left b" style="font-size: 14px; padding-left: 0px; padding-right: 150px;">
-                            <span class="ml-1" t-esc="doc.partner_id.vat"/>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            <div class="col-1_report">
-                <table width="100%">
-                    <tr>
-                        <td class="text-right text_bold b"
-                            style="font-size: 14px;padding-left: 10px; padding-right: 0px;">
-                            <span>เลขที่ :</span>
-
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-right text_bold b"
-                            style="font-size: 14px;padding-left: 10px; padding-right: 0px;">
-                            <span>วันที่ :</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-right text_bold b"
-                            style="font-size: 14px;padding-left: 10px; padding-right: 0px;">
-                            <span>วันที่กำหนดจ่าย :</span>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            <div class="col-2_report">
-                <table width="100%">
-                    <tr>
-                        <td class="text-left b" style="font-size: 14px; padding-left: 0px;">
-                            <span class="ml-1" t-esc="doc.invoice_ids.name"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-left b" style="font-size: 14px; padding-left: 0px;">
-                            <span class="ml-1" t-esc="doc.date_order.strftime('%d-%m-%Y')"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-left b" style="font-size: 14px; padding-left: 0px;">
-                            <span class="ml-1" t-esc="doc.invoice_ids.invoice_date_due.strftime('%d-%m-%Y') if doc.invoice_ids.invoice_date_due else ''"/>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-        </div>
+        <!-- ข้อมูลลูกค้า + เลขที่/วันที่
+             เดิมเป็น <div class="row"> ที่มี 4 บล็อกคลาส col-*_report ซึ่งไม่ใช่ Bootstrap grid
+             (report.css กำหนดให้แค่ padding-left:0 ไม่มี width) และ wkhtmltopdf ไม่รองรับ display:flex
+             แต่ละบล็อกจึงกว้างตามเนื้อหา + ยังมี padding-right:150px ต่อท้ายอีก
+             พอชื่อ/ที่อยู่ลูกค้ายาว บล็อก เลขที่/วันที่/วันที่กำหนดจ่าย จะถูกดันจนตกขอบกระดาษและถูกตัดทิ้ง
+             แก้เป็นตารางเดียว ล็อกความกว้างคอลัมน์ 19/39/21/21 = 100% และให้ป้ายอยู่แถวเดียวกับค่า
+             ที่อยู่ยาวจึงตัดขึ้นบรรทัดใหม่ในคอลัมน์ตัวเอง โดยป้ายยังตรงกับค่าเสมอ -->
+        <table width="100%" style="table-layout: fixed;">
+            <tr>
+                <td width="19%" class="text-right text_bold b"
+                    style="font-size: 14px; padding-left: 0; padding-right: 8px; vertical-align: top; white-space: nowrap;">
+                    <span>ชื่อลูกค้า :</span>
+                </td>
+                <td width="39%" class="text-left b"
+                    style="font-size: 14px; padding-left: 0; padding-right: 10px; vertical-align: top; word-wrap: break-word;">
+                    <span class="ml-1" t-esc="doc.partner_id.name"/>
+                </td>
+                <td width="21%" class="text-right text_bold b"
+                    style="font-size: 14px; padding-left: 0; padding-right: 6px; vertical-align: top; white-space: nowrap;">
+                    <span>เลขที่ :</span>
+                </td>
+                <td width="21%" class="text-left b"
+                    style="font-size: 14px; padding-left: 0; vertical-align: top; word-wrap: break-word;">
+                    <span class="ml-1" t-esc="doc.invoice_ids.name"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="text-right text_bold b"
+                    style="font-size: 14px; padding-left: 0; padding-right: 8px; vertical-align: top; white-space: nowrap;">
+                    <span>ที่อยู่ :</span>
+                </td>
+                <td class="text-left b"
+                    style="font-size: 14px; padding-left: 0; padding-right: 10px; vertical-align: top; word-wrap: break-word;">
+                    <span class="ml-1" t-esc="doc.partner_id.street"/>
+                    <span class="ml-1" t-esc="doc.partner_id.street2"/>
+                    <span class="ml-1" t-esc="doc.partner_id.city"/>
+                    <span class="ml-1" t-esc="doc.partner_id.state_id.name"/>
+                    <span class="ml-1" t-esc="doc.partner_id.zip"/>
+                </td>
+                <td class="text-right text_bold b"
+                    style="font-size: 14px; padding-left: 0; padding-right: 6px; vertical-align: top; white-space: nowrap;">
+                    <span>วันที่ :</span>
+                </td>
+                <td class="text-left b"
+                    style="font-size: 14px; padding-left: 0; vertical-align: top; word-wrap: break-word;">
+                    <span class="ml-1" t-esc="doc.date_order.strftime('%d-%m-%Y')"/>
+                </td>
+            </tr>
+            <tr>
+                <td style="font-size: 10px ;color : white">.</td>
+                <td style="font-size: 10px ;color : white">.</td>
+                <td class="text-right text_bold b"
+                    style="font-size: 14px; padding-left: 0; padding-right: 6px; vertical-align: top; white-space: nowrap;">
+                    <span>วันที่กำหนดจ่าย :</span>
+                </td>
+                <td class="text-left b"
+                    style="font-size: 14px; padding-left: 0; vertical-align: top; word-wrap: break-word;">
+                    <span class="ml-1" t-esc="doc.invoice_ids.invoice_date_due.strftime('%d-%m-%Y') if doc.invoice_ids.invoice_date_due else ''"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="text-right text_bold b"
+                    style="font-size: 14px; padding-left: 0; padding-right: 8px; vertical-align: top; white-space: nowrap;">
+                    <span>เบอร์โทรศัพท์ :</span>
+                </td>
+                <td class="text-left b"
+                    style="font-size: 14px; padding-left: 0; padding-right: 10px; vertical-align: top; word-wrap: break-word;">
+                    <span class="ml-1" t-esc="doc.partner_id.phone"/>
+                </td>
+                <td/>
+                <td/>
+            </tr>
+            <tr>
+                <td class="text-right text_bold b"
+                    style="font-size: 14px; padding-left: 0; padding-right: 8px; vertical-align: top; white-space: nowrap;">
+                    <span>เลขที่ผู้เสียภาษี :</span>
+                </td>
+                <td class="text-left b"
+                    style="font-size: 14px; padding-left: 0; padding-right: 10px; vertical-align: top; word-wrap: break-word;">
+                    <span class="ml-1" t-esc="doc.partner_id.vat"/>
+                </td>
+                <td/>
+                <td/>
+            </tr>
+        </table>
         <p style="color : white; font-size: 5px;">.</p>
         <table width="100%" class="table" style="mt-1">
             <thead>
@@ -257,7 +239,9 @@
                 </tr>
             </tbody>
         </table>
-        <p style="color : white; font-size: 250px;">.</p>
+        <!-- ตัวถ่างเดิม <p style="font-size: 250px">.</p> ถูกลบออก
+             ตำแหน่งท้ายเอกสารมาจาก height + vertical-align:bottom ของตารางโครงหน้าแทน -->
+        <p style="color : white; font-size: 14px;">.</p>
         <!--        <t t-set="number" t-value="range(1,abs((10-c)))"/>-->
         <!--        <t t-foreach="number" t-as="n">-->
         <!--            <tr>-->
@@ -552,15 +536,22 @@
             <t t-foreach="docs" t-as="doc">
                 <t t-call="web.basic_layout">
                     <t t-set="number" t-vatue="0"/>
-                    <table class="width :100%" border="1">
+                    <!-- ตารางโครงหน้า:
+                         - เดิม class="width :100%" ไม่มีผล (ไม่ใช่ style) ตารางจึงกว้างตามเนื้อหา
+                           ต้องตรึง 100% + table-layout:fixed เพื่อให้ % ความกว้างของหัวเอกสารอ้างอิงความกว้างกระดาษจริง
+                         - height 960px = ความสูงพื้นที่พิมพ์ A4 แนวตั้ง (297-10-7 = 280mm ที่ dpi 90 ≈ 992px) เผื่อไว้ ~30px
+                           แถวท้าย vertical-align:bottom จึงถูกดันไปชิดก้นกระดาษเสมอ ไม่ว่าหัวเอกสารจะสูงเท่าไหร่
+                           (เดิมใช้ <p> ตัวถ่าง font-size:250px ใน report_header ดันตำแหน่งแบบตายตัว
+                            พอที่อยู่ลูกค้ายาวขึ้นมาบรรทัดเดียว ท้ายเอกสารก็ตกไปหน้า 2 ทันที — ตัวถ่างนั้นถูกลบออกแล้ว) -->
+                    <table class="width :100%" border="1" style="width: 100%; table-layout: fixed; height: 960px;">
                         <tr>
-                            <td>
+                            <td style="vertical-align: top;">
                                 <!--                              หัวข้อรายงาน-->
                                 <t t-call="pfb_npd_sale_form_Billing_sheet.report_header"/>
                             </td>
                         </tr>
                         <tr>
-                            <td>
+                            <td style="vertical-align: bottom;">
                                 <t t-call="pfb_npd_sale_form_Billing_sheet.report_footer"/>
                             </td>
                         </tr>
