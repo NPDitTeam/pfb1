@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'NPD Rental Stock Overview',
-    'version': '14.0.1.0.0',
+    'version': '14.0.1.1.0',
     'summary': 'รายงานภาพรวมสต็อก เช่า แยกสาขา พร้อมจำนวนที่ถูกเช่า (ตัดสต๊อกเสร็จสิ้น ยังไม่คืน)',
     'description': """
 รายงานภาพรวมสต็อก เช่า
@@ -18,7 +18,9 @@
 """,
     'author': 'NPD',
     'category': 'Inventory/Reporting',
-    'depends': ['stock', 'sale_stock', 'branch'],
+    # npd_scrap_buttons: ต้องใช้สถานะ pending_repair/under_repair/repaired,
+    # ฟิลด์ repair_deadline และ widget npd_repair_countdown ของคอลัมน์รอซ่อม 48 ชม.
+    'depends': ['stock', 'sale_stock', 'branch', 'npd_scrap_buttons'],
     'data': [
         'security/ir.model.access.csv',
         'views/rental_stock_overview_views.xml',
