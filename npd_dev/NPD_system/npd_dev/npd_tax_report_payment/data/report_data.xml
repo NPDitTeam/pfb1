@@ -1,0 +1,38 @@
+<odoo>
+    <record id="action_report_tax_payment_report_html" model="ir.actions.client">
+        <field name="name">TAX Report Payment</field>
+        <field name="tag">npd_tax_report_payment_backend</field>
+        <field name="context" eval="{'active_model': 'report.tax.payment.report'}" />
+    </record>
+    <record id="action_tax_payment_report_pdf" model="ir.actions.report">
+        <field name="name">TAX Report Payment PDF</field>
+        <field name="model">report.tax.payment.report</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">npd_tax_report_payment.report_tax_payment_report_pdf</field>
+        <field name="report_file">npd_tax_report_payment.report_tax_payment_report_pdf</field>
+        <field
+            name="print_report_name"
+        >'TAX Report Payment - [%s]' % object.date_range_id.display_name</field>
+        <field name="paperformat_id" ref="npd_tax_report_payment.paperformat_tax_payment_report" />
+    </record>
+    <record id="action_tax_payment_report_xlsx" model="ir.actions.report">
+        <field name="name">TAX Report Payment XLSX</field>
+        <field name="model">report.tax.payment.report</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">npd_tax_report_payment.report_tax_payment_report_xlsx</field>
+        <field name="report_file">Tax Report</field>
+        <field
+            name="print_report_name"
+        >'TAX Report Payment - [%s]' % object.date_range_id.display_name</field>
+    </record>
+
+    <record id="action_tax_payment_report_test_xlsx" model="ir.actions.report">
+        <field name="name">TAX Report Payment Test XLSX</field>
+        <field name="model">report.tax.payment.report</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">npd_tax_report_payment.report_tax_payment_report_xlsx</field> <field name="report_file">Tax Report Test</field>
+        <field
+            name="print_report_name"
+        >'TAX Report Payment Test - [%s]' % object.date_range_id.display_name</field>
+    </record>
+</odoo>

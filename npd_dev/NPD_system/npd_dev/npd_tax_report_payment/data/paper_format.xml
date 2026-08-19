@@ -1,0 +1,18 @@
+<odoo>
+    <record id="paperformat_tax_payment_report" model="report.paperformat">
+        <field name="name">TAX Report Payment A4</field>
+        <field name="default" eval="False" />
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <!-- แนวนอน เพราะตารางมี 13 คอลัมน์ ใส่ A4 แนวตั้งแล้วตัวหนังสือตกบรรทัด -->
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">18</field>
+        <field name="margin_bottom">20</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False" />
+        <field name="header_spacing">18</field>
+        <field name="dpi">90</field>
+    </record>
+</odoo>

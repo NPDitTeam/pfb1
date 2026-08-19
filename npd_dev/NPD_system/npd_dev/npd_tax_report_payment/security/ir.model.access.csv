@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tax_report_wizard,tax.payment.report.wizard,model_tax_payment_report_wizard,account.group_account_invoice,1,1,1,1
+access_tax_report_view,tax.payment.report.view,model_tax_payment_report_view,account.group_account_invoice,1,1,1,1
+access_report_tax_payment_report,report.tax.payment.report,model_report_tax_payment_report,account.group_account_invoice,1,1,1,1
+access_report_npd_tax_report_payment_report_tax_payment_report_xlsx,report.npd_tax_report_payment.report_tax_payment_report_xlsx,model_report_npd_tax_report_payment_report_tax_payment_report_xlsx,account.group_account_invoice,1,1,1,1
