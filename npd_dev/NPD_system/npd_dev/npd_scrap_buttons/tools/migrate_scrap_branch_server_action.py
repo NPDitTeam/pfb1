@@ -21,6 +21,17 @@ out = []
 Location = env['stock.location']
 Branch = env['res.branch']
 
+# --- กันพลาด: ต้องอัปเกรดโมดูล + restart ก่อน ไม่งั้นยังไม่มีฟิลด์ scrap_branch_id ---
+has_field = env['ir.model.fields'].sudo().search_count([
+    ('model', '=', 'stock.location'), ('name', '=', 'scrap_branch_id'),
+])
+if not has_field:
+    raise UserError(
+        'ยังไม่มีฟิลด์ scrap_branch_id บน stock.location\n\n'
+        'แปลว่ายังไม่ได้อัปเกรดโมดูล npd_scrap_buttons เป็นเวอร์ชัน 14.0.1.3.0\n'
+        'หรืออัปเกรดแล้วแต่ยังไม่ได้ restart เซิร์ฟเวอร์\n\n'
+        'กรุณาอัปเกรดโมดูล + restart ให้เรียบร้อยก่อน แล้วค่อยรันสคริปต์นี้ใหม่')
+
 locs = Location.search([('complete_name', 'ilike', KEYWORD)])
 out.append('คลังที่พบ : %d' % len(locs))
 out.append('')
