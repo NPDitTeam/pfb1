@@ -433,15 +433,46 @@ class SaleOrderCancelDocumentWizard(models.TransientModel):
         return lost
 
     def _validate_return_picking(self, return_pick):
-        """ดันใบคืนให้ 'เสร็จสิ้น' อัตโนมัติ (qty เต็ม + button_validate + wizard)"""
+        """ดันใบคืนให้ 'เสร็จสิ้น' อัตโนมัติ
+        บังคับเขียน qty_done = ดีมานด์ ลง move line 'โดยตรง' (สร้างใหม่ถ้าไม่มี)
+        โดยไม่พึ่งการจอง (reservation) เพราะต้นทางเป็นคลังลูกค้าที่ไม่มีสต๊อก
+        ให้จอง -> action_assign จองได้ 0 -> immediate transfer เซ็ต qty_done=0
+        -> ใบคืนค้างสถานะ 'พร้อม' ต้องมากดยืนยันเอง
+        ใช้ตรรกะเดียวกับ so_auto_stock_cut._force_done_full ที่ปิดใบได้จริง"""
         return_pick.action_confirm()
         return_pick.action_assign()
-        for ml in return_pick.move_lines:
-            ml.quantity_done = ml.product_uom_qty
-        for sml in return_pick.move_line_ids:
-            if sml.qty_done == 0:
-                sml.qty_done = sml.product_uom_qty
-        res = return_pick.sudo().button_validate()
+        for move in return_pick.move_lines.filtered(
+                lambda m: m.state not in ('done', 'cancel')):
+            qty = float(move.product_uom_qty or 0.0)
+            if qty <= 0:
+                continue
+            if move.move_line_ids:
+                first_ml = move.move_line_ids[0]
+                # เหลือ move line เดียวต่อ move กันจำนวนซ้อน
+                for extra in move.move_line_ids[1:]:
+                    extra.unlink()
+                first_ml.write({'qty_done': qty, 'picking_id': return_pick.id})
+                if move.product_id.tracking in ('lot', 'serial') and not (
+                        first_ml.lot_id or first_ml.lot_name):
+                    first_ml.lot_name = "AUTO-%s" % fields.Date.today()
+            else:
+                ml_vals = {
+                    'move_id': move.id,
+                    'picking_id': return_pick.id,
+                    'product_id': move.product_id.id,
+                    'product_uom_id': move.product_uom.id,
+                    'location_id': move.location_id.id,
+                    'location_dest_id': move.location_dest_id.id,
+                    'qty_done': qty,
+                }
+                if move.product_id.tracking in ('lot', 'serial'):
+                    ml_vals['lot_name'] = "AUTO-%s" % fields.Date.today()
+                self.env['stock.move.line'].create(ml_vals)
+        return_pick.invalidate_cache()
+        res = return_pick.with_context(
+            skip_immediate=True, skip_sms=True, skip_backorder=True
+        ).sudo().button_validate()
+        # เผื่อระบบยังเด้ง wizard (immediate/backorder) ให้ประมวลผลจนจบ
         if isinstance(res, dict) and res.get('res_model'):
             model = res.get('res_model')
             if model == 'stock.immediate.transfer':
@@ -451,6 +482,58 @@ class SaleOrderCancelDocumentWizard(models.TransientModel):
                 self.env['stock.backorder.confirmation'].create({
                     'pick_ids': [(6, 0, [return_pick.id])]}).process()
         return_pick.invalidate_cache()
+
+    def _returned_qty_by_product(self, order, cut_move_ids):
+        """จำนวนที่ 'กลับเข้าคลังแล้ว' ต่อสินค้า — นับให้กว้างที่สุดเท่าที่หาได้
+        เพราะถ้านับขาดแม้แต่ทางเดียว = สร้างใบคืนซ้ำ = สต๊อกเบิ้ล
+        นับ 3 ทาง (กันนับ move ซ้ำด้วย counted):
+        1) ใบคืนมาตรฐาน (stock.return.picking) — search จาก stock.move ตรง ๆ
+           ไม่พึ่ง order.picking_ids เพราะถ้าใบคืนหลุด procurement group ของ SO
+           (เช่น ถูกแก้ group/สร้างจากที่อื่น) จะหายไปจากสายตาแล้วคืนซ้ำ
+        2) move ที่วิ่ง 'เข้า' คลัง internal จากที่ที่ไม่ใช่ internal ในใบของ SO นี้
+           → ครอบคลุมใบรับที่พนักงานสร้างมือ และใบคืนที่ไม่ผูก
+           origin_returned_move_id (ของเดิมนับเฉพาะแบบผูก จึงมองไม่เห็นพวกนี้)
+        3) ของที่ 'ซ่อมเสร็จ' แล้วถูกดันกลับคลัง (npd_scrap_buttons.return_move_id)
+           เฉพาะกรณี scrap ออกมาจากที่ที่ไม่ใช่คลัง internal — ถ้า scrap ออกจาก
+           คลัง แสดงว่าของเข้าคลังไปแล้วและถูกนับในข้อ 1/2 การนับซ้ำจะทำให้คืนไม่ครบ
+        """
+        Move = self.env['stock.move'].sudo()
+        returned = {}
+        counted = set()
+
+        def _add(move):
+            if not move or move.id in counted:
+                return
+            if move.state != 'done' or move.quantity_done <= 0:
+                return
+            counted.add(move.id)
+            returned[move.product_id.id] = \
+                returned.get(move.product_id.id, 0.0) + move.quantity_done
+
+        # 1) ใบคืนมาตรฐานที่อ้างอิง move ของใบตัด
+        if cut_move_ids:
+            for m in Move.search([
+                    ('origin_returned_move_id', 'in', list(cut_move_ids)),
+                    ('state', '=', 'done')]):
+                _add(m)
+
+        # 2) ของที่วิ่งเข้าคลัง internal ในใบของ SO นี้ (ทุกรูปแบบ)
+        for p in order.picking_ids.filtered(lambda p: p.state == 'done'):
+            for m in p.move_lines:
+                if (m.location_dest_id.usage == 'internal'
+                        and m.location_id.usage != 'internal'):
+                    _add(m)
+
+        # 3) ของที่ซ่อมเสร็จแล้วคืนเข้าคลัง
+        Scrap = self.env['stock.scrap'].sudo()
+        if 'return_move_id' in Scrap._fields and order.picking_ids:
+            for s in Scrap.search([('picking_id', 'in', order.picking_ids.ids)]):
+                rm = s.return_move_id
+                if (rm and rm.location_dest_id.usage == 'internal'
+                        and s.location_id.usage != 'internal'):
+                    _add(rm)
+
+        return returned
 
     def _return_net_stock(self, tz):
         """คืนสต๊อก 'สุทธิ' ต่อสินค้า ทั้งใบเช่า
@@ -487,19 +570,12 @@ class SaleOrderCancelDocumentWizard(models.TransientModel):
                 now_thai.strftime('%d/%m/%Y %H:%M:%S'))
             return messages
 
-        # คืนแล้วจริง = 'ใบคืน' (move ที่อ้างอิงใบตัดผ่าน origin_returned_move_id) ทุกใบ
-        # นับด้วยจำนวนจริง กันเบิ้ล — ไม่พึ่ง picking_type code เพราะคลังสาขา
-        # ตั้ง return_picking_type_id ไม่ตรงกัน (บางใบคืนไม่ได้เป็น 'incoming')
-        # ต้องใช้เกณฑ์เดียวกับฝั่ง cut_pickings (origin_returned_move_id) ไม่งั้น
-        # จะมองไม่เห็นใบคืนเดิม แล้วสร้างใบคืนซ้ำ ทำให้สต๊อกเบิ้ล
-        returned = {}
-        for p in order.picking_ids.filtered(lambda p: p.state == 'done'):
-            for m in p.move_lines.filtered(
-                    lambda m: m.state == 'done'
-                    and m.quantity_done > 0
-                    and m.origin_returned_move_id):
-                returned[m.product_id.id] = \
-                    returned.get(m.product_id.id, 0.0) + m.quantity_done
+        # คืนแล้วจริง — นับ 'ทุกทางที่ของกลับเข้าคลัง' ด้วยจำนวนจริง กันคืนซ้ำ
+        # ไม่พึ่ง picking_type code เพราะคลังสาขาตั้ง return_picking_type_id
+        # ไม่ตรงกัน (บางใบคืนไม่ได้เป็น 'incoming')
+        cut_move_ids = [m.id for lst in cut_moves_by_product.values()
+                        for (_p, m) in lst]
+        returned = self._returned_qty_by_product(order, cut_move_ids)
 
         # สินค้าหาย (scrap) → ไม่คืน
         lost = self._get_lost_scrap_qty(order)
@@ -619,9 +695,29 @@ class SaleOrderCancelDocumentWizard(models.TransientModel):
             'credit_note': ('cancel_credit_note', 'reason_credit_note', 'ใบลดหนี้'),
         }
 
+        # เลขเอกสารของแต่ละรายการ — ถ้าว่างหรือเป็น '-' (ไม่มีเอกสารจริง)
+        # จะไม่บังคับกรอกเหตุผล (sale_order ไม่อยู่ในแมพ เพราะมีเลข SO เสมอ)
+        doc_display_map = {
+            'invoice': 'invoice_display_names',
+            'delivery': 'delivery_display_names',
+            'stock_cut': 'delivery_display_names',
+            'insurance': 'insurance_display_names',
+            'payment_invoice': 'payment_invoice_display_names',
+            'payment_insurance': 'payment_insurance_display_names',
+            'debit_note': 'debit_note_display_names',
+            'debit_note_payment': 'debit_note_payment_display_names',
+            'credit_note': 'credit_note_display_names',
+        }
+
         missing_reasons = []
         for key in selected:
             checkbox_field, reason_field, label = reason_map[key]
+            # ถ้ารายการนี้ไม่มีเลขเอกสารจริง (ว่าง/'-') ข้ามการบังคับกรอกเหตุผล
+            disp_field = doc_display_map.get(key)
+            if disp_field is not None:
+                disp_val = (getattr(self, disp_field, False) or '').strip()
+                if disp_val in ('', '-'):
+                    continue
             reason_value = getattr(self, reason_field, False)
             if not reason_value or not reason_value.strip():
                 missing_reasons.append(label)
@@ -781,6 +877,16 @@ class SaleOrderCancelDocumentWizard(models.TransientModel):
             raise UserError(
                 _('ไม่สามารถยกเลิกเอกสารต่อไปนี้ได้ เนื่องจากเกิน 3 วัน:\n- %s') % '\n- '.join(over_3_days)
             )
+
+        # ===== กันคืนสต๊อกเบิ้ลจากการกดยืนยันซ้ำ / เปิดหลายแท็บ / ยิงซ้ำ =====
+        # ล็อกแถวใบเช่าไว้ก่อน คนที่กดทีหลังจะต้องรอจนคนแรก commit เสร็จ
+        # แล้วล้าง cache เพื่อให้คำนวณ 'คืนสุทธิ' จากข้อมูลที่ commit แล้วจริง ๆ
+        # (เดิมไม่มีล็อก: transaction ที่สองมองไม่เห็นใบคืนของ transaction แรก
+        #  เพราะยังไม่ commit จึงสร้างใบคืนซ้ำอีกใบ = สต๊อกเบิ้ล)
+        self.env.cr.execute(
+            "SELECT id FROM sale_order WHERE id = %s FOR UPDATE",
+            (self.sale_id.id,))
+        self.sale_id.invalidate_cache()
 
         try:
             self.env.cr.execute("SAVEPOINT cancel_doc_operation")
