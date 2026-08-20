@@ -11,6 +11,7 @@
       = สินค้าหาย / ค่าเช่าส่วนต่าง / สินค้าชำรุด
       ใบเพิ่มหนี้ขึ้นเฉพาะ 'ยอดเงิน' ในตารางสรุป ไม่ดึงรายการสินค้ามาแสดง
   โดยนับเฉพาะ state='posted' และ payment_state in ('not_paid','partial')
+  และนับเฉพาะใบที่ invoice_date >= 1 ม.ค. 2026 (ดู OVERDUE_START_DATE)
 
   สถานะการคืนสินค้า **ไม่ได้ใช้กรองหนี้** แต่ใช้ตัดสินว่าจะดึงสินค้ามาแสดงไหม
   (ยืนยันกับผู้ใช้แล้ว 11 ส.ค. 2026):
@@ -40,6 +41,11 @@ import logging
 from odoo import fields, models
 
 _logger = logging.getLogger(__name__)
+
+# ดึงหนี้ค้างเฉพาะใบแจ้งหนี้ที่ออกตั้งแต่ 1 ม.ค. 2026 เป็นต้นไป (19 ส.ค. 2026)
+# ใช้เกณฑ์เดียวกับโมดูล npd_rent_invoice_overdue ฝั่งรวมหนี้ลูกค้า (npd_debt_summary)
+# เพื่อให้ตัวเลขสองที่ตรงกัน หนี้ปีเก่ากว่านั้นไม่นำมาแสดงทั้งในแท็บและในใบกำกับ
+OVERDUE_START_DATE = '2026-01-01'
 
 # ยอดค้างชำระขั้นต่ำที่จะนำมาแสดง
 # ตั้ง 0.01 = แสดงทุกบาททุกสตางค์ (ตามที่ผู้ใช้ระบุ 13 ส.ค. 2026)
@@ -284,6 +290,7 @@ class SaleOrder(models.Model):
                AND so.state IN ('sale', 'done')
                {rent_filter}
                AND am.state = 'posted'
+               AND am.invoice_date >= %s
                AND am.payment_state IN ('not_paid', 'partial')
                AND am.amount_residual >= %s
              ORDER BY so.name, il.kind DESC, am.invoice_date, am.name
@@ -292,7 +299,8 @@ class SaleOrder(models.Model):
                    branch_filter=branch_filter)
 
         # ลำดับ params ต้องตรงกับลำดับ %s ในประโยค WHERE ด้านบน
-        return sql, (self.partner_id.id, self.id) + branch_params + (RESIDUAL_MIN,)
+        return sql, ((self.partner_id.id, self.id) + branch_params
+                     + (OVERDUE_START_DATE, RESIDUAL_MIN))
 
     # ------------------------------------------------------------------
     # API สำหรับรายงาน
