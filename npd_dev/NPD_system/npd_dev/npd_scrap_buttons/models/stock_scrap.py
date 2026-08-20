@@ -302,6 +302,10 @@ class StockScrap(models.Model):
 
         ใช้กับคลังที่แตกลูกรายสาขา เช่น 'ขายตามสภาพ' -> 'ขายตามสภาพ/ลาดกระบัง'
         ถ้าไม่มีลูกที่ตรงสาขา ก็คืนคลังแม่ตามเดิม (พฤติกรรมเดิมไม่เปลี่ยน)
+
+        จับคู่ด้วย scrap_branch_id ไม่ใช่ branch_id เพราะโมดูลอื่นค้นหาคลัง
+        ต้นทางของสาขาด้วย branch_id แบบ limit=1 ถ้าคลังพักผูก branch_id ด้วย
+        จะไปแย่งผลการค้นหาจนตัดสต๊อกผิดคลัง (ดู help ของ stock.location)
         """
         self.ensure_one()
         branch = self.location_id.branch_id
@@ -310,7 +314,7 @@ class StockScrap(models.Model):
         child = self.env['stock.location'].search([
             ('id', 'child_of', base_location.id),
             ('id', '!=', base_location.id),
-            ('branch_id', '=', branch.id),
+            ('scrap_branch_id', '=', branch.id),
             ('usage', '=', 'internal'),
         ], limit=1)
         return child or base_location
@@ -331,7 +335,7 @@ class StockScrap(models.Model):
             ('complete_name', 'ilike', SOLD_AS_IS_KEYWORD),
         ]
         if branch:
-            domain.append(('branch_id', '=', branch.id))
+            domain.append(('scrap_branch_id', '=', branch.id))
         if self.company_id:
             domain.append(('company_id', 'in', [self.company_id.id, False]))
         return self.env['stock.location'].search(domain, limit=1)

@@ -242,16 +242,20 @@ class RentalStockOverview(models.Model):
                 sold_as_is AS (
                     -- สินค้าขายตามสภาพ = ของที่ยังค้างอยู่ในคลัง 'ขายตามสภาพ' รายสาขา
                     -- (ยอดคงเหลือ ไม่ใช่ยอดสะสม -> ขายออกไปแล้วตัวเลขลดลงเอง)
+                    --
+                    -- อ้างสาขาจาก scrap_branch_id ไม่ใช่ branch_id เพราะคลังกลุ่มนี้
+                    -- ต้องไม่ผูก branch_id ไม่งั้นจะไปแย่งผลการค้นหาคลังต้นทาง
+                    -- ของโมดูลอื่นจนตัดสต๊อกผิดคลัง (ดู help ของ stock.location)
                     SELECT sq.product_id            AS product_id,
-                           sl.branch_id             AS branch_id,
+                           sl.scrap_branch_id       AS branch_id,
                            SUM(sq.quantity)         AS qty_sold_as_is
                       FROM stock_quant sq
                       JOIN stock_location sl ON sl.id = sq.location_id
                      WHERE sl.usage = 'internal'
-                       AND sl.branch_id IS NOT NULL
+                       AND sl.scrap_branch_id IS NOT NULL
                        AND sl.complete_name ILIKE '%{sold_kw}%'
                        AND sq.product_id IN (SELECT product_id FROM rental_prod)
-                     GROUP BY sq.product_id, sl.branch_id
+                     GROUP BY sq.product_id, sl.scrap_branch_id
                 ),
                 cut AS (
                     SELECT sm.id           AS move_id,

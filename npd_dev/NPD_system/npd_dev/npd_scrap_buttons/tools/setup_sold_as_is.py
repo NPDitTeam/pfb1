@@ -87,7 +87,7 @@ print('สาขาที่พบ : %d สาขา' % len(branches))
 created = existed = planned = 0
 for branch in branches:
     child = parent and Location.search([
-        ('location_id', '=', parent.id), ('branch_id', '=', branch.id),
+        ('location_id', '=', parent.id), ('scrap_branch_id', '=', branch.id),
     ], limit=1)
     if child:
         existed += 1
@@ -100,7 +100,10 @@ for branch in branches:
             'name': branch.name,
             'location_id': parent.id,
             'usage': 'internal',
-            'branch_id': branch.id,
+            # ห้ามใช้ branch_id! จะไปแย่งผลค้นหาคลังต้นทางของโมดูลอื่น
+            # จนระบบตัดสต๊อกผิดคลัง -> ใช้ scrap_branch_id แทน
+            'scrap_branch_id': branch.id,
+            'scrap_location': True,
             'company_id': company.id,
         })
         created += 1

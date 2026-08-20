@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'NPD Scrap Buttons',
-    'version': '14.0.1.2.0',
+    'version': '14.0.1.3.0',
     'summary': 'Reset / Cancel / Repair workflow for Scrap Orders',
     'description': """
         Adds to Scrap Orders:
@@ -18,6 +18,7 @@
     'data': [
         'security/ir.model.access.csv',
         'views/assets.xml',
+        'views/stock_location_views.xml',
         'views/scrap_reason_code_views.xml',
         'views/stock_scrap_views.xml',
         'wizard/scrap_repair_wizard_views.xml',

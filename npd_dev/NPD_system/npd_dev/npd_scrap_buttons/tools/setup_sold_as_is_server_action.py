@@ -71,7 +71,7 @@ for branch in branches:
     child = False
     if parent:
         child = Location.search([
-            ('location_id', '=', parent.id), ('branch_id', '=', branch.id),
+            ('location_id', '=', parent.id), ('scrap_branch_id', '=', branch.id),
         ], limit=1)
     if child:
         n_old += 1
@@ -84,7 +84,10 @@ for branch in branches:
             'name': branch.name,
             'location_id': parent.id,
             'usage': 'internal',
-            'branch_id': branch.id,
+            # ห้ามใช้ branch_id! จะไปแย่งผลค้นหาคลังต้นทางของโมดูลอื่น
+            # จนระบบตัดสต๊อกผิดคลัง -> ใช้ scrap_branch_id แทน
+            'scrap_branch_id': branch.id,
+            'scrap_location': True,
             'company_id': company.id,
         })
         n_new += 1
