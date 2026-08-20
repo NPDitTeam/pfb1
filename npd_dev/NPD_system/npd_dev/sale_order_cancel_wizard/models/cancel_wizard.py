@@ -139,6 +139,86 @@ class SaleOrderCancelWizard(models.TransientModel):
                 return True
         return False
 
+    def _returned_qty_by_product(self, order, cut_move_ids):
+        """จำนวนที่ 'กลับเข้าคลังแล้ว' ต่อสินค้า — นับให้กว้างที่สุดเท่าที่หาได้
+        เพราะถ้านับขาดแม้แต่ทางเดียว = สร้างใบคืนซ้ำ = สต๊อกเบิ้ล
+        1) ใบคืนมาตรฐาน (stock.return.picking) — search จาก stock.move ตรง ๆ
+           ไม่พึ่ง order.picking_ids เผื่อใบคืนหลุด procurement group ของ SO
+        2) move ที่วิ่ง 'เข้า' คลัง internal จากที่ที่ไม่ใช่ internal ในใบของ SO นี้
+           (ใบรับที่สร้างมือ / ใบคืนที่ไม่ผูก origin_returned_move_id)
+        3) ของที่ 'ซ่อมเสร็จ' แล้วถูกดันกลับคลัง (npd_scrap_buttons.return_move_id)
+           เฉพาะที่ scrap ออกมาจากที่ที่ไม่ใช่คลัง internal (ถ้า scrap ออกจากคลัง
+           แปลว่าของเข้าคลังไปแล้วและถูกนับในข้อ 1/2)
+        """
+        Move = self.env['stock.move'].sudo()
+        returned = {}
+        counted = set()
+
+        def _add(move):
+            if not move or move.id in counted:
+                return
+            if move.state != 'done' or move.quantity_done <= 0:
+                return
+            counted.add(move.id)
+            returned[move.product_id.id] = \
+                returned.get(move.product_id.id, 0.0) + move.quantity_done
+
+        if cut_move_ids:
+            for m in Move.search([
+                    ('origin_returned_move_id', 'in', list(cut_move_ids)),
+                    ('state', '=', 'done')]):
+                _add(m)
+
+        for p in order.picking_ids.filtered(lambda p: p.state == 'done'):
+            for m in p.move_lines:
+                if (m.location_dest_id.usage == 'internal'
+                        and m.location_id.usage != 'internal'):
+                    _add(m)
+
+        Scrap = self.env['stock.scrap'].sudo()
+        if 'return_move_id' in Scrap._fields and order.picking_ids:
+            for s in Scrap.search([('picking_id', 'in', order.picking_ids.ids)]):
+                rm = s.return_move_id
+                if (rm and rm.location_dest_id.usage == 'internal'
+                        and s.location_id.usage != 'internal'):
+                    _add(rm)
+
+        return returned
+
+    def _net_moves_to_return(self, picking):
+        """[(move, qty)] ของใบนี้ 'เฉพาะส่วนที่ยังค้างคืนจริง'
+            ค้างคืน (ต่อสินค้า) = ตัดออกทั้งใบเช่า − ที่กลับเข้าคลังแล้วทุกทาง
+        คำนวณใหม่ทุกใบที่วน จึงเห็นใบคืนที่เพิ่งสร้างใน transaction นี้ด้วย"""
+        order = self.sale_id
+        cut_pickings = order.picking_ids.filtered(
+            lambda p: p.state == 'done'
+            and p.picking_type_id.code == 'outgoing'
+            and not self._is_return_picking(p))
+
+        delivered = {}
+        cut_move_ids = []
+        for p in cut_pickings:
+            for m in p.move_lines.filtered(
+                    lambda m: m.state == 'done' and m.quantity_done > 0):
+                delivered[m.product_id.id] = \
+                    delivered.get(m.product_id.id, 0.0) + m.quantity_done
+                cut_move_ids.append(m.id)
+
+        returned = self._returned_qty_by_product(order, cut_move_ids)
+        outstanding = {pid: qty - returned.get(pid, 0.0)
+                       for pid, qty in delivered.items()}
+
+        result = []
+        for m in picking.move_lines.filtered(
+                lambda m: m.state == 'done' and m.quantity_done > 0):
+            need = outstanding.get(m.product_id.id, 0.0)
+            if need <= 0.0001:
+                continue
+            take = min(need, m.quantity_done)
+            outstanding[m.product_id.id] = need - take
+            result.append((m, take))
+        return result
+
     def _handle_stock_return(self, picking, tz):
         """จัดการการคืนสต๊อกสำหรับ picking ที่ done แล้ว"""
         messages = []
@@ -150,35 +230,39 @@ class SaleOrderCancelWizard(models.TransientModel):
             _logger.info("🔵 [STOCK_V4] Checking picking %s: picking_type=%s, has_been_returned=%s",
                          picking.name, picking_type, has_returned)
 
-            # ข้าม incoming (รับสต๊อกเข้า / คืนสต๊อก) - ไม่ต้อง reverse
-            if picking_type == 'incoming':
+            # ข้าม incoming และใบคืน (ใบที่มี origin_returned_move_id) - ไม่ต้อง reverse
+            # เช็ค _is_return_picking ด้วย เพราะบางสาขาไม่ได้ตั้ง
+            # return_picking_type_id ทำให้ใบคืนมี code เป็น 'outgoing'
+            if picking_type == 'incoming' or self._is_return_picking(picking):
                 messages.append(
-                    "ℹ️ ข้าม %s (เป็นใบรับสินค้าเข้า ไม่ต้องคืนซ้ำ) (%s)" %
+                    "ℹ️ ข้าม %s (เป็นใบรับ/ใบคืนสินค้า ไม่ต้องคืนซ้ำ) (%s)" %
                     (picking.name, now_thai.strftime('%d/%m/%Y %H:%M:%S'))
                 )
                 return messages
 
-            # ถ้าเป็น outgoing (ตัดสต๊อกออก) → เช็คว่าถูก return ไปแล้วหรือยัง
-            if has_returned:
+            # ✅ คิด 'สุทธิ' ก่อนคืน: ค้างคืน = ตัดออกทั้งใบเช่า − ที่กลับเข้าคลังแล้ว
+            # (เดิมเช็คแค่ has_returned ของใบนี้ใบเดียวแล้วคืน 'เต็มจำนวน' →
+            #  ถ้าเคยคืนบางส่วน หรือคืนด้วยใบที่ไม่ผูก origin_returned_move_id
+            #  จะมองไม่เห็น แล้วคืนซ้ำทั้งใบ = สต๊อกเบิ้ล)
+            done_moves = self._net_moves_to_return(picking)
+            if not done_moves:
                 messages.append(
-                    "ℹ️ ข้าม %s (คืนสต๊อกไปแล้วก่อนหน้านี้) (%s)" %
+                    "ℹ️ ข้าม %s (สต๊อกกลับเข้าคลังครบแล้ว ไม่คืนซ้ำ) (%s)" %
                     (picking.name, now_thai.strftime('%d/%m/%Y %H:%M:%S'))
                 )
                 return messages
 
-            # outgoing + ยังไม่คืน → สร้าง return เพื่อเอาสต๊อกกลับ
-            done_moves = picking.move_lines.filtered(lambda m: m.state == 'done' and m.quantity_done > 0)
             if done_moves:
                 try:
-                    # สร้าง return picking
+                    # สร้าง return picking (เฉพาะจำนวนที่ยังค้างคืน)
                     return_wiz = self.env['stock.return.picking'].with_context(active_id=picking.id).create({
                         'picking_id': picking.id,
                         'location_id': picking.location_id.id,
                         'product_return_moves': [(0, 0, {
                             'product_id': move.product_id.id,
-                            'quantity': move.quantity_done,
+                            'quantity': qty,
                             'move_id': move.id,
-                        }) for move in done_moves],
+                        }) for (move, qty) in done_moves],
                     })
 
                     # สร้าง return และ validate
@@ -192,22 +276,44 @@ class SaleOrderCancelWizard(models.TransientModel):
                         return_pick.action_confirm()
                         return_pick.action_assign()
 
-                        # ✅ ตั้งค่า quantity_done บน move lines ก่อน validate
-                        # Odoo 14: ถ้าไม่ตั้ง quantity_done จะ return wizard stock.immediate.transfer แทน
-                        for move_line in return_pick.move_lines:
-                            move_line.quantity_done = move_line.product_uom_qty
-                            _logger.info("🔵 [STOCK_V5] Set quantity_done=%s for product %s on move %s",
-                                         move_line.quantity_done, move_line.product_id.name, move_line.id)
+                        # ✅ บังคับเขียน qty_done = ดีมานด์ ลง move line 'โดยตรง'
+                        # โดยไม่พึ่งการจอง เพราะต้นทางเป็นคลังลูกค้าที่ไม่มีสต๊อกให้จอง
+                        # -> ถ้าปล่อยให้ immediate transfer จัดการจะเซ็ต qty_done=0
+                        #    แล้วใบคืนค้างสถานะ 'พร้อม' ต้องมากดยืนยันเอง
+                        # (ตรรกะเดียวกับ so_auto_stock_cut._force_done_full)
+                        for move in return_pick.move_lines.filtered(
+                                lambda m: m.state not in ('done', 'cancel')):
+                            qty = float(move.product_uom_qty or 0.0)
+                            if qty <= 0:
+                                continue
+                            if move.move_line_ids:
+                                first_ml = move.move_line_ids[0]
+                                for extra in move.move_line_ids[1:]:
+                                    extra.unlink()
+                                first_ml.write({'qty_done': qty, 'picking_id': return_pick.id})
+                                if move.product_id.tracking in ('lot', 'serial') and not (
+                                        first_ml.lot_id or first_ml.lot_name):
+                                    first_ml.lot_name = "AUTO-%s" % fields.Date.today()
+                            else:
+                                ml_vals = {
+                                    'move_id': move.id,
+                                    'picking_id': return_pick.id,
+                                    'product_id': move.product_id.id,
+                                    'product_uom_id': move.product_uom.id,
+                                    'location_id': move.location_id.id,
+                                    'location_dest_id': move.location_dest_id.id,
+                                    'qty_done': qty,
+                                }
+                                if move.product_id.tracking in ('lot', 'serial'):
+                                    ml_vals['lot_name'] = "AUTO-%s" % fields.Date.today()
+                                self.env['stock.move.line'].create(ml_vals)
 
-                        # ตั้งค่า move_line_ids (detailed operations) ด้วยถ้ามี
-                        for sml in return_pick.move_line_ids:
-                            if sml.qty_done == 0:
-                                sml.qty_done = sml.product_uom_qty
-                                _logger.info("🔵 [STOCK_V5] Set move_line_ids qty_done=%s for %s",
-                                             sml.qty_done, sml.product_id.name)
+                        return_pick.invalidate_cache()
 
-                        # validate - ตอนนี้ quantity_done ถูกตั้งแล้ว ควรผ่านไป done โดยตรง
-                        validate_result = return_pick.sudo().button_validate()
+                        # validate - qty_done ถูกบังคับแล้ว ควรผ่านไป done โดยตรง
+                        validate_result = return_pick.with_context(
+                            skip_immediate=True, skip_sms=True, skip_backorder=True
+                        ).sudo().button_validate()
                         _logger.info("🔵 [STOCK_V5] button_validate() result: %s", validate_result)
 
                         # ถ้า button_validate return wizard (เช่น stock.immediate.transfer)
@@ -311,6 +417,15 @@ class SaleOrderCancelWizard(models.TransientModel):
         _logger.info("🔵 [CANCEL_WIZARD_V4] All invoice_names (invoices + rent_check + extra moves via SO) = %s", invoice_names)
         _logger.info("🔵 [CANCEL_WIZARD_V4] Extra moves found via invoice_origin='%s' (not in invoice_ids): %s",
                      so_name, [mv.name for mv in all_moves_by_so])
+
+        # ===== กันคืนสต๊อกเบิ้ลจากการกดยืนยันซ้ำ / เปิดหลายแท็บ =====
+        # ล็อกแถวใบเช่าไว้ก่อน คนที่กดทีหลังต้องรอจนคนแรก commit เสร็จ แล้วล้าง
+        # cache เพื่อคำนวณสุทธิจากข้อมูลที่ commit จริง (เดิม transaction ที่สอง
+        # มองไม่เห็นใบคืนของ transaction แรก จึงสร้างใบคืนซ้ำ = สต๊อกเบิ้ล)
+        self.env.cr.execute(
+            "SELECT id FROM sale_order WHERE id = %s FOR UPDATE",
+            (self.sale_id.id,))
+        self.sale_id.invalidate_cache()
 
         try:
             # สร้าง savepoint
