@@ -14,9 +14,21 @@
                        decoration-danger="payment_status == 'unpaid'"
                        decoration-success="payment_status == 'paid'"/>
                 <field name="grand_total" string="ยอดหนี้ค้างทั้งสิ้น" sum="รวมทั้งสิ้น"/>
+                <field name="notice_stage" string="ขั้น Notice" widget="badge"
+                       decoration-info="notice_stage == 'notice1'"
+                       decoration-warning="notice_stage == 'notice2'"
+                       decoration-danger="notice_stage == 'legal'"/>
+                <field name="notice_days_label" string="วันคงเหลือ (Notice)"
+                       decoration-danger="notice_days_left &lt; 0"
+                       decoration-warning="notice_days_left &gt;= 0 and notice_days_left &lt;= 3"/>
+                <field name="notice_days_left" string="วันคงเหลือ (ตัวเลข)" optional="hide"/>
+                <field name="notice_due_date" string="ครบกำหนด Notice" optional="hide"/>
                 <!-- ใบแจ้งหนี้ค้างชำระ + วันที่ + สถานะ -->
-                <field name="customer_amount_residual" string="ใบแจ้งหนี้ค้างชำระ" sum="รวม"/>
-                <field name="invoice_report_date" string="วันที่ (ใบแจ้งหนี้)"/>
+                <field name="customer_amount_residual" string="ใบแจ้งหนี้ค่าเช่า" sum="รวม"/>
+                <field name="customer_deposit_residual" string="ใบแจ้งหนี้ค่าประกัน" sum="รวม"/>
+                <field name="customer_rentdiff_residual" string="ค่าเช่าส่วนต่าง" sum="รวม"/>
+                <field name="invoice_report_date" string="วันที่ (ใบแจ้งหนี้ค่าเช่า)"/>
+                <field name="rentdiff_report_date" string="วันที่ (ค่าเช่าส่วนต่าง)"/>
                 <field name="invoice_due_date" string="วันที่กำหนดชำระ (ใบแจ้งหนี้)"/>
                 <field name="invoice_payment_status" string="สถานะ (ใบแจ้งหนี้)" widget="badge"
                        decoration-danger="invoice_payment_status == 'unpaid'" decoration-success="invoice_payment_status == 'paid'"/>
@@ -33,8 +45,10 @@
                 <field name="damage_payment_status" string="สถานะ (ค่าปรับชำรุด)" widget="badge"
                        decoration-danger="damage_payment_status == 'unpaid'" decoration-success="damage_payment_status == 'paid'"/>
                 <!-- ค่า Tax + วันที่ + สถานะ -->
-                <field name="customer_tax_residual" string="ค่า Tax" sum="รวม"/>
-                <field name="tax_report_date" string="วันที่ (ค่า Tax)"/>
+                <field name="customer_transport_residual" string="ค่าขนส่ง" sum="รวม"/>
+                <field name="customer_tax_residual" string="ค่าหัก ณ ที่จ่าย" sum="รวม"/>
+                <field name="transport_report_date" string="วันที่ (ค่าขนส่ง)"/>
+                <field name="tax_report_date" string="วันที่ (ค่าหัก ณ ที่จ่าย)"/>
                 <field name="tax_due_date" string="วันที่กำหนดชำระ (ค่า Tax)"/>
                 <field name="tax_payment_status" string="สถานะ (ค่า Tax)" widget="badge"
                        decoration-danger="tax_payment_status == 'unpaid'" decoration-success="tax_payment_status == 'paid'"/>
@@ -55,6 +69,17 @@
                 <header>
                     <button name="action_refresh_one" type="object"
                             string="🔄 อัพเดทข้อมูลลูกค้ารายนี้" class="btn-primary"/>
+                    <!-- ต้องกดปุ่มนี้ก่อน ระบบถึงเริ่มนับ 14 วันของ Notice 1
+                         หลังจากนั้น cron ประจำวันจะเลื่อนขั้นให้เองถ้ายังค้างชำระ -->
+                    <button name="action_start_notice" type="object"
+                            string="เริ่มออก Notice" class="btn-secondary"
+                            attrs="{'invisible': [('notice_stage', '!=', 'none')]}"/>
+                    <button name="action_reset_notice" type="object"
+                            string="ยกเลิก Notice" class="btn-secondary"
+                            confirm="ยกเลิกการออก Notice ของลูกค้ารายนี้ และล้างวันที่ที่นับไว้ ใช่หรือไม่"
+                            attrs="{'invisible': [('notice_stage', '=', 'none')]}"/>
+                    <field name="notice_stage" widget="statusbar"
+                           statusbar_visible="none,notice1,notice2,legal"/>
                     <field name="payment_status" widget="statusbar" statusbar_visible="unpaid,paid"/>
                 </header>
                 <sheet>
@@ -65,10 +90,18 @@
                     </div>
                     <group>
                         <group string="ยอดหนี้">
-                            <field name="customer_amount_residual" string="ใบแจ้งหนี้ค้างชำระ" readonly="1"/>
-                            <field name="invoice_payment_status" string="สถานะใบแจ้งหนี้" widget="badge"
+                            <field name="customer_amount_residual" string="ใบแจ้งหนี้ค่าเช่า" readonly="1"/>
+                            <field name="invoice_payment_status" string="สถานะใบแจ้งหนี้ค่าเช่า" widget="badge"
                                    decoration-danger="invoice_payment_status == 'unpaid'"
                                    decoration-success="invoice_payment_status == 'paid'"/>
+                            <field name="customer_deposit_residual" string="ใบแจ้งหนี้ค่าประกัน" readonly="1"/>
+                            <field name="deposit_payment_status" string="สถานะค่าประกัน" widget="badge"
+                                   decoration-danger="deposit_payment_status == 'unpaid'"
+                                   decoration-success="deposit_payment_status == 'paid'"/>
+                            <field name="customer_rentdiff_residual" string="ค่าเช่าส่วนต่าง" readonly="1"/>
+                            <field name="rentdiff_payment_status" string="สถานะค่าเช่าส่วนต่าง" widget="badge"
+                                   decoration-danger="rentdiff_payment_status == 'unpaid'"
+                                   decoration-success="rentdiff_payment_status == 'paid'"/>
                             <field name="customer_penalty_residual" string="ค่าปรับหาย" readonly="1"/>
                             <field name="lost_payment_status" string="สถานะค่าปรับหาย" widget="badge"
                                    decoration-danger="lost_payment_status == 'unpaid'"
@@ -77,12 +110,26 @@
                             <field name="damage_payment_status" string="สถานะค่าปรับชำรุด" widget="badge"
                                    decoration-danger="damage_payment_status == 'unpaid'"
                                    decoration-success="damage_payment_status == 'paid'"/>
-                            <field name="customer_tax_residual" string="ค่า Tax" readonly="1"/>
-                            <field name="tax_payment_status" string="สถานะค่า Tax" widget="badge"
+                            <field name="customer_transport_residual" string="ค่าขนส่ง" readonly="1"/>
+                            <field name="transport_payment_status" string="สถานะค่าขนส่ง" widget="badge"
+                                   decoration-danger="transport_payment_status == 'unpaid'"
+                                   decoration-success="transport_payment_status == 'paid'"/>
+                            <field name="customer_tax_residual" string="ค่าหัก ณ ที่จ่าย" readonly="1"/>
+                            <field name="tax_payment_status" string="สถานะค่าหัก ณ ที่จ่าย" widget="badge"
                                    decoration-danger="tax_payment_status == 'unpaid'"
                                    decoration-success="tax_payment_status == 'paid'"/>
                             <field name="grand_total" string="รวมหนี้ทั้งสิ้น" readonly="1"
                                    class="oe_subtotal_footer_separator"/>
+                            <!-- โชว์ตลอด ไม่ซ่อนตอนยังไม่เริ่มออก Notice จะได้รู้ว่ามีช่องนี้อยู่
+                                 (ยังไม่เริ่ม = วันคงเหลือ 0 และวันที่ว่าง) -->
+                            <field name="notice_stage" string="ขั้น Notice" readonly="1" widget="badge"
+                                   decoration-info="notice_stage == 'notice1'"
+                                   decoration-warning="notice_stage == 'notice2'"
+                                   decoration-danger="notice_stage == 'legal'"/>
+                            <field name="notice_date" string="วันที่ออก Notice ขั้นนี้" readonly="1"/>
+                            <field name="notice_due_date" string="ครบกำหนด Notice" readonly="1"/>
+                            <field name="notice_days_label" string="วันคงเหลือ (Notice)" readonly="1"/>
+                            <field name="notice_days_left" invisible="1"/>
                             <field name="currency_id" invisible="1"/>
                         </group>
                         <group string="ข้อมูลลูกค้า">
@@ -107,7 +154,7 @@
                     </group>
 
                     <notebook>
-                        <page string="ใบแจ้งหนี้ค้างชำระ" name="invoices">
+                        <page string="ใบแจ้งหนี้ค่าเช่า" name="invoices">
                             <group col="6">
                                 <field name="invoice_payment_status" string="สถานะ" widget="badge"
                                        decoration-danger="invoice_payment_status == 'unpaid'"
@@ -116,7 +163,65 @@
                                 <field name="invoice_due_date" string="วันที่กำหนดชำระ" readonly="1"/>
                             </group>
                             <field name="customer_invoice_line_ids" nolabel="1">
-                                <tree string="ใบแจ้งหนี้ค้างชำระทั้งหมด" create="0" edit="0" delete="0">
+                                <tree string="ใบแจ้งหนี้ค่าเช่าทั้งหมด" create="0" edit="0" delete="0">
+                                    <field name="invoice_name" string="เลขที่ใบแจ้งหนี้"/>
+                                    <field name="invoice_origin" string="อ้างอิง SO"/>
+                                    <field name="invoice_date"/>
+                                    <field name="invoice_date_due"/>
+                                    <field name="amount_total" sum="รวมทั้งหมด"/>
+                                    <field name="amount_residual" sum="รวมค้างชำระ"/>
+                                    <field name="days_overdue" string="จำนวนวันที่เกิน"/>
+                                    <field name="payment_state_label" string="สถานะการชำระเงิน"/>
+                                    <field name="payment_status" string="สถานะ" widget="badge"
+                                           decoration-danger="payment_status == 'unpaid'"
+                                           decoration-success="payment_status == 'paid'"/>
+                                    <button name="action_view_invoice" type="object"
+                                            string="ดูใบแจ้งหนี้" icon="fa-eye" class="btn-link"/>
+                                    <field name="invoice_id" invisible="1"/>
+                                    <field name="payment_state" invisible="1"/>
+                                    <field name="product_info_html" invisible="1"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="ใบแจ้งหนี้ค่าประกัน" name="deposits">
+                            <group col="6">
+                                <field name="deposit_payment_status" string="สถานะ" widget="badge"
+                                       decoration-danger="deposit_payment_status == 'unpaid'"
+                                       decoration-success="deposit_payment_status == 'paid'"/>
+                                <field name="deposit_report_date" string="วันที่" readonly="1"/>
+                                <field name="deposit_due_date" string="วันที่กำหนดชำระ" readonly="1"/>
+                            </group>
+                            <field name="customer_deposit_line_ids" nolabel="1">
+                                <tree string="ใบแจ้งหนี้ค่าประกันทั้งหมด" create="0" edit="0" delete="0">
+                                    <field name="invoice_name" string="เลขที่ใบแจ้งหนี้"/>
+                                    <field name="invoice_origin" string="อ้างอิง SO"/>
+                                    <field name="invoice_date"/>
+                                    <field name="invoice_date_due"/>
+                                    <field name="amount_total" sum="รวมทั้งหมด"/>
+                                    <field name="amount_residual" sum="รวมค้างชำระ"/>
+                                    <field name="days_overdue" string="จำนวนวันที่เกิน"/>
+                                    <field name="payment_state_label" string="สถานะการชำระเงิน"/>
+                                    <field name="payment_status" string="สถานะ" widget="badge"
+                                           decoration-danger="payment_status == 'unpaid'"
+                                           decoration-success="payment_status == 'paid'"/>
+                                    <button name="action_view_invoice" type="object"
+                                            string="ดูใบแจ้งหนี้" icon="fa-eye" class="btn-link"/>
+                                    <field name="invoice_id" invisible="1"/>
+                                    <field name="payment_state" invisible="1"/>
+                                    <field name="product_info_html" invisible="1"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="ค่าเช่าส่วนต่าง" name="rent_diff">
+                            <group col="6">
+                                <field name="rentdiff_payment_status" string="สถานะ" widget="badge"
+                                       decoration-danger="rentdiff_payment_status == 'unpaid'"
+                                       decoration-success="rentdiff_payment_status == 'paid'"/>
+                                <field name="rentdiff_report_date" string="วันที่" readonly="1"/>
+                                <field name="rentdiff_due_date" string="วันที่กำหนดชำระ" readonly="1"/>
+                            </group>
+                            <field name="customer_rentdiff_line_ids" nolabel="1">
+                                <tree string="ค่าเช่าส่วนต่างทั้งหมด" create="0" edit="0" delete="0">
                                     <field name="invoice_name" string="เลขที่ใบแจ้งหนี้"/>
                                     <field name="invoice_origin" string="อ้างอิง SO"/>
                                     <field name="invoice_date"/>
@@ -196,7 +301,39 @@
                                 </tree>
                             </field>
                         </page>
-                        <page string="ค่า Tax" name="taxes">
+                        <page string="ค่าขนส่ง" name="transport">
+                            <group col="6">
+                                <field name="transport_payment_status" string="สถานะ" widget="badge"
+                                       decoration-danger="transport_payment_status == 'unpaid'"
+                                       decoration-success="transport_payment_status == 'paid'"/>
+                                <field name="transport_report_date" string="วันที่" readonly="1"/>
+                                <field name="transport_due_date" string="วันที่กำหนดชำระ" readonly="1"/>
+                            </group>
+                            <div class="alert alert-info" role="alert" style="margin-bottom: 8px;">
+                                ดึงจากฐานข้อมูลบริษัทขนส่ง โดยจับคู่ "ดึงข้อมูลการเช่าจาก บ.อื่น" กับฐานข้อมูลนี้
+                                และ "เลขเอกสาร SO" กับใบสั่งขายของลูกค้า
+                                <br/>
+                                ถ้ายังไม่ออกใบแจ้งหนี้หรือใบแจ้งหนี้ยังเป็นฉบับร่าง จะใช้ยอดค่าขนส่งบนใบสั่งขายฝั่งขนส่งแทน
+                                (ค่าขนส่งเป็น 0 ถือว่าไม่มีหนี้)
+                            </div>
+                            <field name="customer_transport_line_ids" nolabel="1">
+                                <tree string="ค่าขนส่งทั้งหมด" create="0" edit="0" delete="0">
+                                    <field name="source_type" string="ที่มา"/>
+                                    <field name="invoice_name" string="เลขที่ใบแจ้งหนี้"/>
+                                    <field name="source_so" string="เลขเอกสาร SO"/>
+                                    <field name="transport_so" string="ใบสั่งขายฝั่งขนส่ง"/>
+                                    <field name="invoice_date"/>
+                                    <field name="invoice_date_due"/>
+                                    <field name="amount_total" sum="รวมทั้งหมด"/>
+                                    <field name="amount_residual" sum="รวมค้างชำระ"/>
+                                    <field name="days_overdue" string="จำนวนวันที่เกิน"/>
+                                    <field name="payment_status" string="สถานะ" widget="badge"
+                                           decoration-danger="payment_status == 'unpaid'"
+                                           decoration-success="payment_status == 'paid'"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="ค่าหัก ณ ที่จ่าย" name="taxes">
                             <group col="6">
                                 <field name="tax_payment_status" string="สถานะ" widget="badge"
                                        decoration-danger="tax_payment_status == 'unpaid'"
@@ -205,7 +342,7 @@
                                 <field name="tax_due_date" string="วันที่กำหนดชำระ" readonly="1"/>
                             </group>
                             <field name="customer_tax_line_ids" nolabel="1">
-                                <tree string="ค่า Tax ทั้งหมด" create="0" edit="0" delete="0">
+                                <tree string="ค่าหัก ณ ที่จ่ายทั้งหมด" create="0" edit="0" delete="0">
                                     <field name="invoice_name" string="เลขที่ใบแจ้งหนี้"/>
                                     <field name="invoice_origin" string="อ้างอิง SO"/>
                                     <field name="invoice_date"/>
@@ -401,7 +538,10 @@
         <field name="res_model">npd.debt.summary</field>
         <field name="view_mode">tree,form</field>
         <field name="search_view_id" ref="npd_debt_summary_view_search"/>
-        <field name="context">{'search_default_group_customer': 1}</field>
+        <!-- ไม่จัดกลุ่มตามลูกค้าเป็นค่าเริ่มต้น เพราะลูกค้า 1 รายมีแถวเดียวอยู่แล้ว
+             และแถวกลุ่มของ Odoo แสดงได้เฉพาะคอลัมน์ที่บวกรวมได้ ทำให้ขั้น Notice
+             กับวันคงเหลือหายไปจากหน้าจอ (ยังกดจัดกลุ่มเองได้จากปุ่มจัดกลุ่มตาม) -->
+        <field name="context">{}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">ยังไม่มีลูกค้าที่ค้างชำระ</p>
             <p>กดเมนู "รวมหนี้ลูกค้า" อีกครั้งเพื่อสแกนข้อมูลใหม่</p>
