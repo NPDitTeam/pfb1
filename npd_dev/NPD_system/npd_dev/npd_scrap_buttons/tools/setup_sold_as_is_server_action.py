@@ -27,6 +27,18 @@ DRY_RUN = True
 out = []
 Location = env['stock.location']
 
+# --- กันพลาด: ต้องอัปเกรดโมดูล + restart ก่อน ไม่งั้นยังไม่มีฟิลด์ scrap_branch_id ---
+has_field = env['ir.model.fields'].sudo().search_count([
+    ('model', '=', 'stock.location'), ('name', '=', 'scrap_branch_id'),
+])
+if not has_field:
+    raise UserError(
+        'ยังไม่มีฟิลด์ scrap_branch_id บน stock.location\n\n'
+        'แปลว่ายังไม่ได้อัปเกรดโมดูล npd_scrap_buttons เป็นเวอร์ชัน 14.0.1.3.0\n'
+        'หรืออัปเกรดแล้วแต่ยังไม่ได้ restart เซิร์ฟเวอร์\n\n'
+        'กรุณาอัปเกรดโมดูล + restart ให้เรียบร้อยก่อน แล้วค่อยรันสคริปต์นี้ใหม่\n'
+        '(ถ้ารันด้วยโค้ดชุดเก่าที่ใช้ branch_id จะทำให้ระบบตัดสต๊อกผิดคลัง)')
+
 # --- 1) คลังแม่: อิงตำแหน่งของคลัง 'สินค้าชำรุด' เพื่อให้โครงสร้างเหมือนกัน ---
 damaged = Location.search([('name', 'ilike', 'ชำรุด'), ('usage', '=', 'internal')])
 if len(damaged) != 1:
