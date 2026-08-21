@@ -34,7 +34,6 @@
                      attrs="{'invisible': [('scb_verify_state', '!=', 'success')]}">
                     <i class="fa fa-check-circle mr-1"/>
                     <b>โอนสำเร็จ</b> — จับคู่กับรายการเงินเข้าในบัญชีธนาคารได้แล้ว
-                    (ดูรายละเอียดที่แท็บ "ตรวจสอบการโอน")
                 </div>
                 <div class="alert alert-danger mb-0" role="alert"
                      attrs="{'invisible': [('scb_verify_state', '!=', 'failed')]}">
@@ -69,11 +68,6 @@
                 </div>
             </xpath>
 
-            <!-- ฟิลด์ที่ต้องมีใน view เพื่อให้ attrs ทำงาน -->
-            <xpath expr="//sheet//field[@name='id']" position="after">
-                <field name="scb_slip_read" invisible="1"/>
-            </xpath>
-
             <!-- สถานะการโอน (แสดงข้าง ๆ สมุดรายวัน) -->
             <xpath expr="//field[@name='journal_id']" position="after">
                 <field name="scb_verify_state" widget="badge" readonly="1" force_save="1"
@@ -84,77 +78,6 @@
                        decoration-warning="scb_verify_state in ['waiting', 'no_slip', 'other_company']"
                        decoration-info="scb_verify_state == 'to_check'"
                        decoration-muted="scb_verify_state == 'skipped'"/>
-            </xpath>
-
-            <!-- รายละเอียดที่ AI อ่านได้ + รายการธนาคารที่จับคู่ได้ -->
-            <xpath expr="//notebook" position="inside">
-                <page string="ตรวจสอบการโอน" name="scb_verify"
-                      attrs="{'invisible': [('scb_slip_read', '=', False)]}">
-                    <group>
-                        <group string="สรุปจากสลิปทั้งหมด">
-                            <field name="scb_slip_date" string="วันที่ล่าสุด"/>
-                            <field name="scb_slip_amount" string="ยอดรวมทุกสลิป"/>
-                            <field name="scb_slip_sender"/>
-                        </group>
-                        <group string="ผลการจับคู่">
-                            <field name="scb_verify_bank"/>
-                            <field name="scb_verify_datetime"/>
-                            <field name="scb_verify_attempts"/>
-                        </group>
-                    </group>
-                    <!-- ลูกค้าโอนไม่ครบในครั้งเดียว -> แนบหลายสลิป ระบบตรวจให้ทีละใบ -->
-                    <field name="scb_slip_ids" nolabel="1" readonly="1">
-                        <tree string="ผลตรวจรายสลิป" create="0" delete="0"
-                              decoration-success="state == 'matched'"
-                              decoration-danger="state == 'not_found'"
-                              decoration-warning="state == 'waiting'"
-                              decoration-muted="state in ['skipped', 'not_slip', 'duplicate']">
-                            <field name="attachment_name"/>
-                            <field name="slip_date"/>
-                            <field name="slip_time" optional="show"/>
-                            <field name="slip_amount" sum="รวม"/>
-                            <field name="slip_sender"/>
-                            <field name="slip_sender_acc" optional="hide"/>
-                            <field name="slip_ref" optional="hide"/>
-                            <field name="statement_id" optional="show"/>
-                            <field name="statement_amount" optional="hide" sum="เงินเข้าจริง"/>
-                            <field name="state" widget="badge"
-                                   decoration-success="state == 'matched'"
-                                   decoration-danger="state == 'not_found'"
-                                   decoration-warning="state == 'waiting'"
-                                   decoration-muted="state in ['skipped', 'not_slip', 'duplicate']"/>
-                            <field name="currency_id" invisible="1"/>
-                        </tree>
-                        <form string="ผลตรวจสลิป">
-                            <group>
-                                <group>
-                                    <field name="attachment_id" readonly="1"/>
-                                    <field name="slip_date"/>
-                                    <field name="slip_time"/>
-                                    <field name="slip_amount"/>
-                                    <field name="slip_sender"/>
-                                    <field name="slip_sender_acc"/>
-                                    <field name="slip_ref"/>
-                                </group>
-                                <group>
-                                    <field name="state"/>
-                                    <field name="statement_id" options="{'no_create': True}"/>
-                                </group>
-                            </group>
-                            <group string="รายละเอียด (เฉพาะผู้จัดการบัญชี)"
-                   groups="account.group_account_manager">
-                                <field name="reason" nolabel="1"/>
-                            </group>
-                            <group string="ข้อมูลดิบจาก AI" groups="base.group_no_one">
-                                <field name="raw" nolabel="1"/>
-                            </group>
-                        </form>
-                    </field>
-                    <group string="รายละเอียดผลตรวจ (เฉพาะผู้จัดการบัญชี)"
-                           groups="account.group_account_manager">
-                        <field name="scb_verify_reason" nolabel="1" readonly="1"/>
-                    </group>
-                </page>
             </xpath>
         </field>
     </record>
