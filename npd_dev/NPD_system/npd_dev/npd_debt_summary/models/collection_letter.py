@@ -211,6 +211,14 @@ class NpdDebtSummaryLetter(models.Model):
             (u'ค่าใช้จ่ายอื่นๆ', amounts['other']),
         ]
 
+        # หัวเรื่อง/ย่อหน้าเปิด: เอ่ยเฉพาะประเภทที่ลูกค้ารายนี้ค้างจริง
+        # (ค่าเช่าเป็นฐานของหนังสือ พิมพ์เสมอ ที่เหลือมีก็ต่อท้าย ไม่มีก็ตัดทิ้ง)
+        topics = [label for label, amount in (
+            (u'ค่าเช่าเกินกำหนด', amounts['over']),
+            (u'ค่าปรับเสียหายหรือสูญหาย', amounts['penalty']),
+            (u'ค่าขนส่ง', amounts['transport']),
+        ) if abs(amount) >= 0.005]
+
         # อ้างถึง: 1 บรรทัดต่อ 1 สัญญา นับจำนวนใบแจ้งหนี้ในสัญญานั้น
         # ใบที่ยังไม่มีเลขที่สัญญาเช่าให้ใช้เลขใบสั่งขายแทน (เกณฑ์เดียวกับตารางสรุป)
         # ไม่งั้นลูกค้าที่ยังไม่ได้ออกเลขสัญญาจะได้หนังสือที่ช่องอ้างถึงว่างเปล่า
@@ -221,5 +229,7 @@ class NpdDebtSummaryLetter(models.Model):
             'amounts': amounts,
             'items': [{'label': label, 'amount': amount}
                       for label, amount in items if abs(amount) >= 0.005],
+            'topics': topics,
+            'topics_text': (u' ' + u' '.join(topics)) if topics else u'',
             'has_transport': bool(self.customer_transport_residual),
         }
