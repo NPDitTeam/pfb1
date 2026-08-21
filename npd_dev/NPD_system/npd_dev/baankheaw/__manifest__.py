@@ -22,6 +22,7 @@
         'views/rental_quotation_view.xml',
         'views/receive_payment_view.xml',
         'views/product_stock_summary_day.xml',
+        'views/debtor_all_summary_view.xml',
     ],
     'installable': True,
     'application': True,

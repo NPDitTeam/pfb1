@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ================= Search ================= -->
+    <record id="view_debtor_all_summary_search" model="ir.ui.view">
+        <field name="name">baankheaw.debtor_all_summary.search</field>
+        <field name="model">baankheaw.debtor_all_summary</field>
+        <field name="arch" type="xml">
+            <search string="ค้นหาลูกหนี้">
+                <field name="cus_fullname"/>
+                <field name="cus_id"/>
+                <field name="cus_cpnname"/>
+                <field name="branch_name"/>
+                <field name="bill_numbers" string="เลขใบกำกับเช่า"/>
+                <filter name="filter_open_bill" string="ยังไม่ปิดบิล"
+                        domain="[('bill_status', '=', 'ยังไม่ปิดบิล')]"/>
+                <filter name="filter_over_90" string="ค้างเกิน 90 วัน"
+                        domain="[('debt_duration', '>', 90)]"/>
+                <group expand="0" string="จัดกลุ่มตาม">
+                    <filter name="group_branch" string="สาขา" context="{'group_by': 'branch_name'}"/>
+                    <filter name="group_status" string="สถานะบิล" context="{'group_by': 'bill_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ================= Tree (หัวลูกหนี้) ================= -->
+    <record id="view_debtor_all_summary_tree" model="ir.ui.view">
+        <field name="name">baankheaw.debtor_all_summary.tree</field>
+        <field name="model">baankheaw.debtor_all_summary</field>
+        <field name="arch" type="xml">
+            <tree string="สรุปลูกหนี้บ้านเขียวทั้งหมด">
+                <field name="cus_id"/>
+                <field name="cus_fullname"/>
+                <field name="cus_cpnname"/>
+                <field name="cus_tel"/>
+                <field name="branch_name"/>
+                <field name="amount" sum="รวม"/>
+                <field name="vat" sum="รวม"/>
+                <field name="tax" sum="รวม"/>
+                <field name="lost" sum="รวม"/>
+                <field name="broken" sum="รวม"/>
+                <field name="transport" sum="รวม"/>
+                <field name="total_debt" sum="รวม"/>
+                <field name="insure_balance" sum="รวม"/>
+                <field name="total_paid" sum="รวม"/>
+                <field name="bill_count" sum="รวม"/>
+                <field name="bill_numbers" widget="text"/>
+                <field name="date_start"/>
+                <field name="due_date"/>
+                <field name="debt_duration"/>
+                <field name="bill_status"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ================= Form (หัวลูกหนี้ + บิล + สินค้า) ================= -->
+    <record id="view_debtor_all_summary_form" model="ir.ui.view">
+        <field name="name">baankheaw.debtor_all_summary.form</field>
+        <field name="model">baankheaw.debtor_all_summary</field>
+        <field name="arch" type="xml">
+            <form string="สรุปลูกหนี้บ้านเขียว">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="cus_fullname" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="ข้อมูลลูกค้า">
+                            <field name="cus_id" readonly="1"/>
+                            <field name="cus_cpnname" readonly="1"/>
+                            <field name="cus_tel" readonly="1"/>
+                            <field name="cus_cpntel" readonly="1"/>
+                            <field name="branch_name" readonly="1"/>
+                        </group>
+                        <group string="ที่อยู่">
+                            <field name="cus_address" readonly="1"/>
+                            <field name="cus_cpnadd" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="ยอดหนี้คงค้าง">
+                            <field name="amount" readonly="1"/>
+                            <field name="vat" readonly="1"/>
+                            <field name="tax" readonly="1"/>
+                            <field name="lost" readonly="1"/>
+                            <field name="broken" readonly="1"/>
+                            <field name="transport" readonly="1"/>
+                            <field name="total_debt" readonly="1"/>
+                        </group>
+                        <group string="สรุปสถานะ">
+                            <field name="insure_balance" readonly="1"/>
+                            <field name="total_paid" readonly="1"/>
+                            <field name="bill_count" readonly="1"/>
+                            <field name="date_start" readonly="1"/>
+                            <field name="due_date" readonly="1"/>
+                            <field name="debt_duration" readonly="1"/>
+                            <field name="bill_status" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="บิลค้างชำระ">
+                            <field name="bill_ids" readonly="1">
+                                <tree string="บิลค้างชำระ">
+                                    <field name="doc_id"/>
+                                    <field name="doc_date"/>
+                                    <field name="due_date"/>
+                                    <field name="amount" sum="รวม"/>
+                                    <field name="vat" sum="รวม"/>
+                                    <field name="tax" sum="รวม"/>
+                                    <field name="lost" sum="รวม"/>
+                                    <field name="broken" sum="รวม"/>
+                                    <field name="transport" sum="รวม"/>
+                                    <field name="total_debt" sum="รวม"/>
+                                    <field name="bill_status"/>
+                                    <field name="product_summary" widget="text"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="เลขใบกำกับเช่า (ข้อความ)">
+                            <field name="bill_numbers" readonly="1" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ================= Bill form (เปิดจากบรรทัดบิล เพื่อดูสินค้า) ================= -->
+    <record id="view_debtor_all_summary_bill_form" model="ir.ui.view">
+        <field name="name">baankheaw.debtor_all_summary_bill.form</field>
+        <field name="model">baankheaw.debtor_all_summary_bill</field>
+        <field name="arch" type="xml">
+            <form string="รายละเอียดบิล">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="doc_id" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="ข้อมูลบิล">
+                            <field name="cus_fullname" readonly="1"/>
+                            <field name="branch_name" readonly="1"/>
+                            <field name="doc_date" readonly="1"/>
+                            <field name="due_date" readonly="1"/>
+                            <field name="bill_status" readonly="1"/>
+                        </group>
+                        <group string="ยอดคงค้าง">
+                            <field name="amount" readonly="1"/>
+                            <field name="vat" readonly="1"/>
+                            <field name="tax" readonly="1"/>
+                            <field name="lost" readonly="1"/>
+                            <field name="broken" readonly="1"/>
+                            <field name="transport" readonly="1"/>
+                            <field name="total_debt" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="รายละเอียดหนี้">
+                        <field name="detail_text" readonly="1" nolabel="1"/>
+                    </group>
+                    <notebook>
+                        <page string="รายการสินค้าในบิล">
+                            <field name="product_ids" readonly="1">
+                                <tree string="รายการสินค้า">
+                                    <field name="product_code"/>
+                                    <field name="product_name"/>
+                                    <field name="qty" sum="รวม"/>
+                                    <field name="qty_return" sum="รวม"/>
+                                    <field name="qty_outstanding" sum="รวม"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ================= Bill tree (เมนูย่อย: ดูรายบิลทั้งหมด) ================= -->
+    <record id="view_debtor_all_summary_bill_tree" model="ir.ui.view">
+        <field name="name">baankheaw.debtor_all_summary_bill.tree</field>
+        <field name="model">baankheaw.debtor_all_summary_bill</field>
+        <field name="arch" type="xml">
+            <tree string="บิลค้างชำระรายบิล">
+                <field name="cus_id"/>
+                <field name="cus_fullname"/>
+                <field name="branch_name"/>
+                <field name="doc_id"/>
+                <field name="doc_date"/>
+                <field name="due_date"/>
+                <field name="amount" sum="รวม"/>
+                <field name="vat" sum="รวม"/>
+                <field name="tax" sum="รวม"/>
+                <field name="lost" sum="รวม"/>
+                <field name="broken" sum="รวม"/>
+                <field name="transport" sum="รวม"/>
+                <field name="total_debt" sum="รวม"/>
+                <field name="bill_status"/>
+                <field name="product_summary" widget="text"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ================= Action / Menu ================= -->
+    <record id="action_debtor_all_summary" model="ir.actions.act_window">
+        <field name="name">สรุปลูกหนี้บ้านเขียวทั้งหมด</field>
+        <field name="res_model">baankheaw.debtor_all_summary</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_debtor_all_summary_search"/>
+        <field name="help" type="html">
+            <p>📌 สรุปลูกหนี้ทั้งหมด พร้อมเลขบิลค้างชำระและรายการสินค้าในบิล</p>
+            <p>ข้อมูลถูกดึงเข้ามาครั้งเดียวตอนติดตั้งโมดูล</p>
+        </field>
+    </record>
+
+    <!-- สำรอง: ดึงข้อมูลด้วยตนเอง กรณีตอนติดตั้งดึงไม่สำเร็จ (อยู่ในเมนู Action ของหน้า list) -->
+    <record id="action_server_fetch_debtor_all_summary" model="ir.actions.server">
+        <field name="name">📥 ดึงข้อมูลลูกหนี้บ้านเขียว</field>
+        <field name="model_id" ref="model_baankheaw_debtor_all_summary"/>
+        <field name="binding_model_id" ref="model_baankheaw_debtor_all_summary"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">model.sudo().fetch_and_store_debtor_all_data()</field>
+    </record>
+
+    <!-- ดึงข้อมูลครั้งเดียวตอนติดตั้งโมดูล (noupdate=1 -> ไม่รันซ้ำตอน -u) -->
+    <data noupdate="1">
+        <function model="baankheaw.debtor_all_summary" name="load_once_on_install"/>
+    </data>
+
+    <menuitem id="menu_debtor_all_summary"
+              name="สรุปลูกหนี้บ้านเขียวทั้งหมด"
+              parent="baankheaw.baankheaw_menu_root"
+              action="action_debtor_all_summary"
+              sequence="21"
+              groups="base.group_user"/>
+
+</odoo>
