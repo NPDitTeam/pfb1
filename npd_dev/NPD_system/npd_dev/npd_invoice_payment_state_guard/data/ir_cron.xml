@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- ล้างใบที่สถานะกับยอดค้างขัดกันเอง เผื่อหลุดมาจากทางอื่น
+             ตั้งเวลาไว้ก่อน cron ของรวมหนี้ลูกค้า (ตี 3) เพื่อให้ยอดที่ดึงไปถูกต้อง -->
+        <record id="cron_fix_wrong_payment_state" model="ir.cron">
+            <field name="name">ล้างสถานะชำระเงินใบแจ้งหนี้ที่เพี้ยน (ทุกวัน ตี 2)</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="state">code</field>
+            <field name="code">model.fix_wrong_payment_state()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="active" eval="True"/>
+            <field name="nextcall"
+                   eval="(DateTime.now() + timedelta(days=1)).replace(hour=2, minute=0, second=0, microsecond=0)"/>
+        </record>
+    </data>
+</odoo>

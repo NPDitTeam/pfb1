@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        ล็อก "วันที่ใบแจ้งหนี้" ไม่ให้แก้ตอนที่ใบลงบันทึกแล้ว
+        ต้องรีเซ็ตเป็นฉบับร่างก่อนถึงจะแก้ได้ (ผู้ใช้ระบุ 21 ส.ค. 2026)
+
+        ที่มา: แก้วันที่บนใบที่ posted แล้ว ทำให้ onchange คำนวณยอดค้าง/สถานะใหม่
+        บนเรคคอร์ดชั่วคราวที่ยังไม่มีข้อมูลการ reconcile ผลออกมาเป็น "ชำระแล้ว"
+        แล้วเบราว์เซอร์ส่งค่าผิดนั้นไปบันทึกลงฐานข้อมูล
+        พอบังคับให้แก้ได้เฉพาะตอนเป็นร่าง เส้นทางที่ทำให้เพี้ยนก็ถูกปิด
+        (Odoo ล็อก "วันที่ทางบัญชี" ด้วยเงื่อนไขเดียวกันนี้อยู่แล้ว)
+    -->
+    <record id="view_move_form_lock_invoice_date" model="ir.ui.view">
+        <field name="name">account.move.form.lock.invoice.date</field>
+        <field name="model">account.move</field>
+        <!-- สืบทอดต่อจากวิวของ custom_invoice_date โดยตรง ไม่ใช่จากวิวมาตรฐาน
+             เพราะเงื่อนไขเดิมอ้างฟิลด์ can_edit_invoice_date / is_from_reservation
+             ที่โมดูลนั้นเป็นคนใส่เข้ามาในฟอร์ม ถ้าสืบทอดจากวิวมาตรฐาน Odoo จะฟ้องว่า
+             ฟิลด์ไม่มีอยู่ในวิว และแบบนี้ลำดับการ apply ถูกต้องเสมอโดยไม่ต้องพึ่ง priority -->
+        <field name="inherit_id" ref="custom_invoice_date.view_move_form_inherit_invoice_date"/>
+        <field name="arch" type="xml">
+            <!-- รวมเงื่อนไขเดิมของ custom_invoice_date (ล็อกตามสิทธิ์) เข้ากับ
+                 เงื่อนไขใหม่ (ล็อกเมื่อไม่ใช่ฉบับร่าง) ด้วย or
+                 readonly = (ไม่มีสิทธิ์แก้ และมีที่มาจากเอกสารอื่น) หรือ (ไม่ใช่ฉบับร่าง) -->
+            <xpath expr="//field[@name='invoice_date']" position="attributes">
+                <attribute name="attrs">{'readonly': ['|', '&amp;', ('can_edit_invoice_date', '=', False), ('invoice_origin', '!=', False), ('state', '!=', 'draft')], 'required': [('is_from_reservation', '=', True)]}</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
