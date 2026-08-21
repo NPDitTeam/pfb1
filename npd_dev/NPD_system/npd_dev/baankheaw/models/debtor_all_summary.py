@@ -19,6 +19,16 @@ DB_CONFIG = {
     'cursorclass': pymysql.cursors.DictCursor,
 }
 
+# เลขที่เอกสาร: NPD.B 0001/2569  (ใช้เฉพาะ DB NPD_S_Group_New_V2)
+# เลขเรียงตาม "วันที่เริ่มหนี้" จากเก่าไปใหม่ วันที่ซ้ำกันเรียงตามลำดับที่สร้าง
+# ปีเป็น พ.ศ. (ค.ศ. + 543) ของวันที่ออกเลข
+DOC_PREFIX = u'NPD.B'
+
+
+def _doc_number(seq, year_be):
+    return u'%s %04d/%d' % (DOC_PREFIX, seq, year_be)
+
+
 # ประเภทหนี้ 6 ช่อง (ลำดับตามคิวรีต้นฉบับ)
 DEBT_TYPES = [
     ('b1', 'amount', 'ค่าเช่า'),
@@ -208,9 +218,22 @@ def _fmt(value):
 
 class DebtorAllSummary(models.Model):
     _name = 'baankheaw.debtor_all_summary'
+    # mail.thread -> ได้แท็บ log ท้ายฟอร์ม ระบบจะบันทึกทุกครั้งที่สถานะเปลี่ยน
+    # ว่าใครเปลี่ยน จากอะไรเป็นอะไร เมื่อไหร่ (ฟิลด์ที่ตั้ง tracking=True)
+    _inherit = ['mail.thread']
     _description = 'สรุปลูกหนี้บ้านเขียวทั้งหมด'
     _order = 'branch_name, cus_fullname'
     _rec_name = 'cus_fullname'
+
+    payment_state = fields.Selection([
+        ('unpaid', 'ค้างชำระ'),
+        ('paid', 'ชำระแล้ว'),
+    ], string='สถานะการชำระ', default='unpaid', required=True, index=True,
+        copy=False, tracking=True,
+        help='กดปุ่มบนฟอร์มเพื่อเปลี่ยนสถานะ ย้อนกลับได้ ประวัติเก็บอยู่ในแท็บ log')
+
+    doc_number = fields.Char(string='เลขที่เอกสาร', index=True, copy=False,
+                             help='ออกให้อัตโนมัติหลังดึงข้อมูล เรียงตามวันที่เริ่มหนี้')
 
     # ข้อมูลลูกค้า
     cus_id = fields.Char(string='รหัสลูกค้า', index=True)
@@ -244,6 +267,50 @@ class DebtorAllSummary(models.Model):
     due_date = fields.Date(string='วันที่ครบกำหนดชำระ')
     debt_duration = fields.Integer(string='ระยะเวลาที่เป็นหนี้ (วัน)')
     bill_status = fields.Char(string='สถานะบิล')
+
+    # ------------------------------------------------------------------
+    # สถานะการชำระ (พนักงานกดเอง ไม่ได้มาจากฐานข้อมูลบ้านเขียว)
+    # ------------------------------------------------------------------
+    def action_mark_paid(self):
+        """ปุ่ม 'ทำเครื่องหมายว่าชำระแล้ว' -- ประวัติถูกบันทึกเองจาก tracking=True"""
+        self.write({'payment_state': 'paid'})
+        return True
+
+    def action_mark_unpaid(self):
+        """ปุ่ม 'ย้อนกลับเป็นค้างชำระ' (กดผิด หรือยกเลิกการรับชำระ)"""
+        self.write({'payment_state': 'unpaid'})
+        return True
+
+    # ------------------------------------------------------------------
+    # เลขที่เอกสาร
+    # ------------------------------------------------------------------
+    @api.model
+    def _assign_doc_numbers(self):
+        """ออกเลขใหม่ทั้งชุด เรียงตามวันที่เริ่มหนี้ (ไม่มีวันที่ไปท้ายสุด)"""
+        records = self.sudo().search([])
+        if not records:
+            return 0
+        year_be = date.today().year + 543
+        ordered = records.sorted(key=lambda r: (r.date_start or date.max, r.id))
+        for seq, rec in enumerate(ordered, start=1):
+            rec.doc_number = _doc_number(seq, year_be)
+        _logger.info('baankheaw.debtor_all_summary: ออกเลขที่เอกสาร %s รายการ', len(ordered))
+        return len(ordered)
+
+    @api.model
+    def _assign_missing_doc_numbers(self):
+        """เติมเลขให้ข้อมูลที่ดึงมาก่อนจะมีฟิลด์นี้ (เรียกตอนอัปเกรดโมดูล)
+
+        ถ้าทุกรายการมีเลขอยู่แล้วจะไม่ทำอะไร เลขเดิมจึงไม่ถูกเขียนทับ
+        """
+        if self.sudo().search_count([('doc_number', '=', False)]):
+            return self._assign_doc_numbers()
+        return 0
+
+    def action_assign_doc_numbers(self):
+        """ปุ่มออกเลขที่เอกสารใหม่ทั้งชุด (ใช้เมื่อต้องการเรียงเลขใหม่)"""
+        self.env['baankheaw.debtor_all_summary'].sudo()._assign_doc_numbers()
+        return True
 
     @api.model
     def load_once_on_install(self):
@@ -421,13 +488,35 @@ class DebtorAllSummary(models.Model):
                 if summary['date_start'] else 0
             vals_list.append(summary)
 
+        # สถานะการชำระเป็นสิ่งที่พนักงานกดเอง ไม่ได้มาจากฐานข้อมูลบ้านเขียว
+        # การดึงข้อมูลใหม่ล้างเรคคอร์ดเดิมทิ้งหมด จึงต้องจำไว้ก่อนแล้วใส่คืน
+        # (จับคู่ด้วย รหัสลูกค้า + สาขา ซึ่งเป็นคีย์เดียวกับที่ใช้รวมยอด)
+        paid_keys = {
+            (rec.cus_id or '', rec.branch_name or '')
+            for rec in self.sudo().search([('payment_state', '=', 'paid')])
+        }
+
         # ล้างของเก่า (บิล/สินค้าถูกลบตาม ondelete='cascade')
         self.sudo().search([]).unlink()
 
         # สร้างทีละก้อน กันข้อมูลชุดใหญ่กินหน่วยความจำ
+        # ปิด tracking ระหว่างสร้าง ไม่งั้น mail.thread จะเขียน log ให้ทุกเรคคอร์ด
+        created = self.sudo().browse()
         batch_size = 100
         for i in range(0, len(vals_list), batch_size):
-            self.sudo().create(vals_list[i:i + batch_size])
+            created |= self.sudo().with_context(
+                tracking_disable=True, mail_create_nolog=True
+            ).create(vals_list[i:i + batch_size])
+
+        if paid_keys:
+            back = created.filtered(
+                lambda r: (r.cus_id or '', r.branch_name or '') in paid_keys)
+            if back:
+                back.with_context(tracking_disable=True).write({'payment_state': 'paid'})
+                _logger.info('baankheaw.debtor_all_summary: คืนสถานะชำระแล้ว %s ราย', len(back))
+
+        # ข้อมูลเก่าถูกล้างไปแล้ว เลขจึงต้องออกใหม่ทั้งชุดตามวันที่เริ่มหนี้
+        self._assign_doc_numbers()
 
         _logger.info('baankheaw.debtor_all_summary: created %s customers / %s bills',
                      len(vals_list), len(bill_rows))

@@ -1,11 +1,12 @@
 {
     'name': 'บ้านเขียว',
-    'version': '1.0',
+    'version': '1.4',
     'summary': 'จัดการข้อมูลพนักงานบ้านเขียว',
     'description': 'โมดูลบ้านเขียวสำหรับจัดการข้อมูลพนักงาน',
     'author': 'บ้านเขียว',
     'category': 'Human Resources',
-    'depends': ['base','branch','npd_remote_scrap_api'],
+    # mail -> แท็บ log บนฟอร์มลูกหนี้ (เก็บประวัติการเปลี่ยนสถานะการชำระ)
+    'depends': ['base','mail','branch','npd_remote_scrap_api'],
     'data': [
         'security/ir.model.access.csv',
         'views/baankheaw_employee_views.xml',
@@ -23,6 +24,7 @@
         'views/receive_payment_view.xml',
         'views/product_stock_summary_day.xml',
         'views/debtor_all_summary_view.xml',
+        'report/debtor_collection_letter.xml',
     ],
     'installable': True,
     'application': True,

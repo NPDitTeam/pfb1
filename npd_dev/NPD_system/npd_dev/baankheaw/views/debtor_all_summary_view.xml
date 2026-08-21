@@ -7,11 +7,17 @@
         <field name="model">baankheaw.debtor_all_summary</field>
         <field name="arch" type="xml">
             <search string="ค้นหาลูกหนี้">
+                <field name="doc_number"/>
                 <field name="cus_fullname"/>
                 <field name="cus_id"/>
                 <field name="cus_cpnname"/>
                 <field name="branch_name"/>
                 <field name="bill_numbers" string="เลขใบกำกับเช่า"/>
+                <filter name="filter_unpaid" string="ค้างชำระ"
+                        domain="[('payment_state', '=', 'unpaid')]"/>
+                <filter name="filter_paid" string="ชำระแล้ว"
+                        domain="[('payment_state', '=', 'paid')]"/>
+                <separator/>
                 <filter name="filter_open_bill" string="ยังไม่ปิดบิล"
                         domain="[('bill_status', '=', 'ยังไม่ปิดบิล')]"/>
                 <filter name="filter_over_90" string="ค้างเกิน 90 วัน"
@@ -19,6 +25,8 @@
                 <group expand="0" string="จัดกลุ่มตาม">
                     <filter name="group_branch" string="สาขา" context="{'group_by': 'branch_name'}"/>
                     <filter name="group_status" string="สถานะบิล" context="{'group_by': 'bill_status'}"/>
+                    <filter name="group_payment_state" string="สถานะการชำระ"
+                            context="{'group_by': 'payment_state'}"/>
                 </group>
             </search>
         </field>
@@ -29,7 +37,11 @@
         <field name="name">baankheaw.debtor_all_summary.tree</field>
         <field name="model">baankheaw.debtor_all_summary</field>
         <field name="arch" type="xml">
-            <tree string="สรุปลูกหนี้บ้านเขียวทั้งหมด">
+            <tree string="สรุปลูกหนี้บ้านเขียวทั้งหมด"
+                  decoration-muted="payment_state == 'paid'">
+                <field name="doc_number"/>
+                <field name="payment_state" widget="label_selection"
+                       options="{'classes': {'unpaid': 'danger', 'paid': 'success'}}"/>
                 <field name="cus_id"/>
                 <field name="cus_fullname"/>
                 <field name="cus_cpnname"/>
@@ -60,9 +72,20 @@
         <field name="model">baankheaw.debtor_all_summary</field>
         <field name="arch" type="xml">
             <form string="สรุปลูกหนี้บ้านเขียว">
+                <header>
+                    <button name="action_mark_paid" type="object" class="oe_highlight"
+                            string="ทำเครื่องหมายว่าชำระแล้ว"
+                            attrs="{'invisible': [('payment_state', '=', 'paid')]}"/>
+                    <button name="action_mark_unpaid" type="object"
+                            string="ย้อนกลับเป็นค้างชำระ"
+                            attrs="{'invisible': [('payment_state', '=', 'unpaid')]}"/>
+                    <field name="payment_state" widget="statusbar"
+                           statusbar_visible="unpaid,paid"/>
+                </header>
                 <sheet>
                     <div class="oe_title">
                         <h1><field name="cus_fullname" readonly="1"/></h1>
+                        <h3><field name="doc_number" readonly="1"/></h3>
                     </div>
                     <group>
                         <group string="ข้อมูลลูกค้า">
@@ -121,6 +144,11 @@
                         </page>
                     </notebook>
                 </sheet>
+                <!-- ประวัติการเปลี่ยนสถานะเก็บที่นี่ (mail.thread) -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
@@ -220,6 +248,19 @@
         <field name="state">code</field>
         <field name="code">model.sudo().fetch_and_store_debtor_all_data()</field>
     </record>
+
+    <!-- ออกเลขที่เอกสารใหม่ทั้งชุด เรียงตามวันที่เริ่มหนี้ -->
+    <record id="action_server_assign_doc_number_debtor_all" model="ir.actions.server">
+        <field name="name">🔢 ออกเลขที่เอกสารใหม่</field>
+        <field name="model_id" ref="model_baankheaw_debtor_all_summary"/>
+        <field name="binding_model_id" ref="model_baankheaw_debtor_all_summary"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">model.sudo()._assign_doc_numbers()</field>
+    </record>
+
+    <!-- เติมเลขให้ข้อมูลที่ดึงมาไว้ก่อนแล้ว (รันตอน -u ถ้ายังมีรายการที่ไม่มีเลข) -->
+    <function model="baankheaw.debtor_all_summary" name="_assign_missing_doc_numbers"/>
 
     <!-- ดึงข้อมูลครั้งเดียวตอนติดตั้งโมดูล (noupdate=1 -> ไม่รันซ้ำตอน -u) -->
     <data noupdate="1">
