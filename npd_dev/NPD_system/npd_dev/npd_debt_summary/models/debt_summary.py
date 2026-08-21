@@ -419,13 +419,39 @@ class NpdDebtSummary(models.Model):
         return list(partner_ids)
 
     @api.model
+    def _fix_stale_invoice_residuals(self):
+        """ล้างยอดค้างที่ล้าสมัยของใบแจ้งหนี้ก่อนดึงข้อมูล
+
+        amount_residual กับ payment_state เป็นฟิลด์ compute แบบ store
+        ถ้าไปแก้วันที่บนใบที่ลงบัญชี (posted) แล้ว Odoo ไม่ได้สั่งคำนวณใหม่
+        ค่าที่เก็บไว้จึงค้างของเดิม (ต้องรีเซ็ตเป็นร่างแล้วโพสต์ใหม่ถึงจะอัพเดท)
+
+        อาการที่ตรวจจับได้คือใบที่ payment_state = paid แต่ amount_residual
+        ยังมากกว่า 0 -- แบบนี้คือยอดค้างล้าสมัย ไม่ใช่หนี้จริง
+        ถ้าไม่ล้างก่อน รวมหนี้ลูกค้าจะโชว์หนี้ที่ชำระไปแล้ว
+        (ตรวจข้อมูลจริง 21 ส.ค. 2026 เจอ 22 ใบ รวม 152,751 บาท)
+        """
+        moves = self.env['account.move'].search([
+            ('move_type', 'in', ('out_invoice', 'out_refund')),
+            ('state', '=', 'posted'),
+            ('payment_state', '=', 'paid'),
+            ('amount_residual', '>', 0.005),
+        ])
+        if moves:
+            moves._compute_amount()
+            _logger.info(u'npd_debt_summary: ล้างยอดค้างล้าสมัย %s ใบ', len(moves))
+        return len(moves)
+
+    @api.model
     def cron_refresh_all(self):
         """อัพเดทข้อมูลทุกลูกค้า (เรียกจาก Scheduled Action ทุกวันตี 3)"""
+        self._fix_stale_invoice_residuals()
         self._refresh_all_records()
 
     @api.model
     def action_refresh_all(self):
         """อัพเดททั้งหมดแล้วเปิดรายการ (สำหรับเรียกเองเมื่อต้องการ)"""
+        self._fix_stale_invoice_residuals()
         self._refresh_all_records()
         return {
             'type': 'ir.actions.act_window',
@@ -699,9 +725,10 @@ class NpdDebtSummary(models.Model):
         # ====== 1) ใบแจ้งหนี้ แยกตามประเภท: ค่าเช่า / ค่าเช่าส่วนต่าง ======
         # (เก็บใบเดิมไว้ด้วย เพื่อแสดงสถานะ ค้าง/จ่ายแล้ว)
         # ใบค่าปรับหาย/ชำรุดไม่เข้าสองแท็บนี้ เพราะมีแท็บของตัวเองอยู่แล้ว
-        existing_inv_ids = set(self.customer_invoice_line_ids.mapped('invoice_id').ids)
-        existing_inv_ids |= set(self.customer_deposit_line_ids.mapped('invoice_id').ids)
-        existing_inv_ids |= set(self.customer_rentdiff_line_ids.mapped('invoice_id').ids)
+        # เก็บเฉพาะใบที่ยังค้างชำระ (ผู้ใช้ระบุ 21 ส.ค. 2026)
+        # เดิมเก็บใบที่เคยเข้ารายการไว้ด้วยเพื่อโชว์สถานะ "จ่ายแล้ว"
+        # แต่พอใช้จริงแท็บรกมาก (ตัวอย่าง 24 บรรทัด จ่ายแล้วไปตั้ง 21)
+        # ยอดเงินไม่เคยรวมใบที่จ่ายแล้วอยู่แล้ว การตัดออกจึงไม่กระทบตัวเลข
         unpaid_invoices = self.env['account.move'].search([
             ('partner_id', 'child_of', commercial.id),
             ('move_type', '=', 'out_invoice'),
@@ -710,8 +737,7 @@ class NpdDebtSummary(models.Model):
             ('invoice_date', '>=', DEBT_START_STR),
         ])
         # กรองเฉพาะปี 2026 เป็นต้นไป (ใบเดิมที่เก็บไว้แต่เป็นปีเก่าจะถูกตัดออก = ล้างข้อมูลเก่า)
-        invoices = self.env['account.move'].browse(
-            sorted(existing_inv_ids | set(unpaid_invoices.ids))).exists().filtered(
+        invoices = unpaid_invoices.exists().filtered(
             lambda m: m.move_type == 'out_invoice'
             and m.invoice_date and m.invoice_date >= DEBT_START_DATE)
         inv_lines = [(5, 0, 0)]
@@ -733,7 +759,6 @@ class NpdDebtSummary(models.Model):
                 inv_lines.append((0, 0, line_vals))
 
         # ============ 2) ค่าปรับหาย (เก็บใบเดิมไว้ด้วย) ============
-        existing_pen_ids = set(self.customer_penalty_line_ids.mapped('invoice_id').ids)
         lost_reason = self.env['scrap.reason.code'].search([('name', '=', 'สินค้าหาย')], limit=1)
         penalty_lines = [(5, 0, 0)]
         total_penalty_residual = 0.0
@@ -744,7 +769,7 @@ class NpdDebtSummary(models.Model):
             ('reason_code_id', '=', lost_reason.id),
             ('invoice_date', '>=', DEBT_START_STR),
         ]).ids) if lost_reason else set()
-        penalty_invoices = self.env['account.move'].browse(sorted(existing_pen_ids | new_pen_ids)).exists().filtered(
+        penalty_invoices = self.env['account.move'].browse(sorted(new_pen_ids)).exists().filtered(
             lambda m: m.invoice_date and m.invoice_date >= DEBT_START_DATE)
         if penalty_invoices:
             for pinv in penalty_invoices:
@@ -781,7 +806,6 @@ class NpdDebtSummary(models.Model):
                 }))
 
         # ============ 3) ค่าปรับชำรุด (เก็บใบเดิมไว้ด้วย) ============
-        existing_dmg_ids = set(self.customer_damage_line_ids.mapped('invoice_id').ids)
         damage_reason = self.env['scrap.reason.code'].search([('name', '=', 'สินค้าชำรุด')], limit=1)
         damage_lines = [(5, 0, 0)]
         total_damage_residual = 0.0
@@ -792,7 +816,7 @@ class NpdDebtSummary(models.Model):
             ('reason_code_id', '=', damage_reason.id),
             ('invoice_date', '>=', DEBT_START_STR),
         ]).ids) if damage_reason else set()
-        damage_invoices = self.env['account.move'].browse(sorted(existing_dmg_ids | new_dmg_ids)).exists().filtered(
+        damage_invoices = self.env['account.move'].browse(sorted(new_dmg_ids)).exists().filtered(
             lambda m: m.invoice_date and m.invoice_date >= DEBT_START_DATE)
         if damage_invoices:
             for dinv in damage_invoices:

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'NPD Debt Summary (รวมหนี้ลูกค้า)',
-    'version': '14.0.1.7.0',
+    'version': '14.0.1.9.0',
     'summary': 'สรุปหนี้ลูกค้า - สแกนลูกค้าที่มีใบแจ้งหนี้ค้างชำระอัตโนมัติ',
     'description': """
         รวมหนี้ลูกค้า (Customer Debt Summary)
