@@ -43,7 +43,8 @@
                              style="max-height:60px; max-width:85px;"/>
                     </td>
                     <td style="vertical-align:middle; font-size:14px;">
-                        <div style="font-size:17px; font-weight:bold;"><span t-esc="company.name"/></div>
+                        <!-- เว้นความสูงบรรทัดให้พอ ไม่งั้นวรรณยุกต์/สระบนของชื่อบริษัทโดนตัด -->
+                        <div style="font-size:17px; font-weight:bold; line-height:1.6; padding-top:2px;"><span t-esc="company.name"/></div>
                         <div>
                             <span t-esc="company.street or ''"/>
                             <span t-if="company.street2"> <span t-esc="company.street2"/></span>
@@ -86,24 +87,21 @@
             })();
         </script>
         <span class="page dcl_page_no" style="display:none;"/>
-        <!-- เรียกฟอนต์จากไฟล์ในโมดูลนี้เอง (static/fonts) แบบเดียวกับที่เนื้อหา
-             จดหมายและรายงานสัญญาเช่าใช้ ไม่กระทบรายงานอื่นในระบบ
-
-             ตั้งชื่อ family เฉพาะของหมายเหตุ (THSarabunNewNote) ไม่ให้ทับกับชื่อ
-             ที่รายงานอื่นใช้ และประกาศแค่หน้าเดียว (ตัวหนา) เพราะบล็อกนี้ใช้ตัวหนา
-             อย่างเดียว ยิ่งมีไฟล์ให้โหลดน้อย โอกาสที่ footer จะหลุดยิ่งน้อย
-
-             เคยลองฝังเป็น data URI 480KB แล้ว wkhtmltopdf 0.12.5 บนเซิร์ฟเวอร์
-             ทิ้ง footer ทั้งก้อน จึงกลับมาใช้วิธีอ้างไฟล์แบบนี้แทน -->
-        <style>
-            @font-face {
-                font-family: 'THSarabunNewNote';
-                font-weight: bold;
-                src: url('/npd_debt_summary/static/fonts/THSarabunNew-Bold.ttf') format('truetype');
-            }
-        </style>
+        <!-- ห้ามใส่ @font-face หรือฝังฟอนต์ในบล็อกนี้ ลองมาแล้ว 2 แบบ ไม่รอดทั้งคู่
+               1. อ้างไฟล์ .ttf ผ่าน URL -> wkhtmltopdf ต้องยิง HTTP กลับมาที่ Odoo
+                  ระหว่างที่ worker กำลังทำ PDF อยู่ ถ้าไม่มี worker ว่างรับทัน
+                  มันจะทิ้ง footer ทั้งก้อนเงียบ ๆ (หมายเหตุขึ้นบ้างไม่ขึ้นบ้าง)
+               2. ฝัง base64 480KB -> wkhtmltopdf 0.12.5 บนเซิร์ฟเวอร์ทิ้ง footer เช่นกัน
+             ปล่อยให้ใช้ฟอนต์ระบบไป แลกกับการที่หมายเหตุขึ้นครบทุกใบแน่นอน
+             ไล่ลำดับฟอนต์สำรองให้แต่ละเครื่องหยิบตัวที่ใกล้เคียงที่สุดเท่าที่มี
+               THSarabunNew / TH Sarabun New : ถ้าวันหลังติดตั้งเป็นฟอนต์ระบบ
+               Sarabun  : มีในเครื่อง dev (Windows) ตระกูลเดียวกับ THSarabunNew
+               Laksaman : ฟอนต์ไทยที่มีในคอนเทนเนอร์ของเซิร์ฟเวอร์
+               Tahoma   : ตัวสำรองสุดท้าย
+             ถ้าจะเอา THSarabunNew จริง ๆ ต้องติดตั้งฟอนต์ในคอนเทนเนอร์
+             (กระทบรายงาน ภ.ง.ด. ที่เรียกชื่อฟอนต์นี้อยู่ ต้องทดสอบก่อน) -->
         <div id="dcl_note"
-             style="font-family: 'THSarabunNewNote', 'Tahoma', sans-serif; font-size: 18px; font-weight: bold; line-height: 1.5; color: #000;">
+             style="font-family: 'THSarabunNew', 'TH Sarabun New', 'Sarabun', 'Laksaman', 'Tahoma', sans-serif; font-size: 19px; font-weight: bold; line-height: 1.5; color: #000;">
             <div>
                 หมายเหตุ : มีข้อสอบถามเพิ่มเติมเกี่ยวกับหนังสือฉบับนี้ ติดต่อสอบถามได้ที่
                 สำนักงานใหญ่ โทร. <span style="font-weight:bold;">02-433-5556</span>
@@ -203,6 +201,10 @@
                         /* ตั้งแต่บรรทัด "เลขที่" ลงมาถึงข้อ 1-5 ใช้ 14px
                            ยกเว้นส่วนลงชื่อกับหมายเหตุท้ายกระดาษที่คงขนาดเดิม */
                         .dcl-meta { font-size: 14px; }
+                        /* เว้นระยะระหว่างบรรทัด เลขที่/เรื่อง/เรียน/อ้างถึง ให้อ่านสบายขึ้น
+                           ใส่เฉพาะ padding บน-ล่าง ไม่แตะซ้าย-ขวา จะได้ไม่ไปล้าง
+                           padding-right ของช่องหัวข้อ (.dcl-lbl) */
+                        .dcl-meta td { padding-top: 4px; padding-bottom: 4px; line-height: 1.6; }
                         .dcl-p { text-indent: 3em; margin: 0 0 8px 0; text-align: left; font-size: 14px; }
                         .dcl-item { margin: 0 0 2px 0; padding-left: 4em; font-size: 14px; }
                         /* บรรทัดอ้างถึงมีหลายบรรทัดติดกัน เว้นระยะให้อ่านง่ายขึ้น */
