@@ -11,6 +11,7 @@
 <!--                <field name="end_rent_date"/>-->
                  <field name="end_rent_date" decoration-danger="is_past_due"/>
                 <field name="is_past_due" invisible="1"/>
+                <field name="is_migrated_bill"/>
 
 
 <!--                กรณี ซ่อนฟิลด์ แบบมีเงื่อนไข-->

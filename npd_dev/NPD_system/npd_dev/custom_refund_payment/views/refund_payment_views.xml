@@ -8,7 +8,9 @@
                 <field name="name"/>
                 <field name="transfer_type"/>
                 <field name="state"/>
-                <field name="payment_ids"/>
+                <field name="payment_ref"/>
+                <field name="total_amount" sum="รวมทั้งหมด"/>
+                <field name="payment_ids" widget="many2many_tags" optional="hide"/>
                 <field name="date"/>
             </tree>
         </field>
@@ -92,10 +94,6 @@
                                     ('state', '!=', 'confirmed'),
                                     ('can_confirm_cancel', '=', False),
                                     ('reversed_wtax_move_id', '!=', False)
-                                ]
-                            }"/>
-                                    ('state', '!=', 'confirmed'),
-                                    ('can_confirm_cancel', '=', False)
                                 ]
                             }"/>
 

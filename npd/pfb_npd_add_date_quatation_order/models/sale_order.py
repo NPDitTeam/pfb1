@@ -1,4 +1,4 @@
-from odoo import fields, models, api, exceptions
+from odoo import fields, models, api, exceptions, _
 from datetime import timedelta
 from odoo.exceptions import UserError, ValidationError
 from datetime import date
@@ -27,6 +27,36 @@ class SaleOrder(models.Model):
         index=True, default='sale', required=True)
 
     date_order_x = fields.Date(string="วันที่สั่งซื้อ")
+
+    is_migrated_bill = fields.Boolean(
+        string="บิลย้อนหลัง / ย้ายระบบ (ไม่กระทบสต๊อก)",
+        help="บิลเก่าที่ย้ายเข้าระบบ: ยังสร้างใบตัด (OUT) + ใบคืน (IN) ตามปกติ "
+             "แต่จะไม่กระทบยอดคงเหลือจริงของสาขา\n"
+             "ระบบจะติ๊กให้อัตโนมัติเมื่อ 'วันที่เริ่มต้นการเช่า' เป็นปีก่อน 2026 "
+             "และยังติ๊ก/ปลดเองได้",
+        default=False, store=True,
+    )
+
+    def _date_is_migrated(self, start_date):
+        """เงื่อนไขวันที่: วันที่เริ่มต้นการเช่าเป็นปีก่อน 2026 ถือเป็นบิลย้อนหลัง"""
+        return bool(start_date) and start_date.year < 2026
+
+    @api.onchange('start_rent_date')
+    def _onchange_start_rent_date_migrated(self):
+        """auto-ติ๊ก checkbox ในฟอร์มเมื่อวันเริ่มเช่าเป็นปีก่อน 2026
+        (ไม่ล้างค่าที่ผู้ใช้ติ๊กไว้เอง — สำหรับ import ตัว _is_stock_skip_migrated
+         ก็ยังมองว่าเป็นบิลย้อนหลังจากวันที่อยู่แล้ว)
+        """
+        if self._date_is_migrated(self.start_rent_date):
+            self.is_migrated_bill = True
+
+    def _is_stock_skip_migrated(self):
+        """บิลย้อนหลัง/ย้ายระบบ (ไม่กระทบยอดสต๊อกจริง):
+        - ติ๊ก checkbox is_migrated_bill เอง หรือ
+        - วันที่เริ่มต้นการเช่า (start_rent_date) เป็นปีก่อน 2026
+        """
+        self.ensure_one()
+        return bool(self.is_migrated_bill) or self._date_is_migrated(self.start_rent_date)
 
     user_lock_rent = fields.Boolean(string="User Lock Rent", compute="_compute_user_lock_rent", store=False)
 
@@ -130,6 +160,63 @@ class SaleOrder(models.Model):
                 record.end_rent_date = record.start_rent_date + timedelta(days=record.pfb_date_of_rent)
             else:
                 record.end_rent_date = False
+
+    def _get_expected_end_rent_date(self):
+        """วันที่สิ้นสุดการเช่าที่ถูกต้อง = วันที่เริ่มต้น + จำนวนวันที่ต้องเช่า"""
+        self.ensure_one()
+        if self.start_rent_date and self.pfb_date_of_rent:
+            return self.start_rent_date + timedelta(days=self.pfb_date_of_rent)
+        return False
+
+    @api.constrains('pfb_so_type', 'start_rent_date', 'end_rent_date', 'pfb_date_of_rent')
+    def _check_rent_end_date_consistency(self):
+        """เตือนทันทีเมื่อบันทึก ถ้า 'วันที่สิ้นสุดการเช่า' ไม่ตรงกับ
+        'วันที่เริ่มต้นการเช่า' + 'วันที่ต้องเช่า' (เฉพาะใบสั่งประเภทเช่า)"""
+        for record in self:
+            if record.pfb_so_type != 'rent':
+                continue
+            # ยังไม่กรอกครบ ปล่อยผ่านตอนบันทึกร่าง — จะไปบล็อกจริงตอนกดยืนยัน
+            if not record.start_rent_date or not record.pfb_date_of_rent:
+                continue
+            expected_end = record._get_expected_end_rent_date()
+            if record.end_rent_date and record.end_rent_date != expected_end:
+                raise exceptions.ValidationError(_(
+                    "วันที่สิ้นสุดการเช่าไม่สอดคล้องกับจำนวนวันที่ต้องเช่า\n\n"
+                    "• วันที่เริ่มต้นการเช่า: %s\n"
+                    "• จำนวนวันที่ต้องเช่า: %s วัน\n"
+                    "• วันที่สิ้นสุดที่ถูกต้องควรเป็น: %s\n"
+                    "• แต่ปัจจุบันระบุเป็น: %s\n\n"
+                    "กรุณาแก้ไข 'วันที่สิ้นสุดการเช่า' ให้ถูกต้อง"
+                ) % (
+                    record.start_rent_date, record.pfb_date_of_rent,
+                    expected_end, record.end_rent_date,
+                ))
+
+    def action_confirm(self):
+        """บล็อกการกดยืนยัน ถ้าวันที่เช่าไม่สอดคล้องกัน (กันยอดเงินคลาดเคลื่อน)"""
+        for order in self:
+            if order.pfb_so_type != 'rent':
+                continue
+            if not order.start_rent_date or not order.pfb_date_of_rent:
+                raise exceptions.UserError(_(
+                    "กรุณาระบุ 'วันที่เริ่มต้นการเช่า' และ 'วันที่ต้องเช่า' "
+                    "ให้ครบก่อนยืนยันใบสั่งเช่า %s"
+                ) % (order.name or ''))
+            expected_end = order._get_expected_end_rent_date()
+            if order.end_rent_date != expected_end:
+                raise exceptions.UserError(_(
+                    "ไม่สามารถยืนยันได้ — วันที่สิ้นสุดการเช่าไม่ถูกต้อง!\n\n"
+                    "• ใบสั่งเช่า: %s\n"
+                    "• วันที่เริ่มต้นการเช่า: %s\n"
+                    "• จำนวนวันที่ต้องเช่า: %s วัน\n"
+                    "• วันที่สิ้นสุดที่ถูกต้องควรเป็น: %s\n"
+                    "• แต่ปัจจุบันระบุเป็น: %s\n\n"
+                    "กรุณาแก้ไข 'วันที่สิ้นสุดการเช่า' ให้ตรงกับที่ถูกต้องก่อนกดยืนยัน"
+                ) % (
+                    order.name or '', order.start_rent_date, order.pfb_date_of_rent,
+                    expected_end, order.end_rent_date or '-',
+                ))
+        return super().action_confirm()
 
 
 
@@ -395,7 +482,13 @@ class SaleOrder(models.Model):
 
         # ตั้งค่าอื่นๆ
         default['start_rent_date'] = fields.Date.today()
-        # default['end_rent_date'] = False
+        # ต่ออายุบิล (กดซ้ำ): วันเริ่มใหม่ = วันนี้ จึงต้องคำนวณวันสิ้นสุดใหม่ให้สอดคล้องกับ
+        # จำนวนวันที่ต้องเช่าเดิม เพื่อกัน ValidationError จาก end_rent_date เดิมที่อิงวันเริ่มเก่า
+        if 'end_rent_date' not in default:
+            if self.pfb_date_of_rent:
+                default['end_rent_date'] = fields.Date.today() + timedelta(days=self.pfb_date_of_rent)
+            else:
+                default['end_rent_date'] = False
 
         default['return_greenhome_state'] = 'none'
 

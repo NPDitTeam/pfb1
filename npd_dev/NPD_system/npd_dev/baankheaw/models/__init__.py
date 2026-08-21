@@ -12,3 +12,4 @@ from . import old_customer_summary
 from . import rental_quotation
 from . import receive_payment
 from . import product_stock_summary_day
+from . import debtor_all_summary

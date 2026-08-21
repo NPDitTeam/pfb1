@@ -1238,6 +1238,32 @@ class StockCutConfirmWizard(models.TransientModel):
             }))
         return lines
 
+    def _validate_no_negative(self, picking, migrated, extra_locations=None):
+        """validate picking; สำหรับบิลย้อนหลัง (loopback ยอดสุทธิ=0) จะปลด
+        stock_no_negative ของ location ที่เกี่ยวข้อง 'ชั่วคราวเฉพาะใน transaction นี้'
+        (transaction อื่นมองไม่เห็น + คืนค่าเดิมก่อน commit) เพื่อกัน constraint ฟ้อง
+        ตอน quant แตะค่าติดลบชั่วขณะระหว่าง _action_done"""
+        ctx_picking = picking.with_context(
+            skip_immediate=True, skip_sms=True, skip_backorder=True)
+        if not migrated:
+            return ctx_picking.button_validate()
+
+        locs = (picking.move_lines.mapped('location_id')
+                | picking.move_lines.mapped('location_dest_id'))
+        if extra_locations:
+            locs |= extra_locations
+        locs = locs.filtered(lambda l: l.usage in ('internal', 'transit')).sudo()
+        prev = {l.id: l.allow_negative_stock for l in locs}
+        if locs:
+            locs.write({'allow_negative_stock': True})
+            _dbg("🔓 ปลด stock_no_negative ชั่วคราว (บิลย้อนหลัง): "
+                 + ", ".join(locs.mapped('complete_name')))
+        try:
+            return ctx_picking.button_validate()
+        finally:
+            for l in locs:
+                l.allow_negative_stock = prev.get(l.id, False)
+
     def _force_done_full(self, picking):
         """ใส่ qty_done เต็มจำนวนให้ทุก move แล้ว validate ปิดใบเป็น 'เสร็จสิ้น'"""
         picking.action_assign()
@@ -1266,9 +1292,12 @@ class StockCutConfirmWizard(models.TransientModel):
                     ml_vals['lot_name'] = f"AUTO-{fields.Date.today()}"
                 self.env['stock.move.line'].create(ml_vals)
         picking.invalidate_cache()
-        picking.with_context(
-            skip_immediate=True, skip_sms=True, skip_backorder=True
-        ).button_validate()
+        # บิลย้อนหลัง (migrated): การคืนเป็น loopback (branch->branch) เช่นกัน
+        #   ปลด stock_no_negative ชั่วคราวกัน constraint ฟ้องตอน quant แตะติดลบชั่วขณะ
+        migrated = bool(
+            hasattr(self.order_id, '_is_stock_skip_migrated')
+            and self.order_id._is_stock_skip_migrated())
+        self._validate_no_negative(picking, migrated)
 
     def confirm_stock_return(self):
         self.ensure_one()
@@ -1407,6 +1436,16 @@ class StockCutConfirmWizard(models.TransientModel):
         if not location:
             raise UserError("❌ ไม่พบคลังต้นทางของสาขา (ย่อย)")
 
+        # บิลย้อนหลัง/ย้ายระบบ: ต้องไม่กระทบสต๊อกหลักเลย
+        #   - ไม่เติมสต๊อก (_adjust_odoo_stock)
+        #   - ตัดแบบ loopback (ต้นทาง=ปลายทาง=คลังสาขา) => เอกสารเป็น 'เสร็จสิ้น' แต่ quant ไม่ขยับ
+        migrated = bool(
+            hasattr(self.order_id, '_is_stock_skip_migrated')
+            and self.order_id._is_stock_skip_migrated()
+        )
+        if migrated:
+            _dbg("🕓 บิลย้อนหลัง/ย้ายระบบ: ตัดสต๊อกแบบไม่กระทบ quant (loopback)")
+
         if picking.location_id.id != location.id:
             picking.write({'location_id': location.id})
 
@@ -1438,7 +1477,7 @@ class StockCutConfirmWizard(models.TransientModel):
         #    การเติม Odoo stock จากบ้านเขียว และการบังคับกรอกสต๊อก manual ทั้งหมด
         branch_name = location.branch_id.name if location.branch_id else False
         branch_id_for_mysql = self._branch_mapping().get(branch_name)
-        if GREENHOME_SYNC_ENABLED:
+        if GREENHOME_SYNC_ENABLED and not migrated:
             # ✅ ดึง stock_remain จากบ้านเขียว (ดึงสดทุกครั้ง)
             gh_remain_map = {}  # product_id -> stock_remain
             if branch_id_for_mysql:
@@ -1497,7 +1536,7 @@ class StockCutConfirmWizard(models.TransientModel):
         #    _adjust_odoo_stock() จะเติมเฉพาะสินค้าที่สต๊อกปัจจุบัน < need เท่านั้น
         #    (ตัวที่สต๊อกพออยู่แล้วจะไม่ถูกแตะต้อง) — ช่วยกัน error "จองไม่ได้" ตอน action_assign
         #    และกัน backorder/ตัดไม่ครบ กรณีสต๊อกสาขาใน Odoo ไม่ตรงกับของจริง
-        if not GREENHOME_SYNC_ENABLED:
+        if not GREENHOME_SYNC_ENABLED and not migrated:
             for _pid, _item in cut_items.items():
                 _need = float(_item['quantity'] or 0.0)
                 if _need > 0:
@@ -1539,6 +1578,17 @@ class StockCutConfirmWizard(models.TransientModel):
         for move in picking.move_ids_without_package:
             if move.location_id.id != location.id:
                 move.location_id = location.id
+
+        # บิลย้อนหลัง: ตัดแบบ loopback (ปลายทาง=ต้นทาง=คลังสาขา)
+        #   => button_validate ปิดใบเป็น 'เสร็จสิ้น' ได้ แต่ stock.quant ไม่ขยับ (net-zero)
+        #   การคืน (confirm_stock_return) จะกลับ move นี้ => branch->branch => net-zero ตามอัตโนมัติ
+        if migrated:
+            for move in picking.move_ids_without_package:
+                if move.location_dest_id.id != location.id:
+                    move.location_dest_id = location.id
+            _dbg("🔁 loopback บิลย้อนหลัง: " + " | ".join(
+                f"{m.product_id.display_name}: {m.location_id.complete_name} -> {m.location_dest_id.complete_name}"
+                for m in picking.move_ids_without_package))
 
         # ✅ confirm moves ที่ยังเป็น draft
         draft_moves = picking.move_ids_without_package.filtered(lambda m: m.state == 'draft')
@@ -1626,9 +1676,8 @@ class StockCutConfirmWizard(models.TransientModel):
         #    button_validate() จะ "return" ตัว wizard 'Create Backorder?' กลับมา (ไม่รัน _action_done)
         #    ทำให้ไม่มี move ไหนกลายเป็น 'done' เลย → ระบบเห็น 'ตัดได้ 0' ทุกตัวแล้ว rollback ทั้งใบ
         #    (พฤติกรรมเดียวกับ _force_done_full ที่ส่ง skip_backorder=True อยู่แล้ว)
-        picking.with_context(
-            skip_immediate=True, skip_sms=True, skip_backorder=True
-        ).button_validate()
+        #    บิลย้อนหลัง (migrated): ตัดแบบ loopback + ปลด stock_no_negative ชั่วคราว
+        self._validate_no_negative(picking, migrated, extra_locations=location)
 
         # ============================================================
         # ✅ ตรวจสอบความครบถ้วน: สินค้าทุกตัวจาก Sale Order ต้องถูกตัดครบ
@@ -1652,7 +1701,7 @@ class StockCutConfirmWizard(models.TransientModel):
             if float_compare(done, need, precision_rounding=rounding) < 0:
                 not_cut.append((product, need, done))
             avail_before = pre_cut_available.get(product_id, 0.0)
-            if not GREENHOME_SYNC_ENABLED and \
+            if not GREENHOME_SYNC_ENABLED and not migrated and \
                     float_compare(avail_before, need, precision_rounding=rounding) < 0:
                 insufficient.append((product, need, avail_before))
 

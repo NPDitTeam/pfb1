@@ -11,10 +11,26 @@
                     <field name="product_name"/>
                     <field name="branch_id"/>
                     <field name="qty_initial" sum="รวมจำนวนตั้งต้น"/>
-                    <field name="qty_on_hand" sum="รวมปริมาณที่มีอยู่"/>
+                    <field name="qty_on_hand" sum="รวมสินค้าพร้อมใช้งาน"/>
                     <field name="qty_rented" sum="รวมจำนวนที่ถูกเช่า"/>
                     <field name="qty_lost" sum="รวมสินค้าหาย"/>
                     <field name="qty_damaged" sum="รวมสินค้าชำรุด"/>
+                    <field name="qty_pending_repair" sum="รวมสินค้ารอซ่อม"/>
+                    <!-- ตัวจับเวลาเรียลไทม์: คำนวณในเบราว์เซอร์ ไม่ยิง RPC เพิ่ม -->
+                    <field name="repair_done_date" invisible="1"/>
+                    <field name="repair_deadline" invisible="1"/>
+                    <field name="repair_sla_text"
+                           widget="npd_repair_countdown"
+                           options="{'deadline_field': 'repair_deadline', 'done_field': 'repair_done_date', 'click_action': 'action_open_repair_scraps'}"/>
+                    <!-- แยกจำนวนใบออกมาเป็นคอลัมน์ของตัวเอง (เดิมพ่วงท้ายป้ายเวลาเป็น "(N ใบ)") -->
+                    <field name="repair_doc_count" string="จำนวนใบ" sum="รวมใบซ่อม"/>
+                    <!-- ทางเข้าสำรองของ drill-down (เผื่อคลิกที่ป้ายไม่ถนัด) -->
+                    <button name="action_open_repair_scraps"
+                            type="object"
+                            string="ดูใบแจ้งซ่อม"
+                            icon="fa-wrench"
+                            attrs="{'invisible': [('qty_damaged', '=', 0), ('repair_deadline', '=', False)]}"/>
+                    <field name="qty_sold_as_is" sum="รวมสินค้าขายตามสภาพ"/>
                     <field name="qty_transferred" sum="รวมย้ายเข้า"/>
                     <field name="qty_transferred_out" sum="รวมย้ายออก"/>
                     <field name="uom_name"/>
@@ -39,6 +55,11 @@
                             domain="[('qty_lost', '>', 0)]"/>
                     <filter string="มีสินค้าชำรุด" name="has_damaged"
                             domain="[('qty_damaged', '>', 0)]"/>
+                    <filter string="มีสินค้ารอซ่อม" name="has_pending_repair"
+                            domain="[('qty_pending_repair', '>', 0)]"/>
+                    <!-- ประเมิน ณ ตอนเปิดหน้า (รีเฟรชหน้าเพื่อคำนวณใหม่) -->
+                    <filter string="เกินกำหนดซ่อม" name="repair_overdue"
+                            domain="[('qty_pending_repair', '>', 0), ('repair_deadline', '&lt;', datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))]"/>
                     <separator/>
                     <group expand="0" string="จัดกลุ่มตาม">
                         <filter string="สาขา" name="group_by_branch"
@@ -63,6 +84,8 @@
                     <field name="qty_rented" type="measure"/>
                     <field name="qty_lost" type="measure"/>
                     <field name="qty_damaged" type="measure"/>
+                    <field name="qty_pending_repair" type="measure"/>
+                    <field name="qty_sold_as_is" type="measure"/>
                     <field name="qty_transferred" type="measure"/>
                     <field name="qty_transferred_out" type="measure"/>
                 </pivot>
@@ -75,6 +98,10 @@
             <field name="res_model">dev.rental.stock.overview</field>
             <field name="view_mode">tree,pivot</field>
             <field name="search_view_id" ref="view_search_rental_stock_overview"/>
+            <!-- เปิดเข้ามาเป็นรายการปกติ ไม่จัดกลุ่มอัตโนมัติ
+                 (ยังเลือกจัดกลุ่มตามสาขา/สินค้าเองได้จากเมนู "จัดกลุ่มตาม")
+                 ต้องเขียน {} ไว้ ไม่ใช่ลบบรรทัดทิ้ง ไม่งั้นค่าเดิมใน DB จะค้างอยู่ -->
+            <field name="context">{}</field>
         </record>
 
         <!-- ===================== Menu ===================== -->
