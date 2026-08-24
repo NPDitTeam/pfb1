@@ -102,6 +102,22 @@ class AccountVoucherLine(models.Model):
 class AccountVoucher(models.Model):
     _inherit = 'account.voucher'
 
+    # ยอดที่จ่ายออกจากธนาคารจริง = ยอดบิล - ภาษีหัก ณ ที่จ่าย
+    # ฟอร์มเดิมโชว์แค่ "รวม" ซึ่งเป็นยอดก่อนหัก ทำให้ต้องคิดในใจทุกครั้งว่าจะโอนเท่าไหร่
+    # ตัวเลขนี้ตรงกับบรรทัดธนาคารในสมุดรายวันที่ account_voucher.first_move_line_get()
+    # สร้างด้วยสูตรเดียวกัน (abs(amount - wht_amount)) จึงไม่กระทบการลงบัญชีใด ๆ
+    net_payment_amount = fields.Monetary(
+        string='ยอดจ่ายสุทธิ',
+        currency_field='currency_id',
+        compute='_compute_net_payment_amount',
+        help='ยอดที่จ่าย/รับจริงหลังหักภาษี ณ ที่จ่ายแล้ว (รวม - Withholding Tax)',
+    )
+
+    @api.depends('amount', 'wht_amount')
+    def _compute_net_payment_amount(self):
+        for voucher in self:
+            voucher.net_payment_amount = (voucher.amount or 0.0) - (voucher.wht_amount or 0.0)
+
     @api.model
     def fields_view_get(self, view_id=None, view_type='form',
                         toolbar=False, submenu=False):

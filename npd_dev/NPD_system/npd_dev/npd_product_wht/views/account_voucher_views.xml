@@ -15,6 +15,12 @@
                         class="btn-secondary"
                         attrs="{'invisible': ['|', ('check_type_show_selection', '!=', 'false'), ('state', '!=', 'draft')]}"/>
             </xpath>
+            <!-- ยอดจ่ายสุทธิ ต่อจากยอดรวม (โชว์เฉพาะตอนมีหัก ณ ที่จ่าย ไม่งั้นซ้ำกับยอดรวม) -->
+            <xpath expr="//group[contains(@class,'oe_subtotal_footer')]/field[@name='amount']" position="after">
+                <field name="net_payment_amount"
+                       class="oe_subtotal_footer_separator"
+                       attrs="{'invisible': [('wht_amount', '=', 0)]}"/>
+            </xpath>
             <!-- เพิ่มคอลัมน์ WHT ใน line_ids -->
             <xpath expr="//field[@name='line_ids']/tree/field[@name='wht_total']" position="before">
                 <field name="wht_category_id" optional="show" options="{'no_create': True}"/>
@@ -47,6 +53,12 @@
                         type="object"
                         class="btn-secondary"
                         attrs="{'invisible': ['|', ('check_type_show_selection', '!=', 'false'), ('state', '!=', 'draft')]}"/>
+            </xpath>
+            <!-- ยอดจ่ายสุทธิ ต่อจากยอดรวม (โชว์เฉพาะตอนมีหัก ณ ที่จ่าย ไม่งั้นซ้ำกับยอดรวม) -->
+            <xpath expr="//group[contains(@class,'oe_subtotal_footer')]/field[@name='amount']" position="after">
+                <field name="net_payment_amount"
+                       class="oe_subtotal_footer_separator"
+                       attrs="{'invisible': [('wht_amount', '=', 0)]}"/>
             </xpath>
             <!-- เพิ่มคอลัมน์ WHT ใน line_ids (sale ไม่มี wht_total ต้องเพิ่มให้) -->
             <xpath expr="//field[@name='line_ids']/tree/field[@name='price_subtotal']" position="before">
