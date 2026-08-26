@@ -553,6 +553,15 @@
                 <div class="page" style="font-family: 'Sarabun', sans-serif;">
                     <style>
                         .page, .page * { font-family: 'Sarabun', sans-serif !important; }
+                        /* ลดช่องไฟซ้าย-ขวาของช่องตาราง เพื่อคืนความกว้างให้คอลัมน์ "รายการสินค้า" */
+                        .rent-detail-table td,
+                        .rent-detail-table th {
+                            padding-left: 4px !important;
+                            padding-right: 4px !important;
+                        }
+                        .rent-detail-table .list-col {
+                            word-break: keep-all;
+                        }
                     </style>
                     <t t-call="web.basic_layout">
                         <!-- Header -->
@@ -562,21 +571,21 @@
                         <t t-call="pfb_npd_sale_form_rental_quatation.so_form_title"/>
 
                         <!-- Detail Table -->
-                        <table width="100%" class="table mt-1 mb-3">
+                        <table width="100%" class="table mt-1 mb-3 rent-detail-table">
                             <thead>
                                 <tr style="border-bottom: 1px solid black !important;">
-                                    <th width="1%" class="text-left small-font number-col border_report">No.</th>
+                                    <th width="2%" class="text-left small-font number-col border_report">No.</th>
 <!--                                    <th width="9%" class="text-center small-font pass-col border_report">รหัส</th>-->
-                                    <th width="23%" class="text-left small-font list-col border_report">รายการสินค้า</th>
+                                    <th width="32%" class="text-left small-font list-col border_report">รายการสินค้า</th>
                                     <th width="7%" class="text-right small-font weight-col border_report">น้ำหนัก</th>
 
                                     <th width="6%" class="text-right small-font quantity-col border_report">จำนวน</th>
 
-                                    <th width="16%" class="text-center small-font guarantee-col border_report"> ค่าปรับ/เงินประกัน<br/>ราคาสินค้า(ชิ้น)</th>
-                                    <th width="9%" class="text-center small-font guarantee-col border_report">ค่าซ่อมแซม<br/>(B/ชิ้น)</th>
-                                    <th width="9%" class="text-center small-font rent-col border_report">ค่าเช่า<br/>ต่อหน่วย</th>
-                                    <th width="11%" class="text-center small-font rent-total-col border_report">รวมค่าเช่า<br/>รายวัน</th>
-                                    <th width="11%" class="text-right small-font guarantee-total-col border_report">รวมประกัน</th>
+                                    <th width="13%" class="text-center small-font guarantee-col border_report"> ค่าปรับ/เงินประกัน<br/>ราคาสินค้า(ชิ้น)</th>
+                                    <th width="8%" class="text-center small-font guarantee-col border_report">ค่าซ่อมแซม<br/>(B/ชิ้น)</th>
+                                    <th width="8%" class="text-center small-font rent-col border_report">ค่าเช่า<br/>ต่อหน่วย</th>
+                                    <th width="12%" class="text-center small-font rent-total-col border_report">รวมค่าเช่า<br/>รายวัน</th>
+                                    <th width="12%" class="text-right small-font guarantee-total-col border_report">รวมประกัน</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -584,7 +593,7 @@
                                     <tr>
                                         <td class="text-right"><span t-esc="group_index * chunk_size + l_index + 1"/></td>
 <!--                                        <td class="text-right"><span t-esc="l.name.split(' ')[0]"/></td>-->
-                                        <td class="text-left"><span t-esc="l.product_template_id.name"/></td>
+                                        <td class="text-left list-col"><span t-esc="l.product_template_id.name"/></td>
 
                                         <td class="text-right"><span t-esc="'{0:,.2f}'.format((l.second_uom_qty or 0) * (l.pfb_quantity or 0))"/></td>
                                         <td class="text-right"><span t-esc="'{0:,.0f}'.format(l.pfb_quantity or 0)"/></td>
