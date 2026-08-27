@@ -1905,10 +1905,13 @@ class PayrollSalary(models.Model):
     #   tax_monthly=ตัวเลข → ล็อกภาษีคงที่, tax_monthly=None → คิดภาษีตามปกติ
     #   skip_sso=True  → ไม่หักประกันสังคม (sso = 0)
     #   skip_sso=False → คิด ปกส. ตามปกติ
+    # ⚠️ เลิกล็อกภาษีคงที่แล้ว — บุคคลพิเศษคิดภาษีตามสูตรปกติเหมือนพนักงานทั่วไป
+    #    ถ้าเดือนไหนต้องการล็อกยอดเอง ให้ติ๊ก "ปรับแก้ด้วยมือ (แก้ภาษี/เดือนเอง)"
+    #    ที่แท็บการตั้งค่าภาษีของเดือนนั้นแทน (ชนะทุกอย่าง)
     EXECUTIVE_TAX_CONFIG = {
-        '0022': {'tax_monthly': 65367.0, 'skip_sso': True},   # ธีระพล รอดสาตร์
-        '1343': {'tax_monthly': 92867.0, 'skip_sso': True},   # ฐนันท์พัสร์ ฤทธาภรณ์
-        '0203': {'tax_monthly': 3758.0,  'skip_sso': False},  # จิดาภา รอดสาตร์ (ปกส. ปกติ)
+        '0022': {'tax_monthly': None, 'skip_sso': True},   # ธีระพล รอดสาตร์
+        '1343': {'tax_monthly': None, 'skip_sso': True},   # ฐนันท์พัสร์ ฤทธาภรณ์
+        '0203': {'tax_monthly': None, 'skip_sso': False},  # จิดาภา รอดสาตร์ (ปกส. ปกติ)
         # 0539 สุดคนึง รอดสาตร์ — เอาออกจากบุคคลพิเศษ คิดภาษี + ปกส. ตามปกติ
     }
 
@@ -2698,13 +2701,15 @@ class PayrollSalary(models.Model):
         # ส่ง total_ot_amount (สด) แทน self.ot_total ที่อาจ stale ระหว่าง populate
         temp_recurring, temp_one_time = self._get_tax_income_base(ot_amount=total_ot_amount)
         temp_tax, _ = self._calculate_tax(temp_recurring, sso_amount, temp_one_time)
-        # บุคคลพิเศษ — ล็อกภาษีต่อเดือนคงที่ (เฉพาะที่กำหนด tax_monthly ไว้)
-        if exec_cfg and exec_cfg.get('tax_monthly') is not None:
-            temp_tax = exec_cfg['tax_monthly']
         # ✅ ติ๊ก "ปรับแก้ด้วยมือ" → ใช้ค่าที่กรอกในช่องภาษี/เดือน ไม่คำนวณทับ
-        elif self.manual_override_tax:
+        #    ต้องเช็คก่อนบุคคลพิเศษ เพราะการติ๊กเองคือเจตนาชัดของผู้ใช้
+        #    ต้องชนะค่าล็อกคงที่ใน EXECUTIVE_TAX_CONFIG
+        if self.manual_override_tax:
             temp_tax = self.manual_tax_amount
             _logger.info("[TAX] manual_override_tax=True → ใช้ค่าที่กรอกเอง = %.2f", temp_tax)
+        # บุคคลพิเศษ — ล็อกภาษีต่อเดือนคงที่ (เฉพาะที่กำหนด tax_monthly ไว้)
+        elif exec_cfg and exec_cfg.get('tax_monthly') is not None:
+            temp_tax = exec_cfg['tax_monthly']
 
         lines_to_create.append((0, 0, {
             'name': 'ภาษีหัก ณ ที่จ่าย',
@@ -3100,12 +3105,15 @@ class PayrollSalary(models.Model):
             # ใช้ [:1] เพื่อรับ singleton — กรณีมี duplicate line
             tax_line = rec.line_ids.filtered(lambda l: l.name == 'ภาษีหัก ณ ที่จ่าย')[:1]
             exec_cfg = rec.EXECUTIVE_TAX_CONFIG.get(rec.employee_code or '')
-            if exec_cfg and exec_cfg.get('tax_monthly') is not None:  # ✅ บุคคลพิเศษ — ล็อกภาษีคงที่
-                rec.tax_monthly = exec_cfg['tax_monthly']
-                rec.tax_annual = rec.tax_monthly * 12
-            elif rec.manual_override_tax:  # ✅ ติ๊กปรับแก้ด้วยมือ → ยึดค่าที่กรอก
+            # ✅ ติ๊กปรับแก้ด้วยมือ → ยึดค่าที่กรอก
+            #    ต้องเช็คก่อนบุคคลพิเศษ ไม่งั้นค่าล็อกใน EXECUTIVE_TAX_CONFIG จะทับค่าที่ผู้ใช้กรอก
+            #    แล้วยิงค่าเก่าไป PHP (payroll_report.php อ่าน tax_monthly ตรง ๆ)
+            if rec.manual_override_tax:
                 rec.tax_monthly = rec.manual_tax_amount
                 rec.tax_annual = rec.manual_tax_amount * 12
+            elif exec_cfg and exec_cfg.get('tax_monthly') is not None:  # ✅ บุคคลพิเศษ — ล็อกภาษีคงที่
+                rec.tax_monthly = exec_cfg['tax_monthly']
+                rec.tax_annual = rec.tax_monthly * 12
             elif tax_line and tax_line.amount > 0:  # ✅ ใช้ค่าที่ user override (แก้ใน line ตรงๆ)
                 rec.tax_monthly = tax_line.amount
                 rec.tax_annual = rec.tax_monthly * 12
