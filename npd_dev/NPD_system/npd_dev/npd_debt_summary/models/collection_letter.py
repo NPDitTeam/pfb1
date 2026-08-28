@@ -11,6 +11,11 @@
     4. ค่าขนส่ง                     = แท็บค่าขนส่ง (ดึงข้ามมาจาก DB บริษัทขนส่ง)
     5. ค่าใช้จ่ายอื่นๆ               = แท็บใบแจ้งหนี้ค่าประกัน + แท็บค่าหัก ณ ที่จ่าย
 
+ผู้ใช้ระบุ 28 ส.ค. 2026: หนังสือฉบับนี้จะดึงเฉพาะเอกสารค้างชำระที่ตกอยู่ใน
+สถานะติดตามหนี้ที่ติ๊ก "เริ่มแสดงที่รายงาน" ไว้เท่านั้น (เมนู กำหนดสถานะติดตามหนี้)
+ยอดในข้อ 1-5 และยอดรวมท้ายตารางจึงคิดจากเฉพาะเอกสารที่พิมพ์ออกมา ไม่ใช่ยอดหนี้
+ทั้งหมดของลูกค้า มิฉะนั้นตัวเลขในหนังสือจะไม่ตรงกับตารางที่แนบไปด้วยกัน
+
 เลขที่สัญญาเช่าดึงจาก sale.order.rental_contract_full (โมดูล
 npd_rental_equipment_contract_qweb) ใบไหนหาสัญญาไม่เจอหรือสัญญาไม่มีเลข
 จะไม่พิมพ์บรรทัดเลขที่สัญญาออกมา (ตามที่ผู้ใช้ระบุว่า "ถ้าไม่มี ซ่อน")
@@ -18,7 +23,8 @@ npd_rental_equipment_contract_qweb) ใบไหนหาสัญญาไม�
 import logging
 from datetime import date
 
-from odoo import models
+from odoo import _, models
+from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
@@ -109,28 +115,37 @@ class NpdDebtSummaryLetter(models.Model):
     # ข้อมูลหลักของรายงาน
     # ------------------------------------------------------------------
     def _letter_line_groups(self):
-        """(ชื่อประเภทที่จะพิมพ์, บรรทัดของแท็บนั้น) เรียงตามลำดับแท็บบนหน้าจอ"""
+        """(ชื่อประเภทที่จะพิมพ์, หมวดยอดในข้อ 1-5, บรรทัดของแท็บนั้น)
+
+        เรียงตามลำดับแท็บบนหน้าจอ หมวดยอดใช้จับว่าแท็บนี้ไปรวมอยู่ข้อไหน
+        ของหนังสือ (ดูตารางจับคู่ในหัวไฟล์)
+        """
         self.ensure_one()
         return [
-            (u'ค่าเช่า', self.customer_invoice_line_ids),
-            (u'ค่าประกัน', self.customer_deposit_line_ids),
-            (u'ค่าเช่าเกินกำหนด', self.customer_rentdiff_line_ids),
-            (u'ค่าปรับหาย', self.customer_penalty_line_ids),
-            (u'ค่าปรับชำรุด', self.customer_damage_line_ids),
-            (u'ค่าขนส่ง', self.customer_transport_line_ids),
-            (u'ค่าหัก ณ ที่จ่าย', self.customer_tax_line_ids),
+            (u'ค่าเช่า', 'rent', self.customer_invoice_line_ids),
+            (u'ค่าประกัน', 'other', self.customer_deposit_line_ids),
+            (u'ค่าเช่าเกินกำหนด', 'over', self.customer_rentdiff_line_ids),
+            (u'ค่าปรับหาย', 'penalty', self.customer_penalty_line_ids),
+            (u'ค่าปรับชำรุด', 'penalty', self.customer_damage_line_ids),
+            (u'ค่าขนส่ง', 'transport', self.customer_transport_line_ids),
+            (u'ค่าหัก ณ ที่จ่าย', 'other', self.customer_tax_line_ids),
         ]
 
     def _letter_invoice_rows(self):
         """รวมทุกแท็บให้เป็นรายการเดียว เฉพาะใบที่ยังค้างชำระ
+        และอยู่ในสถานะติดตามหนี้ที่ติ๊ก "เริ่มแสดงที่รายงาน" ไว้
 
-        คืน list ของ dict: doc_type / move / name / date / amount / order
+        คืน list ของ dict: doc_type / bucket / move / name / date / amount / order
         """
         self.ensure_one()
         rows = []
-        for doc_type, lines in self._letter_line_groups():
+        for doc_type, bucket, lines in self._letter_line_groups():
             for line in lines:
                 if line.payment_status != 'unpaid':
+                    continue
+                # ค้างมากี่วันแล้วตกอยู่สถานะไหน ถ้าสถานะนั้นไม่ได้ติ๊กให้ขึ้นรายงาน
+                # (หรือยังไม่เข้าช่วงวันของสถานะไหนเลย) ก็ไม่เอาใบนี้เข้าหนังสือ
+                if not line.collection_status_id.show_in_report:
                     continue
                 amount = getattr(line, 'amount_residual', 0.0)
                 if not amount:
@@ -146,6 +161,7 @@ class NpdDebtSummaryLetter(models.Model):
                         [('name', '=', getattr(line, 'source_so', '') or '')], limit=1)
                 rows.append({
                     'doc_type': doc_type,
+                    'bucket': bucket,
                     'move': move,
                     'name': line.invoice_name or (move.name if move else ''),
                     'date': getattr(line, 'invoice_date', False)
@@ -159,6 +175,14 @@ class NpdDebtSummaryLetter(models.Model):
         """ข้อมูลทั้งหมดที่เทมเพลตต้องใช้ -- เรียกครั้งเดียวแล้ว t-set เก็บไว้"""
         self.ensure_one()
         rows = self._letter_invoice_rows()
+        if not rows:
+            # ถ้าปล่อยผ่านจะได้หนังสือทวงถามที่ยอดรวม 0.00 ส่งให้ลูกค้าไม่ได้
+            raise UserError(_(
+                u'พิมพ์หนังสือของ %s ไม่ได้ '
+                u'เพราะไม่มีเอกสารค้างชำระใบไหนอยู่ในสถานะติดตามหนี้ที่ติ๊ก '
+                u'"เริ่มแสดงที่รายงาน" ไว้ ตรวจได้ที่คอลัมน์ "สถานะติดตามหนี้" ในแต่ละแท็บ '
+                u'และที่เมนู ขาย > รวมหนี้ลูกค้า > กำหนดสถานะติดตามหนี้'
+            ) % (self.display_name or self.name or ''))
 
         # จัดกลุ่มตามสัญญาเช่า (ใบที่หาสัญญาไม่เจอ รวมเป็นกลุ่มเดียวท้ายตาราง)
         groups = []
@@ -190,16 +214,13 @@ class NpdDebtSummaryLetter(models.Model):
         for seq, group in enumerate(groups, start=1):
             group['seq'] = seq
 
-        penalty = (self.customer_penalty_residual or 0.0) + (self.customer_damage_residual or 0.0)
-        other = (self.customer_deposit_residual or 0.0) + (self.customer_tax_residual or 0.0)
-        amounts = {
-            'rent': self.customer_amount_residual or 0.0,
-            'over': self.customer_rentdiff_residual or 0.0,
-            'penalty': penalty,
-            'transport': self.customer_transport_residual or 0.0,
-            'other': other,
-            'total': self.grand_total or 0.0,
-        }
+        # ยอดคิดจาก rows ที่ผ่านการกรองแล้วเท่านั้น ไม่ใช้ยอดรวมที่เก็บไว้บนหัวเอกสาร
+        # (ยอดบนหัวเอกสารเป็นหนี้ทั้งหมดของลูกค้า ถ้าเอามาใช้ ยอดรวมท้ายตารางจะไม่
+        #  เท่ากับผลบวกของบรรทัดที่พิมพ์ออกมา)
+        amounts = {'rent': 0.0, 'over': 0.0, 'penalty': 0.0, 'transport': 0.0, 'other': 0.0}
+        for row in rows:
+            amounts[row['bucket']] += row['amount']
+        amounts['total'] = sum(amounts.values())
 
         # ข้อ 1-5 ในหนังสือ: ตัดข้อที่ยอดเป็น 0 ออก แล้วเรียงเลขใหม่ให้ต่อกัน
         # (ผู้ใช้ระบุ 20 ส.ค. 2026 -- เดิมพิมพ์ครบทุกข้อรวมข้อที่เป็น 0)
@@ -231,5 +252,5 @@ class NpdDebtSummaryLetter(models.Model):
                       for label, amount in items if abs(amount) >= 0.005],
             'topics': topics,
             'topics_text': (u' ' + u' '.join(topics)) if topics else u'',
-            'has_transport': bool(self.customer_transport_residual),
+            'has_transport': abs(amounts['transport']) >= 0.005,
         }

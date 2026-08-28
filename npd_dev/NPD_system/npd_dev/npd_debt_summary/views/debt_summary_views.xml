@@ -14,15 +14,6 @@
                        decoration-danger="payment_status == 'unpaid'"
                        decoration-success="payment_status == 'paid'"/>
                 <field name="grand_total" string="ยอดหนี้ค้างทั้งสิ้น" sum="รวมทั้งสิ้น"/>
-                <field name="notice_stage" string="ขั้น Notice" widget="badge"
-                       decoration-info="notice_stage == 'notice1'"
-                       decoration-warning="notice_stage == 'notice2'"
-                       decoration-danger="notice_stage == 'legal'"/>
-                <field name="notice_days_label" string="วันคงเหลือ (Notice)"
-                       decoration-danger="notice_days_left &lt; 0"
-                       decoration-warning="notice_days_left &gt;= 0 and notice_days_left &lt;= 3"/>
-                <field name="notice_days_left" string="วันคงเหลือ (ตัวเลข)" optional="hide"/>
-                <field name="notice_due_date" string="ครบกำหนด Notice" optional="hide"/>
                 <!-- ใบแจ้งหนี้ค้างชำระ + วันที่ + สถานะ -->
                 <field name="customer_amount_residual" string="ใบแจ้งหนี้ค่าเช่า" sum="รวม"/>
                 <field name="customer_deposit_residual" string="ใบแจ้งหนี้ค่าประกัน" sum="รวม"/>
@@ -69,17 +60,6 @@
                 <header>
                     <button name="action_refresh_one" type="object"
                             string="🔄 อัพเดทข้อมูลลูกค้ารายนี้" class="btn-primary"/>
-                    <!-- ต้องกดปุ่มนี้ก่อน ระบบถึงเริ่มนับ 14 วันของ Notice 1
-                         หลังจากนั้น cron ประจำวันจะเลื่อนขั้นให้เองถ้ายังค้างชำระ -->
-                    <button name="action_start_notice" type="object"
-                            string="เริ่มออก Notice" class="btn-secondary"
-                            attrs="{'invisible': [('notice_stage', '!=', 'none')]}"/>
-                    <button name="action_reset_notice" type="object"
-                            string="ยกเลิก Notice" class="btn-secondary"
-                            confirm="ยกเลิกการออก Notice ของลูกค้ารายนี้ และล้างวันที่ที่นับไว้ ใช่หรือไม่"
-                            attrs="{'invisible': [('notice_stage', '=', 'none')]}"/>
-                    <field name="notice_stage" widget="statusbar"
-                           statusbar_visible="none,notice1,notice2,legal"/>
                     <field name="payment_status" widget="statusbar" statusbar_visible="unpaid,paid"/>
                 </header>
                 <sheet>
@@ -120,16 +100,6 @@
                                    decoration-success="tax_payment_status == 'paid'"/>
                             <field name="grand_total" string="รวมหนี้ทั้งสิ้น" readonly="1"
                                    class="oe_subtotal_footer_separator"/>
-                            <!-- โชว์ตลอด ไม่ซ่อนตอนยังไม่เริ่มออก Notice จะได้รู้ว่ามีช่องนี้อยู่
-                                 (ยังไม่เริ่ม = วันคงเหลือ 0 และวันที่ว่าง) -->
-                            <field name="notice_stage" string="ขั้น Notice" readonly="1" widget="badge"
-                                   decoration-info="notice_stage == 'notice1'"
-                                   decoration-warning="notice_stage == 'notice2'"
-                                   decoration-danger="notice_stage == 'legal'"/>
-                            <field name="notice_date" string="วันที่ออก Notice ขั้นนี้" readonly="1"/>
-                            <field name="notice_due_date" string="ครบกำหนด Notice" readonly="1"/>
-                            <field name="notice_days_label" string="วันคงเหลือ (Notice)" readonly="1"/>
-                            <field name="notice_days_left" invisible="1"/>
                             <field name="currency_id" invisible="1"/>
                         </group>
                         <group string="ข้อมูลลูกค้า">
@@ -172,6 +142,9 @@
                                     <field name="amount_residual" sum="รวมค้างชำระ"/>
                                     <field name="days_overdue" string="จำนวนวันที่เกิน"/>
                                     <field name="payment_state_label" string="สถานะการชำระเงิน"/>
+                                    <field name="collection_status_name" string="สถานะติดตามหนี้"/>
+                                    <field name="collection_days" string="จำนวนวัน (จากวันที่ออกใบแจ้งหนี้)"
+                                           optional="hide"/>
                                     <field name="payment_status" string="สถานะ" widget="badge"
                                            decoration-danger="payment_status == 'unpaid'"
                                            decoration-success="payment_status == 'paid'"/>
@@ -201,6 +174,9 @@
                                     <field name="amount_residual" sum="รวมค้างชำระ"/>
                                     <field name="days_overdue" string="จำนวนวันที่เกิน"/>
                                     <field name="payment_state_label" string="สถานะการชำระเงิน"/>
+                                    <field name="collection_status_name" string="สถานะติดตามหนี้"/>
+                                    <field name="collection_days" string="จำนวนวัน (จากวันที่ออกใบแจ้งหนี้)"
+                                           optional="hide"/>
                                     <field name="payment_status" string="สถานะ" widget="badge"
                                            decoration-danger="payment_status == 'unpaid'"
                                            decoration-success="payment_status == 'paid'"/>
@@ -230,6 +206,9 @@
                                     <field name="amount_residual" sum="รวมค้างชำระ"/>
                                     <field name="days_overdue" string="จำนวนวันที่เกิน"/>
                                     <field name="payment_state_label" string="สถานะการชำระเงิน"/>
+                                    <field name="collection_status_name" string="สถานะติดตามหนี้"/>
+                                    <field name="collection_days" string="จำนวนวัน (จากวันที่ออกใบแจ้งหนี้)"
+                                           optional="hide"/>
                                     <field name="payment_status" string="สถานะ" widget="badge"
                                            decoration-danger="payment_status == 'unpaid'"
                                            decoration-success="payment_status == 'paid'"/>
@@ -261,6 +240,9 @@
                                     <field name="net_penalty" sum="รวมปรับหายสุทธิ"/>
                                     <field name="amount_paid" sum="รวมรับชำระ"/>
                                     <field name="amount_residual" sum="รวมคงเหลือ"/>
+                                    <field name="collection_status_name" string="สถานะติดตามหนี้"/>
+                                    <field name="collection_days" string="จำนวนวัน (จากวันที่ออกใบแจ้งหนี้)"
+                                           optional="hide"/>
                                     <field name="payment_status" string="สถานะ" widget="badge"
                                            decoration-danger="payment_status == 'unpaid'"
                                            decoration-success="payment_status == 'paid'"/>
@@ -291,6 +273,9 @@
                                     <field name="net_damage" sum="รวมปรับชำรุดสุทธิ"/>
                                     <field name="amount_paid" sum="รวมรับชำระ"/>
                                     <field name="amount_residual" sum="รวมคงเหลือ"/>
+                                    <field name="collection_status_name" string="สถานะติดตามหนี้"/>
+                                    <field name="collection_days" string="จำนวนวัน (จากวันที่ออกใบแจ้งหนี้)"
+                                           optional="hide"/>
                                     <field name="payment_status" string="สถานะ" widget="badge"
                                            decoration-danger="payment_status == 'unpaid'"
                                            decoration-success="payment_status == 'paid'"/>
@@ -327,6 +312,9 @@
                                     <field name="amount_total" sum="รวมทั้งหมด"/>
                                     <field name="amount_residual" sum="รวมค้างชำระ"/>
                                     <field name="days_overdue" string="จำนวนวันที่เกิน"/>
+                                    <field name="collection_status_name" string="สถานะติดตามหนี้"/>
+                                    <field name="collection_days" string="จำนวนวัน (จากวันที่ออกใบแจ้งหนี้)"
+                                           optional="hide"/>
                                     <field name="payment_status" string="สถานะ" widget="badge"
                                            decoration-danger="payment_status == 'unpaid'"
                                            decoration-success="payment_status == 'paid'"/>
@@ -350,6 +338,9 @@
                                     <field name="amount_total" string="ยอดรวมใบแจ้งหนี้"/>
                                     <field name="payment_name" string="เลขที่รับชำระ"/>
                                     <field name="tax_amount" sum="รวมยอด Tax"/>
+                                    <field name="collection_status_name" string="สถานะติดตามหนี้"/>
+                                    <field name="collection_days" string="จำนวนวัน (จากวันที่ออกใบแจ้งหนี้)"
+                                           optional="hide"/>
                                     <field name="payment_status" string="สถานะ" widget="badge"
                                            decoration-danger="payment_status == 'unpaid'"
                                            decoration-success="payment_status == 'paid'"/>
@@ -539,8 +530,7 @@
         <field name="view_mode">tree,form</field>
         <field name="search_view_id" ref="npd_debt_summary_view_search"/>
         <!-- ไม่จัดกลุ่มตามลูกค้าเป็นค่าเริ่มต้น เพราะลูกค้า 1 รายมีแถวเดียวอยู่แล้ว
-             และแถวกลุ่มของ Odoo แสดงได้เฉพาะคอลัมน์ที่บวกรวมได้ ทำให้ขั้น Notice
-             กับวันคงเหลือหายไปจากหน้าจอ (ยังกดจัดกลุ่มเองได้จากปุ่มจัดกลุ่มตาม) -->
+             (ยังกดจัดกลุ่มเองได้จากปุ่มจัดกลุ่มตาม) -->
         <field name="context">{}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">ยังไม่มีลูกค้าที่ค้างชำระ</p>
@@ -548,10 +538,17 @@
         </field>
     </record>
 
-    <!-- ========================= Menu (เปิดรายการเฉยๆ ไม่อัพเดท) ========================= -->
+    <!-- ========================= Menu =========================
+         กด "รวมหนี้ลูกค้า" แล้วจะเห็นเมนูย่อย (รายการ / กำหนดสถานะติดตามหนี้)
+         เมนูย่อย "กำหนดสถานะติดตามหนี้" อยู่ใน debt_collection_status_views.xml
+         ========================================================= -->
+    <menuitem id="menu_npd_debt_summary_root" name="รวมหนี้ลูกค้า"
+              parent="sale.sale_menu_root" sequence="16"/>
+
+    <!-- เมนูเดิม (เปิดรายการเฉยๆ ไม่อัพเดท) ย้ายมาเป็นเมนูย่อย -->
     <menuitem id="menu_npd_debt_summary" name="รวมหนี้ลูกค้า"
-              parent="sale.sale_menu_root"
-              action="action_npd_debt_summary" sequence="16"/>
+              parent="menu_npd_debt_summary_root"
+              action="action_npd_debt_summary" sequence="10"/>
 
     <!-- ========================= Scheduled Action: อัพเดททุกวัน ตี 3 ========================= -->
     <data noupdate="1">

@@ -1036,6 +1036,7 @@ class NpdDebtSummary(models.Model):
 
 class NpdDebtSummaryInvoiceLine(models.Model):
     _name = 'npd.debt.summary.invoice.line'
+    _inherit = ['npd.debt.collection.status.mixin']
     _description = 'รายการใบแจ้งหนี้ค้างชำระ (สรุปหนี้)'
     _order = 'invoice_date_due asc'
 
@@ -1075,6 +1076,7 @@ class NpdDebtSummaryInvoiceLine(models.Model):
 class NpdDebtSummaryDepositLine(models.Model):
     """บรรทัดแท็บ 'ใบแจ้งหนี้ค่าประกัน' (โครงเดียวกับแท็บใบแจ้งหนี้ค่าเช่า)"""
     _name = 'npd.debt.summary.deposit.line'
+    _inherit = ['npd.debt.collection.status.mixin']
     _description = 'รายการใบแจ้งหนี้ค่าประกัน (สรุปหนี้)'
     _order = 'invoice_date_due asc'
 
@@ -1118,6 +1120,7 @@ class NpdDebtSummaryRentDiffLine(models.Model):
     ที่ดึงเข้ามา (scrap.reason.code = ค่าเช่าส่วนต่าง)
     """
     _name = 'npd.debt.summary.rentdiff.line'
+    _inherit = ['npd.debt.collection.status.mixin']
     _description = 'รายการค่าเช่าส่วนต่าง (สรุปหนี้)'
     _order = 'invoice_date_due asc'
 
@@ -1156,6 +1159,8 @@ class NpdDebtSummaryRentDiffLine(models.Model):
 
 class NpdDebtSummaryPenaltyLine(models.Model):
     _name = 'npd.debt.summary.penalty.line'
+    _inherit = ['npd.debt.collection.status.mixin']
+    _collection_date_field = 'rental_start_date'
     _description = 'รายการค่าปรับหาย (สรุปหนี้)'
     _order = 'invoice_name asc'
 
@@ -1210,6 +1215,8 @@ class NpdDebtSummaryPenaltyProductLine(models.Model):
 
 class NpdDebtSummaryDamageLine(models.Model):
     _name = 'npd.debt.summary.damage.line'
+    _inherit = ['npd.debt.collection.status.mixin']
+    _collection_date_field = 'rental_start_date'
     _description = 'รายการค่าปรับชำรุด (สรุปหนี้)'
     _order = 'invoice_name asc'
 
@@ -1254,6 +1261,7 @@ class NpdDebtSummaryTransportLine(models.Model):
     many2one ชี้ไปที่ account.move เหมือนแท็บอื่น และไม่มีปุ่มเปิดใบแจ้งหนี้
     """
     _name = 'npd.debt.summary.transport.line'
+    _inherit = ['npd.debt.collection.status.mixin']
     _description = 'รายการค่าขนส่ง (สรุปหนี้)'
     _order = 'invoice_date_due asc'
 
@@ -1281,6 +1289,7 @@ class NpdDebtSummaryTransportLine(models.Model):
 
 class NpdDebtSummaryTaxLine(models.Model):
     _name = 'npd.debt.summary.tax.line'
+    _inherit = ['npd.debt.collection.status.mixin']
     _description = 'รายการค่าหัก ณ ที่จ่าย (สรุปหนี้)'
     _order = 'invoice_name asc'
 

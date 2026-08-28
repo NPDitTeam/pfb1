@@ -8,3 +8,4 @@ access_npd_debt_summary_penalty_product_line_user,npd.debt.summary.penalty.produ
 access_npd_debt_summary_damage_line_user,npd.debt.summary.damage.line.user,model_npd_debt_summary_damage_line,base.group_user,1,1,1,1
 access_npd_debt_summary_transport_line_user,npd.debt.summary.transport.line.user,model_npd_debt_summary_transport_line,base.group_user,1,1,1,1
 access_npd_debt_summary_tax_line_user,npd.debt.summary.tax.line.user,model_npd_debt_summary_tax_line,base.group_user,1,1,1,1
+access_npd_debt_collection_status_user,npd.debt.collection.status.user,model_npd_debt_collection_status,base.group_user,1,1,1,1

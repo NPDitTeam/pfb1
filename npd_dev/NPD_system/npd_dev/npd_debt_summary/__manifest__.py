@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'NPD Debt Summary (รวมหนี้ลูกค้า)',
-    'version': '14.0.1.9.0',
+    'version': '14.0.1.13.0',
     'summary': 'สรุปหนี้ลูกค้า - สแกนลูกค้าที่มีใบแจ้งหนี้ค้างชำระอัตโนมัติ',
     'description': """
         รวมหนี้ลูกค้า (Customer Debt Summary)
@@ -19,6 +19,7 @@
         'security/ir.model.access.csv',
         'data/sequence_data.xml',
         'views/debt_summary_views.xml',
+        'views/debt_collection_status_views.xml',
         'report/debt_summary_reports.xml',
         'report/debt_collection_letter.xml',
     ],
