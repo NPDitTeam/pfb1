@@ -2,6 +2,7 @@
 from odoo import api, fields, models,_
 from odoo.addons import decimal_precision as dp
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_is_zero
 from datetime import date
 
 class AccountAdvance(models.Model):
@@ -31,8 +32,13 @@ class AccountAdvance(models.Model):
     def _compute_remaining(self):
         for adv in self:
             adv.clear = sum(clear.state == 'post' and clear.exclude_amount + clear.clear_amount or 0 for clear in adv.clear_ids)
-            adv.remain = adv.payment_total - adv.clear
-            if adv.remain == 0:
+            remain = adv.payment_total - adv.clear
+            # ผลบวกทศนิยมของใบเคลียร์ทำให้เหลือเศษระดับ 1e-13 (เช่น 933.92 + 66.08)
+            # ถ้าเทียบ == 0 ตรง ๆ เอกสารที่เคลียร์ครบจะค้าง Wait Clear
+            if float_is_zero(remain, precision_digits=2):
+                remain = 0.0
+            adv.remain = remain
+            if remain == 0.0:
                 adv.state_remain = 'Clear'
             else:
                 adv.state_remain = 'Wait Clear'

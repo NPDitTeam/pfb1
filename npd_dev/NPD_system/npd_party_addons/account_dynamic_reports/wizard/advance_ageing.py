@@ -36,25 +36,10 @@ DATE_DICT = {
     '%e-%f-%y' : 'd-m-yy'
 }
 
-class AccountAdvance(models.Model):
-    _inherit = 'account.advance'
-
-    @api.depends('clear_ids.state', 'clear_ids.exclude_amount', 'clear_ids.clear_amount')
-    def _compute_remaining(self):
-        for adv in self:
-            adv.clear = sum(
-                clear.state == 'post' and clear.exclude_amount + clear.clear_amount or 0 for clear in adv.clear_ids)
-            adv.remain = adv.total - adv.clear
-            if adv.remain == 0:
-                adv.state_remain = 'Clear'
-            else:
-                adv.state_remain = 'Wait Clear'
-
-    state_remain = fields.Char(
-        string="State Clear",
-        store=True,
-        compute=_compute_remaining,
-    )
+# หมายเหตุ: เดิมไฟล์นี้ override _compute_remaining / state_remain ซ้ำกับโมดูล account_advance
+# แต่ใช้ adv.total แทน adv.payment_total และโหลดทีหลังจึงไป shadow ของเดิม
+# ตัดออกให้เหลือชุดเดียวที่ account_advance/models/account_advance.py
+# รายงานด้านล่างอ่านคอลัมน์ ad.state_remain ตามปกติ
 
 
 class InsAdvanceAgeing(models.TransientModel):
