@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!--
+        ทำเครื่องหมายบน "จุดสถานะ" ของบอทตัวช่วย AI-IT เพื่อให้ SCSS ย้อมสี
+        เขียว = AI พร้อมใช้ / แดง = AI ใช้ไม่ได้ (ดู models/res_partner.py)
+
+        ทำในเทมเพลตล้วน ไม่ patch คลาส JS เพราะ mail ส่งออก PartnerImStatusIcon
+        แบบดิบ ๆ (return PartnerImStatusIcon) ไม่ได้ห่อด้วย patchMixin
+        การเรียก .patch() จึงพังทั้ง bundle
+
+        จงใจไม่แตะ t-att-class เดิม เพราะเป็น object หลายบรรทัด ถ้าเข้าไปต่อท้าย
+        จะได้ syntax เสีย จึงเพิ่ม data attribute ตัวใหม่แทน
+    -->
+    <t t-inherit="mail.PartnerImStatusIcon" t-inherit-mode="extension">
+
+        <xpath expr="//span[hasclass('o_PartnerImStatusIcon')]" position="attributes">
+            <attribute name="t-att-data-npd-ai-it">partner and env.session.npd_ai_it_bot_partner_id and partner.id === env.session.npd_ai_it_bot_partner_id ? '1' : undefined</attribute>
+        </xpath>
+
+        <!-- เปลี่ยน tooltip ให้สื่อความหมายจริงของสีเขียว/แดง เฉพาะของบอท -->
+        <xpath expr="//i[hasclass('o-online')][hasclass('o_PartnerImStatusIcon_icon')]" position="attributes">
+            <attribute name="title"/>
+            <attribute name="t-att-title">partner.id === env.session.npd_ai_it_bot_partner_id ? 'ตัวช่วย AI-IT พร้อมใช้งาน' : 'Online'</attribute>
+        </xpath>
+
+        <xpath expr="//i[hasclass('o-offline')][hasclass('o_PartnerImStatusIcon_icon')]" position="attributes">
+            <attribute name="title"/>
+            <attribute name="t-att-title">partner.id === env.session.npd_ai_it_bot_partner_id ? 'ตัวช่วย AI-IT ใช้งานไม่ได้ (ยังไม่ได้ตั้งค่า AI Key)' : 'Offline'</attribute>
+        </xpath>
+
+    </t>
+
+</templates>

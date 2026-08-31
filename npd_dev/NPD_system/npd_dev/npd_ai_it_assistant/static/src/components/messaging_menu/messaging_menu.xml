@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-inherit="mail.MessagingMenu" t-inherit-mode="extension">
+
+        <!-- ปุ่มแท็บ "ตัวช่วย AI-IT" ต่อท้ายแท็บ ทั้งหมด / สนทนา / ช่องทาง -->
+        <xpath expr="//div[hasclass('o_MessagingMenu_dropdownMenuHeader')]/div[hasclass('o-autogrow')]" position="before">
+            <t t-if="!env.messaging.device.isMobile">
+                <button class="o_MessagingMenu_tabButton o_MessagingMenu_aiItTabButton o-desktop btn btn-link"
+                        t-att-class="{ 'o-active': messagingMenu.activeTabId === aiItTabId }"
+                        t-on-click="_onClickDesktopTabButton"
+                        type="button" role="tab" t-att-data-tab-id="aiItTabId">
+                    <i class="fa fa-magic mr-1" role="img" aria-hidden="true"/>
+                    <t t-esc="aiItTabLabel"/>
+                </button>
+            </t>
+        </xpath>
+
+        <!-- แท็บนี้ไม่ได้แสดงรายการห้องแชท จึงต้องซ่อน NotificationList ไว้ -->
+        <xpath expr="//NotificationList" position="attributes">
+            <attribute name="t-if">messagingMenu.activeTabId !== aiItTabId</attribute>
+        </xpath>
+
+        <!-- รายการหัวข้อที่ให้ AI ช่วยแก้ -->
+        <xpath expr="//NotificationList" position="after">
+            <t t-if="messagingMenu.activeTabId === aiItTabId">
+                <div class="o_MessagingMenu_aiItList"
+                     t-att-class="{ 'o-mobile': env.messaging.device.isMobile }">
+                    <t t-if="aiIt.isLoading">
+                        <div class="o_AiItTopic_empty">
+                            <i class="fa fa-spinner fa-spin mr-1"/>กำลังโหลดหัวข้อ...
+                        </div>
+                    </t>
+                    <t t-elif="aiIt.topics.length === 0">
+                        <div class="o_AiItTopic_empty">
+                            ยังไม่มีหัวข้อให้บริการ กรุณาแจ้งฝ่าย IT
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="o_AiItTopic_hint">
+                            เลือกหัวข้อปัญหาที่ต้องการให้ช่วย แล้วคุยกับผู้ช่วยในแชทได้เลย
+                        </div>
+                        <t t-foreach="aiIt.topics" t-as="aiItTopic" t-key="aiItTopic.id">
+                            <div class="o_AiItTopic"
+                                 t-att-class="{ 'o-not-ready': !aiItTopic.is_ready }"
+                                 t-att-data-topic-id="aiItTopic.id"
+                                 t-on-click="_onClickAiItTopic">
+                                <div class="o_AiItTopic_index"><t t-esc="aiItTopic.index"/></div>
+                                <div class="o_AiItTopic_body">
+                                    <div class="o_AiItTopic_name"><t t-esc="aiItTopic.name"/></div>
+                                    <div class="o_AiItTopic_description">
+                                        <t t-if="aiItTopic.is_ready"><t t-esc="aiItTopic.description"/></t>
+                                        <t t-else="">ยังไม่เปิดให้บริการ</t>
+                                    </div>
+                                </div>
+                                <div class="o_AiItTopic_arrow"><i class="fa fa-angle-right"/></div>
+                            </div>
+                        </t>
+                    </t>
+                </div>
+            </t>
+        </xpath>
+
+    </t>
+
+</templates>
