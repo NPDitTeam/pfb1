@@ -60,6 +60,16 @@ class PayrollSalary(models.Model):
         """
         self.ensure_one()
         company = self.employee_id.company if self.employee_id else None
+        return self._company_info_by_key(company)
+
+    @api.model
+    def _company_info_by_key(self, company):
+        """ชื่อ+ที่อยู่บริษัทตาม key สังกัด (ค่าจาก employee.salary.company)
+
+        นี่คือ "แหล่งความจริงเดียว" ของชื่อ/ที่อยู่บริษัท — ทั้งสลิป PDF ฝั่ง Odoo
+        และสลิปในแอปมือถือ (ผ่าน api_get_company_info) อ่านจากที่นี่ที่เดียว
+        ย้ายออฟฟิศเมื่อไหร่แก้ตรงนี้จุดเดียว ไม่ต้องไล่แก้ในแอป
+        """
         # เบอร์กลาง ต่อท้ายที่อยู่ทุกสังกัด
         phone = '  โทร. / แฟกซ์. 02-433-5556'
         addr_bangkoknoi = ('ที่อยู่ 85/13-16 ถนนอรุณอมรินทร์ แขวงอรุณอมรินทร์ '
@@ -94,6 +104,23 @@ class PayrollSalary(models.Model):
             'name': 'บริษัท นภดล เอส กรุ๊ป จำกัด',
             'address': addr_bangkoknoi + phone,
         })
+
+    @api.model
+    def api_get_company_info(self, employee_code):
+        """สำหรับแอปมือถือ: ชื่อ+ที่อยู่บริษัทตามสังกัดของพนักงานคนนั้น
+
+        เรียกผ่าน JSON-RPC:
+            callKw('payroll.salary', 'api_get_company_info', [employee_code])
+
+        ให้แอปเลิก hardcode ที่อยู่เอง จะได้ไม่เพี้ยนกับสลิปฝั่ง Odoo อีก
+        คืน {'name': ..., 'address': ...} — หาไม่เจอก็คืนค่า default เดียวกับสลิป
+        """
+        company = None
+        if employee_code:
+            employee = self.env['employee.salary'].sudo().search(
+                [('employee_code', '=', employee_code)], limit=1)
+            company = employee.company if employee else None
+        return self._company_info_by_key(company)
 
     def _get_payslip_api_data(self):
         """
@@ -173,11 +200,16 @@ class PayrollSalary(models.Model):
         import urllib.parse, json
         schedule_str = urllib.parse.quote(json.dumps(schedule_data))
 
+        # ✅ ส่งสูตรคิดสายที่ตั้งเองไปด้วย เพื่อให้หน้าสรุปแสดงตรงกับที่คำนวณจริง
+        rules_str = urllib.parse.quote(
+            json.dumps(self.env['payroll.lateness.rule']._rules_payload(self.branch_id)))
+
         base_url = "https://npdhrms.com/lateness_summary.php"
         full_url = (
             f"{base_url}?employee_code={emp_code}"
             f"&month={month}&year={year}&cutoff_day={cutoff_day}"
-            f"&lateness_grace_period={grace}"  # ✅ ส่งค่า grace period
+            f"&lateness_grace_period={grace}"  # ✅ สูตรเดิม (ใช้กับวันก่อนวันเริ่มใช้สูตรใหม่)
+            f"&lateness_rules={rules_str}"  # ✅ สูตรที่ตั้งเอง + วันเริ่มใช้
             f"&work_schedule={schedule_str}"  # ✅ ส่งตารางกะไปด้วย
         )
 
@@ -2402,9 +2434,17 @@ class PayrollSalary(models.Model):
         resign_date_str = (self.employee_id.resign_date.strftime('%Y-%m-%d')
                            if self.employee_id.resign_date else None)
 
+        # ✅ สูตรคิดสายที่ตั้งเองได้ (เมนู "กำหนดสูตรคิดสาย")
+        #    ส่งไปทั้งรายการ ให้ PHP เลือกใช้ตามวันที่ของแต่ละวันเอง
+        #    รอบที่คร่อมวันเริ่มใช้สูตรใหม่จึงคิดถูกทั้งสองช่วงในใบเดียว
+        #    วันที่ไม่มีสูตรไหนครอบคลุม จะ fallback ไปใช้ grace_period เดิม
+        #    กรองตามสาขาของพนักงานตั้งแต่ฝั่ง Odoo (PHP ไม่ต้องรู้เรื่องสาขา)
+        lateness_rules = self.env['payroll.lateness.rule']._rules_payload(self.branch_id)
+
         payload = {
             'employee_code': self.employee_id.employee_code,
             'grace_period': self.lateness_grace_period,
+            'lateness_rules': lateness_rules,
             'work_schedule': schedule_data,
             'month': self.month,
             'year': self.year,

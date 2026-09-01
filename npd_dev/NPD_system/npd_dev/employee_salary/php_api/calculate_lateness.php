@@ -19,6 +19,31 @@ $data  = json_decode($input, true);
 
 $employee_code = $mysqli->real_escape_string($data['employee_code']);
 $grace_period  = (int)($data['grace_period'] ?? 15);
+
+// ✅ สูตรคิดสายที่ตั้งเองจาก Odoo (เมนู "กำหนดสูตรคิดสาย")
+//    เป็นรายการที่มี effective_date กำกับ → เลือกใช้ตามวันที่ของแต่ละวัน
+//    วันก่อนวันเริ่มใช้สูตรแรก ยังคิดด้วย $grace_period เดิม (ไม่กระทบยอดที่คำนวณไปแล้ว)
+$lateness_rules = $data['lateness_rules'] ?? [];
+if (!is_array($lateness_rules)) $lateness_rules = [];
+// กันข้อมูลเพี้ยน: เก็บเฉพาะรายการที่เป็น array จริง ๆ
+$lateness_rules = array_values(array_filter($lateness_rules, 'is_array'));
+usort($lateness_rules, function ($a, $b) {
+    return strcmp($a['effective_date'] ?? '', $b['effective_date'] ?? '');
+});
+// ✅ include_today: คิด "สายเข้างาน" ของวันนี้ด้วยไหม
+//    payroll ไม่ส่ง (=false) -> พฤติกรรมเดิมเป๊ะ ยอดหักไม่ขยับระหว่างวัน
+//    แอปมือถือส่ง true -> พนักงานเห็นว่าวันนี้สายกี่นาทีทันทีที่สแกนเข้า
+$include_today = !empty($data['include_today']);
+
+// ✅ include_pending_manual: นับคำขอเพิ่มเวลาที่ "ยังรออนุมัติ" เป็นการลงเวลาด้วยไหม
+//    payroll ไม่ส่ง (=false) -> นับเฉพาะที่อนุมัติแล้ว เงินต้องอิงเอกสารที่อนุมัติจริง
+//    การสแกนออกใบเตือนส่ง true -> คนที่มาทำงานจริงแต่ลืมกดแล้วยื่นคำขอไว้
+//    จะไม่โดนใบเตือนระหว่างรออนุมัติ (ให้ประโยชน์แก่พนักงานไว้ก่อน)
+$include_pending_manual = !empty($data['include_pending_manual']);
+$manual_states = $include_pending_manual
+    ? "'อนุมัติ','รออนุมัติ'"
+    : "'อนุมัติ'";
+
 $work_schedule = $data['work_schedule'] ?? [];
 $month         = (int)($data['month'] ?? date('m'));
 $year          = (int)($data['year'] ?? date('Y'));
@@ -109,6 +134,45 @@ function getOverlapMinutes($a_start, $a_end, $b_start, $b_end) {
     return ($s < $e) ? ($e - $s) / 60 : 0;
 }
 
+// ============================================================
+// ✅ Helper: หา "นาทีที่ผ่อนผันได้" ของวันนั้น จากสูตรที่ตั้งไว้ใน Odoo
+//    $rules ต้องเรียงตาม effective_date จากเก่าไปใหม่แล้ว
+//
+//    - ไม่มีสูตรไหนครอบคลุมวันนี้ -> คืน $default (สูตรเดิม)
+//    - mode = grace    -> ผ่อนผันตามจำนวนนาทีที่ตั้งไว้ (0 = ไม่ผ่อนผัน)
+//    - mode = deadline -> แปลง "เวลาเข้างานล่าสุด" เป็นจำนวนนาทีนับจากเวลาเข้ากะ
+//      เพื่อให้ตรรกะเดิม (หักพักเที่ยง / กันทับซ้อนช่วงลา) ใช้ต่อได้เหมือนเดิม
+//      เช่น กะเริ่ม 07:30 + เข้างานไม่เกิน 08:00 => ผ่อนผัน 30 นาที
+// ============================================================
+function resolveLatenessRule($rules, $dateStr) {
+    $picked = null;
+    foreach ($rules as $r) {
+        $eff = $r['effective_date'] ?? '';
+        if ($eff === '') continue;
+        if ($eff <= $dateStr) { $picked = $r; } else { break; }
+    }
+    return $picked;
+}
+
+function resolveGraceMinutes($rules, $dateStr, $shift_start, $default) {
+    $picked = resolveLatenessRule($rules, $dateStr);
+    if ($picked === null) return $default;
+
+    $mode = $picked['mode'] ?? 'grace';
+    if ($mode === 'deadline') {
+        if (!$shift_start) return 0;
+        $h  = (float)($picked['deadline_hour'] ?? 0);
+        $hh = (int)floor($h);
+        $mm = (int)round(($h - $hh) * 60);
+        if ($mm >= 60) { $hh += 1; $mm -= 60; }
+        $deadline = clone $shift_start;
+        $deadline->setTime($hh, $mm, 0);
+        $diff = ($deadline->getTimestamp() - $shift_start->getTimestamp()) / 60;
+        return max(0, (int)round($diff));
+    }
+    return max(0, (int)($picked['grace_minutes'] ?? 0));
+}
+
 // ✅ แปลง Float ชั่วโมง (จาก hr.work.schedule) → "HH:MM:00"
 //    7.0→07:00  7.5→07:30  16.0→16:00  8.25→08:15
 function floatHourToTime($v) {
@@ -155,9 +219,14 @@ $cursor = clone $start;
 while ($cursor <= $end) {
     $d = $cursor->format('Y-m-d');
     $dow = strtolower($cursor->format('D'));
+    $is_today = ($d === $today->format('Y-m-d'));
 
-    // ✅ skip วันที่ยังมาไม่ถึง (วันนี้ + อนาคต)
-    if ($cursor >= $today) {
+    // ✅ วันอนาคต -> ข้ามเสมอ
+    //    วันนี้ -> ปกติข้ามด้วย เพราะวันยังไม่จบ ยังไม่สแกนออก
+    //             ถ้าคิดเลยจะกลายเป็น "ขาดงาน/ออกก่อนเวลา" ทั้งวัน
+    //             แต่ถ้าผู้เรียกส่ง include_today=true (แอปมือถือ)
+    //             จะคิดเฉพาะ "สายเข้างาน" ให้เห็นผลทันที (ดูบล็อก $is_today ด้านล่าง)
+    if ($cursor > $today || ($is_today && !$include_today)) {
         $cursor->modify('+1 day');
         continue;
     }
@@ -292,11 +361,44 @@ while ($cursor <= $end) {
                                 FROM manual_time_logs
                                 WHERE user_id='$user_id' AND work_date='$d'
                                   AND reason_type IN ('ลืมลงเวลา','ทำงานนอกสถานที่','ระบบมีปัญหา')
-                                  AND state='อนุมัติ'");
+                                  AND state IN ({$manual_states})");
 
         if ($qman && ($row = $qman->fetch_assoc())) {
             if (!empty($row['ci'])) $checkin  = new DateTime("$d ".$row['ci']);
             if (!empty($row['co'])) $checkout = new DateTime("$d ".$row['co']);
+        }
+
+        // ✅ วันนี้ (เข้ามาถึงตรงนี้ได้เฉพาะตอน include_today=true)
+        //    สแกนเข้าแล้วแต่ยังไม่สแกนออก -> คิดเฉพาะ "สายเข้างาน"
+        //    ไม่แตะ ขาดงาน / ออกก่อนเวลา และ **ไม่บวกเข้ายอดรวมที่ใช้คิดเงิน**
+        //    ($total_lateness / $total_late_in) เพราะวันยังไม่จบ
+        //    ยอดหักต้องนิ่งจนกว่าจะผ่านวันไปแล้ว
+        if ($is_today) {
+            if ($checkin) {
+                $lateRaw = ($checkin->getTimestamp() - $shift_start->getTimestamp())/60;
+                $lateMin = 0;
+                if ($lateRaw > 0) {
+                    $lateRaw -= getLunchOverlapMinutes($shift_start, $checkin);
+                    foreach ($leave_intervals as $iv) {
+                        $lateRaw -= getOverlapMinutes($shift_start, $checkin, $iv[0], $iv[1]);
+                    }
+                    $lateMin = max(0, (int)floor(round($lateRaw, 6)));
+                }
+                $is_first_workday = ($start_work !== null && $d === $start_work->format('Y-m-d'));
+                $grace_today = resolveGraceMinutes($lateness_rules, $d, $shift_start, $grace_period);
+                if (!$is_first_workday && $lateMin > $grace_today) {
+                    $late_log[] = [
+                        'date'=>$d,
+                        'minutes'=>$lateMin,
+                        'checkin'=>$checkin->format('H:i'),
+                        'shift_start'=>$shift_start->format('H:i'),
+                        'grace'=>$grace_today,
+                        'today'=>true,   // วันยังไม่จบ ยังไม่รวมในยอดหัก
+                    ];
+                }
+            }
+            $cursor->modify('+1 day');
+            continue;
         }
 
         if ($checkin && $checkout) {
@@ -320,7 +422,10 @@ while ($cursor <= $end) {
             //    (ออกก่อนเวลา / ขาดงาน / ลา ยังคิดตามปกติเหมือนเดิม)
             $is_first_workday = ($start_work !== null && $d === $start_work->format('Y-m-d'));
 
-            if (!$is_first_workday && $lateMin > $grace_period) {
+            // ✅ นาทีที่ผ่อนผันของ "วันนั้น" ตามสูตรที่ตั้งไว้ (ไม่มีสูตร = สูตรเดิม)
+            $grace_today = resolveGraceMinutes($lateness_rules, $d, $shift_start, $grace_period);
+
+            if (!$is_first_workday && $lateMin > $grace_today) {
                 $total_lateness += $lateMin;
                 $total_late_in  += $lateMin;
                 $late_log[] = [
@@ -328,6 +433,7 @@ while ($cursor <= $end) {
                     'minutes'=>$lateMin,
                     'checkin'=>$checkin->format('H:i'),         // เวลาเข้าจริง
                     'shift_start'=>$shift_start->format('H:i'), // เวลากะเริ่ม
+                    'grace'=>$grace_today,                      // นาทีที่ผ่อนผันของวันนั้น
                 ];
             }
 

@@ -23,6 +23,21 @@ $month  = (int)($data['month'] ?? $_GET['month'] ?? date('m'));
 $year   = (int)($data['year'] ?? $_GET['year'] ?? date('Y'));
 $cutoff = (int)($data['cutoff_day'] ?? $_GET['cutoff_day'] ?? 24);
 
+// ✅ สูตรคิดสายที่ตั้งเองจาก Odoo (เมนู "กำหนดสูตรคิดสาย")
+//    ต้องใช้ชุดเดียวกับ calculate_lateness.php ไม่งั้นหน้าสรุปจะไม่ตรงกับยอดที่หักจริง
+$lateness_rules = [];
+if (!empty($data['lateness_rules'])) {
+    $lateness_rules = $data['lateness_rules'];
+} elseif (!empty($_GET['lateness_rules'])) {
+    $lateness_rules = json_decode($_GET['lateness_rules'], true);
+}
+if (!is_array($lateness_rules)) $lateness_rules = [];
+// กันข้อมูลเพี้ยน: เก็บเฉพาะรายการที่เป็น array จริง ๆ
+$lateness_rules = array_values(array_filter($lateness_rules, 'is_array'));
+usort($lateness_rules, function ($a, $b) {
+    return strcmp($a['effective_date'] ?? '', $b['effective_date'] ?? '');
+});
+
 // ============================================================
 // ✅ Helper: คำนวณนาทีที่ทับซ้อนช่วงพักเที่ยง 12:00-13:00
 // ============================================================
@@ -49,6 +64,59 @@ function getOverlapMinutes($a_start, $a_end, $b_start, $b_end) {
     $s = max($a_start->getTimestamp(), $b_start->getTimestamp());
     $e = min($a_end->getTimestamp(),   $b_end->getTimestamp());
     return ($s < $e) ? ($e - $s) / 60 : 0;
+}
+
+// ============================================================
+// ✅ Helper: หา "นาทีที่ผ่อนผันได้" ของวันนั้น จากสูตรที่ตั้งไว้ใน Odoo
+//    ต้องเหมือนกับใน calculate_lateness.php เป๊ะ ๆ ไม่งั้นหน้าสรุปจะไม่ตรงกับยอดหักจริง
+//    $rules เรียงตาม effective_date จากเก่าไปใหม่แล้ว
+// ============================================================
+function resolveLatenessRule($rules, $dateStr) {
+    $picked = null;
+    foreach ($rules as $r) {
+        $eff = $r['effective_date'] ?? '';
+        if ($eff === '') continue;
+        if ($eff <= $dateStr) { $picked = $r; } else { break; }
+    }
+    return $picked;
+}
+
+function resolveGraceMinutes($rules, $dateStr, $shift_start, $default) {
+    $picked = resolveLatenessRule($rules, $dateStr);
+    if ($picked === null) return $default;
+
+    $mode = $picked['mode'] ?? 'grace';
+    if ($mode === 'deadline') {
+        if (!$shift_start) return 0;
+        $h  = (float)($picked['deadline_hour'] ?? 0);
+        $hh = (int)floor($h);
+        $mm = (int)round(($h - $hh) * 60);
+        if ($mm >= 60) { $hh += 1; $mm -= 60; }
+        $deadline = clone $shift_start;
+        $deadline->setTime($hh, $mm, 0);
+        $diff = ($deadline->getTimestamp() - $shift_start->getTimestamp()) / 60;
+        return max(0, (int)round($diff));
+    }
+    return max(0, (int)($picked['grace_minutes'] ?? 0));
+}
+
+// ============================================================
+// ✅ Helper: อธิบายสูตรที่ใช้กับวันนั้นเป็นข้อความ (ไว้โชว์ในตาราง)
+//    เพื่อให้เห็นว่าเลข "สายกี่นาที" อ้างจากสูตรอะไร ตรวจย้อนหลังได้
+// ============================================================
+function describeLatenessRule($picked, $grace_min, $default) {
+    if ($picked === null) {
+        return "สูตรเดิม (ผ่อนผัน {$default} นาที)";
+    }
+    $mode = $picked['mode'] ?? 'grace';
+    if ($mode === 'deadline') {
+        $h  = (float)($picked['deadline_hour'] ?? 0);
+        $hh = (int)floor($h);
+        $mm = (int)round(($h - $hh) * 60);
+        if ($mm >= 60) { $hh += 1; $mm -= 60; }
+        return sprintf("เข้างานไม่เกิน %02d:%02d (= ผ่อนผัน %d นาที)", $hh, $mm, $grace_min);
+    }
+    return $grace_min > 0 ? "ผ่อนผัน {$grace_min} นาที" : "ไม่ผ่อนผัน";
 }
 
 // ✅ แปลง Float ชั่วโมง (จาก hr.work.schedule) → "HH:MM:00"
@@ -157,11 +225,15 @@ if ($res && $res->num_rows > 0) {
             <th>ประเภท</th><th>วันที่ลงเวลา</th>
             <th>แผนก</th><th>ตำแหน่ง</th>
             <th>ละติจูด</th><th>ลองจิจูด</th>
+            <th>สายกี่นาที</th><th>สูตรที่ใช้</th>
             <th>สถานะ ขาด/สาย</th>
           </tr>";
 
     while ($row = $res->fetch_assoc()) {
         $status = "<span style='color:green'>ปกติ</span>"; // ค่า default
+        // ✅ 2 คอลัมน์ใหม่: สายกี่นาที + สูตรที่ใช้คิดวันนั้น
+        $late_min_text = "-";
+        $rule_text     = "-";
         $checked_at = new DateTime($row['checked_at']);
         $dow = strtolower($checked_at->format('D')); // mon, tue, wed ...
 
@@ -198,37 +270,58 @@ if ($res && $res->num_rows > 0) {
                 $shift_end_dt   = new DateTime($checked_at->format("Y-m-d")." ".floatHourToTime($shift_end));
 
 
-                $grace_min = isset($_GET['lateness_grace_period']) ? (int)$_GET['lateness_grace_period'] : 0;
+                // ✅ นาทีผ่อนผันของ "วันนั้น" ตามสูตรที่ตั้งไว้
+                //    ไม่มีสูตรครอบคลุม -> ใช้ค่าเดิมที่ Odoo ส่งมา (สูตรเดิม)
+                $legacy_grace = isset($_GET['lateness_grace_period']) ? (int)$_GET['lateness_grace_period'] : 0;
+                $picked_rule = resolveLatenessRule($lateness_rules, $wd);
+                $grace_min = resolveGraceMinutes($lateness_rules, $wd, $shift_start_dt, $legacy_grace);
+                // แสดงสูตรเฉพาะแถว "เข้างาน" เพราะสูตรผ่อนผันใช้กับการเข้างานอย่างเดียว
+                if ($row['check_type'] === "in") {
+                    $rule_text = describeLatenessRule($picked_rule, $grace_min, $legacy_grace);
+                }
 
                 // ✅ พนักงานใหม่ "วันแรก" (วันที่ลงเวลา == วันเริ่มงาน)
                 //    → ข้ามการแสดงสถานะ "สาย" อย่างเดียว (ให้ตรงกับ calculate_lateness.php)
                 //    ออกก่อนเวลา/ขาด/ลา ยังแสดงตามปกติ
                 $is_first_workday = ($start_work !== null && $wd === $start_work->format('Y-m-d'));
 
+                if ($row['check_type'] === "in" && $is_first_workday) {
+                    // วันแรกของพนักงานใหม่ ไม่นับสาย
+                    $late_min_text = "0 (วันแรก ไม่นับสาย)";
+                }
+
                 if ($row['check_type'] === "in" && !$is_first_workday) {
-                    // มาสาย = เวลาเข้าเกิน shift_start + grace
-                    $limit = clone $shift_start_dt;
-                    $limit->modify("+{$grace_min} minutes");
+                    $late_min_text = "0";   // ยังไม่เกินที่ผ่อนผัน = ไม่สาย
 
                     // ✅ ตัดวินาทีออก (ใช้แค่ ชม:นาที)
                     $checked_at_trimmed = new DateTime($checked_at->format("Y-m-d H:i"));
 
-                    if ($checked_at_trimmed > $limit) {
-                        // ✅ คำนวณเป็นนาที → หักพักเที่ยง → กันทับซ้อนช่วงลา → แปลงกลับเป็น ชม/นาที
-                        $total_min = ($checked_at_trimmed->getTimestamp() - $shift_start_dt->getTimestamp()) / 60;
+                    // ✅ คิดนาทีสายให้เหมือน calculate_lateness.php เป๊ะ ๆ คือ
+                    //    หักพักเที่ยง + ตัดช่วงลา "ก่อน" แล้วค่อยเอาไปเทียบกับนาทีที่ผ่อนผัน
+                    //    (เดิมหน้านี้เอา "เวลาดิบ" ไปเทียบกับ shift_start+grace ก่อน
+                    //     วันที่มีใบลาคาบเกี่ยวจึงขึ้นว่าสาย ทั้งที่ payroll ไม่ได้หัก
+                    //     ตัวเลขสองที่ไม่ตรงกัน — คอลัมน์ "สายกี่นาที" ต้องตรงกับยอดหักจริง)
+                    $raw_late  = ($checked_at_trimmed->getTimestamp() - $shift_start_dt->getTimestamp()) / 60;
+                    $total_min = $raw_late;
+                    if ($total_min > 0) {
                         $total_min -= getLunchOverlapMinutes($shift_start_dt, $checked_at_trimmed);
                         foreach ($leave_intervals as $iv) {
                             $total_min -= getOverlapMinutes($shift_start_dt, $checked_at_trimmed, $iv[0], $iv[1]);
                         }
-                        $total_min = max(0, (int)$total_min);
-                        if ($total_min > 0) {
-                            $h = intdiv($total_min, 60);
-                            $m = $total_min % 60;
-                            $status = "<span style='color:red'>สาย {$h}ชม {$m}นาที</span>";
-                        } elseif (!empty($leave_intervals)) {
-                            // เข้าสายเพราะอยู่ในช่วงลา → ไม่คิดสาย
-                            $status = "<span style='color:#2196F3'>ลา (ช่วงเช้า)</span>";
-                        }
+                        $total_min = max(0, (int)floor(round($total_min, 6)));
+                    } else {
+                        $total_min = 0;
+                    }
+
+                    if ($total_min > $grace_min) {
+                        $h = intdiv($total_min, 60);
+                        $m = $total_min % 60;
+                        $status = "<span style='color:red'>สาย {$h}ชม {$m}นาที</span>";
+                        $late_min_text = "<span style='color:red'><b>{$total_min}</b></span>";
+                    } elseif ($raw_late > $grace_min && !empty($leave_intervals)) {
+                        // เข้าสายเพราะอยู่ในช่วงลา → ไม่คิดสาย
+                        $late_min_text = "0 (อยู่ในช่วงลา)";
+                        $status = "<span style='color:#2196F3'>ลา (ช่วงเช้า)</span>";
                     }
                 } elseif ($row['check_type'] === "out") {
                     // ✅ ตัดวินาทีออก (ใช้แค่ ชม:นาที)
@@ -266,6 +359,8 @@ if ($res && $res->num_rows > 0) {
                 <td>{$row['position']}</td>
                 <td>{$row['latitude']}</td>
                 <td>{$row['longitude']}</td>
+                <td style='text-align:center'>{$late_min_text}</td>
+                <td>{$rule_text}</td>
                 <td>{$status}</td>
               </tr>";
     }

@@ -109,6 +109,13 @@
               action="action_work_security_deposit"
               sequence="80"/>
 
+    <!-- เมนูกำหนดสูตรคิดสาย (เด้ง popup ให้ตั้งสูตร + วันเริ่มใช้) -->
+    <menuitem id="sub_lateness_rule_menu"
+              name="กำหนดสูตรคิดสาย"
+              parent="main_employee_salary_menu"
+              action="action_payroll_lateness_rule"
+              sequence="86"/>
+
     <!-- เมนูกำหนดสิทธิหยุดวันเสาร์ (เปิดเมนูแล้ว auto ดึงสาขา + ตั้งค่าเริ่มต้น) -->
     <menuitem id="sub_saturday_leave_config_menu"
               name="กำหนดสิทธิหยุดวันเสาร์"

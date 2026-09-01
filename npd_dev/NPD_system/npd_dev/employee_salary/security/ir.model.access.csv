@@ -75,3 +75,5 @@ access_saturday_leave_config,saturday.leave.config,model_saturday_leave_config,b
 access_saturday_leave_employee,saturday.leave.employee,model_saturday_leave_employee,base.group_user,1,1,1,1
 
 access_pnd1_line,pnd1.line,model_pnd1_line,base.group_user,1,1,1,1
+access_payroll_lateness_rule,payroll.lateness.rule,model_payroll_lateness_rule,base.group_user,1,1,1,1
+access_employee_warning_auto_config,employee.warning.auto.config,model_employee_warning_auto_config,base.group_user,1,1,1,1
