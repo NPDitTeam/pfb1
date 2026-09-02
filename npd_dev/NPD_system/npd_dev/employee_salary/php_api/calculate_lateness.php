@@ -99,6 +99,9 @@ $present_days     = 0;
 $leave_deduction_total = 0;
 
 $missed_days_log  = [];
+// วันที่ "ไม่ได้สแกนเข้างานเลย" — ใช้เฉพาะการออกใบเตือน ไม่เกี่ยวกับการหักเงิน
+// (ลืมสแกนออกอย่างเดียว ยังนับเป็นขาดในการหักเงินเหมือนเดิม แต่ไม่เอามาออกใบเตือน)
+$missed_no_checkin_log = [];
 $late_log         = [];
 $early_log        = [];
 $leave_log        = [];
@@ -357,16 +360,35 @@ while ($cursor <= $end) {
         //    รวม: ลืมลงเวลา / ทำงานนอกสถานที่ / ระบบมีปัญหา
         //    ไม่รวม: ขอโอที, ทำงานวันหยุด, ค่าเบี้ยเลี้ยงออกนอกสถานที่ (เป็น OT/เบี้ยเลี้ยง = เงิน ไม่ใช่เวลาทำงาน)
         //            และรายการเงินอื่น (ค่าอาหาร/ค่ารักษา/ค่าตัวนักแสดง/ไม่ระบุ)
-        $qman = $mysqli->query("SELECT MIN(checkin_time) AS ci, MAX(checkout_time) AS co
+        //    แยกตาม reason_type ด้วย เพราะใบเตือนต้องรู้ว่า "เวลาเข้างานมาจากไหน"
+        //    (ยอดหักเงินยังได้ค่าชุดเดิมเป๊ะ: MIN(checkin_time) / MAX(checkout_time))
+        $checkin_scanned = ($checkin !== null);   // สแกนเข้างานเองจริง
+        $checkin_excused = false;                 // ได้เวลาเข้างานจากเหตุที่ไม่ใช่ความผิดพนักงาน
+        $man_ci = null;
+        $man_co = null;
+
+        $qman = $mysqli->query("SELECT reason_type, MIN(checkin_time) AS ci, MAX(checkout_time) AS co
                                 FROM manual_time_logs
                                 WHERE user_id='$user_id' AND work_date='$d'
                                   AND reason_type IN ('ลืมลงเวลา','ทำงานนอกสถานที่','ระบบมีปัญหา')
-                                  AND state IN ({$manual_states})");
+                                  AND state IN ({$manual_states})
+                                GROUP BY reason_type");
 
-        if ($qman && ($row = $qman->fetch_assoc())) {
-            if (!empty($row['ci'])) $checkin  = new DateTime("$d ".$row['ci']);
-            if (!empty($row['co'])) $checkout = new DateTime("$d ".$row['co']);
+        if ($qman) {
+            while ($row = $qman->fetch_assoc()) {
+                if (!empty($row['ci'])) {
+                    if ($man_ci === null || $row['ci'] < $man_ci) $man_ci = $row['ci'];
+                    // "ลืมลงเวลา" = พนักงานลืมกดเอง ไม่ยกเว้นให้ในใบเตือน
+                    // ส่วนนอกสถานที่/ระบบมีปัญหา ไม่ใช่ความผิดพนักงาน จึงยกเว้น
+                    if ($row['reason_type'] !== 'ลืมลงเวลา') $checkin_excused = true;
+                }
+                if (!empty($row['co'])) {
+                    if ($man_co === null || $row['co'] > $man_co) $man_co = $row['co'];
+                }
+            }
         }
+        if ($man_ci !== null) $checkin  = new DateTime("$d ".$man_ci);
+        if ($man_co !== null) $checkout = new DateTime("$d ".$man_co);
 
         // ✅ วันนี้ (เข้ามาถึงตรงนี้ได้เฉพาะตอน include_today=true)
         //    สแกนเข้าแล้วแต่ยังไม่สแกนออก -> คิดเฉพาะ "สายเข้างาน"
@@ -399,6 +421,15 @@ while ($cursor <= $end) {
             }
             $cursor->modify('+1 day');
             continue;
+        }
+
+        // ✅ เกณฑ์ "ไม่ได้ลงเวลาเข้างาน" — ใช้ออกใบเตือนเท่านั้น ไม่แตะยอดหักเงิน
+        //    นับเมื่อ: ไม่ได้สแกนเข้าเอง + ไม่มีเหตุยกเว้น + ไม่มีใบลา
+        //    → ลืมกดเข้างาน แล้วมาขอเพิ่มเวลาทีหลัง = ยังนับ (คือสิ่งที่ใบเตือนเตือน)
+        //    → เข้างานแล้ว แค่ลืมกดออกงาน = ไม่นับ
+        //    → ทำงานนอกสถานที่ / ระบบมีปัญหา / มีใบลา = ไม่นับ
+        if (empty($leaves) && !$checkin_scanned && !$checkin_excused) {
+            $missed_no_checkin_log[] = $d;
         }
 
         if ($checkin && $checkout) {
@@ -535,6 +566,7 @@ echo json_encode([
         'start_work'=>$start_work ? $start_work->format('Y-m-d') : null,
         'resign_date'=>$resign_date ? $resign_date->format('Y-m-d') : null,
         'missed_days_log'=>$missed_days_log,
+        'missed_no_checkin_log'=>$missed_no_checkin_log,
         'late_checkin_log'=>$late_log,
         'early_checkout_log'=>$early_log,
         'leave_log'=>$leave_log,

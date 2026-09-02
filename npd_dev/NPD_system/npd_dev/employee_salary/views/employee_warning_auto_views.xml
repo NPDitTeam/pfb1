@@ -7,18 +7,26 @@
         <field name="arch" type="xml">
             <form string="ตั้งค่าออกใบเตือนอัตโนมัติ">
                 <div class="alert alert-info" role="alert">
-                    ระบบจะตรวจประวัติการลงเวลา <b>ปีละ 12 ครั้ง วันตัดรอบเท่านั้น</b>
+                    ระบบจะตรวจประวัติการลงเวลา <b>ปีละ 12 ครั้ง รอบละครั้ง</b>
                     (สั่งงานจากเมนู <b>การกระทำที่กำหนดไว้</b>)
                     ใครลงเวลาไม่ครบเกินจำนวนที่ตั้งไว้ในรอบ
                     จะออกใบเตือนพร้อมไฟล์ PDF ให้อัตโนมัติ และส่งเข้าแอปพนักงานทันที
+                    <br/>
+                    ตรวจ <b>เต็มรอบครบทุกวัน</b> โดยรันเช้าวันถัดจากวันตัดรอบ
+                    (ต้องรอให้วันสุดท้ายของรอบจบก่อน ถึงจะรู้ว่าวันนั้นลงเวลาครบไหม)
+                    <br/>
+                    กรอก <b>รอบเริ่มวันที่</b> หรือ <b>ถึงวันที่</b> ช่องไหนก็ได้
+                    อีกช่องขยับตามเอง ส่วน "ให้ระบบรันวันที่" ระบบคำนวณให้ แก้ไม่ได้
                     <br/>
                     ออกได้ <b>1 ใบต่อ 1 รอบ</b> ต่อคน ไม่ออกซ้ำ
                 </div>
                 <group>
                     <group string="เกณฑ์">
                         <field name="auto_enabled"/>
+                        <field name="cycle_start_day"/>
                         <field name="cycle_end_day"/>
-                        <field name="run_day"/>
+                        <field name="cycle_rule_display" readonly="1"/>
+                        <field name="run_day" readonly="1"/>
                         <field name="threshold"/>
                         <field name="respect_saturday_quota"/>
                         <field name="ignore_pending_addtime"/>

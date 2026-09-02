@@ -50,7 +50,7 @@
                     }
                     .warn-head {
                         border: 1px solid #000; padding: 6px 10px;
-                        margin-bottom: 26px;
+                        margin-bottom: 16px;
                     }
                     .warn-sign-line {
                         display: inline-block; width: 68%;
@@ -64,7 +64,7 @@
                         <!-- หัวกระดาษ: โลโก้ + ชื่อ/ที่อยู่บริษัทตามสังกัดพนักงาน -->
                         <div class="warn-head"
                              style="border: 1px solid #000; padding: 6px 10px;
-                                    margin: 0 0 38px 0;">
+                                    margin: 0 0 22px 0;">
                             <table style="width: 100%; border-collapse: collapse;">
                                 <tr>
                                     <td style="width: 78px; vertical-align: middle;">
@@ -84,14 +84,14 @@
                         </div>
 
                         <div style="text-align: center; font-size: 16pt; font-weight: bold;
-                                    margin: 16px 0 30px 0;">
+                                    margin: 10px 0 18px 0;">
                             บันทึกการตักเตือนพนักงาน <span t-esc="o.warning_number_display"/>
                         </div>
 
                         <!-- หัวเรื่อง -->
                         <table style="width: 100%; font-size: 12pt; border-collapse: collapse;">
                             <tr>
-                                <td colspan="2" style="padding: 4px 0;">
+                                <td colspan="2" style="padding: 2px 0;">
                                     เรื่อง <span style="margin-left: 14px;" t-esc="o.subject"/>
                                 </td>
                             </tr>
@@ -104,16 +104,16 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td style="padding: 4px 0;">
+                                <td style="padding: 2px 0;">
                                     สาขา <span t-esc="emp.branch_id.name or '-'"/>
                                 </td>
-                                <td style="padding: 4px 0;">
+                                <td style="padding: 2px 0;">
                                     วันที่ออกหนังสือ <span t-esc="o.report_thai_date()"/>
                                 </td>
                             </tr>
                             <tr>
-                                <td style="padding: 4px 0;"/>
-                                <td style="padding: 4px 0;">
+                                <td style="padding: 2px 0;"/>
+                                <td style="padding: 2px 0;">
                                     ออกโดย <span t-esc="cfg.issuer_name or '-'"/>
                                 </td>
                             </tr>
@@ -138,14 +138,14 @@
                         <div style="white-space: pre-wrap; line-height: 1.6; margin-bottom: 10px;"
                              t-esc="cfg.rule_clauses or ''"/>
 
-                        <div class="warn-indent" style="line-height: 1.6; margin-bottom: 22px;">
+                        <div class="warn-indent" style="line-height: 1.6; margin-bottom: 14px;">
                             ดังนั้น ให้พนักงานปรับปรุง แก้ไขพฤติกรรมข้างต้น หรือไม่กระทำการอื่นใด
                             อันเป็นการฝ่าฝืนคำสั่ง ระเบียบ หรือข้อบังคับเกี่ยวกับการทำงาน มิฉะนั้น
                             บริษัทฯ จะพิจารณาลงโทษเลิกจ้างและให้พ้นสภาพการเป็นพนักงานโดยไม่จ่ายค่าชดเชย
                         </div>
 
                         <!-- ลายเซ็นผู้ออก -->
-                        <table style="width: 100%; text-align: center; margin-bottom: 26px;">
+                        <table style="width: 100%; text-align: center; margin-bottom: 16px;">
                             <tr>
                                 <td style="width: 50%; padding: 0 14px 2px 14px;">
                                     ลงชื่อ <span class="warn-sign-line" style="display: inline-block; width: 68%; border-bottom: 1px dotted #000;">&#160;</span>
@@ -165,7 +165,7 @@
                         </table>
 
                         <!-- คำรับทราบของพนักงาน -->
-                        <div style="line-height: 1.6; margin-bottom: 18px;">
+                        <div style="line-height: 1.6; margin-bottom: 12px;">
                             ข้าพเจ้า <b t-esc="fullname"/> รับทราบข้อความข้างต้นทุกประการ
                             และขอสัญญาว่าจะปรับปรุงแก้ไขพฤติกรรมที่ไม่เหมาะสมดังกล่าวนับแต่นี้เป็นต้นไป
                             และหากข้าพเจ้ากระทำซ้ำความผิดเดิมนี้อีก บริษัทฯ สามารถลงโทษข้าพเจ้าได้ตาม

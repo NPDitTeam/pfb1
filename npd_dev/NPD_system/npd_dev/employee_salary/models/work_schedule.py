@@ -1,4 +1,5 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 
 class HrWorkSchedule(models.Model):
     _name = 'hr.work.schedule'
@@ -128,3 +129,55 @@ class HrWorkSchedule(models.Model):
         else:
             self.sat_shift_start = 0.0
             self.sat_shift_end = 0.0
+
+
+class EmployeeSalaryWorkSchedule(models.Model):
+    """แสดงบนเมนู "ข้อมูลพนักงาน" ว่าคนไหนลงตารางกะแล้วหรือยัง
+
+    สำคัญกับการตรวจสอบ เพราะพนักงานที่ยังไม่ลงกะจะถูก **ข้าม** ทั้งการ
+    ออกใบเตือนอัตโนมัติ และการคิดสาย/ขาดงานในเงินเดือน โดยไม่มีอะไรฟ้อง
+    (hr.work.schedule มี unique(employee_id) อยู่แล้ว = 1 คน 1 กะ)
+    """
+    _inherit = 'employee.salary'
+
+    work_schedule_id = fields.Many2one(
+        'hr.work.schedule', string='ตารางกะ',
+        compute='_compute_work_schedule_state')
+    work_schedule_state = fields.Selection(
+        [('checkin', 'ลงกะแล้ว'),
+         ('no_checkin', 'ลงกะแล้ว (ไม่ต้องเช็คอิน)'),
+         ('unset', 'ยังไม่ลงกะ')],
+        string='สถานะตารางกะ',
+        compute='_compute_work_schedule_state',
+        search='_search_work_schedule_state',
+        help='ยังไม่ลงกะ = ระบบไม่รู้ว่าวันไหนคือวันทำงานของคนนี้\n'
+             'จะถูกข้ามทั้งการออกใบเตือนและการคิดสาย/ขาดงานในเงินเดือน')
+
+    def _compute_work_schedule_state(self):
+        found = {}
+        if self.ids:
+            schedules = self.env['hr.work.schedule'].sudo().search(
+                [('employee_id', 'in', self.ids)])
+            found = {s.employee_id.id: s for s in schedules}
+        for rec in self:
+            sched = found.get(rec.id)
+            rec.work_schedule_id = sched.id if sched else False
+            if not sched:
+                rec.work_schedule_state = 'unset'
+            else:
+                rec.work_schedule_state = (
+                    'no_checkin' if sched.category == 'no_checkin' else 'checkin')
+
+    def _search_work_schedule_state(self, operator, value):
+        """ให้กรอง/ค้นหาได้ ทั้งที่เป็นฟิลด์คำนวณข้ามโมเดล"""
+        with_schedule = self.env['hr.work.schedule'].sudo().search(
+            []).mapped('employee_id').ids
+        values = value if isinstance(value, (list, tuple)) else [value]
+        wants_unset = 'unset' in values
+        if operator in ('=', 'in'):
+            want_set = not wants_unset
+        elif operator in ('!=', 'not in'):
+            want_set = wants_unset
+        else:
+            raise UserError(_('ตัวกรองสถานะตารางกะรองรับเฉพาะ = และ != เท่านั้น'))
+        return [('id', 'in' if want_set else 'not in', with_schedule)]

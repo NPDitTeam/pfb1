@@ -6,8 +6,16 @@
 (``end = ปี-เดือน-วันตัดรอบ``, ``start = end - 1 เดือน + 1 วัน``)
 จึงเรียกใช้ตัวเดิมได้เลย ไม่ต้องเขียนตรรกะนับวันขาดขึ้นมาใหม่ให้เพี้ยนกัน
 
-"ลงเวลาไม่ครบ" = วันทำงานที่ไม่มีทั้งสแกนเข้าและสแกนออกครบคู่ และไม่มีใบลา
-(ตรงกับ ``missed_days_log`` ฝั่ง PHP) ครอบคลุมทั้งลืมกดเข้า ลืมกดออก และขาดงาน
+เกณฑ์ออกใบเตือน = วันทำงานที่ **พนักงานไม่ได้สแกนเข้างานเอง** และไม่มีใบลา
+(``missed_no_checkin_log`` ฝั่ง PHP) สรุปเป็นราย ๆ ไป:
+
+- ลืมกดเข้างาน (ขอเพิ่มเวลา "ลืมลงเวลา" ทีหลัง) -> **นับ** คือสิ่งที่ใบเตือนเตือน
+- เข้างานแล้ว แค่ลืมกดออกงาน                    -> ไม่นับ
+- ทำงานนอกสถานที่ / ระบบมีปัญหา                 -> ไม่นับ (ไม่ใช่ความผิดพนักงาน)
+- มีใบลา                                         -> ไม่นับ
+
+หมายเหตุ: การ **หักเงิน** ยังใช้ ``missed_days_log`` ตัวเดิม (ขาดครบคู่)
+คนละตัวกันโดยตั้งใจ — ปรับเกณฑ์ใบเตือนได้โดยไม่กระทบยอดเงินเดือน
 
 **สิทธิหยุดวันเสาร์**: พนักงานบางคนหยุดเสาร์ได้ตามสิทธิ ถ้าไม่ได้ยื่นใบลา
 วันนั้นจะกลายเป็น "ลงเวลาไม่ครบ" ทั้งที่มีสิทธิหยุด ระบบจึงยกเว้นวันเสาร์
@@ -43,12 +51,22 @@ class EmployeeWarningAutoConfig(models.Model):
         help='ติ๊ก = พอจบรอบระบบจะออกใบเตือนให้เองและส่งเข้าแอปพนักงาน\n'
              'ไม่ติ๊ก = ยังกดออกเองแบบแมนนวลได้จากปุ่มในหน้านี้',
     )
+    cycle_start_day = fields.Integer(
+        string='รอบเริ่มวันที่',
+        compute='_compute_cycle_start_day', readonly=False,
+        help='วันแรกของรอบ (ของเดือนก่อน)\n'
+             'แก้ช่องนี้หรือช่องวันตัดรอบก็ได้ อีกช่องจะขยับตามเอง\n'
+             'เพราะรอบเดือนต่อกันพอดี วันเริ่ม = วันตัดรอบ + 1 เสมอ',
+    )
     cycle_end_day = fields.Integer(
-        string='วันตัดรอบ',
+        string='ถึงวันที่ (วันตัดรอบ)',
         default=DEFAULT_CYCLE_END_DAY,
         required=True,
-        help='รอบเดือนสิ้นสุดวันที่เท่าไหร่ — ค่าเริ่มต้น 24 หมายถึงรอบ 25 ถึง 24',
+        help='วันสุดท้ายของรอบ — ค่าเริ่มต้น 24 หมายถึงรอบ 25 ถึง 24',
     )
+    cycle_rule_display = fields.Char(
+        string='รอบที่ใช้', compute='_compute_cycle_rule_display',
+        help='ช่วงของรอบที่ได้จากวันตัดรอบ — ระบบคำนวณให้ ไม่ต้องกรอกวันเริ่ม')
     threshold = fields.Integer(
         string='ลงเวลาไม่ครบเกินกี่ครั้ง จึงออกใบเตือน',
         default=DEFAULT_THRESHOLD,
@@ -58,24 +76,28 @@ class EmployeeWarningAutoConfig(models.Model):
     ignore_pending_addtime = fields.Boolean(
         string='ไม่นับวันที่ยื่นคำขอเพิ่มเวลาไว้ (รออนุมัติ)',
         default=True,
-        help=('พนักงานที่มาทำงานจริงแต่ลืมกดเข้างาน แล้วยื่นคำขอเพิ่มเวลา '
-              'ประเภท "ลืมลงเวลา" ไว้ ถ้ายังไม่มีใครกดอนุมัติ '
-              'วันนั้นจะถูกนับเป็น "ลงเวลาไม่ครบ" ทั้งที่มาทำงานจริง\n'
-              'ติ๊กไว้ = ให้ประโยชน์แก่พนักงานไว้ก่อน ไม่นับวันที่ยังรออนุมัติ\n'
-              '(คำขอที่อนุมัติแล้ว ระบบไม่นับให้อยู่แล้ว / '
-              'ที่ไม่อนุมัติ ยังนับตามปกติ)'),
+        help=('ใช้กับคำขอประเภท "ทำงานนอกสถานที่" และ "ระบบมีปัญหา" '
+              'ที่ยังไม่มีใครกดอนุมัติ\n'
+              'ติ๊กไว้ = ให้ประโยชน์แก่พนักงานไว้ก่อน ถือว่ามีเหตุยกเว้น ไม่นับ\n'
+              '(ที่อนุมัติแล้ว ไม่นับให้อยู่แล้ว)\n'
+              '\n'
+              'หมายเหตุ: ประเภท "ลืมลงเวลา" ที่เป็นการลืมกดเข้างาน ยังนับเสมอ '
+              'ไม่ว่าจะอนุมัติแล้วหรือไม่ '
+              'เพราะการลืมกดเข้างานคือสิ่งที่ใบเตือนนี้เตือนโดยตรง'),
     )
     run_day = fields.Integer(
         string='ให้ระบบรันวันที่',
-        default=DEFAULT_CYCLE_END_DAY,
-        required=True,
+        compute='_compute_run_day',
         help=(
-            'cron จะทำงานเฉพาะวันนี้วันเดียวของเดือน วันอื่นไม่ทำอะไร\n'
-            'ปกติตั้งให้ตรงกับวันตัดรอบ เช่น รอบ 25 ถึง 24 ก็ตั้ง 24\n'
+            'ระบบตั้งให้เองเป็น "วันถัดจากวันตัดรอบ" ไม่ต้องแก้\n'
+            'เช่น วันตัดรอบ 24 -> รันวันที่ 25\n'
             '\n'
-            'หมายเหตุ: ตัวคำนวณข้าม "วันที่กำลังรัน" เสมอ เพราะวันยังไม่จบ\n'
-            'ตั้ง 24 = นับวันที่ 25 ถึง 23 (วันที่ 24 ไม่ถูกนับ)\n'
-            'ตั้ง 25 = นับครบทั้งรอบ 25 ถึง 24'
+            'ทำไมต้องเป็นวันถัดไป: จะรู้ว่าใครลงเวลาครบไหมในวันที่ 24 ได้\n'
+            'ก็ต่อเมื่อวันที่ 24 ผ่านไปแล้ว ถ้ารันวันที่ 24 ตอนเช้า\n'
+            'วันนั้นยังไม่จบ ระบบจะนับไม่ได้ และวันที่ 24 จะตกหล่นทุกเดือน\n'
+            '\n'
+            'รอบที่ตรวจยังเป็น 25 ถึง 24 ครบเต็มรอบเหมือนเดิม\n'
+            'แค่ออกใบเตือนตอนเช้าของวันถัดไป'
         ),
     )
     respect_saturday_quota = fields.Boolean(
@@ -145,6 +167,61 @@ class EmployeeWarningAutoConfig(models.Model):
         help='ช่วงวันที่จริงของรอบที่เลือก — ดูก่อนกดปุ่มว่าตรงกับที่ต้องการไหม')
 
     display_name = fields.Char(compute='_compute_display_name')
+
+    @api.depends('cycle_end_day', 'run_day')
+    def _compute_cycle_rule_display(self):
+        """อธิบายรอบเป็นภาษาคน — ผู้ใช้จะได้ไม่ต้องเดาว่ารอบเริ่มวันไหน"""
+        for rec in self:
+            end_day = int(rec.cycle_end_day or DEFAULT_CYCLE_END_DAY)
+            if 1 <= end_day <= 27:
+                start_txt = _('วันที่ %s ของเดือนก่อน') % (end_day + 1)
+            else:
+                start_txt = _('วันที่ 1 ของเดือน')
+            rec.cycle_rule_display = _(
+                '%(start)s ถึง วันที่ %(end)s — ออกใบเตือนเช้าวันที่ %(run)s'
+            ) % {'start': start_txt, 'end': end_day, 'run': rec.run_day or '-'}
+
+    @api.depends('cycle_end_day')
+    def _compute_run_day(self):
+        """วันรัน = วันถัดจากวันตัดรอบ
+
+        ต้องรอให้วันสุดท้ายของรอบผ่านไปก่อน ถึงจะรู้ว่าวันนั้นลงเวลาครบไหม
+        (วันตัดรอบ 28-31 ไม่มีครบทุกเดือน จึงเลื่อนไปรันวันที่ 1 ของเดือนถัดไป)
+        """
+        for rec in self:
+            end_day = int(rec.cycle_end_day or DEFAULT_CYCLE_END_DAY)
+            rec.run_day = end_day + 1 if 1 <= end_day <= 27 else 1
+
+    @api.depends('cycle_end_day')
+    def _compute_cycle_start_day(self):
+        """วันเริ่มรอบ = วันตัดรอบ + 1 (รอบเดือนต่อกันพอดี ไม่มีวันว่างคั่น)"""
+        for rec in self:
+            end_day = int(rec.cycle_end_day or DEFAULT_CYCLE_END_DAY)
+            rec.cycle_start_day = end_day + 1 if 1 <= end_day <= 27 else 1
+
+    @api.onchange('cycle_start_day')
+    def _onchange_cycle_start_day(self):
+        """กรอกวันเริ่มรอบเองได้ แล้ววันตัดรอบขยับตามให้"""
+        for rec in self:
+            start = int(rec.cycle_start_day or 0)
+            if not (2 <= start <= 28):
+                return {'warning': {
+                    'title': _('วันเริ่มรอบไม่ถูกต้อง'),
+                    'message': _(
+                        'กรอกได้ระหว่างวันที่ 2 ถึง 28\n'
+                        'เพราะวันตัดรอบต้องเป็นวันก่อนหน้า และบางเดือน'
+                        'ไม่มีวันที่ 29-31 ถ้าใช้จะมีเดือนที่ระบบไม่รันเลย'),
+                }}
+            rec.cycle_end_day = start - 1
+
+    @api.constrains('cycle_end_day')
+    def _check_cycle_end_day(self):
+        for rec in self:
+            if not (1 <= rec.cycle_end_day <= 27):
+                raise ValidationError(_(
+                    'วันตัดรอบต้องอยู่ระหว่าง 1 ถึง 27 (รอบเริ่ม 2 ถึง 28)\n'
+                    'เกินจากนี้จะมีเดือนที่ไม่มีวันดังกล่าว '
+                    'แล้วระบบจะไม่ออกใบเตือนเลยทั้งเดือน'))
 
     @api.depends('target_month', 'target_year', 'cycle_end_day')
     def _compute_target_cycle_dates(self):
@@ -452,13 +529,22 @@ class EmployeeWarning(models.Model):
 
     @api.model
     def _cron_target_cycle(self, config):
-        """รอบที่ cron ต้องตรวจ = รอบที่จบวันที่ตัดรอบ "ของเดือนนี้"
+        """รอบที่ cron ต้องตรวจ = **รอบล่าสุดที่จบไปแล้ว** ณ วันที่รัน
 
-        ใช้ได้ทั้งตอนตั้งให้รันวันตัดรอบ (24) และวันถัดไป (25)
-        เพราะทั้งสองวันอยู่ในเดือนเดียวกับวันจบรอบ
+        ไล่จากรอบของเดือนนี้ ถ้ายังไม่จบก็ถอยไปรอบก่อนหน้า
+        ทำให้ตั้งวันรันเป็นวันไหนก็ได้ผลถูกเสมอ รวมทั้งกรณีวันตัดรอบ
+        เป็นสิ้นเดือนแล้วเลื่อนไปรันวันที่ 1 ของเดือนถัดไป
         """
         today = self._server_today()
-        return today.month, today.year
+        month, year = today.month, today.year
+        _cycle_start, cycle_end = self._cycle_bounds(
+            config.cycle_end_day, month, year)
+        if cycle_end >= today:
+            # รอบนี้ยังไม่จบ (วันสุดท้ายคือวันนี้หรือยังมาไม่ถึง) -> ถอยไปรอบก่อน
+            month -= 1
+            if month < 1:
+                month, year = 12, year - 1
+        return month, year
 
     @api.model
     def _current_cycle(self, config):
@@ -500,10 +586,23 @@ class EmployeeWarning(models.Model):
             schedule_data['%s_shift_start' % dow] = schedule['%s_shift_start' % dow]
             schedule_data['%s_shift_end' % dow] = schedule['%s_shift_end' % dow]
 
-        template = self.env['payroll.holiday'].sudo().search(
-            [('year', '=', year)], limit=1)
-        holidays = ([line.date.strftime('%Y-%m-%d') for line in template.line_ids]
-                    if template else [])
+        # ⚠️ รอบคาบ 2 เดือน และคาบ 2 "ปี" ได้ด้วย (รอบ ม.ค. = 25/12 ถึง 24/01)
+        #    ถ้าดึงวันหยุดแค่ปีเดียว วันหยุดฝั่งเดือน ธ.ค. จะหายไป
+        #    เช่น 31 ธ.ค. "วันสิ้นปี" จะกลายเป็นวันทำงาน แล้วทุกคนโดนนับว่าขาด
+        cycle_start, cycle_end = self._cycle_bounds(end_day, month, year)
+        need_years = {cycle_start.year, cycle_end.year}
+        templates = self.env['payroll.holiday'].sudo().search(
+            [('year', 'in', list(need_years))])
+        missing_years = need_years - set(templates.mapped('year'))
+        if missing_years:
+            # ปีใหม่ที่ยังไม่ได้สร้างตารางวันหยุด -> วันหยุดปีนั้นจะกลายเป็นวันทำงาน
+            # แล้วออกใบเตือนผิดยกบริษัท ต้องเห็นใน log ไม่ใช่เงียบ
+            _logger.warning(
+                '[WARN-AUTO] ยังไม่มีตารางวันหยุดของปี %s '
+                '(รอบ %s ถึง %s) — วันหยุดของปีนั้นจะถูกนับเป็นวันทำงาน',
+                sorted(missing_years), cycle_start, cycle_end)
+        holidays = [line.date.strftime('%Y-%m-%d')
+                    for tmpl in templates for line in tmpl.line_ids]
 
         payload = {
             'employee_code': employee.employee_code,
@@ -531,7 +630,16 @@ class EmployeeWarning(models.Model):
             _logger.warning('[WARN-AUTO] API ตอบ error (%s): %s',
                             employee.employee_code, data.get('message'))
             return None
-        return list((data.get('debug') or {}).get('missed_days_log') or [])
+        debug = data.get('debug') or {}
+        # ใบเตือนดูเฉพาะวันที่ "ไม่ได้สแกนเข้างานเลย"
+        # คนที่เข้างานจริงแต่ลืมสแกนออก ไม่ควรโดนใบเตือนฐานไม่มาทำงาน
+        # (ยอดหักเงินยังใช้ missed_days_log ตัวเดิม ไม่กระทบ)
+        if 'missed_no_checkin_log' in debug:
+            return list(debug.get('missed_no_checkin_log') or [])
+        _logger.warning(
+            '[WARN-AUTO] calculate_lateness.php ฝั่งเซิร์ฟเวอร์ยังเป็นตัวเก่า '
+            '(ไม่มี missed_no_checkin_log) — ยังนับวันที่ลืมสแกนออกอยู่')
+        return list(debug.get('missed_days_log') or [])
 
     @api.model
     def _fetch_missed_days_in_range(self, employee, config, cycle_start, cycle_end):
@@ -568,7 +676,11 @@ class EmployeeWarning(models.Model):
         สิทธิเป็น "ครั้งต่อเดือน" รอบหนึ่งคาบ 2 เดือนปฏิทิน จึงให้สิทธิตามเดือน
         ของวันเสาร์นั้น ๆ (เดือนไหนใช้สิทธิเดือนนั้น)
 
-        คืน (วันที่เหลือหลังยกเว้น, จำนวนวันเสาร์ที่ยกเว้นไป)
+        สิทธิดึงจากเมนู "สิทธิหยุดวันเสาร์" (saturday.leave.config) รายคน
+        ลำดับความสำคัญ: ตั้งรายบุคคล -> ค่าของสาขา -> ค่าเริ่มต้นตามชนิดสาขา
+        แต่ละคนจึงไม่เท่ากัน ระบบเรียกทีละคนอยู่แล้ว
+
+        คืน (วันที่เหลือหลังยกเว้น, จำนวนวันเสาร์ที่ยกเว้นไป, สิทธิต่อเดือนของคนนั้น)
         """
         quota = self.env['saturday.leave.config'].sudo().api_get_saturday_quota(
             employee.employee_code)
@@ -577,7 +689,7 @@ class EmployeeWarning(models.Model):
         except (TypeError, ValueError):
             quota = 0
         if quota <= 0:
-            return list(missed_days), 0
+            return list(missed_days), 0, quota
 
         remaining = {}
         kept, excused = [], 0
@@ -598,7 +710,7 @@ class EmployeeWarning(models.Model):
                 excused += 1
             else:
                 kept.append(day)
-        return kept, excused
+        return kept, excused, quota
 
     # ------------------------------------------------------------------
     # สแกน + ออกใบเตือน
@@ -632,7 +744,15 @@ class EmployeeWarning(models.Model):
         domain = [('employee_code', '!=', False)]
         if employee_ids:
             domain.append(('id', 'in', employee_ids))
-        employees = Employee.search(domain)
+        candidates = Employee.search(domain)
+
+        # คัดคนที่ "เข้ารอบนี้" ด้วยเกณฑ์เดียวกับที่รอบเงินเดือนใช้เป๊ะ ๆ
+        # จะได้ไม่ออกใบเตือนให้คนที่ลาออกไปแล้ว หรือยังไม่เริ่มงาน
+        # (resign_date/start_date มีอำนาจเหนือ status เผื่อลืมปรับสถานะหลังลาออก)
+        Period = self.env['payroll.period'].sudo()
+        employees = candidates.filtered(
+            lambda emp: Period._is_eligible_employee(emp, cycle_start, cycle_end))
+        skipped_not_eligible = len(candidates) - len(employees)
 
         issued, over, skipped, details = 0, [], 0, []
         for employee in employees:
@@ -642,10 +762,10 @@ class EmployeeWarning(models.Model):
                 skipped += 1
                 continue
             if config.respect_saturday_quota:
-                missed, excused = self._excuse_saturdays(
+                missed, excused, sat_quota = self._excuse_saturdays(
                     missed, employee, cycle_start, cycle_end)
             else:
-                excused = 0
+                excused, sat_quota = 0, 0
             count = len(missed)
             if count <= config.threshold:
                 continue
@@ -656,6 +776,7 @@ class EmployeeWarning(models.Model):
                 'count': count,
                 'days': sorted(missed),
                 'excused_sat': excused,
+                'sat_quota': sat_quota,
             })
 
         if not dry_run:
@@ -670,6 +791,7 @@ class EmployeeWarning(models.Model):
             'cycle_end': cycle_end,
             'threshold': config.threshold,
             'scanned': len(employees),
+            'skipped_not_eligible': skipped_not_eligible,
             'skipped_no_schedule': skipped,
             'over_threshold': len(over),
             'issued': issued,
@@ -704,7 +826,7 @@ class EmployeeWarning(models.Model):
             for d in item['days'])
         description = _(
             'ตรวจสอบประวัติการลงเวลาระหว่างวันที่ %(start)s ถึง %(end)s '
-            'พบว่าท่านลงเวลาปฏิบัติงานไม่ครบถ้วนจำนวน %(count)s ครั้ง '
+            'พบว่าท่านไม่ได้ลงเวลาเข้าปฏิบัติงานจำนวน %(count)s ครั้ง '
             'ซึ่งเกินเกณฑ์ที่บริษัทกำหนดไว้ (ไม่เกิน %(threshold)s ครั้งต่อรอบ) '
             'ได้แก่วันที่ %(days)s'
         ) % {
@@ -715,9 +837,12 @@ class EmployeeWarning(models.Model):
             'days': days_inline,
         }
         if item.get('excused_sat'):
+            # ระบุสิทธิของพนักงานคนนั้นด้วย เพราะแต่ละคนไม่เท่ากัน
+            # (ตั้งรายบุคคล/รายสาขาได้ที่เมนู "สิทธิหยุดวันเสาร์")
             description += _(
-                '\n(ยกเว้นวันเสาร์ตามสิทธิหยุดวันเสาร์ให้แล้ว %s วัน)'
-            ) % item['excused_sat']
+                '\n(ยกเว้นวันเสาร์ให้แล้ว %(n)s วัน '
+                'ตามสิทธิหยุดวันเสาร์ของท่าน %(quota)s ครั้ง/เดือน)'
+            ) % {'n': item['excused_sat'], 'quota': item.get('sat_quota') or 0}
 
         line = Line.create({
             'warning_id': warning.id,
@@ -747,6 +872,9 @@ class EmployeeWarning(models.Model):
             _('เกินเกณฑ์ (>%s ครั้ง) %s คน') % (result['threshold'],
                                                 result['over_threshold']),
         ]
+        if result.get('skipped_not_eligible'):
+            lines.append(_('ข้าม %s คน (ลาออกก่อนรอบนี้ / ยังไม่เริ่มงาน)')
+                         % result['skipped_not_eligible'])
         if result['skipped_no_schedule']:
             lines.append(_('ข้าม %s คน (ยังไม่ได้ตั้งตารางกะ)')
                          % result['skipped_no_schedule'])

@@ -17,6 +17,11 @@
                                 <field name="pin" required="1"/>
                                 <field name="allow_offsite_time"/>
                                 <field name="status"/>
+                                <field name="work_schedule_state" widget="badge"
+                                       decoration-success="work_schedule_state != 'unset'"
+                                       decoration-danger="work_schedule_state == 'unset'"/>
+                                <field name="work_schedule_id" readonly="1"
+                                       attrs="{'invisible': [('work_schedule_state', '=', 'unset')]}"/>
                                 <field name="auto_payroll"/>
                             </group>
                             <group>
@@ -160,7 +165,37 @@
                     <field name="lastname"/>
                     <field name="position_id"/>
                     <field name="department_id"/>
+                    <field name="work_schedule_state" widget="badge"
+                           decoration-success="work_schedule_state != 'unset'"
+                           decoration-danger="work_schedule_state == 'unset'"/>
                 </tree>
+            </field>
+        </record>
+
+        <record id="view_employee_salary_search" model="ir.ui.view">
+            <field name="name">employee.salary.search</field>
+            <field name="model">employee.salary</field>
+            <field name="arch" type="xml">
+                <search string="ข้อมูลพนักงาน">
+                    <field name="employee_code"/>
+                    <field name="firstname"/>
+                    <field name="lastname"/>
+                    <field name="branch_id"/>
+                    <field name="department_id"/>
+                    <filter name="flt_no_schedule" string="ยังไม่ลงกะ"
+                            domain="[('work_schedule_state', '=', 'unset')]"/>
+                    <filter name="flt_has_schedule" string="ลงกะแล้ว"
+                            domain="[('work_schedule_state', '!=', 'unset')]"/>
+                    <separator/>
+                    <filter name="flt_active" string="ใช้งาน"
+                            domain="[('status', '=', 'active')]"/>
+                    <group expand="0" string="จัดกลุ่มตาม">
+                        <filter name="grp_branch" string="สาขา"
+                                context="{'group_by': 'branch_id'}"/>
+                        <filter name="grp_dept" string="แผนก"
+                                context="{'group_by': 'department_id'}"/>
+                    </group>
+                </search>
             </field>
         </record>
     </data>
