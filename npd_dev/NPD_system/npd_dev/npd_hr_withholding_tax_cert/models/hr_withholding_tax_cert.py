@@ -77,6 +77,22 @@ class HRWithholdingTaxCert(models.Model):
         readonly=True,
         help="รวมยอด 'ภาษีที่ต้องหัก' จากรายงาน ภ.ง.ด.1 ของเลขบัตรนี้ในปีที่ระบุ",
     )
+    sso_amount = fields.Float(
+        string="กองทุนประกันสังคม (ทั้งปี)",
+        compute="_compute_fund_amounts",
+        store=True,
+        readonly=False,
+        help="ยอดเงินที่จ่ายเข้ากองทุนประกันสังคมทั้งปีภาษี "
+             "ดึงจากหน้าทำเงินเดือนให้เป็นค่าเริ่มต้น — แก้ไขเองได้",
+    )
+    provident_fund_amount = fields.Float(
+        string="กองทุนสำรองเลี้ยงชีพ (ทั้งปี)",
+        compute="_compute_fund_amounts",
+        store=True,
+        readonly=False,
+        help="ยอดเงินที่จ่ายเข้ากองทุนสำรองเลี้ยงชีพทั้งปีภาษี "
+             "ดึงจากหน้าทำเงินเดือนให้เป็นค่าเริ่มต้น — แก้ไขเองได้",
+    )
     employee_id = fields.Many2one(
         comodel_name="employee.salary",
         string="ชื่อพนักงาน",
@@ -108,6 +124,14 @@ class HRWithholdingTaxCert(models.Model):
         related="employee_id.address",
         store=True,
         readonly=True,
+    )
+    employee_resign_date = fields.Date(
+        string="วันที่ออกจากงาน",
+        related="employee_id.resign_date",
+        store=True,
+        readonly=True,
+        help="ดึงจากหน้าข้อมูลพนักงาน — ถ้าลาออกในปีภาษีนี้ ระบบจะนับยอด "
+             "ประกันสังคม/กองทุนสำรองเลี้ยงชีพ ถึงเดือนที่ลาออกเท่านั้น",
     )
     pnd1_full_name = fields.Char(
         string="ชื่อ-นามสกุล (จากรายงาน ภ.ง.ด.1)",
@@ -266,6 +290,86 @@ class HRWithholdingTaxCert(models.Model):
                 tax = income * 3.0 / 100
             rec.total_net_salary = income
             rec.total_tax = tax
+
+    # ------------------------------------------------------------------
+    # ประกันสังคม / กองทุนสำรองเลี้ยงชีพ — ดึงจากหน้าทำเงินเดือน (payroll.salary)
+    # ------------------------------------------------------------------
+    PROVIDENT_LINE_NAME = "กองทุนสำรองเลี้ยงชีพ"
+
+    @api.model
+    def _get_payroll_last_month(self, employee, gregorian_year):
+        """เดือนสุดท้ายของปีภาษีที่นับยอดให้พนักงานคนนี้ (1-12)
+
+        ยึด "วันที่ออกจากงาน" (resign_date) ในหน้าข้อมูลพนักงาน — พนักงานแต่ละคน
+        ออกคนละเดือน จึงต้องตัดเป็นรายคน:
+          - ลาออกในปีภาษีนี้ → นับถึงเดือนที่ลาออก (เดือนล่าสุดที่คนนั้นออก)
+          - ลาออกไปก่อนปีภาษีนี้ → ไม่มียอดของปีนี้ (คืน 0)
+          - ยังไม่ลาออก / ลาออกหลังปีนี้ → นับครบ 12 เดือน
+        """
+        resign_date = getattr(employee, "resign_date", False)
+        if not resign_date:
+            return 12
+        if resign_date.year < gregorian_year:
+            return 0
+        if resign_date.year == gregorian_year:
+            return resign_date.month
+        return 12
+
+    @api.model
+    def _get_fund_totals(self, employee, report_year):
+        """รวมยอด "ประกันสังคม" + "กองทุนสำรองเลี้ยงชีพ" ทั้งปีภาษีจากหน้าทำเงินเดือน
+
+        - จับคู่รอบเงินเดือนจากปีที่ระบุ (รองรับทั้ง ค.ศ. และ พ.ศ. ที่เก็บในฟิลด์ year)
+        - ตัดตามวันที่ออกจากงานของพนักงานแต่ละคน (ดู _get_payroll_last_month)
+        - ประกันสังคม: ใช้ "ประกันสังคมสะสม" ของรอบเดือนล่าสุด = ยอดที่หักจริงทั้งปีภาษี
+          (รวมยอดต้นรอบที่ยกมาจากระบบเก่าด้วย) — ถ้าไม่มี fallback เป็นผลรวมรายเดือน
+        - กองทุนสำรองเลี้ยงชีพ: ไม่มียอดสะสม → รวมรายเดือนจากบรรทัดหักในสลิป
+          (ครอบคลุมทั้งแบบกรอกยอดเองและแบบคิดตามอัตรา %)
+        คืนค่า (ประกันสังคมทั้งปี, กองทุนสำรองเลี้ยงชีพทั้งปี)
+        """
+        if not employee or not report_year:
+            return 0.0, 0.0
+        year = self._pnd1_gregorian_year(report_year)
+        if not year:
+            return 0.0, 0.0
+
+        last_month = self._get_payroll_last_month(employee, year)
+        if not last_month:
+            return 0.0, 0.0
+
+        payrolls = self.env["payroll.salary"].search(
+            [
+                ("employee_id", "=", employee.id),
+                ("year", "in", [str(year), str(year + 543)]),
+                ("month", "<=", last_month),
+            ],
+            order="month asc",
+        )
+        if not payrolls:
+            return 0.0, 0.0
+
+        sso = payrolls[-1].accumulated_social_security or 0.0
+        if not sso:
+            sso = sum(payrolls.mapped("sso_total"))
+
+        provident = 0.0
+        for payroll in payrolls:
+            month_pf = sum(
+                payroll.line_ids.filtered(
+                    lambda l: l.type == "deduction"
+                    and (l.name or "").strip() == self.PROVIDENT_LINE_NAME
+                ).mapped("amount")
+            )
+            provident += month_pf or (payroll.expense_provident or 0.0)
+
+        return sso, provident
+
+    @api.depends("employee_id", "employee_id.resign_date", "report_year")
+    def _compute_fund_amounts(self):
+        for rec in self:
+            sso, provident = rec._get_fund_totals(rec.employee_id, rec.report_year)
+            rec.sso_amount = sso
+            rec.provident_fund_amount = provident
 
     @api.model
     def create(self, vals):

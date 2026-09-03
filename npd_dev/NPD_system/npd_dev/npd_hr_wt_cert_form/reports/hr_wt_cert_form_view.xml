@@ -232,6 +232,18 @@
                 </span>
             </p>
 
+            <!-- แถว "เงินที่จ่ายเข้า ... กองทุนประกันสังคม ... กองทุนสำรองเลี้ยงชีพ ..." -->
+            <t t-if="o.sso_amount">
+                <p class="fund_sso">
+                    <t t-esc="'{0:,.2f}'.format(o.sso_amount)" />
+                </p>
+            </t>
+            <t t-if="o.provident_fund_amount">
+                <p class="fund_provident">
+                    <t t-esc="'{0:,.2f}'.format(o.provident_fund_amount)" />
+                </p>
+            </t>
+
             <t t-if="o.tax_payer == 'withholding'">
                 <p class="choich_withholding_tax">X</p>
             </t>

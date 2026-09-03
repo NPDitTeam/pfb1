@@ -390,6 +390,19 @@
         right: 80px;
         text-align: center;
     }
+    // แถว "เงินที่จ่ายเข้า ... กองทุนประกันสังคม ...บาท  กองทุนสำรองเลี้ยงชีพ ...บาท"
+    .fund_sso {
+        position: fixed;
+        top: 1309px;
+        right: 366px;
+        font-size: 21px;
+    }
+    .fund_provident {
+        position: fixed;
+        top: 1309px;
+        right: 116px;
+        font-size: 21px;
+    }
     .choich_withholding_tax {
         position: fixed;
         top: 1350px;

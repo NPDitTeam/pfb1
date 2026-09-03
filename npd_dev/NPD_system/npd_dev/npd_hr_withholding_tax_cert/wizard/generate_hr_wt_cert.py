@@ -48,6 +48,9 @@ class GenerateHRWTCert(models.TransientModel):
 
             wt_percent = (tax_total / income_total * 100) if income_total else 0.0
 
+            # ประกันสังคม + กองทุนสำรองเลี้ยงชีพ ทั้งปี (ตัดตามวันที่ออกจากงานของแต่ละคน)
+            sso_amount, provident_amount = Cert._get_fund_totals(employee, self.year)
+
             line_vals = {
                 "wt_cert_income_type": "1",
                 "wt_cert_income_desc": "เงินเดือน ค่าจ้าง เบี้ยเลี้ยง โบนัส ฯลฯ 40(1)",
@@ -69,6 +72,8 @@ class GenerateHRWTCert(models.TransientModel):
                 existing.wt_line.unlink()
                 existing.write({
                     "wt_line": [(0, 0, line_vals)],
+                    "sso_amount": sso_amount,
+                    "provident_fund_amount": provident_amount,
                     "state": "done",
                 })
                 updated_count += 1
@@ -79,6 +84,8 @@ class GenerateHRWTCert(models.TransientModel):
                     "report_year": self.year,
                     "income_tax_form": "pnd1",
                     "tax_payer": "withholding",
+                    "sso_amount": sso_amount,
+                    "provident_fund_amount": provident_amount,
                     "wt_line": [(0, 0, line_vals)],
                 })
                 cert.write({"state": "done"})

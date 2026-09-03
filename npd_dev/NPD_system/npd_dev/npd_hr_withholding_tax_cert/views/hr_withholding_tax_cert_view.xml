@@ -43,6 +43,7 @@
                             <field name="pnd1_full_name" readonly="1"/>
                             <field name="employee_taxid"/>
                             <field name="employee_address"/>
+                            <field name="employee_resign_date"/>
                         </group>
                     </group>
                     <group>
@@ -54,6 +55,10 @@
                             <field name="report_year"/>
                             <field name="total_net_salary"/>
                             <field name="total_tax"/>
+                            <field name="sso_amount"
+                                   attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                            <field name="provident_fund_amount"
+                                   attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                             <field name="date"/>
                             <field name="currency_id" invisible="1"/>
                             <field name="company_id" invisible="1"/>
@@ -93,6 +98,7 @@
                 <field name="employee_id"/>
                 <field name="employee_firstname"/>
                 <field name="employee_lastname"/>
+                <field name="employee_resign_date"/>
                 <field name="company_name"/>
                 <field name="branch_id"/>
                 <field name="total_net_salary"/>
