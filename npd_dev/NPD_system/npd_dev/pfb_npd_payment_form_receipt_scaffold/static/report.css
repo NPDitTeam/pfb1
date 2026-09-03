@@ -1,0 +1,118 @@
+table tr td {
+    pending: 5px;
+    color: black;
+}
+
+table {
+    width: 100%;
+}
+
+.border_report {
+    border-bottom: 1px solid black !important;
+    border-top: 1px solid black !important
+}
+
+.font_weight {
+    font-weight: 800;
+}
+
+.line-distance {
+    line-height: 1;
+}
+
+
+
+
+.font_weight {
+            font-weight: 800;
+            }
+            .address-line {
+            font-size: 16px;
+            margin-top: -3px;
+            }
+            .phone-line {
+            font-size: 14px;
+            margin-top: -5px;
+            }
+            .number-line {
+            font-size: 14px;
+            margin-top: -5px;
+            }
+            .tax-id {
+            font-size: 16px;
+            margin-top: -10px;
+            display: block;
+            }
+            .header-container {
+            display: flex;
+            align-items: flex-start;
+            }
+            .company-info {
+            margin-left: 40px;
+            }
+            .document-info {
+            margin-top: 15px;
+            <!--                margin-left: -20px;-->
+            }
+            .text-date {
+            font-size: 16px;
+            margin-top: -10px
+            }
+            .date-info {
+            margin-top: -10px;
+            }
+
+            .container-table {
+                width: 19.5cm;
+                height: 11.5cm;
+<!--                border: 1px solid black;-->
+                padding: 5px;
+                box-sizing: border-box;
+                font-size: 14px;
+            }
+            .invoice-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 10px;
+                font-size: 14px;
+            }
+            .invoice-table, .invoice-table th, .invoice-table td {
+                border: 1px solid black;
+                font-size: 14px;
+            }
+            .invoice-table th, .invoice-table td {
+                padding: 5px;
+<!--                text-align: right;-->
+                vertical-align: top;
+                font-size: 14px;
+            }
+            .bold {
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .text-right {
+                text-align: right;
+                font-size: 14px;
+            }
+            .text-center {
+                text-align: center;
+                font-size: 14px;
+            }
+            .preserve-whitespace {
+                white-space: pre;
+            }
+            .customer-info {
+                margin-top: -5px;
+            }
+            .purchase-info {
+                margin-top: -5px;
+            }
+            .line-distance {
+                line-height: 1;
+            }
+            .tt{
+                width: 100%;
+            }
+            .tt1{
+                 width: 100%;
+            }
