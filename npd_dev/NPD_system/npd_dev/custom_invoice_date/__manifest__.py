@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Custom Invoice Date Management',
-    'version': '14.0.1.0.0',
+    'version': '14.0.1.1.0',
     'category': 'Accounting',
     'summary': 'จัดการวันที่ Invoice และใบเสนอราคาแบบจอง',
     'description': """

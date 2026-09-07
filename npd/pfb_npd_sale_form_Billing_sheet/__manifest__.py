@@ -6,6 +6,7 @@
     'author': 'Devtest',
     'depends': ['base','sale'],
     'data': [
+    "views/res_company_views.xml",
     "report/pfb_npd_sale_form_Billing_sheet.xml"
 ],
 

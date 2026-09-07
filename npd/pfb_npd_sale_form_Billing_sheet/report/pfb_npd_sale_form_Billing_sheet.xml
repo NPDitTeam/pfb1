@@ -352,14 +352,12 @@
 <!--                        <td class="text-right mt-1 mb-1 b" style="font-size: 16px;">-->
 <!--                            <strong><span t-esc="'{0:,.2f}'.format(doc.pfb_amount + doc.amount_total)"/></strong>-->
 <!--                        </td>-->
+                        <!-- จำนวนเงินทั้งสิ้น: ใช้เมธอดเดียวกับจำนวนเงินตัวอักษรและยอดในคิวอาร์
+                             เพื่อไม่ให้ทั้งสามที่แสดงไม่ตรงกัน
+                             ติ๊ก "ใช้ภาษีหัก ณ ที่จ่ายใบแจ้งหนี้/ใบวางบิล หัก 5%" = ยอดนี้หักภาษี ณ ที่จ่ายออกแล้ว -->
                         <td class="text-right mt-1 mb-1 b" style="font-size: 16px;">
                             <strong>
-                                <t t-if="doc.deposit_ref">
-                                    <span t-esc="'{0:,.2f}'.format(doc.amount_total)"/>
-                                </t>
-                                <t t-else="">
-                                    <span t-esc="'{0:,.2f}'.format(doc.pfb_amount + doc.amount_total)"/>
-                                </t>
+                                <span t-esc="'{0:,.2f}'.format(doc.get_grand_total_billing_sheet())"/>
                             </strong>
                         </td>
 
@@ -371,14 +369,20 @@
             </div>
         </div>
         <div style="border-bottom: 1px solid black ;top: 700px;" class="mt-1 mb-1"/>
-        <t t-if="doc.partner_id.company_type == 'company'">
+        <!-- ภาษีหัก ณ ที่จ่าย: แสดงทุกใบที่ลูกค้าเป็นนิติบุคคล
+             ไม่ติ๊ก = เอกสารเป็นยอดเต็ม บอกลูกค้าว่าต้องหัก ณ ที่จ่ายไว้เท่าไร
+             ติ๊ก = หักออกจากจำนวนเงินทั้งสิ้นให้แล้ว ลูกค้าจะได้เห็นว่าโดนหักไปเท่าไร
+             ฐานคิดคือยอดค่าเช่าก่อนภาษีมูลค่าเพิ่มอย่างเดียว ไม่รวมค่าประกัน -->
+        <t t-if="doc.wht_applies_billing_sheet()">
             <p class="text-left b" style="font-size: 16px;"><strong>ข้อมูลภาษี หัก ณ.ที่จ่าย</strong></p>
             <p class="spacing1 b" style="font-size: 14px;">
                 ภาษีหัก ณ ที่จ่าย 5% ของ :
-                <span class="spacing1" style="font-size: 14px;" t-esc="'{0:,.2f}'.format(doc.amount_untaxed)"/>
+                <span class="spacing1" style="font-size: 14px;" t-esc="'{0:,.2f}'.format(doc.get_wht_base_billing_sheet())"/>
                 <span class="spacing2" style="font-size: 14px;">=</span>
-                <span class="spacing2" style="font-size: 14px;" t-esc="'{0:,.2f}'.format(doc.get_wht_amount())"/>
+                <span class="spacing2" style="font-size: 14px;" t-esc="'{0:,.2f}'.format(doc.get_wht_amount_billing_sheet())"/>
                 <span class="spacing2" style="font-size: 14px;">บาท</span>
+                <span t-if="doc.deduct_wht_billing_sheet()" class="spacing2"
+                      style="font-size: 14px;">(หักออกจากจำนวนเงินทั้งสิ้นแล้ว)</span>
             </p>
         </t>
         <p class="d" style="font-size: 16px;"><strong>การชำระเงิน :</strong></p>
@@ -481,31 +485,53 @@
                 <td class="spacing1 b" style="font-size: 14px;">ค่าธรรมเนียมธนาคาร ผู้ชำระเงินเป็นผู้รับผิดชอบ</td>
             </tr>
              <tr>
-
-                     <td  class="spacing1 b">
-
-                                                            <t t-if="request.db == 'NPD_S_Group_New'">
-                                                            <img t-att-src="'/pfb_npd_sale_form_Billing_sheet/static/description/นภดล เอส กรุ๊ป.png'" style="max-height: 100px;"/>
-                                                                        </t>
-                                                            <t t-if="request.db == 'NPD_S_Group_New_V2'">
-                                                            <img t-att-src="'/pfb_npd_sale_form_Billing_sheet/static/description/นภดล เอส กรุ๊ป.png'" style="max-height: 100px;"/>
-                                                                        </t>
-                                                            <t t-if="request.db == 'NPD_Steeltech_New'">
-                                                             <img t-att-src="'/pfb_npd_sale_form_Billing_sheet/static/description/สตีลเทค.png'" style="max-height: 100px;"/>
-                                                                        </t>
-                                                            <t t-if="request.db == 'NPD_Logistics_New'">
-                                                             <img t-att-src="'/pfb_npd_sale_form_Billing_sheet/static/description/เอ็นพีดี โลจิสติกส์.png'" style="max-height: 100px;"/>
-                                                                        </t>
-                                                            <t t-if="request.db == 'NPD_Intertrading_New'">
-                                                             <img t-att-src="'/pfb_npd_sale_form_Billing_sheet/static/description/นภดล อินเตอร์เทรดดิ้ง.png'" style="max-height: 100px;"/>
-                                                                        </t>
-                                                            <t t-if="request.db == 'NPD_Intertrading_New_NonVat'">
-                                                             <img t-att-src="'/pfb_npd_sale_form_Billing_sheet/static/description/นภดล อินเตอร์เทรดดิ้ง.png'" style="max-height: 100px;"/>
-                                                                        </t>
-                                                             <t t-if="request.db == 'NPD_Bangkok_New'">
-                                                             <img t-att-src="'/pfb_npd_sale_form_Billing_sheet/static/description/นภดล กรุงเทพ.png'" style="max-height: 100px;"/>
-                                                                        </t>
-                                                        </td>
+                     <td class="spacing1 b">
+                        <!-- QR สแกนจ่ายพร้อมเพย์
+                             - เลขพร้อมเพย์ดึงจากบริษัทที่ใช้อยู่ (ตั้งค่าที่ การตั้งค่า > บริษัท > พร้อมเพย์)
+                             - ยอดในคิวอาร์ = จำนวนเงินทั้งสิ้น ยอดเดียวกับที่พิมพ์ท้ายเอกสาร
+                               (ยังไม่หักภาษี ณ ที่จ่าย ตรงกับยอดที่ตั้งเบิก)
+                             - ฝังรูปเป็น data URI ไม่เรียกผ่าน URL รายงาน จึงไม่พึ่ง web.base.url
+                             - ถ้าบริษัทยังไม่ได้ตั้งเลขพร้อมเพย์ จะแสดงรูป QR เดิมของบริษัทแทน -->
+                        <t t-set="promptpay_qr" t-value="doc.get_promptpay_qr_image_billing_sheet()"/>
+                        <t t-if="promptpay_qr">
+                            <table style="text-align: left;">
+                                <tr>
+                                    <td class="b" style="font-size: 14px; text-align: left;">
+                                        <strong>สแกนจ่ายด้วยพร้อมเพย์</strong>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: left;">
+                                        <img t-att-src="'data:image/png;base64,%s' % promptpay_qr"
+                                             style="width: 100px; height: 100px;"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </t>
+                        <t t-else="">
+                        <t t-if="request.db == 'NPD_S_Group_New'">
+                        <img t-att-src="'/pfb_npd_sale_form_Billing_sheet/static/description/นภดล เอส กรุ๊ป.png'" style="max-height: 100px;"/>
+                        </t>
+                        <t t-if="request.db == 'NPD_S_Group_New_V2'">
+                        <img t-att-src="'/pfb_npd_sale_form_Billing_sheet/static/description/นภดล เอส กรุ๊ป.png'" style="max-height: 100px;"/>
+                        </t>
+                        <t t-if="request.db == 'NPD_Steeltech_New'">
+                        <img t-att-src="'/pfb_npd_sale_form_Billing_sheet/static/description/สตีลเทค.png'" style="max-height: 100px;"/>
+                        </t>
+                        <t t-if="request.db == 'NPD_Logistics_New'">
+                        <img t-att-src="'/pfb_npd_sale_form_Billing_sheet/static/description/เอ็นพีดี โลจิสติกส์.png'" style="max-height: 100px;"/>
+                        </t>
+                        <t t-if="request.db == 'NPD_Intertrading_New'">
+                        <img t-att-src="'/pfb_npd_sale_form_Billing_sheet/static/description/นภดล อินเตอร์เทรดดิ้ง.png'" style="max-height: 100px;"/>
+                        </t>
+                        <t t-if="request.db == 'NPD_Intertrading_New_NonVat'">
+                        <img t-att-src="'/pfb_npd_sale_form_Billing_sheet/static/description/นภดล อินเตอร์เทรดดิ้ง.png'" style="max-height: 100px;"/>
+                        </t>
+                        <t t-if="request.db == 'NPD_Bangkok_New'">
+                        <img t-att-src="'/pfb_npd_sale_form_Billing_sheet/static/description/นภดล กรุงเทพ.png'" style="max-height: 100px;"/>
+                        </t>
+                        </t>
+                     </td>
              </tr>
 
         </div>

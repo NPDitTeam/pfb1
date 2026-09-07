@@ -8,6 +8,12 @@
         <field name="arch" type="xml">
             <xpath expr="//sheet/group" position="after">
                 <group string="ข้อมูลการจอง">
+                    <!-- ช่องภาษีหัก ณ ที่จ่ายใช้กับลูกค้านิติบุคคลเท่านั้น
+                         ลูกค้าบุคคลธรรมดาไม่มีการหัก ณ ที่จ่าย จึงซ่อนไปเลย -->
+                    <field name="partner_company_type" invisible="1"/>
+                    <field name="use_wht_billing_sheet"
+                           string="ใช้ภาษีหัก ณ ที่จ่ายใบแจ้งหนี้/ใบวางบิล หัก 5%"
+                           attrs="{'invisible': [('partner_company_type', '!=', 'company')]}"/>
                     <field name="is_reservation_quotation" string="ใบเสนอราคาแบบจอง"/>
                 </group>
             </xpath>
