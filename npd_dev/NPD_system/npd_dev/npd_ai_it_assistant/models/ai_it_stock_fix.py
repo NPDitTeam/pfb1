@@ -7,6 +7,9 @@
     เท่านั้น — AI ไม่ได้เป็นคนสร้าง SQL และไม่มีทางแทรกคำสั่งเข้ามาได้
   * เติมสต๊อกได้อย่างเดียว (diff > 0) ไม่มีเส้นทางไหนที่ลดสต๊อก
   * เขียนลง location ของ "สาขาที่พนักงานสังกัด" เท่านั้น
+  * ถ้าสาขานั้นยังไม่มี location ตัวช่วยจะสร้าง/ผูกให้เอง (ดู
+    ensure_branch_internal_location) เพื่อให้พนักงานไม่ต้องรอฝ่าย IT มาตั้งค่า
+    — สร้างได้แค่คลังลูกแบบ internal ไม่แตะ warehouse/ลำดับเลขที่
 
 พฤติกรรมอิงกับปุ่ม "ตัดสต็อก Auto 🚚" เดิม (so_auto_stock_cut):
 วิธีหาคลังต้นทางของสาขา และการเติมสต๊อกให้ถึงจำนวนสต๊อกจริงที่พนักงานนับได้
@@ -17,6 +20,15 @@ import logging
 from odoo import api, models
 
 _logger = logging.getLogger(__name__)
+
+# System Parameter สำหรับปิดการสร้างคลังของสาขาอัตโนมัติ (ค่าเริ่มต้น = เปิด)
+PARAM_AUTO_CREATE_LOCATION = 'npd_ai_it_assistant.auto_create_branch_location'
+
+
+def _norm_name(text):
+    """ชื่อคลัง/สาขาแบบเทียบกันได้ — ยุบช่องว่างซ้ำและตัดหัวท้ายทิ้ง"""
+    return ' '.join((text or '').split()).lower()
+
 
 # ==============================================================================
 # SQL ที่เตรียมไว้ล่วงหน้า — ห้ามต่อสตริงค่าใด ๆ เข้าไป ใช้ผ่าน parameter เท่านั้น
@@ -165,6 +177,157 @@ class NpdAiItStockFix(models.AbstractModel):
         if location:
             return location
         return locations[:1]
+
+    # ------------------------------------------------------------------
+    # หาคลังของสาขา — ถ้ายังไม่มี ให้สร้าง/ผูกให้เอง
+    #
+    # เดิมพอหาคลังของสาขาไม่เจอ ระบบจะตัดจบแล้วบอกให้ไปตามฝ่าย IT มาตั้งค่า
+    # ซึ่งพนักงานต้องรอข้ามวัน ทั้งที่สิ่งที่ IT ทำก็คือ "สร้าง location ของสาขา"
+    # ตามแบบเดียวกับสาขาอื่น ๆ เท่านั้น จึงย้ายงานนี้มาให้ตัวช่วยทำเองได้เลย
+    #
+    # ขอบเขตที่ยอมให้ทำเอง (กันสร้างมั่ว):
+    #   * สร้างได้เฉพาะสาขาที่ resolve_branch อนุมัติแล้ว = สาขาที่พนักงานสังกัด
+    #   * สร้างเป็นคลังลูกใต้ "คลังแม่ที่สาขาอื่นในบริษัทเดียวกันใช้กันอยู่"
+    #     ไม่ได้ไปสร้าง warehouse/ประเภทการดำเนินการ/ลำดับเลขที่ใหม่
+    #   * ถ้ามีคลังชื่อตรงกับสาขาอยู่แล้วแต่ยังไม่ได้ผูกสาขา จะ "ผูกให้" แทนการ
+    #     สร้างใบใหม่ซ้ำ (เคสที่เจอบ่อยกว่าการไม่มีคลังเลย)
+    # ------------------------------------------------------------------
+    @api.model
+    def _auto_create_location_enabled(self):
+        """เปิด/ปิดการสร้างคลังสาขาอัตโนมัติ — ค่าเริ่มต้นคือ "เปิด" """
+        value = self.env['ir.config_parameter'].sudo().get_param(
+            PARAM_AUTO_CREATE_LOCATION, '1')
+        return str(value).strip().lower() not in ('0', 'false', 'off', 'no', '')
+
+    @api.model
+    def _warehouse_reserved_location_ids(self):
+        """คลังที่เป็น "ของ warehouse โดยตรง" (view/stock/input/output)
+
+        ห้ามไปแตะ branch_id ของคลังพวกนี้ เพราะ constraint ของโมดูล branch
+        บังคับว่าต้องตรงกับสาขาของ warehouse (inherited_stock_location._check_branch)
+        """
+        reserved = set()
+        for warehouse in self.env['stock.warehouse'].sudo().search([]):
+            reserved.update({
+                warehouse.view_location_id.id,
+                warehouse.lot_stock_id.id,
+                warehouse.wh_input_stock_loc_id.id,
+                warehouse.wh_output_stock_loc_id.id,
+            })
+        reserved.discard(False)
+        return reserved
+
+    @api.model
+    def _branch_location_parent(self, branch):
+        """หา "คลังแม่" ที่ควรเอาคลังของสาขานี้ไปแขวนไว้
+
+        ไล่ตามลำดับความมั่นใจ: warehouse ที่ผูกสาขานี้ไว้ตรง ๆ -> ที่ที่สาขาอื่น
+        ในบริษัทเดียวกันแขวนกันอยู่ (ของจริงคือ lot_stock ของ warehouse หลัก)
+        -> lot_stock ของ warehouse แรกของบริษัท
+        """
+        Location = self.env['stock.location'].sudo()
+        Warehouse = self.env['stock.warehouse'].sudo()
+        company = branch.company_id or self.env.company
+
+        warehouse = Warehouse.search([('branch_id', '=', branch.id)], limit=1)
+        if warehouse.lot_stock_id:
+            return warehouse.lot_stock_id
+
+        siblings = Location.search([
+            '|', ('company_id', '=', company.id), ('company_id', '=', False),
+            ('usage', '=', 'internal'),
+            ('branch_id', '!=', False),
+            ('location_id', '!=', False),
+        ])
+        counter = {}
+        for location in siblings:
+            parent_id = location.location_id.id
+            counter[parent_id] = counter.get(parent_id, 0) + 1
+        if counter:
+            return Location.browse(max(counter, key=counter.get))
+
+        warehouse = Warehouse.search(
+            [('company_id', '=', company.id)], order='id', limit=1)
+        return warehouse.lot_stock_id or Location.browse()
+
+    @api.model
+    def _adopt_branch_location(self, branch, parent):
+        """คลังที่ชื่อตรงกับสาขาแต่ยังไม่ได้ผูกสาขา -> ผูกให้ (ไม่สร้างซ้ำ)"""
+        target = _norm_name(branch.name)
+        if not target:
+            return self.env['stock.location'].browse()
+
+        reserved = self._warehouse_reserved_location_ids()
+        candidates = self.env['stock.location'].sudo().search([
+            ('location_id', '=', parent.id),
+            ('usage', '=', 'internal'),
+            ('branch_id', '=', False),
+        ])
+        for location in candidates:
+            if location.id in reserved:
+                continue
+            if _norm_name(location.name) == target:
+                location.write({'branch_id': branch.id})
+                _logger.info(
+                    'ตัวช่วย AI-IT: ผูกคลัง %s เข้ากับสาขา %s (uid=%s)',
+                    location.complete_name, branch.name, self.env.uid)
+                return location
+        return self.env['stock.location'].browse()
+
+    @api.model
+    def _create_branch_location(self, branch, parent):
+        """สร้างคลัง (internal) ของสาขา ตามแบบเดียวกับสาขาอื่นในบริษัทเดียวกัน"""
+        location = self.env['stock.location'].sudo().create({
+            'name': branch.name,
+            'usage': 'internal',
+            'location_id': parent.id,
+            'company_id': (branch.company_id or parent.company_id
+                           or self.env.company).id,
+            'branch_id': branch.id,
+        })
+        _logger.info(
+            'ตัวช่วย AI-IT: สร้างคลัง %s ให้สาขา %s (uid=%s)',
+            location.complete_name, branch.name, self.env.uid)
+        return location
+
+    @api.model
+    def ensure_branch_internal_location(self, branch, product_ids=None):
+        """คืน (location, info) — หาคลังของสาขาให้ได้ ถ้าไม่มีก็สร้างให้
+
+        info บอกว่าเกิดอะไรขึ้น เพื่อเอาไปเล่าให้พนักงานฟังในแชท
+            None                      คลังมีอยู่แล้ว (ทางปกติ)
+            {'mode': 'adopted'}       มีคลังชื่อเดียวกันอยู่ แต่ยังไม่ผูกสาขา -> ผูกให้
+            {'mode': 'created'}       ไม่มีเลย -> สร้างใหม่ให้
+            {'mode': 'disabled'}      ปิดการสร้างอัตโนมัติไว้ที่ System Parameter
+            {'mode': 'no_parent'}     ไม่รู้จะสร้างไว้ใต้คลังไหน (บริษัทยังไม่มี warehouse)
+            {'mode': 'failed', ...}   สร้างไม่สำเร็จ พร้อมข้อความ error
+        """
+        location = self.get_branch_internal_location(branch, product_ids)
+        if location:
+            return location, None
+
+        empty = self.env['stock.location'].browse()
+        if not self._auto_create_location_enabled():
+            return empty, {'mode': 'disabled'}
+
+        # สร้าง/แก้ผังคลังพลาดต้องไม่ทำให้ทั้งบทสนทนาล้ม — กันไว้ด้วย savepoint
+        # เพื่อให้ cursor ยังใช้ต่อได้ แล้วไปตอบพนักงานเป็นข้อความปกติ
+        try:
+            with self.env.cr.savepoint():
+                parent = self._branch_location_parent(branch)
+                if not parent:
+                    return empty, {'mode': 'no_parent'}
+
+                adopted = self._adopt_branch_location(branch, parent)
+                if adopted:
+                    return adopted, {'mode': 'adopted', 'parent': parent}
+
+                created = self._create_branch_location(branch, parent)
+                return created, {'mode': 'created', 'parent': parent}
+        except Exception as error:  # noqa: BLE001
+            _logger.exception('ตัวช่วย AI-IT: สร้างคลังให้สาขา %s ไม่สำเร็จ',
+                              branch.name)
+            return empty, {'mode': 'failed', 'error': str(error)}
 
     # ------------------------------------------------------------------
     # อ่านความต้องการ / สต๊อกคงเหลือ

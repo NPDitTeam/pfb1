@@ -683,11 +683,20 @@ class NpdAiItSession(models.Model):
             return
 
         product_ids = [p.id for p, _qty in Fix._required_lines(document)]
-        location = Fix.get_branch_internal_location(branch, product_ids)
+        # หาคลังของสาขา — ถ้ายังไม่มี ตัวช่วยจะสร้าง/ผูกให้เองแล้วทำต่อเลย
+        # เดิมเคสนี้จะตัดจบแล้วให้ไปตามฝ่าย IT มาสร้าง location ให้ ซึ่งพนักงานต้องรอข้ามวัน
+        location, location_info = Fix.ensure_branch_internal_location(
+            branch, product_ids)
         if not location:
-            self._post_bot('⛔ ไม่พบคลังสินค้า (internal) ของสาขา "%s" '
-                           'กรุณาแจ้งฝ่าย IT ให้ตั้งค่าคลังของสาขาก่อน'
-                           % html_escape(branch.name or ''))
+            self._post_bot(_block(
+                _rows(
+                    _title('ไม่พบคลังสินค้า (internal) ของสาขา "%s"'
+                           % html_escape(branch.name or ''), '⛔'),
+                    'และระบบสร้างให้เองไม่ได้',
+                    _hint(self._location_fail_reason(location_info)),
+                ),
+                'กรุณาแจ้งฝ่าย IT ให้ตั้งค่าคลังของสาขาให้ก่อน',
+            ))
             self.sudo().write({'state': 'cancelled'})
             return
 
@@ -699,6 +708,9 @@ class NpdAiItSession(models.Model):
             'branch_id': branch.id,
             'location_id': location.id,
         })
+
+        if location_info:
+            self._announce_branch_location(location, location_info)
 
         header = _rows(
             _title(html_escape(document.name or ''), '📄'),
@@ -752,6 +764,50 @@ class NpdAiItSession(models.Model):
             _rows('กรุณานับของจริงในคลัง แล้วแจ้ง <b>จำนวนสต็อกจริง</b> ของแต่ละรายการ',
                   example),
         ))
+
+    # ---- คลังของสาขาที่ตัวช่วยสร้าง/ผูกให้เอง ------------------------
+    def _location_fail_reason(self, info):
+        """บอกเหตุที่สร้างคลังให้เองไม่ได้ พนักงานจะได้บอก IT ถูกจุด"""
+        mode = (info or {}).get('mode')
+        if mode == 'disabled':
+            return ('ปิดการสร้างคลังอัตโนมัติไว้ที่ System Parameter '
+                    '<b>npd_ai_it_assistant.auto_create_branch_location</b>')
+        if mode == 'no_parent':
+            return ('บริษัทของสาขานี้ยังไม่มีคลังสินค้า (warehouse) '
+                    'ให้อ้างอิงว่าควรสร้างคลังของสาขาไว้ใต้อะไร')
+        if mode == 'failed':
+            return 'สร้างคลังไม่สำเร็จ: %s' % html_escape((info or {}).get('error') or '')
+        return 'ระบบหาคลังของสาขานี้ไม่เจอ'
+
+    def _announce_branch_location(self, location, info):
+        """เล่าให้พนักงานฟังว่าคลังของสาขาเพิ่งถูกสร้าง/ผูกให้เมื่อกี้
+
+        ต้องบอกให้ชัด เพราะคลังที่เพิ่งสร้างจะมีสต๊อกเป็น 0 ทุกตัว
+        พนักงานจะได้ไม่ตกใจว่า "ของหายไปไหน" และรู้ว่าต้องนับของจริงมาแจ้ง
+        """
+        self.ensure_one()
+        mode = (info or {}).get('mode')
+        branch_name = html_escape(self.branch_id.name or '')
+        if mode == 'created':
+            head = _title('ไม่พบคลังของสาขา "%s" — สร้างให้แล้ว' % branch_name, '🏗️')
+            note = _hint('คลังที่เพิ่งสร้างยังไม่มีสต๊อกในระบบ (ทุกรายการเป็น 0) '
+                         'เดี๋ยวผมถามจำนวนสต็อกจริง แล้วเติมให้ในขั้นตอนถัดไป')
+            detail = 'สร้างคลังใหม่ให้สาขา'
+        elif mode == 'adopted':
+            head = _title('คลังนี้มีอยู่แล้ว แต่ยังไม่ได้ผูกกับสาขา "%s" — ผูกให้แล้ว' % branch_name, '🔗')
+            note = _hint('ต่อจากนี้ระบบจะมองเห็นคลังนี้เป็นคลังของสาขาคุณ สต๊อกเดิมที่มีอยู่ยังอยู่ครบ')
+            detail = 'ผูกคลังเดิมเข้ากับสาขา'
+        else:
+            return
+
+        self._post_bot(_block(_rows(
+            head,
+            _kv('คลัง', html_escape(location.complete_name or '—')),
+            note,
+        )), commands=False)
+        self._log_history('stock_location', html2plaintext(
+            '%s : %s (สาขา %s)'
+            % (detail, location.complete_name or '-', self.branch_id.name or '-')))
 
     # ---- ขั้นที่ 2: รับจำนวนสต๊อกจริงของแต่ละรายการ ------------------
     def _step_ask_qty(self, text):

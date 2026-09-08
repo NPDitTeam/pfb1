@@ -71,7 +71,7 @@
                     <filter name="filter_invoice" string="งานฝั่งใบแจ้งหนี้"
                             domain="[('action_type', 'in', ['invoice_date', 'invoice_cancel'])]"/>
                     <filter name="filter_stock" string="งานฝั่งสต๊อก"
-                            domain="[('action_type', 'in', ['stock_topup', 'stock_cut'])]"/>
+                            domain="[('action_type', 'in', ['stock_topup', 'stock_cut', 'stock_location'])]"/>
                     <group expand="0" string="จัดกลุ่มตาม">
                         <filter name="group_action" string="ประเภทการแก้"
                                 context="{'group_by': 'action_type'}"/>
