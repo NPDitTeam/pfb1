@@ -16,7 +16,9 @@ from . import commission_rate_config
 from . import commission_branch_config
 from . import commission_rate_branch_sales
 from . import commission_sale_headoffice
+from . import medical_expense_limit
 from . import medical_expense
+from . import medical_expense_voucher
 from . import employee_warning
 from . import other_income
 from . import work_security_deposit

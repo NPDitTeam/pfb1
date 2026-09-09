@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ============================================================ -->
+        <!-- Tree View -->
+        <!-- ============================================================ -->
+        <record id="view_medical_expense_limit_tree" model="ir.ui.view">
+            <field name="name">medical.expense.limit.tree</field>
+            <field name="model">medical.expense.limit</field>
+            <field name="arch" type="xml">
+                <tree string="วงเงินค่ารักษาพยาบาลต่อปี"
+                      decoration-info="not employee_id"
+                      editable="bottom">
+                    <field name="year"/>
+                    <field name="employee_id"
+                           options="{'no_create': True}"
+                           placeholder="เว้นว่าง = ใช้กับทุกคน"/>
+                    <field name="employee_code"/>
+                    <field name="branch_id"/>
+                    <field name="amount" sum="รวมวงเงิน"/>
+                    <field name="note"/>
+                    <field name="active" widget="boolean_toggle"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Form View -->
+        <!-- ============================================================ -->
+        <record id="view_medical_expense_limit_form" model="ir.ui.view">
+            <field name="name">medical.expense.limit.form</field>
+            <field name="model">medical.expense.limit</field>
+            <field name="arch" type="xml">
+                <form string="วงเงินค่ารักษาพยาบาลต่อปี">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1><field name="name" readonly="1"/></h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="year"/>
+                                <field name="amount"/>
+                                <field name="active"/>
+                            </group>
+                            <group>
+                                <field name="employee_id"
+                                       options="{'no_create': True}"
+                                       placeholder="เว้นว่าง = วงเงินมาตรฐานของทุกคน"/>
+                                <field name="employee_code"/>
+                                <field name="branch_id"/>
+                            </group>
+                        </group>
+                        <group string="หมายเหตุ">
+                            <field name="note" nolabel="1" placeholder="เช่น มติที่ประชุมประจำปี..."/>
+                        </group>
+                        <div class="alert alert-info" role="alert">
+                            <b>วิธีใช้</b>
+                            <ul>
+                                <li>ไม่ระบุพนักงาน = วงเงินมาตรฐานของ "ทุกคน" ในปีนั้น</li>
+                                <li>ระบุพนักงาน = วงเงินเฉพาะรายคนนั้น (ทับวงเงินมาตรฐานของปีเดียวกัน)</li>
+                                <li>ยอดใช้ไปนับแยกตามปีของ "วันที่ทำงาน" — ขึ้นปีใหม่ยอดจะเริ่มนับ 0 ใหม่เอง</li>
+                                <li>ระบบจะยกวงเงินของปีก่อนมาตั้งเป็นปีใหม่ให้อัตโนมัติ (ถ้ายังไม่ได้ตั้งเอง)</li>
+                            </ul>
+                        </div>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Search View -->
+        <!-- ============================================================ -->
+        <record id="view_medical_expense_limit_search" model="ir.ui.view">
+            <field name="name">medical.expense.limit.search</field>
+            <field name="model">medical.expense.limit</field>
+            <field name="arch" type="xml">
+                <search string="ค้นหาวงเงินค่ารักษาพยาบาล">
+                    <field name="year"/>
+                    <field name="employee_id"/>
+                    <field name="employee_code"/>
+                    <field name="branch_id"/>
+                    <separator/>
+                    <filter string="วงเงินมาตรฐาน (ทุกคน)" name="standard"
+                            domain="[('employee_id', '=', False)]"/>
+                    <filter string="วงเงินเฉพาะราย" name="per_employee"
+                            domain="[('employee_id', '!=', False)]"/>
+                    <separator/>
+                    <filter string="เก็บเข้าคลัง" name="inactive" domain="[('active', '=', False)]"/>
+                    <group expand="0" string="จัดกลุ่มตาม">
+                        <filter string="ปี" name="group_year" context="{'group_by': 'year'}"/>
+                        <filter string="พนักงาน" name="group_employee" context="{'group_by': 'employee_id'}"/>
+                        <filter string="สาขา" name="group_branch" context="{'group_by': 'branch_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Action -->
+        <!-- ============================================================ -->
+        <record id="action_medical_expense_limit" model="ir.actions.act_window">
+            <field name="name">วงเงินค่ารักษาพยาบาลต่อปี</field>
+            <field name="res_model">medical.expense.limit</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_medical_expense_limit_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    ตั้งวงเงินค่ารักษาพยาบาลต่อปี
+                </p>
+                <p>
+                    ยังไม่ได้ตั้งวงเงิน ระบบจะใช้ค่าเริ่มต้น 10,000 บาท/คน/ปี<br/>
+                    สร้างรายการโดย "ไม่ระบุพนักงาน" เพื่อตั้งวงเงินมาตรฐานของทุกคนในปีนั้น
+                </p>
+            </field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- Server Action: ยกวงเงินขึ้นปีใหม่ทันที (ไม่ต้องรอ cron) -->
+        <!-- ============================================================ -->
+        <record id="action_medical_limit_rollover_now" model="ir.actions.server">
+            <field name="name">ยกวงเงินของปีก่อนมาเป็นปีปัจจุบัน</field>
+            <field name="model_id" ref="model_medical_expense_limit"/>
+            <field name="binding_model_id" ref="model_medical_expense_limit"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_rollover_annual_limit()</field>
+        </record>
+
+        <!-- ============================================================ -->
+        <!-- ยอดที่เบิกไปแล้วก่อนใช้ระบบ (ยกมาจากช่องทางเดิม) -->
+        <!-- ============================================================ -->
+        <record id="view_medical_expense_opening_tree" model="ir.ui.view">
+            <field name="name">medical.expense.opening.tree</field>
+            <field name="model">medical.expense.opening</field>
+            <field name="arch" type="xml">
+                <tree string="ยอดยกมาค่ารักษาพยาบาล" editable="bottom">
+                    <field name="year"/>
+                    <field name="employee_id" options="{'no_create': True}"/>
+                    <field name="employee_code"/>
+                    <field name="branch_id"/>
+                    <field name="company"/>
+                    <field name="annual_limit"/>
+                    <field name="used_amount" sum="รวมยอดยกมา"/>
+                    <field name="remaining_preview"/>
+                    <field name="note"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_medical_expense_opening_form" model="ir.ui.view">
+            <field name="name">medical.expense.opening.form</field>
+            <field name="model">medical.expense.opening</field>
+            <field name="arch" type="xml">
+                <form string="ยอดยกมาค่ารักษาพยาบาล">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="year"/>
+                                <field name="employee_id" options="{'no_create': True}"/>
+                                <field name="employee_code"/>
+                                <field name="branch_id"/>
+                                <field name="company"/>
+                            </group>
+                            <group>
+                                <field name="used_amount"/>
+                                <field name="annual_limit"/>
+                                <field name="remaining_preview"/>
+                                <field name="note"/>
+                            </group>
+                        </group>
+                        <div class="alert alert-info" role="alert">
+                            <b>ใช้เมื่อไหร่</b>
+                            <p>
+                                พนักงานที่เคยเบิกค่ารักษาพยาบาลผ่านช่องทางเดิมก่อนเริ่มใช้ระบบนี้
+                                Odoo ไม่รู้ยอดนั้น ถ้าไม่บันทึกไว้ทุกคนจะดูเหมือนยังมีวงเงินเต็ม
+                            </p>
+                            <p>
+                                <b>ถ้ามีแต่ตัวเลข "คงเหลือ"</b> ให้กรอกช่อง "เบิกไปแล้วก่อนใช้ระบบ"
+                                เป็น <b>วงเงินต่อปี − คงเหลือ</b> แล้วดูช่อง "คงเหลือหลังหัก"
+                                ว่าตรงกับตัวเลขที่ถืออยู่หรือไม่
+                            </p>
+                            <p>
+                                1 คน ต่อ 1 ปี ได้แถวเดียว ระบบกันสร้างซ้ำไว้แล้ว
+                                เพราะถ้าซ้ำยอดจะถูกหักสองรอบ
+                            </p>
+                        </div>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_medical_expense_opening_search" model="ir.ui.view">
+            <field name="name">medical.expense.opening.search</field>
+            <field name="model">medical.expense.opening</field>
+            <field name="arch" type="xml">
+                <search string="ค้นหายอดยกมา">
+                    <field name="employee_id"/>
+                    <field name="employee_code"/>
+                    <field name="year"/>
+                    <field name="branch_id"/>
+                    <field name="company"/>
+                    <group expand="0" string="จัดกลุ่มตาม">
+                        <filter string="ปี" name="group_year" context="{'group_by': 'year'}"/>
+                        <filter string="สาขา" name="group_branch" context="{'group_by': 'branch_id'}"/>
+                        <filter string="บริษัท" name="group_company" context="{'group_by': 'company'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_medical_expense_opening" model="ir.actions.act_window">
+            <field name="name">ยอดค่ารักษาพยาบาลยกมา</field>
+            <field name="res_model">medical.expense.opening</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_medical_expense_opening_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    บันทึกยอดที่พนักงานเบิกไปแล้วก่อนเริ่มใช้ระบบ
+                </p>
+                <p>
+                    พิมพ์ทีละแถวในตารางได้เลย หรือกด <b>รายการโปรด → นำเข้าระเบียน</b>
+                    เพื่ออัปโหลดเป็นไฟล์ CSV ทีเดียวทั้งบริษัท<br/>
+                    บันทึกแล้วยอดคงเหลือในแอปของพนักงานจะเปลี่ยนตามทันที ไม่ต้องอัปเดตแอป
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

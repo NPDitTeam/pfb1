@@ -77,3 +77,11 @@ access_saturday_leave_employee,saturday.leave.employee,model_saturday_leave_empl
 access_pnd1_line,pnd1.line,model_pnd1_line,base.group_user,1,1,1,1
 access_payroll_lateness_rule,payroll.lateness.rule,model_payroll_lateness_rule,base.group_user,1,1,1,1
 access_employee_warning_auto_config,employee.warning.auto.config,model_employee_warning_auto_config,base.group_user,1,1,1,1
+
+access_medical_expense_limit_user,medical.expense.limit.user,model_medical_expense_limit,base.group_user,1,0,0,0
+access_medical_expense_limit_manager,medical.expense.limit.manager,model_medical_expense_limit,hr.group_hr_manager,1,1,1,1
+access_medical_expense_file_user,medical.expense.file.user,model_medical_expense_file,base.group_user,1,1,1,1
+access_medical_expense_voucher_config_user,medical.expense.voucher.config.user,model_medical_expense_voucher_config,base.group_user,1,0,0,0
+access_medical_expense_voucher_config_manager,medical.expense.voucher.config.manager,model_medical_expense_voucher_config,hr.group_hr_manager,1,1,1,1
+access_medical_expense_opening_user,medical.expense.opening.user,model_medical_expense_opening,base.group_user,1,0,0,0
+access_medical_expense_opening_manager,medical.expense.opening.manager,model_medical_expense_opening,hr.group_hr_manager,1,1,1,1

@@ -5,7 +5,8 @@
     'category': 'Human Resources',
     'author': 'Your Name',
     'website': 'https://www.yourwebsite.com',
-    'depends': ['hr'],
+    # mail = กล่องเอกสารแนบ/บันทึกโน้ตของ medical.expense (hr ดึงมาให้อยู่แล้ว ระบุไว้ให้ชัด)
+    'depends': ['hr', 'mail'],
     'data': [
         'security/ir.model.access.csv',
         'views/employee_salary_view.xml',
@@ -24,6 +25,8 @@
         'views/position_views.xml',
         'views/branch_views.xml',
         'views/payroll_period_views.xml',
+        'views/medical_expense_limit_views.xml',
+        'views/medical_expense_voucher_views.xml',
         'views/medical_expense_views.xml',
         'views/employee_warning_view.xml',
         'views/other_income_view.xml',
@@ -40,6 +43,8 @@
         'data/employee_warning_auto_cron.xml',
         'data/leave_entitlement_cron.xml',
         'data/deactivate_resigned_cron.xml',
+        'data/medical_expense_limit_cron.xml',
+        'data/medical_expense_voucher_config_data.xml',
         'data/commission_rate_data.xml',
     ],
     'installable': True,

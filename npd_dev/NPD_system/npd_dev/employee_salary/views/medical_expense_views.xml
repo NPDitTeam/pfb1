@@ -18,11 +18,17 @@
                     <field name="employee_code"/>
                     <field name="username"/>
                     <field name="branch_id"/>
+                    <field name="company"/>
                     <field name="department"/>
                     <field name="position"/>
                     <field name="work_date"/>
                     <field name="amount" sum="รวมจำนวนเงิน"/>
+                    <field name="annual_limit"/>
                     <field name="remaining_amount"/>
+                    <field name="bank_name"/>
+                    <field name="bank_account_number"/>
+                    <field name="attachment_count" string="ไฟล์แนบ"/>
+                    <field name="voucher_number"/>
                     <field name="user_note"/>
                     <field name="state"/>
                     <field name="created_at"/>
@@ -40,11 +46,17 @@
                 <form string="ค่ารักษาพยาบาล">
                     <header>
                         <button name="action_approve"
-                                string="อนุมัติ"
+                                string="อนุมัติส่งเข้าการรับ"
                                 type="object"
                                 class="btn-primary"
                                 attrs="{'invisible': [('state', '!=', 'รออนุมัติ')]}"
-                                confirm="ยืนยันการอนุมัติค่ารักษาพยาบาลนี้?"/>
+                                confirm="อนุมัติคำขอนี้ และสร้างใบการรับในระบบบัญชีของบริษัทพนักงาน?"/>
+                        <button name="action_revert_approval"
+                                string="ถอยกลับการอนุมัติ"
+                                type="object"
+                                class="btn-secondary"
+                                attrs="{'invisible': [('state', '!=', 'อนุมัติ')]}"
+                                confirm="ถอยกลับเป็นรออนุมัติ และยกเลิกใบการรับที่สร้างไว้?"/>
                         <button name="action_reject"
                                 string="ไม่อนุมัติ"
                                 type="object"
@@ -74,6 +86,7 @@
                                        attrs="{'readonly': ['|', ('state', '!=', 'รออนุมัติ'), ('php_id', '!=', 0)]}"/>
                                 <field name="employee_code"/>
                                 <field name="branch_id" readonly="1"/>
+                                <field name="company" readonly="1"/>
                                 <field name="department" readonly="1"/>
                                 <field name="position" readonly="1"/>
                             </group>
@@ -85,34 +98,66 @@
                                 <field name="created_at"/>
                             </group>
                         </group>
+                        <group string="บัญชีที่โอนเข้า">
+                            <group>
+                                <field name="bank_name"
+                                       attrs="{'readonly': [('state', '!=', 'รออนุมัติ')]}"/>
+                                <field name="bank_account_number"
+                                       attrs="{'readonly': [('state', '!=', 'รออนุมัติ')]}"/>
+                            </group>
+                            <group>
+                                <field name="bank_account_name"
+                                       attrs="{'readonly': [('state', '!=', 'รออนุมัติ')]}"/>
+                            </group>
+                        </group>
                         <group string="วงเงินค่ารักษาพยาบาลประจำปี">
                             <group>
                                 <field name="expense_year"/>
                                 <field name="annual_limit"/>
+                                <field name="annual_opening_amount"/>
                                 <field name="annual_approved_amount"/>
                             </group>
                             <group>
+                                <field name="annual_pending_amount"/>
                                 <field name="remaining_amount"/>
+                                <button name="action_open_annual_limit"
+                                        string="ตั้งวงเงินต่อปี"
+                                        type="object"
+                                        class="btn-link"
+                                        icon="fa-cog"/>
                             </group>
                         </group>
                         <group>
-                            <group string="หมายเหตุ">
+                            <group string="หมายเหตุ (สร้างอัตโนมัติ)">
                                 <field name="user_note"
                                        nolabel="1"
-                                       attrs="{'readonly': [('state', '!=', 'รออนุมัติ')]}"
-                                       placeholder="กรอกหมายเหตุ..."/>
+                                       readonly="1"
+                                       placeholder="ระบบสร้างจากจำนวนเงิน + บัญชีธนาคารให้อัตโนมัติ"/>
                             </group>
-                            <group string="ไฟล์แนบ">
+                            <group string="ไฟล์แนบเพิ่มเติม (ฝั่ง Odoo)">
                                 <field name="attachment_ids"
                                        widget="many2many_binary"
                                        nolabel="1"
                                        attrs="{'readonly': [('state', '!=', 'รออนุมัติ')]}"/>
-                                <button name="action_open_attachment"
-                                        string="ดูไฟล์แนบ"
+                            </group>
+                        </group>
+                        <!-- ตารางรายการไฟล์แนบซ่อนไว้ — ตัวไฟล์จริงดูได้ที่กล่องเอกสารแนบ
+                             ยังต้องคงฟิลด์ไว้ในฟอร์ม เพราะระบบใช้อ้างอิงตอนโหลดไฟล์จากแอป -->
+                        <field name="attachment_line_ids" invisible="1"/>
+                        <group string="ใบการรับในระบบบัญชี"
+                               attrs="{'invisible': [('voucher_number', 'in', [False, ''])]}">
+                            <group>
+                                <field name="voucher_number"/>
+                                <field name="voucher_db"/>
+                            </group>
+                            <group>
+                                <field name="voucher_partner"/>
+                                <field name="voucher_created_at"/>
+                                <button name="action_open_voucher"
+                                        string="เปิดใบการรับ"
                                         type="object"
                                         class="btn-link"
-                                        icon="fa-paperclip"
-                                        attrs="{'invisible': [('file_path', 'in', [False, ''])]}"/>
+                                        icon="fa-external-link"/>
                             </group>
                         </group>
                         <group string="การอนุมัติ">
@@ -128,8 +173,14 @@
                         <group>
                             <field name="php_id" invisible="1"/>
                             <field name="file_path" invisible="1"/>
+                            <field name="voucher_ref_id" invisible="1"/>
                         </group>
                     </sheet>
+                    <!-- กล่องเอกสารแนบ + บันทึกโน้ต — ใบเสร็จจากแอปจะมาโชว์เป็นรูปตัวอย่างที่นี่ -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
                 </form>
             </field>
         </record>
@@ -146,8 +197,13 @@
                     <field name="username"/>
                     <field name="employee_code"/>
                     <field name="branch_id"/>
+                    <field name="company"/>
                     <field name="department"/>
+                    <field name="bank_account_number"/>
+                    <field name="voucher_number"/>
                     <separator/>
+                    <filter string="ส่งเข้าการรับแล้ว" name="has_voucher"
+                            domain="[('voucher_number', '!=', False)]"/>
                     <filter string="รออนุมัติ" name="pending" domain="[('state', '=', 'รออนุมัติ')]"/>
                     <filter string="อนุมัติแล้ว" name="approved" domain="[('state', '=', 'อนุมัติ')]"/>
                     <filter string="ไม่อนุมัติ" name="rejected" domain="[('state', '=', 'ไม่อนุมัติ')]"/>
@@ -157,6 +213,7 @@
                         <filter string="พนักงาน" name="group_employee" context="{'group_by': 'employee_id'}"/>
                         <filter string="สถานะ" name="group_state" context="{'group_by': 'state'}"/>
                         <filter string="สาขา" name="group_branch" context="{'group_by': 'branch_id'}"/>
+                        <filter string="บริษัท (สังกัด)" name="group_company" context="{'group_by': 'company'}"/>
                         <filter string="แผนก" name="group_department" context="{'group_by': 'department'}"/>
                         <filter string="วันที่ทำงาน" name="group_work_date" context="{'group_by': 'work_date'}"/>
                     </group>

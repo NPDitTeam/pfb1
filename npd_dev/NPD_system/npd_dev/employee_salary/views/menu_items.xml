@@ -81,6 +81,27 @@
               action="action_sync_medical_expense_from_api"
               sequence="60"/>
 
+    <!-- เมนูตั้งวงเงินค่ารักษาพยาบาลต่อปี -->
+    <menuitem id="sub_medical_expense_limit_menu"
+              name="วงเงินค่ารักษาพยาบาลต่อปี"
+              parent="main_employee_salary_menu"
+              action="action_medical_expense_limit"
+              sequence="61"/>
+
+    <!-- เมนูยอดค่ารักษาพยาบาลที่เบิกไปแล้วก่อนใช้ระบบ -->
+    <menuitem id="sub_medical_expense_opening_menu"
+              name="ยอดค่ารักษาพยาบาลยกมา"
+              parent="main_employee_salary_menu"
+              action="action_medical_expense_opening"
+              sequence="62"/>
+
+    <!-- เมนูตั้งค่าส่งค่ารักษาพยาบาลเข้าหน้าการรับ -->
+    <menuitem id="sub_medical_expense_voucher_config_menu"
+              name="ตั้งค่าส่งค่ารักษาพยาบาลเข้าการรับ"
+              parent="main_employee_salary_menu"
+              action="action_medical_expense_voucher_config"
+              sequence="63"/>
+
     <!-- เมนูจัดการค่าเบี้ยเลี้ยง -->
     <menuitem id="sub_allowance_management_menu"
               name="จัดการค่าเบี้ยเลี้ยง"

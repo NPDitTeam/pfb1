@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_medical_expense_voucher_config_tree" model="ir.ui.view">
+            <field name="name">medical.expense.voucher.config.tree</field>
+            <field name="model">medical.expense.voucher.config</field>
+            <field name="arch" type="xml">
+                <tree string="ตั้งค่าส่งค่ารักษาพยาบาลเข้าการรับ">
+                    <field name="company"/>
+                    <field name="db_name"/>
+                    <field name="target_company_id"/>
+                    <field name="target_journal_id"/>
+                    <field name="target_payment_journal_id"/>
+                    <field name="target_payment_method_id"/>
+                    <field name="target_product_id"/>
+                    <field name="target_account_id"/>
+                    <field name="target_analytic_id"/>
+                    <field name="target_default_branch_id"/>
+                    <field name="active" widget="boolean_toggle"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_medical_expense_voucher_config_form" model="ir.ui.view">
+            <field name="name">medical.expense.voucher.config.form</field>
+            <field name="model">medical.expense.voucher.config</field>
+            <field name="arch" type="xml">
+                <form string="ตั้งค่าส่งค่ารักษาพยาบาลเข้าการรับ">
+                    <header>
+                        <button name="action_test_connection"
+                                string="ทดสอบการเชื่อมต่อ"
+                                type="object"
+                                class="btn-primary"
+                                icon="fa-plug"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1><field name="company" placeholder="เลือกบริษัท"/></h1>
+                        </div>
+                        <group>
+                            <group string="ฐานข้อมูลปลายทาง">
+                                <field name="db_name" placeholder="NPD_S_Group_New_V2"/>
+                                <field name="target_company_id"/>
+                                <field name="active"/>
+                            </group>
+                            <group string="เอกสาร">
+                                <field name="reference_text"/>
+                                <field name="line_label"/>
+                                <field name="note"/>
+                            </group>
+                        </group>
+                        <group string="ข้อมูลอ้างอิงใน DB ปลายทาง (id ของแต่ละ DB ไม่เท่ากัน)">
+                            <group>
+                                <field name="target_journal_id"/>
+                                <field name="target_payment_journal_id"/>
+                                <field name="target_payment_method_id"/>
+                            </group>
+                            <group>
+                                <field name="target_product_id"/>
+                                <field name="target_account_id"/>
+                                <field name="target_analytic_id"/>
+                                <field name="target_default_branch_id"/>
+                            </group>
+                        </group>
+                        <div class="alert alert-warning" role="alert">
+                            <b>หา id ได้จากไหน</b>
+                            <p>
+                                เปิดระบบบัญชีของบริษัทนั้น ไปที่รายการที่ต้องการ แล้วดูเลข
+                                <code>id=</code> บน URL เช่น
+                                <code>.../web#id=1514&amp;model=product.product</code> → id คือ 1514<br/>
+                                กรอกครบแล้วกด <b>ทดสอบการเชื่อมต่อ</b> เพื่อยืนยันว่าทุก id
+                                มีอยู่จริงก่อนใช้งาน — ถ้าตั้งผิด จะไปรู้ตอนกดอนุมัติแล้วใบเบิกค้าง
+                            </p>
+                        </div>
+                        <div class="alert alert-info" role="alert">
+                            <b>ระบบทำอะไรให้บ้างตอนกดอนุมัติ</b>
+                            <ul>
+                                <li>สร้างใบการรับ (ใบจ่ายเงินการจัดซื้อ) ใน DB ตามสังกัดพนักงาน</li>
+                                <li>ผู้จำหน่าย = ชื่อพนักงาน (ไม่มีในระบบจะสร้างให้)</li>
+                                <li>สาขา = สาขาของพนักงาน จับคู่ด้วยชื่อ ไม่เจอใช้สาขาเริ่มต้น</li>
+                                <li>หมายเหตุ = หมายเหตุจากคำขอค่ารักษาพยาบาล</li>
+                                <li>แนบไฟล์ใบเสร็จ/ใบรับรองแพทย์ทั้งหมดเข้าใบการรับ</li>
+                                <li>post ใบเพื่อออกเลขเอกสาร แล้วส่งเลขกลับมาที่คำขอ</li>
+                            </ul>
+                        </div>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_medical_expense_voucher_config" model="ir.actions.act_window">
+            <field name="name">ตั้งค่าส่งค่ารักษาพยาบาลเข้าการรับ</field>
+            <field name="res_model">medical.expense.voucher.config</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    ยังไม่ได้ตั้งค่าปลายทาง
+                </p>
+                <p>
+                    ต้องตั้งค่า 1 รายการต่อ 1 บริษัท ระบบถึงจะส่งใบเบิกค่ารักษาพยาบาล
+                    เข้าหน้าการรับของบริษัทนั้นได้
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

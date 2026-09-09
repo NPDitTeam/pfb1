@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    หมายเหตุสำหรับผู้ดูแลระบบ:
+    cron นี้ทำหน้าที่ "รีเซตวงเงินค่ารักษาพยาบาลเมื่อขึ้นปีใหม่"
+    โดยยกวงเงินของปีก่อนหน้ามาตั้งเป็นวงเงินของปีปัจจุบันให้อัตโนมัติ
+    (ยอดที่เบิกไปแล้วนับแยกตามปีอยู่แล้ว ขึ้นปีใหม่จึงเริ่มนับ 0 เอง)
+
+    รันทุกวันเพื่อความชัวร์ — ถ้าวงเงินของปีนี้มีอยู่แล้วจะไม่ทำอะไร
+
+    หากต้องการเปลี่ยน "เวลา" ที่ cron นี้รัน
+    >>> ห้ามแก้ที่ไฟล์นี้ <<< เพราะ noupdate="1" ใช้ได้แค่ตอน install ใหม่เท่านั้น
+    ให้ไปแก้ที่ Odoo UI:
+        Settings → Technical → Automation → Scheduled Actions
+        ค้นหา: "รีเซตวงเงินค่ารักษาพยาบาลขึ้นปีใหม่ (Auto)"
+-->
+<odoo>
+    <data noupdate="1">
+        <record id="ir_cron_medical_expense_limit_rollover" model="ir.cron">
+            <field name="name">รีเซตวงเงินค่ารักษาพยาบาลขึ้นปีใหม่ (Auto)</field>
+            <field name="model_id" ref="model_medical_expense_limit"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_rollover_annual_limit()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active">True</field>
+            <!-- ตี 1 เวลาไทย = 18:00 UTC (UTC+7) ของวันก่อนหน้า -->
+            <field name="nextcall">2026-09-08 18:00:00</field>
+        </record>
+
+        <!-- วงเงินมาตรฐานตั้งต้น — HR แก้ตัวเลขได้ที่เมนู "วงเงินค่ารักษาพยาบาลต่อปี"
+             ปีถัดไป cron ด้านบนจะยกวงเงินนี้ไปให้เอง -->
+        <record id="medical_expense_limit_default_2026" model="medical.expense.limit">
+            <field name="year">2026</field>
+            <field name="amount">10000.0</field>
+            <field name="note">วงเงินมาตรฐานตั้งต้นของระบบ</field>
+        </record>
+
+    </data>
+</odoo>

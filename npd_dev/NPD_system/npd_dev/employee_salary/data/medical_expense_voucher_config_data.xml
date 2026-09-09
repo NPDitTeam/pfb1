@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ค่าตั้งต้นของการส่งค่ารักษาพยาบาลเข้าหน้าการรับ — 1 แถวต่อ 1 บริษัท
+
+    ทุกค่าดึงมาจาก "ใบการรับค่ารักษาพยาบาลที่ทำไว้จริง" ในแต่ละฐานข้อมูล
+    (สำรวจ 8 ก.ย. 2026) ไม่ใช่การเดาจากชื่อหรือลอกรหัสข้ามบริษัท
+
+    ทั้ง 5 บริษัทลงบัญชี 5310-11 ค่ารักษาพยาบาล เหมือนกันหมด
+    และใช้สินค้าชื่อ "ค่าสวัสดิการรักษาพยาบาล" ของแต่ละฐาน (ยกเว้นสตีลเทค
+    ที่มีแค่ "ค่ารักษาพยาบาล")
+
+    >>> ห้ามลอกรหัสบัญชี/รหัสสินค้าข้าม DB <<<
+    รหัสเดียวกันคนละบริษัทเป็นคนละตัว เช่น 5200-24
+      • นภดลกรุงเทพ / อินเตอร์เทรดดิ้ง / เอสกรุ๊ป = ค่ารักษาพยาบาล-พนง.ขาย
+      • เอ็นพีดีโลจิสติกส์            = ค่าการตลาด (ค่าทำ TikTok)   ← คนละเรื่องเลย
+
+    noupdate="1" — สร้างครั้งเดียวตอนติดตั้ง อัปเกรดรอบหลังจะไม่ทับค่าที่ HR แก้ไว้
+    แก้ไขได้ที่เมนู "ตั้งค่าส่งค่ารักษาพยาบาลเข้าการรับ" และควรกด
+    "ทดสอบการเชื่อมต่อ" ทุกครั้งหลังแก้
+-->
+<odoo>
+    <data noupdate="1">
+
+        <!-- นภดล เอส กรุ๊ป — ใบเดิม 188 ใบ ใช้ PR/01368 + 5310-11 -->
+        <record id="medical_voucher_cfg_sgroup" model="medical.expense.voucher.config">
+            <field name="company">นภดลเอสกรุ๊ปจำกัด</field>
+            <field name="db_name">NPD_S_Group_New_V2</field>
+            <field name="target_company_id">1</field>
+            <field name="target_journal_id">2</field>
+            <field name="target_payment_journal_id">17</field>
+            <field name="target_payment_method_id">2</field>
+            <field name="target_product_id">1369</field>
+            <field name="target_account_id">194</field>
+            <field name="target_analytic_id">8</field>
+            <field name="target_default_branch_id">27</field>
+            <field name="line_label">[PR/01368] ค่าสวัสดิการรักษาพยาบาล</field>
+            <field name="note">ตามใบเดิม 188 ใบ (PR/01368 + 5310-11) / KBANK 777-4</field>
+        </record>
+
+        <!-- นภดล กรุงเทพ — ใบเดิม 42 ใบ ใช้ EP-0108 + 5310-11 -->
+        <record id="medical_voucher_cfg_bangkok" model="medical.expense.voucher.config">
+            <field name="company">นภดลกรุงเทพจำกัด</field>
+            <field name="db_name">NPD_Bangkok_New</field>
+            <field name="target_company_id">1</field>
+            <field name="target_journal_id">54</field>
+            <field name="target_payment_journal_id">47</field>
+            <field name="target_payment_method_id">2</field>
+            <field name="target_product_id">2716</field>
+            <field name="target_account_id">188</field>
+            <field name="target_analytic_id">1</field>
+            <field name="target_default_branch_id">4</field>
+            <field name="line_label">[EP-0108] ค่าสวัสดิการรักษาพยาบาล</field>
+            <field name="note">ตามใบเดิม 42 ใบ (EP-0108 + 5310-11) / KBANK 2988</field>
+        </record>
+
+        <!-- นภดล อินเตอร์เทรดดิ้ง — ใบเดิม 31 ใบ ชุดเดียวกับกรุงเทพ -->
+        <record id="medical_voucher_cfg_intertrading" model="medical.expense.voucher.config">
+            <field name="company">นภดลอินเตอร์เทรดดิ้งจำกัด</field>
+            <field name="db_name">NPD_Intertrading_New</field>
+            <field name="target_company_id">1</field>
+            <field name="target_journal_id">54</field>
+            <field name="target_payment_journal_id">47</field>
+            <field name="target_payment_method_id">2</field>
+            <field name="target_product_id">2716</field>
+            <field name="target_account_id">188</field>
+            <field name="target_analytic_id">1</field>
+            <field name="target_default_branch_id">4</field>
+            <field name="line_label">[EP-0108] ค่าสวัสดิการรักษาพยาบาล</field>
+            <field name="note">ตามใบเดิม 31 ใบ (EP-0108 + 5310-11) / KBANK 6512</field>
+        </record>
+
+        <!-- เอ็นพีดี โลจิสติกส์ — ใบเดิม 8 ใบ ใช้ PR/00503 + 5310-11 -->
+        <record id="medical_voucher_cfg_logistics" model="medical.expense.voucher.config">
+            <field name="company">เอ็นพีดีโลจิสติกส์จำกัด</field>
+            <field name="db_name">NPD_Logistics_New</field>
+            <field name="target_company_id">1</field>
+            <field name="target_journal_id">2</field>
+            <field name="target_payment_journal_id">16</field>
+            <field name="target_payment_method_id">8</field>
+            <field name="target_product_id">490</field>
+            <field name="target_account_id">1296</field>
+            <field name="target_analytic_id">34</field>
+            <field name="target_default_branch_id">21</field>
+            <field name="line_label">[PR/00503] ค่าสวัสดิการรักษาพยาบาล</field>
+            <field name="note">ตามใบเดิม 8 ใบ (PR/00503 + 5310-11) / KBANK 3298</field>
+        </record>
+
+        <!-- เอ็นพีดี สตีลเทค — ใบเดิมมีแค่ 2 ใบ ใช้ PR/00297 + 5310-11 -->
+        <record id="medical_voucher_cfg_steeltech" model="medical.expense.voucher.config">
+            <field name="company">เอ็นพีดีสตีลเทคจำกัด</field>
+            <field name="db_name">NPD_Steeltech_New</field>
+            <field name="target_company_id">1</field>
+            <field name="target_journal_id">2</field>
+            <field name="target_payment_journal_id">81</field>
+            <field name="target_payment_method_id">7</field>
+            <field name="target_product_id">298</field>
+            <field name="target_account_id">188</field>
+            <field name="target_analytic_id">5</field>
+            <field name="target_default_branch_id">4</field>
+            <field name="line_label">[PR/00297] ค่ารักษาพยาบาล</field>
+            <field name="note">ตามใบเดิม 2 ใบ (PR/00297 + 5310-11) / KBANK7578 — ใบเดิมไม่ได้ใส่สาขา ระบบจะใส่สาขาพนักงานให้</field>
+        </record>
+
+    </data>
+</odoo>
