@@ -130,6 +130,30 @@ class HrWorkSchedule(models.Model):
             self.sat_shift_start = 0.0
             self.sat_shift_end = 0.0
 
+    def name_get(self):
+        """โมเดลนี้ไม่มีฟิลด์ชื่อ ถ้าไม่กำหนดเอง Odoo จะโชว์เป็น "hr.work.schedule,104"
+        ซึ่งอ่านไม่ออกว่าเป็นกะของใคร โดยเฉพาะบนหน้าข้อมูลพนักงาน
+        """
+        categories = dict(self._fields['category'].selection)
+        result = []
+        for rec in self:
+            emp = rec.employee_id
+            who = ' '.join(filter(None, [emp.firstname or '', emp.lastname or ''])).strip()
+            code = emp.employee_code or ''
+            if who and code:
+                label = '%s (%s)' % (who, code)
+            elif who:
+                label = who
+            elif code:
+                label = 'รหัส %s' % code
+            else:
+                label = 'ตารางกะ'
+            cat = categories.get(rec.category)
+            if cat:
+                label = '%s · %s' % (label, cat)
+            result.append((rec.id, label))
+        return result
+
 
 class EmployeeSalaryWorkSchedule(models.Model):
     """แสดงบนเมนู "ข้อมูลพนักงาน" ว่าคนไหนลงตารางกะแล้วหรือยัง
