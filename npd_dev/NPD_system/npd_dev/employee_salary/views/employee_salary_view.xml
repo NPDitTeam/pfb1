@@ -59,7 +59,6 @@
                                         <field name="phone_number"/>
                                         <field name="email"/>
                                         <field name="id_card_number"/>
-                                        <field name="passport_number"/>
                                         <field name="social_security_number"/>
                                     </group>
                                 </group>
@@ -149,6 +148,59 @@
                                     </group>
                                 </group>
                             </page>
+                            <page string="ข้อมูลต่างชาติ" name="foreign_worker">
+                                <!-- เตือนแทนการ "ขึ้นสีแดงก่อนหนึ่งเดือน" ในชีทเดิม -->
+                                <div class="alert alert-danger" role="alert"
+                                     attrs="{'invisible': [('work_permit_expiring', '=', False)]}">
+                                    <b>ใบอนุญาตทำงานจะหมดอายุภายใน 1 เดือน หรือหมดไปแล้ว</b>
+                                    — ต้องเริ่มยื่นต่ออายุ
+                                </div>
+                                <div class="alert alert-danger" role="alert"
+                                     attrs="{'invisible': [('passport_expiring', '=', False)]}">
+                                    <b>Passport จะหมดอายุภายใน 1 เดือน หรือหมดไปแล้ว</b>
+                                </div>
+                                <div class="alert alert-danger" role="alert"
+                                     attrs="{'invisible': [('pink_card_expiring', '=', False)]}">
+                                    <b>บัตรชมพูจะหมดอายุภายใน 1 เดือน หรือหมดไปแล้ว</b>
+                                </div>
+                                <group>
+                                    <group string="บัตรชมพู">
+                                        <field name="pink_card_issue_date"/>
+                                        <field name="pink_card_expiry_date"/>
+                                    </group>
+                                    <group string="หนังสือเดินทาง (Passport)">
+                                        <field name="passport_number"/>
+                                        <field name="passport_issue_date"/>
+                                        <field name="passport_expiry_date"/>
+                                    </group>
+                                </group>
+                                <group>
+                                    <group string="ข้อมูลนายจ้าง">
+                                        <field name="employer_business_type"/>
+                                        <field name="employer_workplace"/>
+                                    </group>
+                                    <group string="ใบอนุญาตทำงาน (Work Permit)">
+                                        <field name="work_permit_issue_date"/>
+                                        <field name="work_permit_expiry_date"/>
+                                    </group>
+                                </group>
+                                <group string="การต่อเอกสาร">
+                                    <group>
+                                        <field name="foreign_doc_status_id"/>
+                                        <field name="return_trip_date"/>
+                                    </group>
+                                    <group>
+                                        <field name="work_permit_renewal_date"/>
+                                        <field name="bt50_submit_date"/>
+                                    </group>
+                                </group>
+                                <group string="หมายเหตุ">
+                                    <field name="foreign_doc_note" nolabel="1"/>
+                                </group>
+                                <field name="pink_card_expiring" invisible="1"/>
+                                <field name="passport_expiring" invisible="1"/>
+                                <field name="work_permit_expiring" invisible="1"/>
+                            </page>
                         </notebook>
                     </sheet>
                 </form>
@@ -159,7 +211,8 @@
             <field name="name">employee.salary.tree</field>
             <field name="model">employee.salary</field>
             <field name="arch" type="xml">
-                <tree string="Employee Salary">
+                <tree string="Employee Salary" decoration-danger="foreign_doc_expiring">
+                    <field name="foreign_doc_expiring" invisible="1"/>
                     <field name="employee_code"/>
                     <field name="firstname"/>
                     <field name="lastname"/>
@@ -189,6 +242,14 @@
                     <separator/>
                     <filter name="flt_active" string="ใช้งาน"
                             domain="[('status', '=', 'active')]"/>
+                    <separator/>
+                    <filter name="flt_foreign" string="ต่างชาติ"
+                            domain="[('nationality', '=', 'ต่างชาติ')]"/>
+                    <filter name="flt_foreign_doc_expiring" string="เอกสารต่างชาติใกล้หมดอายุ (1 เดือน)"
+                            domain="['|', '|',
+                                     ('work_permit_expiry_date', '&lt;=', (context_today() + relativedelta(months=1)).strftime('%Y-%m-%d')),
+                                     ('passport_expiry_date', '&lt;=', (context_today() + relativedelta(months=1)).strftime('%Y-%m-%d')),
+                                     ('pink_card_expiry_date', '&lt;=', (context_today() + relativedelta(months=1)).strftime('%Y-%m-%d'))]"/>
                     <group expand="0" string="จัดกลุ่มตาม">
                         <filter name="grp_branch" string="สาขา"
                                 context="{'group_by': 'branch_id'}"/>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ตารางสถานะการต่อเอกสาร — HR เพิ่ม/แก้/เรียงลำดับเองได้ -->
+        <record id="view_employee_foreign_doc_status_tree" model="ir.ui.view">
+            <field name="name">employee.foreign.doc.status.tree</field>
+            <field name="model">employee.foreign.doc.status</field>
+            <field name="arch" type="xml">
+                <tree string="สถานะการต่อเอกสารแรงงานต่างชาติ" editable="bottom">
+                    <field name="sequence" widget="handle"/>
+                    <field name="name"/>
+                    <field name="active" widget="boolean_toggle"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_employee_foreign_doc_status" model="ir.actions.act_window">
+            <field name="name">สถานะต่อเอกสารต่างชาติ</field>
+            <field name="res_model">employee.foreign.doc.status</field>
+            <field name="view_mode">tree</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">ยังไม่มีสถานะการต่อเอกสาร</p>
+                <p>
+                    รายการนี้คือตัวเลือกของช่อง "สถานะการต่อเอกสาร" ในแท็บข้อมูลต่างชาติ
+                    ลากเพื่อเรียงลำดับ หรือพิมพ์สถานะใหม่จากหน้าข้อมูลพนักงานได้เลย
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

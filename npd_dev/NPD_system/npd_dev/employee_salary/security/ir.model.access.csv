@@ -85,3 +85,4 @@ access_medical_expense_voucher_config_user,medical.expense.voucher.config.user,m
 access_medical_expense_voucher_config_manager,medical.expense.voucher.config.manager,model_medical_expense_voucher_config,hr.group_hr_manager,1,1,1,1
 access_medical_expense_opening_user,medical.expense.opening.user,model_medical_expense_opening,base.group_user,1,0,0,0
 access_medical_expense_opening_manager,medical.expense.opening.manager,model_medical_expense_opening,hr.group_hr_manager,1,1,1,1
+access_employee_foreign_doc_status_user,employee.foreign.doc.status.user,model_employee_foreign_doc_status,base.group_user,1,1,1,1

@@ -143,4 +143,11 @@
               parent="main_employee_salary_menu"
               action="action_sync_and_open_saturday_leave_config"
               sequence="85"/>
+
+    <!-- เมนูตัวเลือกสถานะการต่อเอกสารแรงงานต่างชาติ -->
+    <menuitem id="sub_employee_foreign_doc_status_menu"
+              name="สถานะต่อเอกสารต่างชาติ"
+              parent="main_employee_salary_menu"
+              action="action_employee_foreign_doc_status"
+              sequence="90"/>
 </odoo>
