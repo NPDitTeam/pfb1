@@ -15,6 +15,7 @@ ACTION_TYPES = [
     ('invoice_cancel', u'ยกเลิกใบแจ้งหนี้'),
     ('return_date', u'แก้วันที่คืนสินค้า'),
     ('rental_status', u'แก้สถานะการเช่า'),
+    ('invoice_vat_round', u'แก้การปัดเศษ VAT ใบแจ้งหนี้'),
 ]
 
 

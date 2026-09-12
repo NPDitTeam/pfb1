@@ -18,6 +18,12 @@ from odoo.exceptions import UserError
 from odoo.tools import html2plaintext
 from odoo.tools.misc import html_escape
 
+# ป้ายชื่อของสองวิธีปัดเศษ VAT — เอามาจากที่เดียวกับตัวคำนวณ จะได้ไม่เขียนซ้ำ
+# แล้วเพี้ยนกันทีหลัง (ดู ai_it_vat_fix.py)
+from .ai_it_vat_fix import MODE_HOW as VAT_MODE_HOW
+from .ai_it_vat_fix import MODE_NAME as VAT_MODE_NAME
+from .ai_it_vat_fix import MODE_WHO as VAT_MODE_WHO
+
 _logger = logging.getLogger(__name__)
 
 BOT_XMLID = 'npd_ai_it_assistant.partner_ai_it_bot'
@@ -32,6 +38,7 @@ TOPIC_START_STATE = {
     'invoice_date_fix': 'ask_url',
     'return_date_fix': 'ask_return_doc',
     'rental_status_fix': 'ask_rental_doc',
+    'vat_round_fix': 'ask_vat_doc',
 }
 
 # ไอคอนประจำหัวข้อ ใช้เป็นจุดสังเกตหัวเรื่องในแชท
@@ -40,7 +47,16 @@ TOPIC_ICONS = {
     'invoice_date_fix': '📅',
     'return_date_fix': '↩️',
     'rental_status_fix': '🔄',
+    'vat_round_fix': '🧮',
 }
+
+# หัวข้อ 5 — คำที่พนักงานใช้เลือกวิธีปัดเศษ VAT
+# ตอบเป็นเลข 1/2 ก็ได้ (จัดการแยกในตัวอ่านคำตอบ) หรือพิมพ์เป็นคำก็ได้
+VAT_TOTAL_WORDS = {'ยอดรวม', 'แบบยอดรวม', 'รวม', 'แบบรวม', 'คิดจากยอดรวม',
+                   'จากยอดรวม', 'total'}
+VAT_LINE_WORDS = {'รายบรรทัด', 'แบบรายบรรทัด', 'บรรทัด', 'แบบบรรทัด',
+                  'ทีละบรรทัด', 'ถอย', 'ถอยกลับ', 'ย้อนกลับ', 'คืนค่าเดิม',
+                  'ค่าเดิม', 'แบบเดิม', 'เหมือนเดิม', 'undo', 'revert', 'line'}
 
 CANCEL_WORDS = {'ยกเลิก', 'เลิก', 'จบ', 'ไม่ต้อง', 'cancel', 'exit', 'quit', 'stop', 'no'}
 CONFIRM_WORDS = {'ยืนยัน', 'ตกลง', 'ทำเลย', 'ok', 'okay', 'confirm', 'yes', 'y', 'ใช่'}
@@ -104,6 +120,11 @@ def _fmt(value):
     if abs(value - round(value)) < 0.005:
         return '{:,}'.format(int(round(value)))
     return '{:,.2f}'.format(value)
+
+
+def _baht(value):
+    """จำนวนเงิน — คงทศนิยม 2 ตำแหน่งเสมอ เพราะเรื่องนี้คุยกันที่ระดับสตางค์"""
+    return '{:,.2f}'.format(float(value or 0.0))
 
 
 # ======================================================================
@@ -220,6 +241,9 @@ class NpdAiItSession(models.Model):
         ('ask_return_date', 'รอวันที่คืนใหม่'),
         ('ask_rental_doc', 'รอเลขที่ใบสั่งขาย'),
         ('confirm_status', 'รอยืนยันการแก้สถานะการเช่า'),
+        ('ask_vat_doc', 'รอใบแจ้งหนี้ที่จะแก้การปัดเศษ VAT'),
+        ('ask_vat_mode', 'รอเลือกวิธีปัดเศษ VAT'),
+        ('confirm_vat', 'รอยืนยันการแก้การปัดเศษ VAT'),
         ('ask_date', 'รอวันที่ใหม่'),
         ('ask_reason', 'รอหมายเหตุว่าแก้เพราะอะไร'),
         ('confirm_date', 'รอยืนยันการแก้วันที่'),
@@ -470,6 +494,18 @@ class NpdAiItSession(models.Model):
                 + _hint('ระบบจะคำนวณสถานะที่ถูกต้องให้เอง จากวันที่สิ้นสุดการเช่า'),
             ))
             return
+        if topic.code == 'vat_round_fix':
+            self._post_bot(_block(
+                heading,
+                _rows(
+                    'ใช้ตอนลูกค้าทักว่า <b>ยอดก่อน VAT ต่างไป 1 สตางค์</b>',
+                    _hint('ยอดรวมทั้งใบไม่เปลี่ยน ย้ายแค่เศษสตางค์'
+                          'ระหว่างช่องก่อน VAT กับช่อง VAT'),
+                ),
+                'พิมพ์ <b>เลขที่ใบแจ้งหนี้</b> หรือวาง <b>URL</b> ของหน้านั้นมาก็ได้<br/>'
+                + _hint('เช่น INV-2608070024'),
+            ))
+            return
         self._post_bot(_block(
             heading,
             'หัวข้อนี้ยังไม่เปิดให้บริการ กรุณาแจ้งฝ่าย IT โดยตรงไปก่อน',
@@ -620,6 +656,9 @@ class NpdAiItSession(models.Model):
             return
         if code == 'rental_status_fix':
             self._handle_rental_status_fix(text)
+            return
+        if code == 'vat_round_fix':
+            self._handle_vat_round_fix(text)
             return
 
         self._post_bot('หัวข้อนี้ยังไม่เปิดให้บริการ กรุณาแจ้งฝ่าย IT โดยตรงไปก่อน')
@@ -1407,6 +1446,12 @@ class NpdAiItSession(models.Model):
             self._step_confirm_rental_status()
             return
 
+        # ทางแก้การปัดเศษ VAT (หัวข้อ 5)
+        if data.get('plan') == 'vat_round':
+            self.sudo().write({'change_note': note, 'state': 'confirm_vat'})
+            self._step_confirm_vat_round()
+            return
+
         move = self.env['account.move'].sudo().browse(self.document_id)
         if not move.exists():
             self._post_bot('⛔ ไม่พบเอกสารนี้แล้ว (อาจถูกลบไป)')
@@ -1900,6 +1945,279 @@ class NpdAiItSession(models.Model):
         self._log_history('rental_status',
                           'สถานะการเช่า: %s → %s' % (old_label, new_label))
         self._post_bot('<br/>'.join(lines))
+
+    # ==================================================================
+    # หัวข้อที่ 5 : แก้การปัดเศษ VAT ในใบแจ้งหนี้ (สลับได้ทั้งไปและกลับ)
+    # ==================================================================
+    def _handle_vat_round_fix(self, text):
+        self.ensure_one()
+        if self.state == 'ask_vat_doc':
+            self._step_ask_vat_doc(text)
+        elif self.state == 'ask_vat_mode':
+            self._step_ask_vat_mode(text)
+        elif self.state == 'ask_reason':
+            self._step_ask_reason(text)
+        elif self.state == 'confirm_vat':
+            self._step_confirm_vat(text)
+        else:
+            self._recover_unknown_state()
+
+    # ---- ขั้นที่ 1: รับเอกสาร แล้วเทียบสองแบบให้ดู ----------------------
+    def _step_ask_vat_doc(self, text):
+        Fix = self.env['npd.ai.it.vat.fix']
+        move, error = Fix.find_move(text)
+        if error:
+            self._post_bot('⛔ %s' % error)
+            return
+        if not move:
+            self._post_bot('กรุณาพิมพ์ <b>เลขที่ใบแจ้งหนี้</b> '
+                           'หรือวาง <b>URL</b> ของหน้านั้นครับ')
+            return
+
+        branch, branch_error = self.env['npd.ai.it.stock.fix'].resolve_branch(
+            move, self.env.user)
+        if branch_error:
+            self._post_bot('⛔ %s' % html_escape(branch_error))
+            self.sudo().write({'state': 'cancelled'})
+            return
+
+        plan, error = Fix.analyze(move)
+        if error:
+            self._post_bot('⛔ %s' % error)
+            self.sudo().write({'state': 'cancelled'})
+            return
+
+        # ปัดแล้วลงตัวพอดีทั้งสองแบบ = ไม่มีอะไรให้เลือก จบตรงนี้
+        if plan['same']:
+            self._post_bot(_block(
+                _rows(
+                    _title('ใบนี้ไม่มีเศษให้แก้', '✅'),
+                    _kv('ใบแจ้งหนี้', '<b>%s</b>' % html_escape(plan['move_name'])),
+                    _kv('ยอดก่อน VAT', '<b>%s</b>' % _baht(plan['old_untaxed'])),
+                    _kv('ภาษีมูลค่าเพิ่ม 7%', '<b>%s</b>' % _baht(plan['old_tax'])),
+                ),
+                _hint('คิดแบบยอดรวมหรือแบบรายบรรทัดก็ได้เลขเท่ากัน '
+                      'ไม่ว่าลูกค้าจะคิดวิธีไหนก็ตรงกับใบนี้อยู่แล้วครับ'),
+            ))
+            self.sudo().write({'state': 'done'})
+            return
+
+        self.sudo().write({
+            'document_ref': move.name or '',
+            'document_model': move._name,
+            'document_id': move.id,
+            'branch_id': branch.id if branch else False,
+        })
+        self._set_data({'plan': 'vat_round', 'analysis': plan})
+        self.sudo().write({'state': 'ask_vat_mode'})
+        self._post_vat_choices(plan)
+
+    def _post_vat_choices(self, plan):
+        """กล่องเทียบสองแบบ — ให้เห็นทันทีว่าตอนนี้เป็นแบบไหนและอีกแบบได้เท่าไร"""
+        current = plan.get('current_mode')
+        blocks = [_rows(
+            _title(html_escape(plan['move_name']), '🧮'),
+            _kv('ยอดรวมทั้งสิ้น', '<b>%s บาท</b>' % _baht(plan['gross'])),
+            _hint('ยอดรวมนี้ไม่เปลี่ยน ไม่ว่าจะเลือกแบบไหน '
+                  'ย้ายแค่เศษสตางค์ระหว่างช่องก่อน VAT กับช่อง VAT'),
+        )]
+
+        for number, mode in ((1, 'total'), (2, 'line')):
+            detail = plan['modes'][mode]
+            heading = '<b>%d) %s</b>' % (number, VAT_MODE_NAME[mode])
+            if mode == current:
+                heading += ' <span class="text-muted">— ใบนี้ใช้อยู่ตอนนี้</span>'
+            blocks.append(_rows(
+                heading,
+                _indent(_rows(
+                    _kv('ก่อน VAT', '<b>%s</b>' % _baht(detail['untaxed'])),
+                    _kv('VAT 7%', '<b>%s</b>' % _baht(detail['tax'])),
+                    _hint(VAT_MODE_HOW[mode]),
+                    _hint(VAT_MODE_WHO[mode]),
+                )),
+            ))
+
+        if current is None:
+            # ใบที่ยอดไม่ตรงกับสูตรไหนเลย เคยเจอในใบเก่าที่เคยแก้มือมาก่อน
+            blocks.append(_rows(
+                '<b class="text-danger">⚠️ ตอนนี้ใบนี้ไม่ตรงกับทั้งสองแบบ</b>',
+                _kv('ยอดปัจจุบัน', 'ก่อน VAT <b>%s</b> · VAT <b>%s</b>'
+                    % (_baht(plan['old_untaxed']), _baht(plan['old_tax']))),
+                _hint('เลือกแบบที่ต้องการได้เลย ระบบจะจัดให้ตรงสูตรนั้น'),
+            ))
+
+        blocks.append(_rows(
+            'พิมพ์ <b>1</b> หรือ <b>2</b> เพื่อเลือกแบบที่ต้องการ',
+            _hint('ถ้าเคยให้แก้เป็นแบบยอดรวมไปแล้วอยากได้ของเดิมคืน '
+                  'พิมพ์ <b>"ถอยกลับ"</b> ก็ได้ครับ'),
+        ))
+        self._post_bot(_block(*blocks))
+
+    # ---- ขั้นที่ 2: เลือกแบบ ------------------------------------------
+    def _step_ask_vat_mode(self, text):
+        data = self._get_data()
+        plan = data.get('analysis') or {}
+        mode = self._parse_vat_mode(text)
+        if not mode:
+            self._post_bot('ยังไม่แน่ใจว่าเลือกแบบไหนครับ 🙏<br/>'
+                           'พิมพ์ <b>1</b> = แบบยอดรวม หรือ <b>2</b> = แบบรายบรรทัด '
+                           '(หรือพิมพ์ <b>"ถอยกลับ"</b> เพื่อเอาแบบเดิมคืน)')
+            return
+
+        if mode == plan.get('current_mode'):
+            self._post_bot(_block(
+                _rows(
+                    _title('ใบนี้เป็น%sอยู่แล้ว' % VAT_MODE_NAME[mode], 'ℹ️'),
+                    _kv('ก่อน VAT', '<b>%s</b>' % _baht(plan['old_untaxed'])),
+                    _kv('VAT 7%', '<b>%s</b>' % _baht(plan['old_tax'])),
+                ),
+                'ถ้าต้องการอีกแบบให้พิมพ์เลขอีกข้อ '
+                'หรือพิมพ์ <b>"ยกเลิก"</b> เพื่อออกจากรายการนี้',
+            ))
+            return
+
+        data['mode'] = mode
+        self._set_data(data)
+        self.sudo().write({'state': 'ask_reason'})
+        self._ask_change_reason('เปลี่ยนเป็น%s' % VAT_MODE_NAME[mode])
+
+    def _parse_vat_mode(self, text):
+        """อ่านคำตอบของพนักงานเป็น 'total' / 'line' (None = อ่านไม่ออก)"""
+        if _is_command(text, VAT_TOTAL_WORDS):
+            return 'total'
+        if _is_command(text, VAT_LINE_WORDS):
+            return 'line'
+        match = re.search(r'\d+', text or '')
+        if match:
+            return {'1': 'total', '2': 'line'}.get(match.group())
+        return None
+
+    # ---- ขั้นที่ 3: ตรวจทานก่อนยืนยัน ---------------------------------
+    def _step_confirm_vat_round(self):
+        """เรียกจาก _step_ask_reason เมื่อ plan = vat_round"""
+        data = self._get_data()
+        plan = data.get('analysis') or {}
+        mode = data.get('mode')
+        detail = (plan.get('modes') or {}).get(mode) or {}
+
+        changed_lines = [item for item in detail.get('lines', [])
+                         if abs(item['new'] - item['old']) >= 0.005]
+        line_rows = [
+            _kv(html_escape(item['name'][:40]),
+                '%s → <b>%s</b>' % (_baht(item['old']), _baht(item['new'])))
+            for item in changed_lines
+        ]
+
+        blocks = [_rows(
+            _title('ตรวจทานก่อนแก้', '📋'),
+            _kv('ใบแจ้งหนี้', '<b>%s</b>' % html_escape(self.document_ref or '')),
+            _kv('เปลี่ยนเป็น', '<b>%s</b>' % VAT_MODE_NAME.get(mode, '—')),
+        ), _rows(
+            _kv('ก่อน VAT', '%s → <b>%s</b>'
+                % (_baht(plan.get('old_untaxed')), _baht(detail.get('untaxed')))),
+            _kv('VAT 7%', '%s → <b>%s</b>'
+                % (_baht(plan.get('old_tax')), _baht(detail.get('tax')))),
+            _kv('ยอดรวมทั้งสิ้น', '<b>%s</b> <span class="text-muted">'
+                '(เท่าเดิม)</span>' % _baht(plan.get('gross'))),
+        )]
+
+        if line_rows:
+            blocks.append(_rows(_title('บรรทัดที่ยอดก่อน VAT เปลี่ยน'),
+                                _indent(_rows(*line_rows))))
+
+        blocks.append(_rows(
+            _kv('เหตุผล', '<b>%s</b>' % html_escape(self.change_note or '')),
+            _hint('ระบบจะแก้ยอดภาษีขายในรายงานภาษี (ภ.พ.30) ให้ตรงกันด้วย'),
+        ))
+        blocks.append('พิมพ์ <b>"ยืนยัน"</b> เพื่อแก้ '
+                      'หรือ <b>"ยกเลิก"</b> เพื่อออกจากรายการนี้')
+        self._post_bot(_block(*blocks))
+
+    # ---- ขั้นที่ 4: ลงมือแก้ -------------------------------------------
+    def _step_confirm_vat(self, text):
+        if not _is_command(text, CONFIRM_WORDS):
+            self._post_bot('กรุณาพิมพ์ <b>"ยืนยัน"</b> เพื่อแก้ '
+                           'หรือ <b>"ยกเลิก"</b> เพื่อออกจากรายการนี้')
+            return
+
+        Fix = self.env['npd.ai.it.vat.fix']
+        move = self.env['account.move'].sudo().browse(self.document_id)
+        if not move.exists():
+            self._post_bot('⛔ ไม่พบใบแจ้งหนี้นี้แล้ว (อาจถูกลบไป)')
+            self.sudo().write({'state': 'cancelled'})
+            return
+
+        data = self._get_data()
+        mode = data.get('mode')
+        if mode not in ('total', 'line'):
+            self._post_bot('ข้อมูลที่เลือกไว้หายไป กรุณาเริ่มใหม่จากแท็บ '
+                           '"ตัวช่วย AI-IT"')
+            self.sudo().write({'state': 'cancelled'})
+            return
+
+        note = self.change_note or ''
+        try:
+            result = Fix.apply_fix_isolated(
+                move.id, mode, note=note,
+                actor_name=self.env.user.display_name)
+        except Exception as error:  # noqa: BLE001 - ต้องตอบกลับในแชทเสมอ
+            _logger.exception('ตัวช่วย AI-IT: แก้การปัดเศษ VAT ของ %s ไม่สำเร็จ',
+                              self.document_ref)
+            self._post_bot(_block(
+                _rows('<b class="text-danger">⛔ แก้ไม่สำเร็จ</b>',
+                      html_escape(str(error) or error.__class__.__name__)),
+                _hint('ระบบย้อนกลับให้แล้ว ยอดในใบยังเป็นค่าเดิมทุกอย่าง '
+                      'กรุณาแจ้งฝ่าย IT พร้อมข้อความนี้'),
+            ))
+            self.sudo().write({'state': 'done'})
+            return
+
+        if not result.get('applied'):
+            self._post_bot(_block(
+                _rows(_title('ใบนี้เป็นแบบที่เลือกอยู่แล้ว', 'ℹ️'),
+                      _hint('ไม่ได้แก้อะไร ยอดคงเดิมทุกช่อง')),
+                _hint('มีใบอื่นอีกไหม? พิมพ์ "เริ่มใหม่" ได้เลย'),
+            ))
+            self.sudo().write({'state': 'done'})
+            return
+
+        summary = _block(
+            _rows(
+                _title('แก้เรียบร้อยแล้ว', '✅'),
+                _kv('ใบแจ้งหนี้', '<b>%s</b>' % html_escape(self.document_ref or '')),
+                _kv('ตอนนี้เป็น', '<b>%s</b>' % VAT_MODE_NAME.get(mode, '—')),
+            ),
+            _rows(
+                _kv('ก่อน VAT', '%s → <b>%s</b>'
+                    % (_baht(result['old_untaxed']), _baht(result['new_untaxed']))),
+                _kv('VAT 7%', '%s → <b>%s</b>'
+                    % (_baht(result['old_tax']), _baht(result['new_tax']))),
+                _kv('ยอดรวมทั้งสิ้น', '<b>%s</b> <span class="text-muted">'
+                    '(เท่าเดิม)</span>' % _baht(result['gross'])),
+                _kv('เหตุผล', html_escape(note)),
+            ),
+            _rows(
+                _hint('พิมพ์ใบเสร็จ/ใบกำกับภาษีใหม่ได้เลย ยอดจะตรงตามนี้'),
+                _hint('ยอดภาษีขายในรายงานภาษีเปลี่ยนตามไปด้วย %s บาท '
+                      'ถ้ายื่นแบบของเดือนนี้ไปแล้ว ควรแจ้งฝ่ายบัญชีทราบ'
+                      % _baht(result['new_tax'] - result['old_tax'])),
+                _hint('ถ้าต้องการกลับเป็นแบบเดิม พิมพ์ "เริ่มใหม่" '
+                      'แล้วเลือกหัวข้อนี้อีกครั้งได้ตลอด'),
+            ),
+        )
+
+        self.sudo().write({
+            'state': 'done',
+            'summary': html2plaintext(summary),
+        })
+        self._log_history(
+            'invoice_vat_round',
+            'เปลี่ยนเป็น%s · ก่อน VAT %s → %s · VAT %s → %s (ยอดรวม %s เท่าเดิม)'
+            % (VAT_MODE_NAME.get(mode, mode),
+               _baht(result['old_untaxed']), _baht(result['new_untaxed']),
+               _baht(result['old_tax']), _baht(result['new_tax']),
+               _baht(result['gross'])))
+        self._post_bot(summary)
 
     # ------------------------------------------------------------------
     # การอ่านข้อความของพนักงาน (regex ก่อน แล้วค่อยให้ AI ช่วยถ้าอ่านไม่ออก)

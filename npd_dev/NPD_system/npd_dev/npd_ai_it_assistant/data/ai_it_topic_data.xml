@@ -38,5 +38,14 @@
             <field name="active" eval="True"/>
         </record>
 
+        <!-- หัวข้อที่ 5 -->
+        <record id="topic_vat_round_fix" model="npd.ai.it.topic">
+            <field name="name">แก้การปัดเศษ VAT ในใบแจ้งหนี้</field>
+            <field name="code">vat_round_fix</field>
+            <field name="sequence">5</field>
+            <field name="description">ลูกค้าทักว่ายอดก่อน VAT ต่างไป 1 สตางค์ สลับระหว่างคิดจากยอดรวมกับคิดรายบรรทัด (ถอยกลับได้)</field>
+            <field name="active" eval="True"/>
+        </record>
+
     </data>
 </odoo>
