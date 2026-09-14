@@ -5,7 +5,7 @@ import logging
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
-from .head_office_branch_common import DOC_TYPES, HO_FIELD
+from .head_office_branch_common import DOC_TYPES, HO_FIELD, HO_MANUAL_FIELD
 
 _logger = logging.getLogger(__name__)
 
@@ -191,6 +191,9 @@ class NpdHeadOfficeBranchConfig(models.Model):
         domain = list(spec['domain'])
         if 'company_id' in Model._fields:
             domain = [('company_id', '=', self.company_id.id)] + domain
+        if HO_MANUAL_FIELD in Model._fields:
+            # ใบที่ผู้ใช้แก้สาขาสำนักงานใหญ่เอง ห้ามคำนวณทับ
+            domain = [(HO_MANUAL_FIELD, '=', False)] + domain
         records = Model.search(domain)
 
         scanned = len(records)

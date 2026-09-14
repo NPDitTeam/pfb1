@@ -44,6 +44,7 @@ NPD Head Office Branch Mapping
         'views/account_move_views.xml',
         'views/account_advance_clear_views.xml',
         'views/account_voucher_views.xml',
+        'views/res_users_views.xml',
         'views/head_office_branch_menus.xml',
     ],
     'installable': True,

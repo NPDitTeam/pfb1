@@ -13,9 +13,12 @@
                        attrs="{'invisible': [('move_type', 'not in', ['in_invoice', 'in_refund'])]}"/>
                 <div name="head_office_branch_div" class="d-flex"
                      attrs="{'invisible': [('move_type', 'not in', ['in_invoice', 'in_refund'])]}">
+                    <field name="can_edit_head_office_branch" invisible="1"/>
+                    <!-- แก้เองได้เฉพาะผู้ใช้ที่ติ๊ก "แก้ไขสาขาสำนักงานใหญ่เองได้" -->
                     <field name="head_office_branch_id"
                            force_save="1"
-                           options="{'no_open': True}"/>
+                           options="{'no_open': True, 'no_create': True}"
+                           attrs="{'readonly': [('can_edit_head_office_branch', '=', False)]}"/>
                 </div>
             </xpath>
         </field>
