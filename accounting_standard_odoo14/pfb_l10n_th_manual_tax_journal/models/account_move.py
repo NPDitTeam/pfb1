@@ -17,6 +17,8 @@ class TaxReport(models.TransientModel):
     
     def _compute_results(self):
         self.ensure_one()
+        # hook จาก l10n_th_tax_report (เช่น npd_tax_report_branch กรองสาขา)
+        extra_where, extra_params = self._get_extra_where()
         self._cr.execute(
             """
             select company_id, account_id, partner_id,
@@ -48,18 +50,19 @@ class TaxReport(models.TransientModel):
               and t.report_date >= %s and t.report_date <= %s
               and ml.company_id = %s
               and t.reversed_id is null
+              {extra_where}
             ) a
             group by company_id, account_id, partner_id,
                 tax_invoice_number, tax_date, name, tax_id
             order by tax_date, tax_invoice_number
-        """,
+        """.format(extra_where=extra_where),
             (
                 tuple(self.tax_id.ids),
                 tuple(self.tax_id.ids),
                 self.date_from,
                 self.date_to,
                 self.company_id.id,
-            ),
+            ) + tuple(extra_params),
         )
         tax_report_results = self._cr.dictfetchall()
         ReportLine = self.env["tax.report.view"]
