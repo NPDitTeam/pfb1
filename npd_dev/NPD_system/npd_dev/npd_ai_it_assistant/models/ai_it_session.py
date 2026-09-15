@@ -2270,26 +2270,30 @@ class NpdAiItSession(models.Model):
         count = len(items)
         result = {}
 
-        # (1) ทีละบรรทัด เช่น "1) 10", "2: 5", "3 - 12"
+        # (1) คู่ "ลำดับ=จำนวน" เช่น "1=10, 2=5" (บรรทัดเดียวหรือหลายบรรทัดก็ได้)
+        # ต้องมาก่อนการอ่านทีละบรรทัด — เดิมอ่านทีละบรรทัดก่อน แล้ว "1=1, 2=30"
+        # ถูกตีเป็นรายการที่ 1 = 30 (เลขตัวท้ายของบรรทัด) และรายการที่ 2 หายไป
+        # ทั้งที่เป็นรูปแบบเดียวกับตัวอย่างที่บอทบอกให้ตอบ
+        # จำนวนรับเลขหลักพันมีจุลภาค "1=1,500" แต่ "1=1,2=30" (ไม่เว้นวรรค) ยังแยกเป็นสองคู่
+        for index, qty in re.findall(
+                r'(?<![\d.])(\d{1,2})\s*[=:]\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)', text):
+            index = int(index)
+            if 1 <= index <= count:
+                result[index] = float(qty.replace(',', ''))
+        if len(result) == count:
+            return result
+
+        # (2) ทีละบรรทัด เช่น "1) 10", "2 - 5" (ไม่ทับค่าที่อ่านจากคู่ด้านบนแล้ว)
         for line in text.splitlines():
             match = re.match(r'^\s*(\d{1,2})\s*[)\].:\-=]\s*(.+)$', line)
             if not match:
                 continue
             index = int(match.group(1))
             numbers = re.findall(r'\d+(?:[.,]\d+)?', match.group(2))
-            if 1 <= index <= count and numbers:
+            if 1 <= index <= count and numbers and index not in result:
                 result[index] = float(numbers[-1].replace(',', ''))
         if len(result) == count:
             return result
-
-        # (2) คู่ "ลำดับ=จำนวน" ในบรรทัดเดียว เช่น "1=10, 2=5"
-        if not result:
-            for index, qty in re.findall(r'(?<![\d.,])(\d{1,2})\s*[=:]\s*(\d+(?:[.,]\d+)?)', text):
-                index = int(index)
-                if 1 <= index <= count:
-                    result[index] = float(qty.replace(',', ''))
-            if len(result) == count:
-                return result
 
         # (3) ตัวเลขล้วน จำนวนเท่ากับรายการพอดี -> ไล่ตามลำดับที่แสดงไป
         if not result:
