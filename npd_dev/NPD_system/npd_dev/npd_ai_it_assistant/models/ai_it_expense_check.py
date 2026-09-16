@@ -381,6 +381,21 @@ class NpdAiItExpense(models.AbstractModel):
     # รันแผน (อ่านอย่างเดียว)
     # ------------------------------------------------------------------
     @api.model
+    def _group_orderby(self, plan):
+        """order ที่ใช้กับ read_group ได้
+
+        Odoo 18 ยอมให้เรียงเฉพาะฟิลด์ที่จัดกลุ่มหรือค่าที่รวมยอดเท่านั้น
+        (Odoo 14 ยอมทุกฟิลด์) ถ้า order ที่ AI ให้มาไม่เข้าเงื่อนไข ให้ปล่อยว่าง
+        ไม่งั้นได้ ValueError: Order term ... is not a valid aggregate nor valid groupby
+        """
+        order = (plan.get('order') or '').strip()
+        if not order:
+            return None
+        field_name = order.split()[0]
+        allowed = [g.split(':')[0] for g in plan.get('group_by') or []] + list(plan.get('measures') or [])
+        return order if field_name in allowed else None
+
+    @api.model
     def run_plan(self, plan):
         """คืน dict ผลลัพธ์ {count, total, rows/groups, ...}"""
         conf = self._expense_models()[plan['model']]
@@ -405,7 +420,7 @@ class NpdAiItExpense(models.AbstractModel):
         if plan['intent'] == 'group' and plan['group_by']:
             groups = Model.read_group(domain, plan['measures'] + plan['group_by'],
                                       plan['group_by'], lazy=False,
-                                      orderby=plan['order'] or None, limit=MAX_GROUPS)
+                                      orderby=self._group_orderby(plan), limit=MAX_GROUPS)
             result['groups'] = groups
             return result
 
@@ -519,7 +534,7 @@ class NpdAiItExpense(models.AbstractModel):
                        + [(info.get(m) or {}).get('string') or m for m in plan['measures']]
                        + ['จำนวนเอกสาร'])
             records = Model.read_group(domain, plan['measures'] + plan['group_by'], plan['group_by'],
-                                       lazy=False, orderby=plan['order'] or None, limit=MAX_EXCEL_ROWS)
+                                       lazy=False, orderby=self._group_orderby(plan), limit=MAX_EXCEL_ROWS)
         else:
             columns = plan['fields']
             headers = [(info.get(f) or {}).get('string') or f for f in columns]
