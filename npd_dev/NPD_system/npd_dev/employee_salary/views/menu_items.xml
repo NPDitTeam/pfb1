@@ -130,6 +130,13 @@
               action="action_work_security_deposit"
               sequence="80"/>
 
+    <!-- เมนูหักเงินสงเคราะห์ลูกจ้าง -->
+    <menuitem id="sub_welfare_fund_menu"
+              name="หักเงินสงเคราะห์ลูกจ้าง"
+              parent="main_employee_salary_menu"
+              action="action_welfare_fund_config"
+              sequence="81"/>
+
     <!-- เมนูกำหนดสูตรคิดสาย (เด้ง popup ให้ตั้งสูตร + วันเริ่มใช้) -->
     <menuitem id="sub_lateness_rule_menu"
               name="กำหนดสูตรคิดสาย"

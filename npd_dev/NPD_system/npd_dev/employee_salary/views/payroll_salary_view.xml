@@ -201,6 +201,9 @@
                                 </group>
                                 <group>
                                     <field name="expense_ksl"/>
+                                    <field name="expense_welfare_fund"/>
+                                    <field name="welfare_fund_rate" readonly="1"/>
+                                    <field name="welfare_fund_base" readonly="1"/>
                                     <field name="expense_insurance" invisible="1"/>
                                     <field name="expense_other_manual"/>
                                     <field name="expense_other" readonly="1"/>

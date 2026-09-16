@@ -36,6 +36,7 @@
         'views/lateness_rule_views.xml',
         'views/employee_warning_auto_views.xml',
         'views/employee_foreign_worker_views.xml',
+        'views/welfare_fund_views.xml',
         'views/menu_items.xml',
         'views/pnd1_report_views.xml',
         'reports/payslip_report.xml',

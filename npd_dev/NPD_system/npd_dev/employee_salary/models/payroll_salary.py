@@ -508,6 +508,15 @@ class PayrollSalary(models.Model):
     expense_advance = fields.Float(string="เบิกเงินล่วงหน้า", default=0.0)
     expense_loan = fields.Float(string="เงินกู้", default=0.0)
     expense_ksl = fields.Float(string="กยศ", default=0.0)
+    # ---- หักเงินสงเคราะห์ลูกจ้าง (ตั้งอัตราที่เมนู "หักเงินสงเคราะห์ลูกจ้าง") ----
+    expense_welfare_fund = fields.Float(
+        string="หักเงินสงเคราะห์ลูกจ้าง", default=0.0,
+        help="คิดจากรายได้รวมของรอบ (ไม่รวมค่าคอมมิชชั่น) x อัตราที่ตั้งไว้ในเมนูหักเงินสงเคราะห์ลูกจ้าง")
+    welfare_fund_rate = fields.Float(
+        string="อัตราเงินสงเคราะห์ (%)", default=0.0, readonly=True)
+    welfare_fund_base = fields.Float(
+        string="ฐานคำนวณเงินสงเคราะห์", default=0.0, readonly=True,
+        help="รายได้รวมของรอบนี้ หักค่าคอมมิชชั่นออกแล้ว")
     expense_insurance = fields.Float(string="เงินประกันการทำงาน (ไม่ใช้แล้ว)", default=0.0,
                                      help="Deprecated — ย้าย logic ไปที่ expense_other / income_other")
     expense_other = fields.Float(string="หักอื่นๆ (รวมทั้งหมด)", default=0.0,
@@ -818,6 +827,7 @@ class PayrollSalary(models.Model):
             'expense_advance': self.expense_advance,
             'expense_loan': self.expense_loan,
             'expense_ksl': self.expense_ksl,
+            'expense_welfare_fund': self.expense_welfare_fund,
             'expense_insurance': self.expense_insurance,
             'expense_other': self.expense_other,
             # ✅ provident fund rate-based
@@ -2713,6 +2723,33 @@ class PayrollSalary(models.Model):
                 (0, 0, {'name': 'เบิกเงินล่วงหน้า', 'type': 'deduction', 'amount': self.expense_advance}))
 
         lines_to_create.append((0, 0, {'name': 'เงินกู้', 'type': 'deduction', 'amount': self.expense_loan}))
+
+        # ---- หักเงินสงเคราะห์ลูกจ้าง ----
+        # ฐาน = รายได้รวมของรอบนี้ ไม่รวมค่าคอมมิชชั่น (คอมสาขา + คอม Sale)
+        # คิดจาก lines ที่เพิ่งสร้าง ไม่ใช่ total_gross เพราะ total_gross ยังเป็นค่าของรอบก่อน
+        welfare_income = sum((cmd[2].get('amount') or 0.0)
+                             for cmd in lines_to_create if cmd[2].get('type') == 'income')
+        welfare_commission = ((self.income_commission or 0.0)
+                              + (self.income_commission_sale or 0.0))
+        # ค่าเริ่มต้นไม่เอาค่าคอมมาคิด — ติ๊ก "รวมค่าคอมมิชชั่นในฐานคำนวณ" ในเมนูเมื่อต้องการให้รวม
+        welfare_policy = self.env['welfare.fund.config'].get_policy_for(
+            self.employee_id, self.month, self.year)
+        welfare_rate = welfare_policy['rate']
+        welfare_base = max(welfare_income - (0.0 if welfare_policy['include_commission']
+                                             else welfare_commission), 0.0)
+        welfare_amount = round(welfare_base * welfare_rate / 100.0, 2) if welfare_rate else 0.0
+        self.welfare_fund_base = welfare_base
+        self.welfare_fund_rate = welfare_rate
+        self.expense_welfare_fund = welfare_amount
+        _logger.info("[WELFARE] emp=%s %s/%s base=%.2f (คอม %.2f %s) rate=%.2f%% amount=%.2f",
+                     emp_code, self.month, self.year, welfare_base, welfare_commission,
+                     "รวม" if welfare_policy['include_commission'] else "ไม่รวม",
+                     welfare_rate, welfare_amount)
+        lines_to_create.append((0, 0, {
+            'name': 'หักเงินสงเคราะห์ลูกจ้าง',
+            'type': 'deduction',
+            'amount': welfare_amount,
+        }))
 
         lines_to_create.append((0, 0, {'name': 'กยศ', 'type': 'deduction', 'amount': self.expense_ksl}))
 
