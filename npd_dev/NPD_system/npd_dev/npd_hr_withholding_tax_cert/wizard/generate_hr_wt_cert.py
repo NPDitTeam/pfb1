@@ -57,12 +57,12 @@ class GenerateHRWTCert(models.TransientModel):
             for company in sorted(companies):
                 # ดึงเงินได้ + ภาษี จากรายงาน ภ.ง.ด.1 ของบริษัทนี้ในปีนี้
                 income_total, tax_total = Cert._get_pnd1_totals(employee, company, self.year)
-                # fallback: ถ้ายังไม่มีข้อมูลใน ภ.ง.ด.1 → net_salary × 3% (เหมือนเดิม)
+                # fallback: ถ้ายังไม่มีข้อมูลใน ภ.ง.ด.1 → รายรับ (รวมรายได้) × 3%
                 if not income_total and not tax_total:
                     emp_payrolls = payrolls.filtered(
                         lambda p: p.employee_id == employee
                     )
-                    income_total = sum(emp_payrolls.mapped("net_salary"))
+                    income_total = sum(emp_payrolls.mapped("total_gross"))
                     tax_total = income_total * 3.0 / 100
                 if not income_total:
                     continue

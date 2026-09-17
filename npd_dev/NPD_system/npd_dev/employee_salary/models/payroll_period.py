@@ -681,6 +681,9 @@ class PayrollPeriod(models.Model):
             except Exception as e:
                 _logger.error("[CRON-RECONCILE] รอบ %s ล้มเหลว: %s", period.name, e)
 
+        # 4) ภ.ง.ด.1: ให้ตามทันเงินเดือนที่แก้หลังวันจ่าย/ทำนอกรอบ (ขั้น 2 ครอบแค่รอบที่ยังไม่จ่าย)
+        self._reconcile_pnd1_safe()
+
     def action_view_payrolls(self):
         """เปิดรายการเงินเดือนของรอบนี้"""
         self.ensure_one()
@@ -702,3 +705,13 @@ class PayrollPeriod(models.Model):
                     rec.env['pnd1.line'].sync_from_period(rec)
             except Exception as e:
                 _logger.exception("[PND1] sync ล้มเหลวสำหรับรอบ %s: %s", rec.display_name, e)
+        # เก็บตกเงินเดือนที่แก้หลังดึง / ทำนอกรอบ ของทุกเดือนที่ใช้ระบบแล้ว
+        self._reconcile_pnd1_safe()
+
+    @api.model
+    def _reconcile_pnd1_safe(self):
+        try:
+            with self.env.cr.savepoint():
+                self.env['pnd1.line'].reconcile_system_lines()
+        except Exception as e:
+            _logger.exception("[PND1] reconcile ล้มเหลว: %s", e)

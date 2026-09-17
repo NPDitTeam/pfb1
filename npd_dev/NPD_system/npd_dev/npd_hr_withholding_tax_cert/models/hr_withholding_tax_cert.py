@@ -314,14 +314,14 @@ class HRWithholdingTaxCert(models.Model):
         for rec in self:
             income, tax = rec._get_pnd1_totals(
                 rec.employee_id, rec.company_name, rec.report_year)
-            # fallback: ถ้ายังไม่มีข้อมูลใน ภ.ง.ด.1 → ใช้เงินสุทธิจากระบบเงินเดือน × 3%
+            # fallback: ถ้ายังไม่มีข้อมูลใน ภ.ง.ด.1 → ใช้รายรับ (รวมรายได้) จากระบบเงินเดือน × 3%
             # (ให้ตรงกับยอดที่ wizard/onchange ใช้สร้าง wt_line เมื่อไม่มีข้อมูล ภ.ง.ด.1)
             if not income and not tax and rec.employee_id and rec.report_year:
                 payrolls = self.env["payroll.salary"].search([
                     ("employee_id", "=", rec.employee_id.id),
                     ("year", "=", rec.report_year),
                 ])
-                income = sum(payrolls.mapped("net_salary"))
+                income = sum(payrolls.mapped("total_gross"))
                 tax = income * 3.0 / 100
             rec.total_net_salary = income
             rec.total_tax = tax
@@ -446,13 +446,13 @@ class HRWithholdingTaxCert(models.Model):
         if self.employee_id and self.report_year:
             income, tax = self._get_pnd1_totals(
                 self.employee_id, self.company_name, self.report_year)
-            # fallback: ถ้ายังไม่มีข้อมูลใน ภ.ง.ด.1 → net_salary × 3% (เหมือนเดิม)
+            # fallback: ถ้ายังไม่มีข้อมูลใน ภ.ง.ด.1 → รายรับ (รวมรายได้) × 3%
             if not income and not tax:
                 payrolls = self.env["payroll.salary"].search([
                     ("employee_id", "=", self.employee_id.id),
                     ("year", "=", self.report_year),
                 ])
-                income = sum(payrolls.mapped("net_salary"))
+                income = sum(payrolls.mapped("total_gross"))
                 tax = income * 3.0 / 100
             self.wt_line = [(5, 0, 0)]
             if income:
