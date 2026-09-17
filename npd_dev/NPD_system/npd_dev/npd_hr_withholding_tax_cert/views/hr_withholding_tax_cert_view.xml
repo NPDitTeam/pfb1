@@ -30,7 +30,8 @@
                     </h1>
                     <group>
                         <group string="Company">
-                            <field name="company_name"/>
+                            <field name="company_name"
+                                   attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                             <field name="company_taxid"/>
                             <field name="company_address"/>
                             <field name="branch_id"/>

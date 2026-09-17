@@ -1,3 +1,5 @@
+import re
+
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
@@ -31,8 +33,8 @@ class HRWithholdingTaxCert(models.Model):
     _sql_constraints = [
         (
             "employee_year_unique",
-            "UNIQUE(employee_id, report_year)",
-            "มี WT Certificate ของพนักงานคนนี้ในปีนี้แล้ว!",
+            "UNIQUE(employee_id, report_year, company_name)",
+            "มี WT Certificate ของพนักงานคนนี้ ในปีนี้ ของบริษัทนี้แล้ว!",
         ),
     ]
 
@@ -139,11 +141,14 @@ class HRWithholdingTaxCert(models.Model):
         help="ดึงชื่อจากรายงาน ภ.ง.ด.1 (pnd1.line) โดยจับคู่จากเลขบัตรประชาชน "
              "ถ้าไม่พบใช้ชื่อจากข้อมูลพนักงานแทน",
     )
-    company_name = fields.Char(
+    company_name = fields.Selection(
+        selection=lambda self: self.env["employee.salary"]._fields["company"].selection,
         string="บริษัท",
         compute="_compute_company_name",
         store=True,
-        readonly=True,
+        readonly=False,
+        help="บริษัทผู้จ่ายเงินได้ — ค่าเริ่มต้นคือสังกัดปัจจุบันของพนักงาน "
+             "ถ้าพนักงานย้ายบริษัทกลางปี ให้ออกหนังสือรับรองแยกของแต่ละบริษัท",
     )
     company_address = fields.Char(
         string="ที่อยู่บริษัท",
@@ -224,15 +229,12 @@ class HRWithholdingTaxCert(models.Model):
     def _compute_pnd1_full_name(self):
         """ใช้ชื่อจากรายงาน ภ.ง.ด.1 (pnd1.line) แทนชื่อจากหน้าทำเงินเดือน
         จับคู่จากเลขบัตรประชาชนของพนักงาน — ถ้าไม่พบ fallback เป็นชื่อ+นามสกุลเดิม"""
-        Pnd1 = self.env["pnd1.line"]
         for rec in self:
             name = ""
-            taxid = rec.employee_id.id_card_number or ""
-            if taxid:
-                line = Pnd1.search(
-                    [("id_card_number", "=", taxid), ("full_name", "!=", False)],
-                    order="pay_date desc, id desc", limit=1,
-                )
+            if rec.employee_id:
+                lines = rec._get_pnd1_lines(rec.employee_id, False).filtered("full_name")
+                # แถวระบบก่อน (ชื่อตรงข้อมูลพนักงาน) แล้วค่อยแถว excel ล่าสุด
+                line = (lines.filtered(lambda l: l.source_type == "system") or lines)[:1]
                 name = (line.full_name or "").strip()
             if not name:
                 name = ("%s %s" % (
@@ -250,35 +252,68 @@ class HRWithholdingTaxCert(models.Model):
         return y - 543 if y >= 2500 else y
 
     @api.model
-    def _get_pnd1_totals(self, taxid, company, report_year):
-        """รวม 'จำนวนเงินได้' + 'ภาษีที่ต้องหัก' จากรายงาน ภ.ง.ด.1 (pnd1.line)
-        ของเลขบัตรนี้ในปีที่ระบุ — จับคู่จากเลขบัตร (+ บริษัท ถ้ามี),
-        กรองปีจากวันที่จ่าย (pay_date). คืนค่า (เงินได้รวม, ภาษีรวม)"""
-        taxid = taxid or ""
-        if not taxid:
-            return 0.0, 0.0
-        domain = [("id_card_number", "=", taxid)]
-        if company:
-            domain.append(("company", "=", company))
+    def _normalize_taxid(self, taxid):
+        """เลขบัตรสำหรับจับคู่: เอาเฉพาะตัวเลข แล้วตัด 0 นำหน้า
+        (excel ตัด 00 หน้าเลขบัตรต่างด้าวทิ้ง เช่น 73061319654 = 0073061319654)"""
+        return re.sub(r"\D", "", taxid or "").lstrip("0")
+
+    @api.model
+    def _get_employee_taxids(self, employee):
+        """เลขบัตร (normalize แล้ว) ทุกเลขของพนักงาน — เลขปัจจุบัน + เลขที่เคยใช้ในแถวระบบ
+        (แรงงานต่างด้าวเปลี่ยนเลขบัตรกลางปีได้)"""
+        taxids = {self._normalize_taxid(employee.id_card_number)}
+        system_lines = self.env["pnd1.line"].search([
+            ("employee_id", "=", employee.id),
+            ("source_type", "=", "system"),
+        ])
+        taxids.update(self._normalize_taxid(t) for t in system_lines.mapped("id_card_number"))
+        taxids.discard("")
+        return taxids
+
+    @api.model
+    def _pnd1_year_domain(self, report_year):
+        """domain กรองปีภาษีจาก pay_date — นับทั้ง ค.ศ. และ พ.ศ.
+        เพราะแถวที่นำเข้าจาก excel เก็บวันที่เป็น พ.ศ."""
         y = self._pnd1_gregorian_year(report_year)
-        if y:
-            # นับทั้งปี ค.ศ. (y) และ พ.ศ. (y+543) ของปีภาษีเดียวกัน
-            # เพราะบางแถว (เช่น นำเข้าจาก excel) วันที่ถูกเก็บเป็น พ.ศ.
-            yb = y + 543
-            domain += [
-                "|",
-                "&", ("pay_date", ">=", "%04d-01-01" % y), ("pay_date", "<=", "%04d-12-31" % y),
-                "&", ("pay_date", ">=", "%04d-01-01" % yb), ("pay_date", "<=", "%04d-12-31" % yb),
-            ]
-        lines = self.env["pnd1.line"].search(domain)
+        if not y:
+            return []
+        yb = y + 543
+        return [
+            "|",
+            "&", ("pay_date", ">=", "%04d-01-01" % y), ("pay_date", "<=", "%04d-12-31" % y),
+            "&", ("pay_date", ">=", "%04d-01-01" % yb), ("pay_date", "<=", "%04d-12-31" % yb),
+        ]
+
+    @api.model
+    def _get_pnd1_lines(self, employee, report_year, company=False):
+        """แถวรายงาน ภ.ง.ด.1 ของพนักงานในปีภาษี (กรองบริษัทถ้าระบุ)
+        - แถวระบบ: จับคู่ด้วยตัวพนักงาน (employee_id)
+        - แถว excel: จับคู่เลขบัตรแบบ normalize กับทุกเลขของพนักงาน"""
+        Pnd1 = self.env["pnd1.line"]
+        if not employee:
+            return Pnd1
+        taxids = self._get_employee_taxids(employee)
+        domain = self._pnd1_year_domain(report_year)
+        if company:
+            domain = [("company", "=", company)] + domain
+        return Pnd1.search(domain).filtered(
+            lambda l: l.employee_id == employee
+            or (not l.employee_id and self._normalize_taxid(l.id_card_number) in taxids)
+        )
+
+    @api.model
+    def _get_pnd1_totals(self, employee, company, report_year):
+        """รวม 'จำนวนเงินได้' + 'ภาษีที่ต้องหัก' จากรายงาน ภ.ง.ด.1 ของพนักงาน
+        ในปีภาษีที่ระบุ ของบริษัทที่ระบุ — คืนค่า (เงินได้รวม, ภาษีรวม)"""
+        lines = self._get_pnd1_lines(employee, report_year, company)
         return sum(lines.mapped("income")), sum(lines.mapped("tax"))
 
-    @api.depends("employee_id", "employee_id.id_card_number", "employee_id.company",
+    @api.depends("employee_id", "employee_id.id_card_number", "company_name",
                  "report_year")
     def _compute_total_net_salary(self):
         for rec in self:
             income, tax = rec._get_pnd1_totals(
-                rec.employee_id.id_card_number, rec.employee_id.company, rec.report_year)
+                rec.employee_id, rec.company_name, rec.report_year)
             # fallback: ถ้ายังไม่มีข้อมูลใน ภ.ง.ด.1 → ใช้เงินสุทธิจากระบบเงินเดือน × 3%
             # (ให้ตรงกับยอดที่ wizard/onchange ใช้สร้าง wt_line เมื่อไม่มีข้อมูล ภ.ง.ด.1)
             if not income and not tax and rec.employee_id and rec.report_year:
@@ -316,7 +351,7 @@ class HRWithholdingTaxCert(models.Model):
         return 12
 
     @api.model
-    def _get_fund_totals(self, employee, report_year):
+    def _get_fund_totals(self, employee, report_year, company=False):
         """รวมยอด "ประกันสังคม" + "กองทุนสำรองเลี้ยงชีพ" ทั้งปีภาษีจากหน้าทำเงินเดือน
 
         - จับคู่รอบเงินเดือนจากปีที่ระบุ (รองรับทั้ง ค.ศ. และ พ.ศ. ที่เก็บในฟิลด์ year)
@@ -348,12 +383,36 @@ class HRWithholdingTaxCert(models.Model):
         if not payrolls:
             return 0.0, 0.0
 
-        sso = payrolls[-1].accumulated_social_security or 0.0
-        if not sso:
-            sso = sum(payrolls.mapped("sso_total"))
+        in_company = payrolls
+        if company:
+            # บริษัทที่จ่ายของแต่ละเดือน = บริษัทในแถว ภ.ง.ด.1 (ระบบ) ของรอบนั้น
+            # (พนักงานย้ายบริษัทกลางปีได้) — ไม่มีแถวก็ใช้สังกัดปัจจุบันของพนักงาน
+            payer = {
+                line.payroll_id.id: line.company
+                for line in self.env["pnd1.line"].search([
+                    ("payroll_id", "in", payrolls.ids),
+                    ("source_type", "=", "system"),
+                ])
+            }
+            in_company = payrolls.filtered(
+                lambda p: payer.get(p.id, employee.company) == company)
+            if not in_company:
+                return 0.0, 0.0
+
+        if in_company == payrolls:
+            sso = payrolls[-1].accumulated_social_security or 0.0
+            if not sso:
+                sso = sum(payrolls.mapped("sso_total"))
+        else:
+            # ย้ายบริษัทกลางปี: ยอดทบแยกบริษัทไม่ได้ → ใช้ยอดยกมาจากระบบเก่า
+            # (ถ้าเดือนแรกเป็นของบริษัทนี้) + ประกันสังคมรายเดือนที่บริษัทนี้จ่าย
+            # ซึ่งรวมทุกบริษัทแล้วเท่ากับยอดทบ (ยอดทบ = ยอดยกมา + ผลรวมรายเดือน)
+            sso = sum(in_company.mapped("sso_total"))
+            if payrolls[0] in in_company:
+                sso += payrolls[0].opening_accumulated_social_security or 0.0
 
         provident = 0.0
-        for payroll in payrolls:
+        for payroll in in_company:
             month_pf = sum(
                 payroll.line_ids.filtered(
                     lambda l: l.type == "deduction"
@@ -364,10 +423,11 @@ class HRWithholdingTaxCert(models.Model):
 
         return sso, provident
 
-    @api.depends("employee_id", "employee_id.resign_date", "report_year")
+    @api.depends("employee_id", "employee_id.resign_date", "report_year", "company_name")
     def _compute_fund_amounts(self):
         for rec in self:
-            sso, provident = rec._get_fund_totals(rec.employee_id, rec.report_year)
+            sso, provident = rec._get_fund_totals(
+                rec.employee_id, rec.report_year, rec.company_name)
             rec.sso_amount = sso
             rec.provident_fund_amount = provident
 
@@ -380,12 +440,12 @@ class HRWithholdingTaxCert(models.Model):
             )
         return super().create(vals)
 
-    @api.onchange("employee_id", "report_year")
+    @api.onchange("employee_id", "report_year", "company_name")
     def _onchange_employee_year(self):
-        """เลือกพนักงาน/เปลี่ยนปี → ดึงเงินได้+ภาษีจากรายงาน ภ.ง.ด.1 → สร้าง line อัตโนมัติ"""
+        """เลือกพนักงาน/ปี/บริษัท → ดึงเงินได้+ภาษีจากรายงาน ภ.ง.ด.1 → สร้าง line อัตโนมัติ"""
         if self.employee_id and self.report_year:
             income, tax = self._get_pnd1_totals(
-                self.employee_id.id_card_number, self.employee_id.company, self.report_year)
+                self.employee_id, self.company_name, self.report_year)
             # fallback: ถ้ายังไม่มีข้อมูลใน ภ.ง.ด.1 → net_salary × 3% (เหมือนเดิม)
             if not income and not tax:
                 payrolls = self.env["payroll.salary"].search([
