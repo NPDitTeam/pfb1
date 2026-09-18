@@ -546,12 +546,17 @@ class NpdAiItSession(models.Model):
                           'ต้องแก้เท่าไหร่ และเมนูที่ต้องไปทำอยู่ตรงไหน'),
                 ),
                 _rows(
+                    _hint('ตอนนี้ตั้งไว้ที่ <b>ปี %s</b> — จะเปลี่ยนพิมพ์ "ปิดปี 2025" ได้เลย'
+                          % year),
+                ),
+                _rows(
                     _hint('ตัวอย่างคำถาม'),
                     _indent('• ปี %s ปิดงบได้หรือยัง ติดอะไรบ้าง' % year),
-                    _indent('• แต่ละปีปิดงบครบไหม'),
-                    _indent('• ขั้นตอนปิดงบมีอะไรบ้าง ต้องดูเมนูไหนก่อน'),
-                    _indent('• เมนูงบทดลองอยู่ตรงไหน'),
-                    _indent('• กด Calculate แล้วเงียบ เพราะอะไร'),
+                    _indent('• ต้องแก้อะไรบ้าง (ผมจะไล่เลขเอกสารให้)'),
+                    _indent('• ตั้งค่าให้หน่อย (ปีบัญชี · แม่แบบ · Cut-off)'),
+                    _indent('• ถอย / ถอยข้อ 2 / ถอยทั้งหมด'),
+                    _indent('• ตรวจต่อ (หลังแก้ข้อมูลเสร็จ)'),
+                    _indent('• ขั้นตอนปิดงบมีอะไรบ้าง · เมนูงบทดลองอยู่ตรงไหน'),
                 ),
                 _rows(
                     _hint('ถามต่อเนื่องได้ ผมจำคำถามก่อนหน้าไว้ให้'),
@@ -2365,8 +2370,32 @@ class NpdAiItSession(models.Model):
         Closing = self.env['npd.ai.it.closing']
         data = self._get_data()
         history = data.get('closing_history') or []
-        year = (history[-1] or {}).get('years', [None])[0] if history else None
-        year = year or Closing.default_year()
+        # ปีที่กำลังปิด ติดอยู่กับบทสนทนาจนกว่าพนักงานจะสั่งเปลี่ยน
+        asked = Closing.parse_years(question)
+        previous_year = data.get('closing_year')
+        if asked:
+            data['closing_year'] = asked[0]
+            self._set_data(data)
+        year = data.get('closing_year') or Closing.default_year()
+        changed_year = bool(asked) and previous_year and asked[0] != previous_year
+
+        # ---- ถามว่าปิดปีไหนได้บ้าง ----
+        if any(w in question for w in (u'ปีไหนได้บ้าง', u'มีปีอะไรบ้าง', u'เลือกปี',
+                                       u'ปิดปีไหนได้')):
+            years = Closing.available_years()
+            self._post_bot(_block(
+                _rows(_title(u'ปีที่มีข้อมูลให้ปิดงบ', '📆'),
+                      *[_indent(u'• ปี %s (พ.ศ. %s)' % (y, y + 543)) for y in years[:8]]),
+                _rows(_hint(u'ตอนนี้กำลังดูปี %s' % year),
+                      _hint(u'จะเปลี่ยนปีพิมพ์ว่า "ปิดปี 2025" ได้เลย')),
+            ))
+            return
+        if changed_year:
+            self._post_bot(_block(
+                _rows(_title(u'เปลี่ยนมาทำปี %s แล้ว' % year, '📆'),
+                      _hint(u'คำสั่งต่อจากนี้ (ตรวจ / ตั้งค่าให้ / ถอย / ตรวจต่อ) '
+                            u'จะยึดปี %s จนกว่าจะสั่งเปลี่ยนอีกครั้ง' % year)),
+            ), commands=False)
 
         # ---- รอยืนยันให้ลงมือแก้ ----
         if self.state == 'confirm_closing_fix':
@@ -2457,11 +2486,55 @@ class NpdAiItSession(models.Model):
             ), commands=False)
             return
 
+        # ---- ฝ่ายบัญชีแจ้งการตัดสินใจเรื่องค่าเสื่อม ----
+        decided = Closing.detect_options(question).get('depreciation')
+        if decided:
+            Closing.set_decision('depreciation_control', decided)
+            self._post_bot(_block(
+                _rows(_title(u'รับทราบครับ บันทึกไว้แล้ว', '📝'),
+                      u'ค่าเสื่อมราคา: คุมใน <b>%s</b>'
+                      % (u'Excel (นอกระบบ)' if decided == 'excel' else u'Odoo')),
+                _hint(u'ผมจะ%sนับเรื่องค่าเสื่อมเป็นตัวบล็อกการปิดงบ'
+                      % (u'ไม่' if decided == 'excel' else u'')),
+            ))
+            return
+
+        # ---- ขอชุดข้อมูลสำหรับยื่นงบ ----
+        if any(w in question for w in (u'ยื่นงบ', u'ยื่นปิดงบ', u'สบช', u'ส.บช.3',
+                                       u'dbd', u'ภ.ง.ด.50', u'ภงด 50', u'ภงด50',
+                                       u'e-filing', u'efiling')):
+            blocks, ready = Closing.filing_blocks(year)
+            filename, content, rows = Closing.build_filing_excel(year)
+            attachments = []
+            body = [_rows(b) for b in blocks]
+            if content:
+                attachments.append((filename, content))
+                body.append(_rows(_title(u'แนบไฟล์ให้แล้ว (%s บรรทัดบัญชี)' % rows, '📎'),
+                                  _hint(u'ในไฟล์มี 4 ชีต: ข้อมูลสำหรับยื่น · '
+                                        u'งบแสดงฐานะการเงิน · งบกำไรขาดทุน · งบทดลอง')))
+            else:
+                body.append(_hint(u'สร้างไฟล์ไม่สำเร็จ (ไม่มีไลบรารี xlsxwriter) แจ้งฝ่าย IT'))
+            self._post_bot(_block(*body), commands=False, attachments=attachments)
+            self._log_history('closing_help', u'ออกชุดข้อมูลยื่นงบ ปี %s' % year)
+            return
+
+        # ---- แก้ข้อมูลเสร็จแล้ว ให้ตรวจต่อจากของเดิม ----
+        if u'ตรวจต่อ' in question:
+            before = (data.get('closing_snapshot') or {}).get(str(year))
+            blocks, after = Closing.progress_blocks(year, before)
+            data.setdefault('closing_snapshot', {})[str(year)] = after
+            self._set_data(data)
+            self._post_bot(_block(*[_rows(b) for b in blocks]), commands=False)
+            return
+
         # ---- ขอรายการงานที่ต้องให้คนแก้เอง ----
         if any(w in question for w in (u'ต้องแก้อะไรบ้าง', u'งานที่ต้องทำ', u'ให้พนักงานแก้',
-                                       u'รายการที่ต้องแก้', u'worklist', u'ตรวจต่อ')):
-            blocks = Closing.worklist_blocks(fix_year if False else year)
+                                       u'รายการที่ต้องแก้', u'worklist')):
+            blocks = Closing.worklist_blocks(year)
             self._post_bot(_block(*[_rows(b) for b in blocks]), commands=False)
+            # เก็บสภาพไว้เทียบตอนพนักงานกลับมาพิมพ์ "ตรวจต่อ"
+            data.setdefault('closing_snapshot', {})[str(year)] = Closing.snapshot(year)
+            self._set_data(data)
             return
 
         # "ขอเป็นไฟล์ Excel" เฉย ๆ -> ใช้ปีของคำถามล่าสุด ไม่ต้องถามซ้ำ
@@ -2472,8 +2545,11 @@ class NpdAiItSession(models.Model):
             if not asked:
                 years_override = (history[-1] or {}).get('years')
 
+        # ปีที่พนักงานเลือกไว้ต้องมีผลกับทุกคำสั่ง ไม่ใช่เฉพาะตอนพิมพ์ปีมาด้วย
+        # (ถามเทียบหลายปีในประโยคเดียว ยังใช้ปีที่ระบุในประโยคนั้นตามเดิม)
+        use_years = years_override or (asked if len(asked) > 1 else [year])
         blocks, meta, error = Closing.answer(question, history=history[-2:],
-                                             years=years_override)
+                                             years=use_years)
         if error:
             self._post_bot(_block(
                 _rows(_title('ยังตอบคำถามนี้ไม่ได้', '🤔'), html_escape(error)),

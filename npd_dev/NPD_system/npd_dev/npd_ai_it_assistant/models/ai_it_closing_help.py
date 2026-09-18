@@ -571,6 +571,12 @@ class NpdAiItClosing(models.AbstractModel):
             check['status'] = 'skip'
             check['found'] = u'ฐานนี้ไม่ได้ติดตั้งโมดูลสินทรัพย์'
             return check
+        if self.get_decision('depreciation_control') == 'excel':
+            # ฝ่ายบัญชีตัดสินแล้วว่าคุมค่าเสื่อมนอกระบบ จึงไม่ใช่ตัวบล็อกการปิดงบ
+            check['status'] = 'skip'
+            check['found'] = u'ฝ่ายบัญชีแจ้งว่าคุมค่าเสื่อมใน Excel จึงไม่ตรวจข้อนี้'
+            check['need'] = u'ถ้าเปลี่ยนใจ พิมพ์ "ค่าเสื่อมคุมใน Odoo"'
+            return check
         Asset = self.env['account.asset'].sudo()
         company_id = self._company().id
         draft = Asset.search_count([('company_id', '=', company_id), ('state', '=', 'draft')])
@@ -755,6 +761,51 @@ class NpdAiItClosing(models.AbstractModel):
                         u'ทำให้ยอดที่คำนวณเพี้ยน — เคลียร์ใบร่างแล้วกด Recalculate ใหม่')
         return check
 
+    def _check_books_integrity(self, year, dfrom, dto):
+        u"""บัญชีสะสมทั้งหมดต้องสมดุล และต้องมียอดยกมา ไม่งั้นงบดุลใช้ไม่ได้
+
+        ต่างจากตัวตรวจ "งบทดลองสมดุล" ที่ดูเฉพาะรายการในปี ตัวนี้ดูสะสมทั้งหมด
+        ตั้งแต่เริ่มระบบ ซึ่งเป็นตัวที่บอกว่างบดุลยื่นได้หรือไม่ได้
+        """
+        check = self._blank('books_integrity', u'งบดุลใช้ยื่นได้ไหม (ยอดสะสม)',
+                            u'Trial Balance',
+                            u'Accounting > Reporting > Dynamic Reports(Wiz) > Trial Balance')
+        company_id = self._company().id
+        self.env.cr.execute(
+            """SELECT COALESCE(SUM(balance), 0) FROM account_move_line
+                WHERE company_id = %s AND parent_state = 'posted' AND date <= %s""",
+            (company_id, dto))
+        diff = float((self.env.cr.fetchone() or [0.0])[0] or 0.0)
+        self.env.cr.execute(
+            """SELECT COALESCE(SUM(l.balance), 0)
+                 FROM account_move_line l
+                 JOIN account_account a ON a.id = l.account_id
+                 JOIN account_account_type t ON t.id = a.user_type_id
+                WHERE l.company_id = %s AND l.parent_state = 'posted'
+                  AND l.date <= %s AND t.internal_group = 'equity'""",
+            (company_id, dto))
+        equity = float((self.env.cr.fetchone() or [0.0])[0] or 0.0)
+
+        problems, fixes = [], []
+        if abs(diff) >= EPS:
+            problems.append(u'ยอดสะสมทั้งหมดไม่เป็นศูนย์ (ต่าง %s บาท)' % _money(abs(diff)))
+            fixes.append(u'มาจากใบที่เดบิตไม่เท่าเครดิต ดูรายการได้จาก "ต้องแก้อะไรบ้าง" '
+                         u'ต้องให้ IT หาต้นเหตุก่อน ห้ามเติมบรรทัดให้ลงตัวเอง')
+        if abs(equity) < EPS:
+            problems.append(u'ไม่มียอดในบัญชีหมวดส่วนของผู้ถือหุ้นเลย')
+            fixes.append(u'แปลว่ายังไม่เคยลงยอดยกมา (ทุนจดทะเบียน/กำไรสะสม) '
+                         u'ต้องลงใบตั้งยอดยกมาก่อน ไม่งั้นงบดุลไม่มีทางถูก')
+        if not problems:
+            check['found'] = u'ยอดสะสมสมดุล และมียอดส่วนของผู้ถือหุ้นแล้ว'
+            check['need'] = u'—'
+            return check
+        check['status'] = 'block'
+        check['amount'] = abs(diff)
+        check['found'] = u' · '.join(problems)
+        check['need'] = u'ต้องแก้ให้ครบก่อน ไม่งั้นงบดุลที่ยื่นจะไม่ถูก'
+        check['fix'] = u' · '.join(fixes)
+        return check
+
     def _check_lock_dates(self, year, dfrom, dto):
         check = self._blank('lock_dates', u'การล็อกวันที่', u'lock dates',
                             u'Accounting > Accounting > Actions > Update accounting lock dates')
@@ -871,7 +922,8 @@ class NpdAiItClosing(models.AbstractModel):
             self._check_assets, self._check_month_gaps, self._check_result,
             self._check_fiscal_year, self._check_closing_template,
             self._check_closing_entry, self._check_closing_amount,
-            self._check_unaffected_earnings, self._check_lock_dates,
+            self._check_unaffected_earnings, self._check_books_integrity,
+            self._check_lock_dates,
         ]
         results = []
         for checker in checkers:
@@ -1233,6 +1285,8 @@ class NpdAiItClosing(models.AbstractModel):
         text = (question or u'').lower()
         if any(w in text for w in UNDO_WORDS):
             return 'undo', 'all' if any(w in text for w in ALL_WORDS) else 'list'
+        # "ตั้งแต่ปี 2025" มีคำว่า "ตั้ง" อยู่ แต่ไม่ใช่คำสั่งให้ตั้งค่า
+        text = text.replace(u'ตั้งแต่', u' ')
         if not any(v in text for v in FIX_VERBS):
             return None, None
         if any(w in text for w in (u'cut-off', u'cutoff', u'คัทออฟ', u'ค้างรับ', u'ค้างจ่าย')):
@@ -1243,9 +1297,9 @@ class NpdAiItClosing(models.AbstractModel):
             return 'fix', 'closing_template'
         if any(w in text for w in (u'ล็อก', u'ล๊อก', u'lock')):
             return 'fix', 'lock_date'
-        if any(w in text for w in (u'ให้หมด', u'ทุกอย่างที่ทำได้', u'เท่าที่ทำได้')):
-            return 'fix', 'all'
-        return None, None
+        # สั่งลอย ๆ ว่า "ตั้งค่าให้หน่อย" โดยไม่ระบุว่าตั้งอะไร
+        # = ทำทุกอย่างที่ทำได้ (ยังต้องยืนยันก่อนลงมืออยู่ดี)
+        return 'fix', 'all'
 
     @api.model
     def detect_options(self, question):
@@ -1256,6 +1310,7 @@ class NpdAiItClosing(models.AbstractModel):
         คืน dict {'dest_code': ..., 'journal_code': ...} เฉพาะที่ระบุมา
         """
         text = question or u''
+        lowered = text.lower()          # พนักงานพิมพ์ "Excel" ตัวใหญ่ได้
         options = {}
         match = re.search(r'(\d{4}-\d{2})', text)
         if match:
@@ -1263,7 +1318,36 @@ class NpdAiItClosing(models.AbstractModel):
         match = re.search(r'(?:สมุด|journal)\s*([A-Za-z]{2,6})', text)
         if match:
             options['journal_code'] = match.group(1).upper()
+        # ปิดแบบไหน: แค่บรรทัดกำไรขาดทุน (พอสำหรับไทย) หรือเต็มรูป Closing+Opening
+        if any(w in lowered for w in (u'เต็มรูป', u'closing+opening', u'closing + opening',
+                                      u'ปิดเต็ม', u'แบบเต็ม')):
+            options['mode'] = 'full'
+        elif any(w in lowered for w in (u'แค่กำไรขาดทุน', u'เฉพาะกำไรขาดทุน', u'แค่ p&l',
+                                        u'เฉพาะ p&l', u'บรรทัดเดียว')):
+            options['mode'] = 'pl_only'
+        # ค่าเสื่อมคุมที่ไหน
+        if u'ค่าเสื่อม' in lowered:
+            if any(w in lowered for w in (u'excel', u'เอ็กเซล', u'นอกระบบ')):
+                options['depreciation'] = 'excel'
+            elif any(w in lowered for w in (u'odoo', u'ในระบบ')):
+                options['depreciation'] = 'odoo'
         return options
+
+    # ------------------------------------------------------------------
+    # การตัดสินใจของฝ่ายบัญชีที่ AI ต้องจำไว้
+    # ------------------------------------------------------------------
+    @api.model
+    def _decision_key(self, name):
+        return 'npd_ai_it_assistant.%s.%s' % (name, self._company().id)
+
+    @api.model
+    def get_decision(self, name, default=u''):
+        return self.env['ir.config_parameter'].sudo().get_param(
+            self._decision_key(name), default)
+
+    @api.model
+    def set_decision(self, name, value):
+        self.env['ir.config_parameter'].sudo().set_param(self._decision_key(name), value)
 
     @api.model
     def _closing_journal(self, code=None):
@@ -1400,11 +1484,20 @@ class NpdAiItClosing(models.AbstractModel):
                                 % FIX_LABEL[k])
                 else:
                     todo += 1
-                    rows.append(u'<div><b>%s ปี %s</b><br/>'
+                    mode = options.get('mode') or 'pl_only'
+                    extra = (u'<br/>+ บรรทัด Closing (1%% · 2%% · 3%%) และ Opening '
+                             u'ของปี %s' % (year + 1)) if mode == 'full' else u''
+                    rows.append(u'<div><b>%s ปี %s</b> — แบบ%s<br/>'
                                 u'ปิดบัญชีรหัส 4%% · 5%% · 6%% (แยก 3 บรรทัด) '
-                                u'เข้าบัญชี <b>%s %s</b> ผ่านสมุด %s</div>'
-                                % (FIX_LABEL[k], year, html_escape(dest.code or u''),
-                                   html_escape(dest.name or u''), html_escape(journal.code or u'')))
+                                u'เข้าบัญชี <b>%s %s</b> ผ่านสมุด %s%s</div>'
+                                u'<div><span class="text-muted">อยากได้เต็มรูปพิมพ์ '
+                                u'"ปิดเต็มรูป" · อยากได้แค่บรรทัดเดียวพิมพ์ '
+                                u'"เฉพาะกำไรขาดทุน"</span></div>'
+                                % (FIX_LABEL[k], year,
+                                   u'เต็มรูป' if mode == 'full' else u'เฉพาะกำไรขาดทุน',
+                                   html_escape(dest.code or u''),
+                                   html_escape(dest.name or u''),
+                                   html_escape(journal.code or u''), extra))
             elif k == 'lock_date':
                 current = company.sudo().fiscalyear_lock_date
                 if current and current >= dto:
@@ -1485,22 +1578,45 @@ class NpdAiItClosing(models.AbstractModel):
                         journal = self._closing_journal(options.get('journal_code'))
                         if not dest or not journal:
                             continue
+                        mode = options.get('mode') or 'pl_only'
+                        configs = [(0, 0, {
+                            'name': u'ปิดกำไรขาดทุน %s' % year,
+                            'code': 'PL_%s' % year, 'sequence': 1,
+                            'move_type': 'loss_profit', 'move_date': 'last_ending',
+                            'journal_id': journal.id, 'closing_type_default': 'balance',
+                            # ต้องแยกบรรทัดต่อรูปแบบ ระบบเทียบแบบ =ilike ทีละบรรทัด
+                            # ใส่ '4%,5%,6%' รวมกันจะไม่ตรงบัญชีไหนเลย
+                            'mapping_ids': [(0, 0, {'name': u'ปิด %s' % p,
+                                                    'src_accounts': p,
+                                                    'dest_account': dest.code})
+                                            for p in ('4%', '5%', '6%')],
+                        })]
+                        if mode == 'full':
+                            # แบบยุโรป: ปิดงบดุลแล้วเปิดยอดใหม่ปีถัดไป
+                            # ต้องทำครบคู่ ไม่งั้นปีหน้ายอดยกมาซ้ำสองเท่า
+                            configs.append((0, 0, {
+                                'name': u'ปิดงบดุล %s' % year,
+                                'code': 'CLOSE_%s' % year, 'sequence': 2,
+                                'move_type': 'closing', 'move_date': 'last_ending',
+                                'journal_id': journal.id,
+                                'closing_type_default': 'unreconciled',
+                                'mapping_ids': [(0, 0, {'name': u'ปิด %s' % p,
+                                                        'src_accounts': p})
+                                                for p in ('1%', '2%', '3%')],
+                            }))
+                            configs.append((0, 0, {
+                                'name': u'เปิดยอดยกมา %s' % (year + 1),
+                                'code': 'OPEN_%s' % (year + 1), 'sequence': 3,
+                                'move_type': 'opening', 'move_date': 'first_opening',
+                                'journal_id': journal.id,
+                                'closing_type_default': 'unreconciled',
+                                'inverse': 'CLOSE_%s' % year,
+                            }))
                         vals = {
                             'name': u'ปิดงบ %s' % year,
                             'check_draft_moves': True,
                             'company_id': company.id,
-                            'move_config_ids': [(0, 0, {
-                                'name': u'ปิดกำไรขาดทุน %s' % year,
-                                'code': 'PL_%s' % year, 'sequence': 1,
-                                'move_type': 'loss_profit', 'move_date': 'last_ending',
-                                'journal_id': journal.id, 'closing_type_default': 'balance',
-                                # ต้องแยกบรรทัดต่อรูปแบบ ระบบเทียบแบบ =ilike ทีละบรรทัด
-                                # ใส่ '4%,5%,6%' รวมกันจะไม่ตรงบัญชีไหนเลย
-                                'mapping_ids': [(0, 0, {'name': u'ปิด %s' % p,
-                                                        'src_accounts': p,
-                                                        'dest_account': dest.code})
-                                                for p in ('4%', '5%', '6%')],
-                            })],
+                            'move_config_ids': configs,
                         }
                         if company.chart_template_id:
                             vals['chart_template_ids'] = [(6, 0, [company.chart_template_id.id])]
@@ -1508,8 +1624,10 @@ class NpdAiItClosing(models.AbstractModel):
                         Fix.log_create(rec, k, u'%s ปี %s (ปิดเข้า %s)'
                                        % (FIX_LABEL[k], year, dest.code),
                                        batch=batch, session=session, year=year)
-                        done.append(u'%s ปี %s → ปิด 4%%/5%%/6%% เข้าบัญชี %s'
-                                    % (FIX_LABEL[k], year, dest.code))
+                        done.append(u'%s ปี %s แบบ%s → ปิด 4%%/5%%/6%% เข้าบัญชี %s'
+                                    % (FIX_LABEL[k], year,
+                                       u'เต็มรูป (Closing+Opening)' if mode == 'full'
+                                       else u'เฉพาะกำไรขาดทุน', dest.code))
 
                     elif k == 'lock_date':
                         current = company.sudo().fiscalyear_lock_date
@@ -1581,6 +1699,52 @@ class NpdAiItClosing(models.AbstractModel):
         return fixes.action_undo()
 
     # ------------------------------------------------------------------
+    @api.model
+    def snapshot(self, year, checks=None):
+        u"""สภาพผลตรวจแบบย่อ เก็บไว้เทียบความคืบหน้าครั้งถัดไป"""
+        checks = checks if checks is not None else self.run_checks(year)
+        return {c['key']: c['status'] for c in checks}
+
+    @api.model
+    def progress_blocks(self, year, before):
+        u"""เทียบกับครั้งก่อนว่าอะไรเคลียร์แล้ว อะไรยังค้าง อะไรเพิ่งโผล่
+
+        ใช้ตอนพนักงานแก้ข้อมูลเสร็จแล้วพิมพ์ "ตรวจต่อ" -- ผู้ใช้สั่งว่าให้
+        AI ตรวจต่อจากข้อมูลที่แก้แล้ว ไม่ใช่เริ่มนับหนึ่งใหม่
+        """
+        checks = self.run_checks(year)
+        after = self.snapshot(year, checks=checks)
+        title = {c['key']: c['title'] for c in checks}
+        before = before or {}
+
+        fixed, still, fresh = [], [], []
+        for key, status in after.items():
+            was = before.get(key)
+            if was in ('block', 'warn') and status == 'ok':
+                fixed.append(title.get(key, key))
+            elif status == 'block':
+                (still if was == 'block' else fresh).append(title.get(key, key))
+        blocks = []
+        if not before:
+            blocks.append(u'<span class="text-muted">ยังไม่มีผลตรวจครั้งก่อนไว้เทียบ '
+                          u'ตรวจใหม่ทั้งหมดให้แทน</span>')
+        else:
+            parts = []
+            if fixed:
+                parts.append(u'<div>🟢 <b>เคลียร์แล้ว %s เรื่อง</b> — %s</div>'
+                             % (len(fixed), html_escape(u' · '.join(fixed))))
+            if still:
+                parts.append(u'<div>🔴 <b>ยังค้างอยู่ %s เรื่อง</b> — %s</div>'
+                             % (len(still), html_escape(u' · '.join(still))))
+            if fresh:
+                parts.append(u'<div>🆕 <b>เพิ่งโผล่ใหม่ %s เรื่อง</b> — %s</div>'
+                             % (len(fresh), html_escape(u' · '.join(fresh))))
+            if not parts:
+                parts.append(u'<div>ไม่มีอะไรเปลี่ยนจากครั้งก่อน</div>')
+            blocks.append(u'<b>เทียบกับผลตรวจครั้งก่อน</b>%s' % u''.join(parts))
+        blocks += self.checks_blocks(year, checks=checks)
+        return blocks, after
+
     @api.model
     def worklist_blocks(self, year, limit=10):
         u"""งานที่ AI ทำให้ไม่ได้ ต้องให้พนักงานแก้เอง พร้อมเลขที่เอกสาร
@@ -1687,6 +1851,221 @@ class NpdAiItClosing(models.AbstractModel):
             u'รายการข้างบนเป็นสิ่งที่ "ระบบตรวจเจอ" ฝ่ายบัญชีอาจเห็นว่าบางข้อ'
             u'ไม่ต้องแก้ หรือต้องแก้คนละแบบ — บอกผมได้ ผมปรับตามที่บัญชีตัดสิน'))
         return blocks
+
+    # ==================================================================
+    # ชุดข้อมูลสำหรับยื่นงบการเงิน
+    # ==================================================================
+    @api.model
+    def _statement_rows(self, year):
+        u"""ยอดคงเหลือแยกตามกลุ่มบัญชี ใช้ทำงบแสดงฐานะการเงิน/งบกำไรขาดทุน
+
+        งบดุลเอายอด "สะสมถึงวันสิ้นงวด" ส่วนงบกำไรขาดทุนเอาเฉพาะ "ในงวด"
+        """
+        dfrom, dto = self.fiscal_window(year)
+        self.env.cr.execute(
+            """SELECT t.internal_group, a.code, a.name,
+                      COALESCE(SUM(CASE WHEN l.date >= %s THEN l.balance END), 0) AS in_period,
+                      COALESCE(SUM(l.balance), 0) AS cumulative
+                 FROM account_move_line l
+                 JOIN account_account a ON a.id = l.account_id
+                 JOIN account_account_type t ON t.id = a.user_type_id
+                WHERE l.company_id = %s AND l.parent_state = 'posted' AND l.date <= %s
+                GROUP BY t.internal_group, a.code, a.name
+                HAVING ABS(COALESCE(SUM(l.balance), 0)) > 0.004
+                    OR ABS(COALESCE(SUM(CASE WHEN l.date >= %s THEN l.balance END), 0)) > 0.004
+                ORDER BY a.code""",
+            (dfrom, self._company().id, dto, dfrom))
+        return self.env.cr.fetchall()
+
+    @api.model
+    def filing_summary(self, year):
+        u"""ตัวเลขหลักที่ต้องกรอกในแบบนำส่ง"""
+        rows = self._statement_rows(year)
+        total = {'asset': 0.0, 'liability': 0.0, 'equity': 0.0,
+                 'income': 0.0, 'expense': 0.0}
+        for group, _code, _name, in_period, cumulative in rows:
+            if group in ('income', 'expense'):
+                total[group] += float(in_period or 0.0)
+            elif group in total:
+                total[group] += float(cumulative or 0.0)
+        income = -total['income']
+        expense = total['expense']
+        return {
+            'asset': total['asset'],
+            'liability': -total['liability'],
+            'equity': -total['equity'],
+            'income': income,
+            'expense': expense,
+            'profit': income - expense,
+        }
+
+    @api.model
+    def build_filing_excel(self, year):
+        u"""ไฟล์ชุดข้อมูลยื่นงบ คืน (ชื่อไฟล์, ไบต์, จำนวนแถว)"""
+        if not xlsxwriter:
+            return None, None, 0
+        company = self._company()
+        dfrom, dto = self.fiscal_window(year)
+        rows = self._statement_rows(year)
+        summary = self.filing_summary(year)
+
+        stream = io.BytesIO()
+        book = xlsxwriter.Workbook(stream, {'in_memory': True})
+        head = book.add_format({'bold': True, 'bg_color': '#DDEBF7', 'border': 1,
+                                'font_name': 'Tahoma', 'font_size': 10})
+        text = book.add_format({'font_name': 'Tahoma', 'font_size': 10})
+        money = book.add_format({'num_format': '#,##0.00', 'font_name': 'Tahoma',
+                                 'font_size': 10})
+        bold = book.add_format({'bold': True, 'font_name': 'Tahoma', 'font_size': 10})
+        boldmoney = book.add_format({'bold': True, 'num_format': '#,##0.00',
+                                     'font_name': 'Tahoma', 'font_size': 10, 'top': 1})
+        title = book.add_format({'bold': True, 'font_name': 'Tahoma', 'font_size': 13})
+        warn = book.add_format({'font_name': 'Tahoma', 'font_size': 10,
+                                'text_wrap': True, 'valign': 'top', 'bg_color': '#FFF2CC'})
+
+        # ---------------- ชีต 1: ข้อมูลสำหรับแบบนำส่ง ----------------
+        sheet = book.add_worksheet(u'ข้อมูลสำหรับยื่น')
+        sheet.set_column(0, 0, 38)
+        sheet.set_column(1, 1, 30)
+        sheet.write(0, 0, u'ข้อมูลสำหรับยื่นงบการเงิน', title)
+        info = [
+            (u'ชื่อนิติบุคคล', company.name or u''),
+            (u'เลขทะเบียน / เลขประจำตัวผู้เสียภาษี',
+             company.vat or getattr(company, 'company_registry', u'') or u''),
+            (u'รอบปีบัญชี', u'%s ถึง %s' % (_thai_date(dfrom), _thai_date(dto))),
+            (u'ปี พ.ศ.', year + 543),
+            (u'', u''),
+            (u'สินทรัพย์รวม', summary['asset']),
+            (u'หนี้สินรวม', summary['liability']),
+            (u'ส่วนของผู้ถือหุ้นรวม', summary['equity']),
+            (u'รายได้รวม', summary['income']),
+            (u'ค่าใช้จ่ายรวม', summary['expense']),
+            (u'กำไร(ขาดทุน) สุทธิ', summary['profit']),
+        ]
+        line = 2
+        for label, value in info:
+            sheet.write(line, 0, label, bold if label else text)
+            if isinstance(value, float):
+                sheet.write_number(line, 1, value, money)
+            else:
+                sheet.write(line, 1, value, text)
+            line += 1
+        line += 1
+        sheet.merge_range(
+            line, 0, line + 4, 1,
+            u'ไฟล์นี้เป็น "ตัวเลขตั้งต้น" ที่ดึงจากบัญชีในระบบ ไม่ใช่ไฟล์ที่ยื่นได้เลย\n'
+            u'การยื่น DBD e-Filing ต้องใช้งบการเงินที่ผู้สอบบัญชีรับรอง เป็นไฟล์ PDF/A '
+            u'พร้อมลายมือชื่อดิจิทัล ยื่นคู่กับ ส.บช.3 และ บอจ.5 '
+            u'ภายใน 5 เดือนนับจากวันสิ้นรอบบัญชี\n'
+            u'ส่วน ภ.ง.ด.50 ยื่นกรมสรรพากรภายใน 150 วันนับจากวันสิ้นรอบบัญชี\n'
+            u'ให้ส่งไฟล์นี้กับงบที่พิมพ์จากระบบให้ผู้สอบบัญชีตรวจก่อนเสมอ', warn)
+
+        # ---------------- ชีต 2-3: งบการเงิน ----------------
+        groups = (
+            (u'งบแสดงฐานะการเงิน', ('asset', 'liability', 'equity'), 4),
+            (u'งบกำไรขาดทุน', ('income', 'expense'), 3),
+        )
+        labels = {'asset': u'สินทรัพย์', 'liability': u'หนี้สิน',
+                  'equity': u'ส่วนของผู้ถือหุ้น', 'income': u'รายได้',
+                  'expense': u'ค่าใช้จ่าย'}
+        total_rows = 0
+        for name, wanted, col_amount in groups:
+            sh = book.add_worksheet(name)
+            sh.set_column(0, 0, 14)
+            sh.set_column(1, 1, 46)
+            sh.set_column(2, 3, 18)
+            sh.write(0, 0, u'%s — %s' % (name, company.name or u''), title)
+            sh.write(1, 0, u'งวด %s ถึง %s' % (_thai_date(dfrom), _thai_date(dto)), text)
+            for index, header in enumerate((u'รหัสบัญชี', u'ชื่อบัญชี', u'จำนวนเงิน')):
+                sh.write(3, index, header, head)
+            line = 4
+            for key in wanted:
+                sh.write(line, 1, labels[key], bold)
+                line += 1
+                subtotal = 0.0
+                for group, code, acc_name, in_period, cumulative in rows:
+                    if group != key:
+                        continue
+                    value = float(in_period if key in ('income', 'expense') else cumulative)
+                    if key in ('income', 'liability', 'equity'):
+                        value = -value
+                    if abs(value) < 0.005:
+                        continue
+                    sh.write(line, 0, code, text)
+                    sh.write(line, 1, acc_name or u'', text)
+                    sh.write_number(line, 2, value, money)
+                    subtotal += value
+                    line += 1
+                    total_rows += 1
+                sh.write(line, 1, u'รวม%s' % labels[key], bold)
+                sh.write_number(line, 2, subtotal, boldmoney)
+                line += 2
+            if name == u'งบกำไรขาดทุน':
+                sh.write(line, 1, u'กำไร(ขาดทุน) สุทธิ', bold)
+                sh.write_number(line, 2, summary['profit'], boldmoney)
+
+        # ---------------- ชีต 4: งบทดลอง ----------------
+        sh = book.add_worksheet(u'งบทดลอง')
+        sh.set_column(0, 0, 14)
+        sh.set_column(1, 1, 46)
+        sh.set_column(2, 3, 18)
+        for index, header in enumerate((u'รหัสบัญชี', u'ชื่อบัญชี', u'ยอดในงวด',
+                                        u'ยอดสะสมถึงสิ้นงวด')):
+            sh.write(0, index, header, head)
+        sh.freeze_panes(1, 0)
+        line = 1
+        for _group, code, acc_name, in_period, cumulative in rows:
+            sh.write(line, 0, code, text)
+            sh.write(line, 1, acc_name or u'', text)
+            sh.write_number(line, 2, float(in_period or 0.0), money)
+            sh.write_number(line, 3, float(cumulative or 0.0), money)
+            line += 1
+        book.close()
+        return (u'ยื่นงบ-%s-%s.xlsx' % (year + 543, (company.name or u'')[:12]),
+                stream.getvalue(), total_rows)
+
+    @api.model
+    def filing_blocks(self, year):
+        u"""ข้อความตอบเรื่องไฟล์ยื่นงบ คืน (blocks, พร้อมออกไฟล์ไหม)"""
+        verdict = self.verdict(year)
+        summary = self.filing_summary(year)
+        blocks = []
+        integrity = [c for c in verdict['checks'] if c['key'] == 'books_integrity']
+        if integrity and integrity[0]['status'] == 'block':
+            blocks.append(
+                u'<b>🛑 ตัวเลขชุดนี้ยังใช้ยื่นไม่ได้</b>'
+                u'<div>%s</div>'
+                u'<div><span class="text-muted">%s</span></div>'
+                % (html_escape(integrity[0]['found']), html_escape(integrity[0]['fix'])))
+        if not verdict['complete']:
+            blocks.append(
+                u'<b>⚠️ ปี %s ยังปิดงบไม่สมบูรณ์ — ยังไม่ควรเอาตัวเลขไปยื่น</b>'
+                u'<div>ติดอยู่ %s เรื่อง: %s</div>'
+                % (year, len(verdict['blocking']),
+                   html_escape(u' · '.join(c['title'] for c in verdict['blocking'][:5]))))
+            blocks.append(_hint_fix(u'พิมพ์ "ต้องแก้อะไรบ้าง" เพื่อดูรายการที่ต้องเคลียร์ก่อน'))
+        else:
+            blocks.append(u'<b>🟢 ปี %s ปิดงบสมบูรณ์แล้ว พร้อมจัดชุดข้อมูลยื่นได้</b>' % year)
+        rows = [u'<tr><th style="text-align:left">รายการ</th>'
+                u'<th style="text-align:right">จำนวนเงิน</th></tr>']
+        for label, key in ((u'สินทรัพย์รวม', 'asset'), (u'หนี้สินรวม', 'liability'),
+                           (u'ส่วนของผู้ถือหุ้นรวม', 'equity'), (u'รายได้รวม', 'income'),
+                           (u'ค่าใช้จ่ายรวม', 'expense'), (u'กำไร(ขาดทุน) สุทธิ', 'profit')):
+            rows.append(u'<tr><td>%s</td><td style="text-align:right">%s</td></tr>'
+                        % (label, _money(summary[key])))
+        blocks.append(u'<table class="table table-sm" style="width:100%%">%s</table>'
+                      % u''.join(rows))
+        blocks.append(
+            u'<b>สิ่งที่ต้องยื่นจริง</b>'
+            u'<div class="ml-3">DBD e-Filing — งบการเงินที่<b>ผู้สอบบัญชีรับรอง</b> '
+            u'เป็นไฟล์ <b>PDF/A พร้อมลายมือชื่อดิจิทัล</b> ยื่นคู่กับ <b>ส.บช.3</b> '
+            u'และ <b>บอจ.5</b> ภายใน 5 เดือนนับจากวันสิ้นรอบบัญชี</div>'
+            u'<div class="ml-3">กรมสรรพากร — <b>ภ.ง.ด.50</b> ภายใน 150 วัน'
+            u'นับจากวันสิ้นรอบบัญชี</div>'
+            u'<div><span class="text-muted">ไฟล์ที่ผมออกให้เป็น "ตัวเลขตั้งต้น" '
+            u'จากบัญชีในระบบ เอาไปกรอกแบบและส่งให้ผู้สอบบัญชีตรวจ '
+            u'<b>ไม่ใช่ไฟล์ที่ยื่นได้เลย</b> เพราะต้องมีลายมือชื่อผู้สอบบัญชี</span></div>')
+        return blocks, verdict['complete']
 
     # ==================================================================
     # ตอบคำถามอิสระด้วย AI (ยึดคู่มือ + ผลตรวจจริง + เมนูจริง)
