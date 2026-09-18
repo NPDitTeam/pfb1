@@ -338,12 +338,18 @@ class NpdAiItClosing(models.AbstractModel):
         if not keyword:
             return []
         Menu = self.env['ir.ui.menu']
-        try:
-            candidates = Menu.sudo().with_context(
-                **{'ir.ui.menu.full_list': True}
-            ).search([('name', 'ilike', keyword)], limit=60)
-        except Exception:  # noqa: BLE001
-            return []
+        # ชื่อเมนูเป็นฟิลด์แปลภาษา การค้นจะค้นเฉพาะภาษาที่ผู้ใช้เปิดอยู่
+        # พนักงานเปิดหน้าจอภาษาไทย แต่ชื่อเมนูจริงหลายตัวเป็นอังกฤษ
+        # (Trial Balance) ถ้าค้นภาษาเดียวจะไม่เจอ ต้องค้นทั้งสองภาษาแล้วรวมกัน
+        base = Menu.sudo().with_context(**{'ir.ui.menu.full_list': True})
+        candidates = base.browse()
+        for lang in (self.env.lang or 'en_US', 'en_US'):
+            try:
+                found = base.with_context(lang=lang).search(
+                    [('name', 'ilike', keyword)], limit=60)
+            except Exception:  # noqa: BLE001
+                continue
+            candidates |= found.with_env(base.env)
         if not candidates:
             return []
         visible_ids = set(Menu.search([('id', 'in', candidates.ids)]).ids)
