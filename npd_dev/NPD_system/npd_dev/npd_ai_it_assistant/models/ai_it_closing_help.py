@@ -1296,6 +1296,47 @@ class NpdAiItClosing(models.AbstractModel):
                 return a
         return Account.browse()
 
+    # ------------------------------------------------------------------
+    # ลิงก์ไปหน้าที่ต้องไปแก้
+    #
+    # เอกสารฉบับร่างหลายใบยังไม่มีเลขที่ (ขึ้นเป็น "/") พนักงานจึงค้นจากเลขไม่ได้
+    # กรณีแบบนี้ต้องแนบ URL ของหน้านั้นไปให้เลย (หลักการเดียวกับหัวข้อแก้วันที่
+    # ใบแจ้งหนี้ ที่ให้วาง URL เพราะฉบับร่างไม่มีเลขที่)
+    # ------------------------------------------------------------------
+    @api.model
+    def _base_url(self):
+        return (self.env['ir.config_parameter'].sudo()
+                .get_param('web.base.url') or u'').rstrip('/')
+
+    @api.model
+    def doc_url(self, record):
+        u"""ลิงก์เปิดเอกสารใบนั้นตรง ๆ"""
+        base = self._base_url()
+        if not base or not record:
+            return u''
+        return u'%s/web#id=%s&model=%s&view_type=form' % (base, record.id, record._name)
+
+    @api.model
+    def action_url(self, xmlid):
+        u"""ลิงก์เปิดหน้าจอจาก xmlid ของ action (เช่นหน้าตั้งวันที่ล็อก)"""
+        base = self._base_url()
+        action = self.env.ref(xmlid, raise_if_not_found=False)
+        if not base or not action:
+            return u''
+        return u'%s/web#action=%s' % (base, action.id)
+
+    @api.model
+    def _where_to_fix(self, label, xmlid, menu_find, menu_path, extra=u''):
+        u"""บรรทัด "ไปแก้ที่ไหน" พร้อมเมนูจริงและลิงก์"""
+        menu = self._item_menu_text({'find': menu_find, 'path': menu_path})
+        url = self.action_url(xmlid)
+        text = u'<div><span class="text-muted">ไปแก้ที่</span> %s' % html_escape(menu)
+        if url:
+            text += u'<br/><a href="%s">%s</a>' % (html_escape(url), html_escape(url))
+        if extra:
+            text += u'<br/><span class="text-muted">%s</span>' % extra
+        return text + u'</div>'
+
     @api.model
     def _lock_allowed(self, lock_date):
         u"""Odoo ยอมให้ล็อกได้ไม่เกินวันสิ้นเดือนก่อนหน้าเท่านั้น
@@ -1372,9 +1413,15 @@ class NpdAiItClosing(models.AbstractModel):
                 elif not self._lock_allowed(dto):
                     # Odoo ห้ามล็อกงวดที่ยังไม่จบ (ต้องไม่เกินวันสิ้นเดือนก่อนหน้า)
                     rows.append(u'<div>%s — <b>ยังล็อกไม่ได้</b> เพราะงวดสิ้นสุด %s '
-                                u'ยังมาไม่ถึง ระบบให้ล็อกได้ไม่เกินสิ้นเดือนที่แล้ว '
-                                u'ค่อยมาล็อกหลังปิดงบจริง</div>'
-                                % (FIX_LABEL[k], _thai_date(dto)))
+                                u'ยังมาไม่ถึง ระบบให้ล็อกได้ไม่เกินสิ้นเดือนที่แล้ว</div>%s'
+                                % (FIX_LABEL[k], _thai_date(dto),
+                                   self._where_to_fix(
+                                       FIX_LABEL[k],
+                                       'account_lock_date_update.account_update_lock_date_act_window',
+                                       u'lock dates',
+                                       u'Accounting > Accounting > Actions > Update accounting lock dates',
+                                       u'ทำได้ตั้งแต่ %s เป็นต้นไป' % _thai_date(
+                                           date(dto.year + 1, 1, 1)))))
                 else:
                     todo += 1
                     rows.append(u'<div><b>%s</b> → ล็อกถึง %s (เดิม %s)</div>'
@@ -1471,8 +1518,14 @@ class NpdAiItClosing(models.AbstractModel):
                         if not self._lock_allowed(dto):
                             failed.append(
                                 u'%s — ยังล็อกไม่ได้ งวดสิ้นสุด %s ยังมาไม่ถึง '
-                                u'(ระบบให้ล็อกได้ไม่เกินสิ้นเดือนที่แล้ว)'
-                                % (FIX_LABEL[k], _thai_date(dto)))
+                                u'(ระบบให้ล็อกได้ไม่เกินสิ้นเดือนที่แล้ว) '
+                                u'ทำได้ตั้งแต่ %s · เมนู %s'
+                                % (FIX_LABEL[k], _thai_date(dto),
+                                   _thai_date(date(dto.year + 1, 1, 1)),
+                                   self._item_menu_text({
+                                       'find': u'lock dates',
+                                       'path': u'Accounting > Accounting > Actions > '
+                                               u'Update accounting lock dates'})))
                             continue
                         company.sudo().write({'fiscalyear_lock_date': dto})
                         Fix.log_write(company, 'fiscalyear_lock_date', current and str(current),
@@ -1548,24 +1601,39 @@ class NpdAiItClosing(models.AbstractModel):
             rows = [u'<tr><th style="text-align:left">เลขที่ / อ้างอิง</th>'
                     u'<th style="text-align:left">วันที่</th>'
                     u'<th style="text-align:left">สมุด</th>'
-                    u'<th style="text-align:right">ยอด</th></tr>']
+                    u'<th style="text-align:right">ยอด</th>'
+                    u'<th style="text-align:left">เปิดเอกสาร</th></tr>']
             for mv in drafts[:limit]:
+                # ใบร่างหลายใบยังไม่มีเลขที่ ต้องให้ลิงก์ไปเลย ไม่งั้นค้นไม่เจอ
+                has_number = mv.name and mv.name != '/'
+                label = mv.name if has_number else (mv.ref or u'(ยังไม่มีเลขที่)')
+                url = self.doc_url(mv)
+                link = (u'<a href="%s">เปิด</a>' % html_escape(url)) if url else u'—'
+                if not has_number and url:
+                    link = u'<a href="%s">%s</a>' % (html_escape(url), html_escape(url))
                 rows.append(u'<tr><td>%s</td><td>%s</td><td>%s</td>'
-                            u'<td style="text-align:right">%s</td></tr>'
-                            % (html_escape(mv.name if mv.name != '/' else (mv.ref or u'(ยังไม่มีเลข)')),
-                               _thai_date(mv.date), html_escape(mv.journal_id.code or u''),
-                               _money(mv.amount_total)))
+                            u'<td style="text-align:right">%s</td><td>%s</td></tr>'
+                            % (html_escape(label), _thai_date(mv.date),
+                               html_escape(mv.journal_id.code or u''),
+                               _money(mv.amount_total), link))
             more = (u'<div><span class="text-muted">แสดง %s จาก %s ใบ — '
                     u'ขอเป็นไฟล์ Excel เพื่อดูครบ</span></div>'
                     % (min(limit, len(drafts)), len(drafts))) if len(drafts) > limit else u''
             blocks.append(u'<b>1. ใบค้างร่าง %s ใบ — ต้องกด Post หรือ Cancel เอง</b>'
                           u'<div><span class="text-muted">AI ตัดสินใจแทนไม่ได้ '
-                          u'ต้องดูทีละใบว่ารายการถูกไหม</span></div>'
-                          u'<table class="table table-sm" style="width:100%%">%s</table>%s'
-                          % (len(drafts), u''.join(rows), more))
+                          u'ต้องดูทีละใบว่ารายการถูกไหม · ใบที่ยังไม่มีเลขที่ '
+                          u'ให้กดจากลิงก์ เพราะค้นด้วยเลขไม่ได้</span></div>'
+                          u'<table class="table table-sm" style="width:100%%">%s</table>%s%s'
+                          % (len(drafts), u''.join(rows), more,
+                             self._where_to_fix(
+                                 u'ใบค้างร่าง', 'account.action_move_journal_line',
+                                 u'Journal Entries',
+                                 u'Accounting > Accounting > Miscellaneous > Journal Entries',
+                                 u'กรอง Draft + ปี %s' % year)))
 
         self.env.cr.execute(
-            """SELECT m.name, m.date, j.code, ROUND((t.d - t.c)::numeric, 2), COUNT(*) OVER ()
+            """SELECT m.id, m.name, m.date, j.code,
+                      ROUND((t.d - t.c)::numeric, 2), COUNT(*) OVER ()
                  FROM account_move m
                  JOIN account_journal j ON j.id = m.journal_id
                  JOIN (SELECT move_id, SUM(debit) d, SUM(credit) c
@@ -1577,16 +1645,20 @@ class NpdAiItClosing(models.AbstractModel):
         bad = self.env.cr.fetchall()
         if bad:
             any_work = True
-            total = bad[0][4]
+            total = bad[0][5]
             rows = [u'<tr><th style="text-align:left">เลขที่</th>'
                     u'<th style="text-align:left">วันที่</th>'
                     u'<th style="text-align:left">สมุด</th>'
-                    u'<th style="text-align:right">ผลต่าง</th></tr>']
-            for name, date_, code, diff, _n in bad:
+                    u'<th style="text-align:right">ผลต่าง</th>'
+                    u'<th style="text-align:left">เปิดเอกสาร</th></tr>']
+            Move = self.env['account.move'].sudo()
+            for move_id, name, date_, code, diff, _n in bad:
+                url = self.doc_url(Move.browse(move_id))
+                link = (u'<a href="%s">เปิด</a>' % html_escape(url)) if url else u'—'
                 rows.append(u'<tr><td>%s</td><td>%s</td><td>%s</td>'
-                            u'<td style="text-align:right">%s</td></tr>'
-                            % (html_escape(name or u'-'), _thai_date(date_),
-                               html_escape(code or u''), _money(diff)))
+                            u'<td style="text-align:right">%s</td><td>%s</td></tr>'
+                            % (html_escape(name or u'(ยังไม่มีเลขที่)'), _thai_date(date_),
+                               html_escape(code or u''), _money(diff), link))
             blocks.append(u'<b>2. ใบที่เดบิตไม่เท่าเครดิต %s ใบ — ต้องให้ IT กับบัญชีดูร่วมกัน</b>'
                           u'<div><span class="text-muted">เป็นข้อมูลผิดปกติ ไม่ใช่ขั้นตอนปิดงบ '
                           u'AI จะไม่เติมบรรทัดให้ลงตัวเอง เพราะต้องรู้ต้นเหตุก่อน</span></div>'
@@ -1600,9 +1672,10 @@ class NpdAiItClosing(models.AbstractModel):
                 any_work = True
                 blocks.append(u'<b>3. สินทรัพย์สถานะร่าง %s รายการ — ต้องยืนยันเอง</b>'
                               u'<div><span class="text-muted">กระทบค่าเสื่อมทั้งปี '
-                              u'ต้องตกลงก่อนว่าจะคุมค่าเสื่อมใน Odoo หรือ Excel · เมนู %s</span></div>'
-                              % (n_draft, html_escape(self._item_menu_text(
-                                  {'find': u'Assets', 'path': u'Accounting > Assets'}))))
+                              u'ต้องตกลงก่อนว่าจะคุมค่าเสื่อมใน Odoo หรือ Excel</span></div>%s'
+                              % (n_draft, self._where_to_fix(
+                                  u'สินทรัพย์', 'account_asset_management.account_asset_action',
+                                  u'Assets', u'Accounting > Assets')))
 
         if not any_work:
             return [u'<b>🟢 ไม่มีงานที่ต้องให้พนักงานแก้เองแล้ว</b> '
