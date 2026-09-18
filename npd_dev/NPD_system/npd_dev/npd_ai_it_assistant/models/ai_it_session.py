@@ -247,6 +247,7 @@ class NpdAiItSession(models.Model):
         ('confirm_status', 'รอยืนยันการแก้สถานะการเช่า'),
         ('ask_expense', 'รอคำถามเรื่องค่าใช้จ่าย'),
         ('ask_closing', 'รอคำถามเรื่องปิดงบ'),
+        ('confirm_closing_fix', 'รอยืนยันให้ลงมือแก้งานปิดงบ'),
         ('ask_vat_doc', 'รอใบแจ้งหนี้ที่จะแก้การปัดเศษ VAT'),
         ('ask_vat_mode', 'รอเลือกวิธีปัดเศษ VAT'),
         ('confirm_vat', 'รอยืนยันการแก้การปัดเศษ VAT'),
@@ -2364,6 +2365,104 @@ class NpdAiItSession(models.Model):
         Closing = self.env['npd.ai.it.closing']
         data = self._get_data()
         history = data.get('closing_history') or []
+        year = (history[-1] or {}).get('years', [None])[0] if history else None
+        year = year or Closing.default_year()
+
+        # ---- รอยืนยันให้ลงมือแก้ ----
+        if self.state == 'confirm_closing_fix':
+            pending = data.get('closing_fix') or {}
+            if not _is_command(text, CONFIRM_WORDS):
+                # บัญชีพิมพ์เงื่อนไขใหม่มาแทนการยืนยัน -> เสนอใหม่ตามที่สั่ง
+                options = Closing.detect_options(question)
+                if options:
+                    pending['options'] = dict(pending.get('options') or {}, **options)
+                    title, rows, error = Closing.fix_preview(
+                        pending.get('key'), pending.get('year') or year,
+                        options=pending['options'])
+                    if error:
+                        self.sudo().write({'state': 'ask_closing'})
+                        self._post_bot(_block(_rows(_title(u'ปรับตามที่บัญชีสั่งแล้ว', '📝'),
+                                                    html_escape(error))))
+                        return
+                    data['closing_fix'] = pending
+                    self._set_data(data)
+                    self._post_bot(_block(
+                        _rows(_title(u'ปรับตามที่ฝ่ายบัญชีสั่งแล้ว — %s' % title, '📝')),
+                        _rows(*rows),
+                        _hint(u'พิมพ์ "ยืนยัน" เพื่อให้ผมลงมือ'),
+                    ), commands=False)
+                    return
+                self.sudo().write({'state': 'ask_closing'})
+                self._post_bot(u'ยังไม่ได้ลงมือแก้อะไรครับ ถามต่อได้เลย')
+                return
+            batch, done, failed, error = Closing.fix_apply(
+                pending.get('key'), pending.get('year') or year, session=self,
+                options=pending.get('options'))
+            self.sudo().write({'state': 'ask_closing'})
+            data.pop('closing_fix', None)
+            self._set_data(data)
+            if error:
+                self._post_bot(_block(_rows(_title(u'ไม่ได้แก้อะไร', 'ℹ️'), html_escape(error))))
+                return
+            body = []
+            if done:
+                body.append(_rows(_title(u'แก้ให้แล้ว %s เรื่อง' % len(done), '✅'),
+                                  *[_indent(u'• %s' % html_escape(d)) for d in done]))
+            if failed:
+                body.append(_rows(_title(u'ทำให้ไม่ได้ %s เรื่อง' % len(failed), '⚠️'),
+                                  *[_indent(u'• %s' % html_escape(d)) for d in failed]))
+            if done:
+                body.append(_rows(_hint(u'ถ้าไม่ถูกใจ พิมพ์ "ถอย" เพื่อดูรายการที่ถอยได้ '
+                                        u'ถอยทีละข้อหรือถอยทั้งหมดก็ได้')))
+            body += [_rows(b) for b in Closing.verify_blocks(pending.get('year') or year)]
+            self._post_bot(_block(*body), commands=False)
+            self._log_history('closing_fix', html2plaintext(u'; '.join(done))[:400])
+            return
+
+        # ---- สั่งถอย ----
+        mode, key = Closing.detect_fix(question)
+        if mode == 'undo':
+            match = re.search(u'ข้อ\\s*(\\d+)', question)
+            if key == 'all' or match:
+                count, problems = Closing.undo_apply(int(match.group(1)) if match else None)
+                body = [_rows(_title(u'ถอยกลับแล้ว %s รายการ' % count, '↩️'))]
+                if problems:
+                    body.append(_rows(_hint(u'ถอยไม่ได้: %s'
+                                            % html_escape(u' · '.join(problems[:3])))))
+                body += [_rows(b) for b in Closing.undo_blocks()]
+                self._post_bot(_block(*body), commands=False)
+                self._log_history('closing_fix', u'ถอยกลับ %s รายการ' % count)
+                return
+            self._post_bot(_block(*[_rows(b) for b in Closing.undo_blocks()]), commands=False)
+            return
+
+        # ---- สั่งให้ลงมือแก้ ----
+        if mode == 'fix':
+            options = Closing.detect_options(question)
+            asked = Closing.parse_years(question)
+            fix_year = asked[0] if asked else year
+            title, rows, error = Closing.fix_preview(key, fix_year, options=options)
+            if error:
+                body = [_rows(_title(u'ยังไม่ต้องแก้', 'ℹ️'), html_escape(error))]
+                body += [_rows(b) for b in rows]
+                self._post_bot(_block(*body))
+                return
+            data['closing_fix'] = {'key': key, 'year': fix_year, 'options': options}
+            self._set_data(data)
+            self.sudo().write({'state': 'confirm_closing_fix'})
+            self._post_bot(_block(
+                _rows(_title(title, '🛠️')),
+                _rows(*rows),
+                _rows(_hint(u'พิมพ์ "ยืนยัน" เพื่อให้ผมลงมือ · ทุกอย่างที่ผมทำถอยกลับได้')),
+            ), commands=False)
+            return
+
+        # ---- ขอรายการงานที่ต้องให้คนแก้เอง ----
+        if any(w in question for w in (u'ต้องแก้อะไรบ้าง', u'งานที่ต้องทำ', u'ให้พนักงานแก้',
+                                       u'รายการที่ต้องแก้', u'worklist', u'ตรวจต่อ')):
+            blocks = Closing.worklist_blocks(fix_year if False else year)
+            self._post_bot(_block(*[_rows(b) for b in blocks]), commands=False)
+            return
 
         # "ขอเป็นไฟล์ Excel" เฉย ๆ -> ใช้ปีของคำถามล่าสุด ไม่ต้องถามซ้ำ
         want_excel = Closing.wants_excel(question)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'NPD - ตัวช่วย AI-IT (AI-IT Assistant)',
-    'version': '14.0.1.12.0',
+    'version': '14.0.1.13.0',
     'category': 'Productivity/Discuss',
     'summary': 'แท็บ "ตัวช่วย AI-IT" ในกล่องสนทนา ให้พนักงานแจ้งปัญหาเป็นหัวข้อ แล้วให้ AI แก้ให้',
     'description': """
