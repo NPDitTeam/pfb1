@@ -315,6 +315,12 @@ class PayrollPeriod(models.Model):
             'log': new_log,
         })
 
+        # สร้างรายงานหักเงินสงเคราะห์ลูกจ้างของรอบนี้ให้เลย (แยกไฟล์ตามสังกัด)
+        self._sync_welfare_report_safe()
+
+        # ดึงเข้ารายงาน ภ.ง.ด.1 ทันที ไม่ต้องรอ cron รายวันหรือกด "อัพเดตข้อมูลเงินเดือน"
+        self._sync_pnd1_safe()
+
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
@@ -559,6 +565,9 @@ class PayrollPeriod(models.Model):
         # อัพเดทรายงาน ภ.ง.ด.1 (system) อัตโนมัติหลังอัพเดตข้อมูลเงินเดือน
         self._sync_pnd1_safe()
 
+        # อัพเดทรายงานหักเงินสงเคราะห์ลูกจ้าง (แยกตามสังกัด) ให้ตรงกับยอดที่เพิ่งคิดใหม่
+        self._sync_welfare_report_safe()
+
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
@@ -570,6 +579,22 @@ class PayrollPeriod(models.Model):
                 'sticky': False,
             }
         }
+
+    def _sync_welfare_report_safe(self):
+        """สร้าง/อัพเดตรายงานหักเงินสงเคราะห์ลูกจ้างของรอบนี้ — ล้มเหลวไม่ทำให้ทำเงินเดือนพัง
+
+        รอบที่ยังไม่ถึงเดือนเริ่มหัก จะไม่มีใครถูกหัก จึงไม่มีรายงานถูกสร้าง
+        """
+        for rec in self:
+            try:
+                made = rec.env['welfare.fund.report'].generate_for_period(rec)
+                if made:
+                    _logger.info('[WELFARE-REPORT] รอบ %s/%s สร้าง/อัพเดตรายงาน %s สังกัด',
+                                 rec.month, rec.year, made)
+            except Exception as e:
+                _logger.exception('[WELFARE-REPORT] สร้างรายงานล้มเหลว รอบ %s/%s: %s',
+                                  rec.month, rec.year, e)
+        return True
 
     @api.model
     def _cron_auto_payroll(self):

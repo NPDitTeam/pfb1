@@ -137,6 +137,12 @@
               action="action_welfare_fund_config"
               sequence="81"/>
 
+    <menuitem id="sub_welfare_fund_report_menu"
+              name="รายงานหักเงินสงเคราะห์ลูกจ้าง"
+              parent="main_employee_salary_menu"
+              action="action_welfare_fund_report"
+              sequence="82"/>
+
     <!-- เมนูกำหนดสูตรคิดสาย (เด้ง popup ให้ตั้งสูตร + วันเริ่มใช้) -->
     <menuitem id="sub_lateness_rule_menu"
               name="กำหนดสูตรคิดสาย"

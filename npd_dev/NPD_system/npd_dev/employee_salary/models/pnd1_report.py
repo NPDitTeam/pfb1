@@ -156,6 +156,62 @@ class Pnd1Line(models.Model):
         return created
 
     @api.model
+    def _managed_months(self):
+        """เดือนที่ทำเงินเดือนด้วยระบบแล้ว (มีรอบที่ไม่ใช่ร่าง) — เดือนก่อนหน้านั้น
+        ยึดข้อมูลที่นำเข้าจาก excel (เงินเดือนที่ทำไว้ก่อนเริ่มใช้ระบบเป็นรายการทดลอง)"""
+        return {
+            (p.year, p.month)
+            for p in self.env['payroll.period'].search([('state', '!=', 'draft')])
+        }
+
+    @api.model
+    def _sync_payrolls(self, payrolls, months=None):
+        """ทำให้แถว ภ.ง.ด.1 (system) ตรงกับรายการเงินเดือนที่ส่งมา
+        - มีแถวอยู่แล้ว → อัพเดตเงินได้/ภาษี โดยคงบริษัทเดิมของเดือนนั้น
+        - ยังไม่มีแถว → สร้างให้ (บริษัท = สังกัดปัจจุบัน) แล้วลบแถว excel ที่ซ้ำ
+        คืนค่า dict จำนวนที่อัพเดต/สร้าง/ลบ"""
+        result = {'updated': 0, 'created': 0, 'excel_removed': 0}
+        if months is None:
+            months = self._managed_months()
+        payrolls = payrolls.filtered(
+            lambda p: p.employee_id and (p.year, p.month) in months)
+        if not payrolls:
+            return result
+
+        line_by_payroll = {}
+        for line in self.search([('source_type', '=', 'system'),
+                                 ('payroll_id', 'in', payrolls.ids)]):
+            line_by_payroll.setdefault(line.payroll_id.id, line)
+
+        new_vals = []
+        for payroll in payrolls:
+            income = payroll.total_gross or 0.0
+            tax = payroll.tax_monthly or 0.0
+            line = line_by_payroll.get(payroll.id)
+            if line:
+                if abs((line.income or 0.0) - income) > 0.005 or abs((line.tax or 0.0) - tax) > 0.005:
+                    line.write({'income': income, 'tax': tax})
+                    result['updated'] += 1
+            elif payroll.employee_id.company:
+                new_vals.append(
+                    self._prepare_system_vals(payroll, payroll.employee_id.company))
+
+        if new_vals:
+            created = self.create(new_vals)
+            result['created'] = len(created)
+            result['excel_removed'] = self._remove_excel_overlaps(created)
+        return result
+
+    @api.model
+    def _sync_payrolls_safe(self, payrolls):
+        """เรียกจากตอนบันทึกเงินเดือน — ล้มเหลวต้องไม่ทำให้บันทึกเงินเดือนพัง"""
+        try:
+            with self.env.cr.savepoint():
+                self._sync_payrolls(payrolls)
+        except Exception as e:
+            _logger.exception("[PND1] sync ตอนบันทึกเงินเดือนล้มเหลว: %s", e)
+
+    @api.model
     def reconcile_system_lines(self):
         """ให้แถว ภ.ง.ด.1 (system) ตามทันรายการเงินเดือนล่าสุด — รันทุกวันจาก cron
         และหลังกด "อัพเดตข้อมูลเงินเดือน"
@@ -168,41 +224,14 @@ class Pnd1Line(models.Model):
         คืนค่า dict จำนวนที่อัพเดต/สร้าง/ลบ
         """
         result = {'updated': 0, 'created': 0, 'excel_removed': 0}
-        months = {
-            (p.year, p.month)
-            for p in self.env['payroll.period'].search([('state', '!=', 'draft')])
-        }
+        months = self._managed_months()
         if not months:
             return result
         domain = ['|'] * (len(months) - 1)
         for year, month in sorted(months):
             domain += ['&', ('year', '=', year), ('month', '=', month)]
         payrolls = self.env['payroll.salary'].search(domain)
-
-        line_by_payroll = {}
-        for line in self.search([('source_type', '=', 'system'),
-                                 ('payroll_id', 'in', payrolls.ids)]):
-            line_by_payroll.setdefault(line.payroll_id.id, line)
-
-        new_vals = []
-        for payroll in payrolls:
-            emp = payroll.employee_id
-            if not emp:
-                continue
-            income = payroll.total_gross or 0.0
-            tax = payroll.tax_monthly or 0.0
-            line = line_by_payroll.get(payroll.id)
-            if line:
-                if abs((line.income or 0.0) - income) > 0.005 or abs((line.tax or 0.0) - tax) > 0.005:
-                    line.write({'income': income, 'tax': tax})
-                    result['updated'] += 1
-            elif emp.company:
-                new_vals.append(self._prepare_system_vals(payroll, emp.company))
-
-        if new_vals:
-            created = self.create(new_vals)
-            result['created'] = len(created)
-            result['excel_removed'] = self._remove_excel_overlaps(created)
+        result = self._sync_payrolls(payrolls, months)
         if any(result.values()):
             _logger.info("[PND1] reconcile: อัพเดต %(updated)d, สร้าง %(created)d, "
                          "ลบแถว excel ที่ซ้ำ %(excel_removed)d", result)
@@ -268,3 +297,21 @@ class Pnd1Line(models.Model):
             self.env['pnd1.line'].invalidate_cache(['full_name'])
             _logger.info("[PND1] เติมชื่อจากระบบให้แถว excel %d บรรทัด", updated)
         return updated
+
+
+class PayrollSalaryPnd1(models.Model):
+    """ให้รายงาน ภ.ง.ด.1 ตามทันทุกครั้งที่เงินเดือนถูกแก้ ไม่ต้องรอ cron รายวัน"""
+    _inherit = 'payroll.salary'
+
+    # ฟิลด์ที่กระทบยอดในรายงาน (line_ids → ยอดรายรับเปลี่ยนตามบรรทัดในสลิป)
+    PND1_WATCH_FIELDS = {
+        'line_ids', 'total_gross', 'net_salary', 'tax_monthly',
+        'payment_date', 'employee_id', 'year', 'month', 'period_id',
+    }
+
+    def write(self, vals):
+        res = super().write(vals)
+        if (res and not self.env.context.get('skip_pnd1_sync')
+                and set(vals) & self.PND1_WATCH_FIELDS):
+            self.env['pnd1.line']._sync_payrolls_safe(self)
+        return res

@@ -88,3 +88,5 @@ access_medical_expense_opening_manager,medical.expense.opening.manager,model_med
 access_employee_foreign_doc_status_user,employee.foreign.doc.status.user,model_employee_foreign_doc_status,base.group_user,1,1,1,1
 access_welfare_fund_config_user,welfare.fund.config.user,model_welfare_fund_config,base.group_user,1,1,1,1
 access_welfare_fund_line_user,welfare.fund.line.user,model_welfare_fund_line,base.group_user,1,1,1,1
+access_welfare_fund_report,access_welfare_fund_report,model_welfare_fund_report,base.group_user,1,1,1,1
+access_welfare_fund_report_line,access_welfare_fund_report_line,model_welfare_fund_report_line,base.group_user,1,1,1,1
