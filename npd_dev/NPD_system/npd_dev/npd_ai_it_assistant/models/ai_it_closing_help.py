@@ -204,6 +204,16 @@ CLOSING_STEPS = [
 
 # อาการที่เจอบ่อย -> สาเหตุจริง -> วิธีแก้
 PITFALLS = [
+    (u'กด Recover หลัง Post แล้วนึกว่าถอยกลับแล้ว',
+     u'ปุ่ม Recover เปลี่ยนแค่สถานะใบปิดกลับเป็นร่าง '
+     u'แต่ไม่ได้ลบใบที่ Post ลงบัญชีไปแล้ว (ทดสอบจริงแล้ว)',
+     u'ถ้าจะถอยหลัง Post ต้องกด Cancel (ยกเลิก) ซึ่งจะถอนการกระทบยอด '
+     u'ยกเลิกและลบใบปิดออกจากบัญชีให้จริง ยอดจะกลับเป็นเหมือนก่อนปิดทุกบาท '
+     u'อันตรายของการกด Recover คือถ้าไปกด Calculate ต่อ จะได้ใบปิดซ้ำสองใบ'),
+    (u'ใส่ Source accounts เป็น 4%,5%,6% รวมในบรรทัดเดียว',
+     u'ระบบเทียบรหัสบัญชีแบบทีละรูปแบบ (=ilike) ใส่รวมกันจะไม่ตรงบัญชีไหนเลย',
+     u'ต้องแยกเป็น 3 บรรทัด บรรทัดละรูปแบบ (4% / 5% / 6%) '
+     u'ถ้าใส่รวมกัน กด Calculate แล้วจะได้ใบเปล่าโดยไม่ขึ้น error'),
     (u'หาเมนูปิดงบไม่เจอ',
      u'สิทธิ์ผู้ใช้เป็น Billing ไม่ใช่ Billing Administrator',
      u'ให้ IT ปรับที่ Settings > Users > แท็บ Access Rights > Invoicing = Billing Administrator'),
@@ -648,6 +658,67 @@ class NpdAiItClosing(models.AbstractModel):
                         u'ถ้าตรงจึงกด Post (ก่อน Post ยังถอยกลับได้)')
         return check
 
+    def _check_closing_amount(self, year, dfrom, dto):
+        u"""ยอดที่ใบปิดโอนเข้าบัญชีทุน ตรงกับกำไรในงบกำไรขาดทุนไหม
+
+        เจอจากการทดสอบจริง: แม่แบบจับบัญชีด้วย "รหัสขึ้นต้น" (4% 5% 6%)
+        แต่งบกำไรขาดทุนจัดกลุ่มด้วย "ประเภทบัญชี" สองอย่างนี้ไม่เท่ากันเสมอไป
+        (บัญชีพัก 9999-99 เป็นค่าใช้จ่ายแต่รหัสขึ้นต้น 9 จึงไม่ถูกล้าง
+         และถ้ายังมีใบค้างร่าง ยอดที่คำนวณได้ก็จะเพี้ยนไปอีก)
+        ต่างกันเมื่อไรต้องให้บัญชีตรวจก่อน Post ห้ามปล่อยผ่าน
+        """
+        check = self._blank('closing_amount', u'ยอดในใบปิดตรงกับงบไหม',
+                            u'Fiscal year closings',
+                            u'Accounting > Accounting > Fiscal year closings')
+        if 'account.fiscalyear.closing' not in self.env:
+            check['status'] = 'skip'
+            check['found'] = u'ฐานนี้ไม่ได้ติดตั้งโมดูลใบปิดบัญชี'
+            return check
+        closing = self.env['account.fiscalyear.closing'].sudo().search(
+            [('company_id', '=', self._company().id), ('year', '=', year)], limit=1)
+        moves = closing.move_ids if closing else self.env['account.move']
+        if not moves:
+            check['status'] = 'skip'
+            check['found'] = u'ยังไม่ได้สร้างใบปิด จึงยังไม่มีตัวเลขให้เทียบ'
+            check['need'] = u'ตรวจข้อนี้ได้หลังกด Calculate'
+            return check
+
+        move_ids = tuple(moves.ids)
+        # กำไรของปี โดยไม่นับใบปิดเอง
+        self.env.cr.execute(
+            """SELECT COALESCE(SUM(l.balance), 0)
+                 FROM account_move_line l
+                 JOIN account_account a ON a.id = l.account_id
+                 JOIN account_account_type t ON t.id = a.user_type_id
+                WHERE l.company_id = %s AND l.parent_state = 'posted'
+                  AND l.date >= %s AND l.date <= %s
+                  AND t.internal_group IN ('income', 'expense')
+                  AND l.move_id NOT IN %s""",
+            (self._company().id, dfrom, dto, move_ids))
+        profit = -float((self.env.cr.fetchone() or [0.0])[0] or 0.0)
+        # ยอดที่ใบปิดโอนออกไปฝั่งทุน/งบดุล (ไม่ใช่บัญชีรายได้-ค่าใช้จ่าย)
+        self.env.cr.execute(
+            """SELECT COALESCE(SUM(l.balance), 0)
+                 FROM account_move_line l
+                 JOIN account_account a ON a.id = l.account_id
+                 JOIN account_account_type t ON t.id = a.user_type_id
+                WHERE l.move_id IN %s
+                  AND t.internal_group NOT IN ('income', 'expense')""",
+            (move_ids,))
+        transferred = -float((self.env.cr.fetchone() or [0.0])[0] or 0.0)
+        diff = transferred - profit
+        check['amount'] = abs(diff)
+        check['found'] = u'ใบปิดโอน %s · กำไรตามงบ %s' % (_money(transferred), _money(profit))
+        if abs(diff) < EPS:
+            check['need'] = u'—'
+            return check
+        check['status'] = 'block'
+        check['need'] = u'ต่างกัน %s บาท ต้องเป็น 0 ก่อน Post' % _money(abs(diff))
+        check['fix'] = (u'สาเหตุที่พบบ่อย: (1) มีบัญชีรายได้/ค่าใช้จ่ายที่รหัสไม่ได้ขึ้นต้น '
+                        u'4/5/6 เช่นบัญชีพัก จึงไม่ถูกล้าง (2) ยังมีใบค้างร่างในปี '
+                        u'ทำให้ยอดที่คำนวณเพี้ยน — เคลียร์ใบร่างแล้วกด Recalculate ใหม่')
+        return check
+
     def _check_lock_dates(self, year, dfrom, dto):
         check = self._blank('lock_dates', u'การล็อกวันที่', u'lock dates',
                             u'Accounting > Accounting > Actions > Update accounting lock dates')
@@ -763,8 +834,8 @@ class NpdAiItClosing(models.AbstractModel):
             self._check_draft_moves, self._check_balance, self._check_unreconciled,
             self._check_assets, self._check_month_gaps, self._check_result,
             self._check_fiscal_year, self._check_closing_template,
-            self._check_closing_entry, self._check_unaffected_earnings,
-            self._check_lock_dates,
+            self._check_closing_entry, self._check_closing_amount,
+            self._check_unaffected_earnings, self._check_lock_dates,
         ]
         results = []
         for checker in checkers:
@@ -896,6 +967,49 @@ class NpdAiItClosing(models.AbstractModel):
                                  html_escape(self._item_menu_text(
                                      {'find': check['menu_find'], 'path': check['menu_path']}))))
             blocks.append(u'<b>วิธีแก้ เรียงตามลำดับที่ควรทำ</b>%s' % u''.join(fixes))
+        blocks += self.verify_blocks(year)
+        return blocks
+
+    @api.model
+    def verify_blocks(self, year):
+        u"""บอกว่าให้บัญชีไปตรวจซ้ำที่เมนูไหน และถอยกลับยังไงถ้าทำผิด
+
+        ผู้ใช้สั่งว่าทุกครั้งที่ AI รายงานผล ต้องบอกทางตรวจซ้ำและทางถอยกลับด้วย
+        เพื่อกันพลาด ไม่ใช่ให้เชื่อ AI อย่างเดียว
+        """
+        checkpoints = [
+            (u'งบทดลอง', u'Trial Balance',
+             u'Accounting > Reporting > Dynamic Reports(Wiz) > Trial Balance',
+             u'เดบิตรวมต้องเท่าเครดิตรวม'),
+            (u'งบกำไรขาดทุน', u'Profit and Loss',
+             u'Accounting > Reporting > Dynamic Reports(Wiz) > Profit and Loss',
+             u'กำไรต้องตรงกับยอดที่ใบปิดโอนเข้าบัญชีทุน'),
+            (u'งบดุล', u'Balance Sheet',
+             u'Accounting > Reporting > Dynamic Reports(Wiz) > Balance Sheet',
+             u'ดูว่ากำไรไปโผล่ในส่วนของผู้ถือหุ้นถูกช่อง'),
+            (u'ใบที่ระบบสร้างให้', u'Fiscal year closings',
+             u'Accounting > Accounting > Fiscal year closings',
+             u'เปิดใบปิด แล้วกดปุ่ม Moves ดูทีละบรรทัดก่อน Post'),
+        ]
+        rows = [u'<tr><th style="text-align:left">ตรวจอะไร</th>'
+                u'<th style="text-align:left">เมนู</th>'
+                u'<th style="text-align:left">ดูให้แน่ใจว่า</th></tr>']
+        for label, find, path, what in checkpoints:
+            rows.append(u'<tr><td><b>%s</b></td><td>%s</td><td>%s</td></tr>' % (
+                html_escape(label),
+                html_escape(self._item_menu_text({'find': find, 'path': path})),
+                html_escape(what)))
+        blocks = [u'<b>ตรวจซ้ำก่อนเชื่อผลนี้ — ปี %s</b>' % year,
+                  u'<table class="table table-sm" style="width:100%%">%s</table>'
+                  % u''.join(rows)]
+        blocks.append(
+            u'<b>ถ้าทำผิด ถอยกลับได้</b>'
+            u'<div class="ml-3">ยังไม่ Post → กด <b>Recalculate</b> คำนวณใหม่ได้เลย</div>'
+            u'<div class="ml-3">Post ไปแล้ว → ต้องกด <b>Cancel (ยกเลิก)</b> '
+            u'ระบบจะถอนการกระทบยอดและลบใบปิดออกจากบัญชีให้ ยอดกลับเป็นเหมือนก่อนปิดทุกบาท</div>'
+            u'<div class="ml-3"><span class="text-muted">อย่ากด <b>Recover</b> หลัง Post — '
+            u'มันเปลี่ยนแค่สถานะเป็นร่าง ใบยังค้างอยู่ในบัญชี ถ้ากด Calculate ต่อจะได้ใบซ้ำสองใบ '
+            u'(ทดสอบจริงแล้ว)</span></div>')
         return blocks
 
     @api.model
