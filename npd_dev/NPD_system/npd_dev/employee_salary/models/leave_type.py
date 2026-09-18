@@ -3,7 +3,7 @@ import requests
 import calendar
 from odoo import models, fields, api
 import logging
-from datetime import date
+from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 from odoo.exceptions import UserError
 
@@ -89,6 +89,30 @@ class LeaveTypeCustom(models.Model):
             'leave_emergency_total': 3,
         }
 
+    # ---------- Helper: วันที่ตามเวลาไทย ----------
+    @staticmethod
+    def _today_bangkok():
+        """cron รันด้วยผู้ใช้ระบบ (__system__) ที่ไม่ได้ตั้งเขตเวลา ถ้าใช้ context_today
+        จะได้วันที่แบบ UTC — รอบตี 2 ของไทยยังเป็นเมื่อวานของ UTC ทำให้เช็ค "1 ม.ค."
+        พลาดไปหนึ่งวัน (รีเซ็ตสิทธิ์ช้าไป 1 วัน)"""
+        return (fields.Datetime.now() + timedelta(hours=7)).date()
+
+    # ---------- ค่าที่ใช้ตอนขึ้นปีใหม่ ----------
+    def _year_reset_values(self):
+        """ขึ้นปีใหม่ = คืนคงเหลือให้เต็มตาม "ทั้งหมด" ที่ตั้งไว้ของแต่ละคน
+
+        ห้ามดึง _default_leave_values() มาทับ "ทั้งหมด" เพราะสิทธิหยุดวันเสาร์ตั้งรายสาขา/
+        รายคน (บางคน 12 บางคน 9/8/6) ถ้าทับด้วยค่ากลาง 24 จะเพี้ยนทั้งปี
+        ส่วนลากิจได้รับค่าจ้าง/ลาพักร้อน จะถูกคำนวณตามอายุงานทับอีกทีใน _entitlement_vals
+        """
+        self.ensure_one()
+        vals = {}
+        for key in ('leave_personal_paid', 'leave_personal_unpaid', 'leave_sick',
+                    'leave_maternity_paid', 'leave_maternity_unpaid',
+                    'leave_vacation', 'leave_saturday', 'leave_emergency'):
+            vals[key + '_total_remaining'] = self[key + '_total']
+        return vals
+
     # ---------- Helper: ข้อความสรุปอายุงาน ----------
     @staticmethod
     def _work_duration_text(start_date, today):
@@ -143,7 +167,7 @@ class LeaveTypeCustom(models.Model):
         self.ensure_one()
         vals = {}
         if reset_all:
-            vals.update(self._default_leave_values())
+            vals.update(self._year_reset_values())
 
         # อายุงาน
         vals['check_y'] = self._work_duration_text(self.start_date, today)
@@ -169,12 +193,16 @@ class LeaveTypeCustom(models.Model):
             if not rec.start_date:
                 rec.check_y = False
                 continue
-            vals = rec._entitlement_vals(today, force_remaining=True)
+            # ตั้งคงเหลือให้เฉพาะ record ที่เพิ่งสร้าง — ของเดิมห้ามแตะ
+            # (เดิมรีเซ็ตเป็นสิทธิ์เต็มทุกครั้งที่ start_date ถูกเขียน ทำให้วันลาที่ใช้ไปแล้วหายไป)
+            is_new = not isinstance(rec.id, int)
+            vals = rec._entitlement_vals(today, force_remaining=is_new)
             rec.check_y = vals['check_y']
             rec.leave_personal_paid_total = vals['leave_personal_paid_total']
-            rec.leave_personal_paid_total_remaining = vals['leave_personal_paid_total_remaining']
             rec.leave_vacation_total = vals['leave_vacation_total']
-            rec.leave_vacation_total_remaining = vals['leave_vacation_total_remaining']
+            if is_new:
+                rec.leave_personal_paid_total_remaining = vals['leave_personal_paid_total_remaining']
+                rec.leave_vacation_total_remaining = vals['leave_vacation_total_remaining']
 
     # ---------- Scheduled Action: อัพเดทสิทธิ์การลารายวัน ----------
     @api.model
@@ -183,7 +211,7 @@ class LeaveTypeCustom(models.Model):
         เฉพาะพนักงานสถานะ 'ใช้งาน' หรือ 'ไม่ใช้งาน' ที่ออกจากงานในรอบทำเงินปัจจุบัน (25→24)
         ขึ้นปีใหม่ (1 ม.ค.) รีเซ็ตสิทธิ์การลาทุกประเภทเป็นค่าตั้งต้น
         """
-        today = fields.Date.context_today(self)
+        today = self._today_bangkok()
 
         # ---- คำนวณวันเริ่มรอบทำเงินปัจจุบัน (รอบ 25→24, ดีฟอลต์ start_day=25) ----
         #   รอบคร่อม 2 เดือน: ตั้งแต่วันที่ 25 ของเดือนหนึ่ง ถึงวันที่ 24 ของเดือนถัดไป
@@ -210,7 +238,10 @@ class LeaveTypeCustom(models.Model):
         try:
             self.with_context(skip_api_sync=True).sync_all_from_api()
         except Exception as e:
-            _logger.warning("ดึงข้อมูลคงเหลือจาก PHP ก่อนอัพเดทล้มเหลว (ข้ามขั้นตอน pull): %s", e)
+            # ดึงไม่ได้แล้วยัง push ต่อ = เอาค่าเก่าใน Odoo ไปทับของจริงฝั่ง PHP
+            # ยอมข้ามรอบนี้ไปเลย พรุ่งนี้ cron รันใหม่เอง
+            _logger.warning("ดึงข้อมูลคงเหลือจาก PHP ไม่สำเร็จ — ข้ามการอัพเดทรอบนี้ทั้งหมด: %s", e)
+            return False
 
         # ---- 2) อัพเดท "ทั้งหมด" + อายุงาน (คงเหลือแตะเฉพาะปีใหม่/เพิ่งได้สิทธิ์) ----
         updated = 0
@@ -275,6 +306,14 @@ class LeaveTypeCustom(models.Model):
                     'leave_emergency_total_remaining': rec.leave_emergency_total_remaining,
                     'leave_emergency_total': rec.leave_emergency_total,
                 }
+
+                # "คงเหลือ" ฝั่ง PHP คิดจากใบลาจริง (leave_requests) แล้ว — Odoo เป็นเจ้าของ
+                # เฉพาะ "ทั้งหมด" เท่านั้น ถ้ายัง push คงเหลือไปด้วยจะไปทับค่าที่คิดไว้
+                # (ตอน create ยังส่ง เพราะแถวฝั่ง PHP ยังไม่มี ต้องมีค่าตั้งต้นก่อน)
+                if action == 'update':
+                    for key in list(payload):
+                        if key.endswith('_total_remaining'):
+                            del payload[key]
 
                 # ส่งข้อมูลแบบ POST ไปยัง API
                 response = requests.post(API_URL, json=payload)
@@ -393,6 +432,16 @@ class LeaveTypeCustom(models.Model):
         Override create() method to sync data to API after creation.
         """
         record = super(LeaveTypeCustom, self).create(vals)
+        # record ใหม่ยังไม่มีการใช้วันลา — ตั้งคงเหลือให้ตรงสิทธิ์ตามอายุงานตั้งแต่แรก
+        # (compute ไม่ตั้งให้แล้ว เพราะของเดิมห้ามแตะ ดู _compute_work_duration)
+        entitlement = record._entitlement_vals(
+            fields.Date.context_today(record), force_remaining=True)
+        record.with_context(skip_api_sync=True).write({
+            'leave_personal_paid_total_remaining':
+                entitlement['leave_personal_paid_total_remaining'],
+            'leave_vacation_total_remaining':
+                entitlement['leave_vacation_total_remaining'],
+        })
         record._sync_to_api('create')
         return record
 
