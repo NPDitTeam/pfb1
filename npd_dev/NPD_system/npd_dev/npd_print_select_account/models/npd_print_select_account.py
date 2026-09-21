@@ -162,44 +162,49 @@ class AccountMove(models.Model):
             print("self.reason_code_id.name", self.reason_code_id.name)
             print("analytic_tag.id", analytic_tag.id)
 
-            picking_source = self.env['stock.picking'].search(
-                [('name', '=', new_move.invoice_origin)], limit=1
+            # หาใบส่งสินค้า/ใบคืนที่อ้างถึงเอกสารต้นทาง — ต้องเก็บ "ทุกใบ" ห้ามใช้ limit=1
+            # เดิมใช้ limit=1: ถ้า SO หนึ่งใบมีใบส่งหลายใบ (เช่นส่งหลายรอบ) ระบบอาจสุ่ม
+            # ได้ใบที่ยังไม่มีใบคืน ทำให้ picking_source ว่าง แล้วไปค้น scrap ด้วย
+            # picking_id = False ซึ่งแมตช์รายการแตกหักเสียหายที่ไม่มีใบส่ง "ทั้งฐาน"
+            # ผลคือใบแจ้งหนี้ถูกเติมสินค้าของสาขาอื่นเข้ามาเต็มไปหมด
+            Picking = self.env['stock.picking']
+            origin_ref = new_move.invoice_origin
+            if not origin_ref:
+                raise UserError(
+                    "❌ ใบนี้ไม่มีเอกสารต้นทาง (Source Document) จึงดึงรายการแตกหักเสียหายไม่ได้"
+                )
+
+            source_pickings = Picking.search(
+                ['|', ('name', '=', origin_ref), ('origin', '=', origin_ref)]
             )
-
-
+            picking_source = source_pickings
+            if source_pickings:
+                return_origins = []
+                for pick in source_pickings:
+                    return_origins += [
+                        f'Return of {pick.name}',
+                        f'การส่งคืนของ {pick.name}',
+                        f'Returned from {pick.name}',
+                    ]
+                picking_source |= Picking.search([('origin', 'in', return_origins)])
 
             if not picking_source:
-
-                picking_source1 = self.env['stock.picking'].search(
-                    [('origin', '=', new_move.invoice_origin)], limit=1
+                raise UserError(
+                    f"❌ ไม่พบใบส่งสินค้า/ใบคืนสินค้าที่อ้างถึงเอกสาร {origin_ref} "
+                    "กรุณาตรวจสอบว่ามีการส่งหรือคืนสินค้าของเอกสารนี้แล้วหรือยัง"
                 )
-                print(f" พบข้อมูลใน stock_picking สำหรับ Return: {picking_source1.name}")
-                # if picking_source1:
-                #     picking_source = self.env['stock.picking'].search(
-                #         [('origin', '=', f'Return of {picking_source1.name}')], limit=1
-                #     )
-                if picking_source1:
-                    picking_source = self.env['stock.picking'].search([
-                        '|', '|',
-                        ('origin', '=', f'Return of {picking_source1.name}'),
-                        ('origin', '=', f'การส่งคืนของ {picking_source1.name}'),
-                        ('origin', '=', f'Returned from {picking_source1.name}')
-                    ], limit=1)
 
-                if not picking_source1:
-                    # print(f"❌ ไม่พบข้อมูลใน stock.picking สำหรับ Return ของ {new_move.invoice_origin}")
-                    raise UserError(f"❌ ไม่พบข้อมูลใน stock picking สำหรับ ค่าของ {new_move.invoice_origin}")
-                    # return True
-
-            print(f" พบข้อมูลใน stock_picking สำหรับ Return: {picking_source.id}")
+            print(f" ใบส่ง/ใบคืนที่เกี่ยวข้อง: {picking_source.mapped('name')}")
 
             # ค้นหา stock.scrap
             # รองรับสินค้าชำรุดที่เข้า workflow ส่งซ่อม (npd_scrap_buttons) ซึ่งจะไม่อยู่สถานะ done
             # แต่จะอยู่ที่ pending_repair / under_repair แทน
             # ไม่รวม 'repaired' เพราะซ่อมสำเร็จแล้วจะ reverse คืนสต๊อก สินค้าออกจาก scrap location แล้ว
             scrap_states = ['done', 'pending_repair', 'under_repair']
+            # ('picking_id', 'in', ids) — ห้ามใช้ '=' กับ recordset ว่าง เพราะจะกลายเป็น
+            # picking_id = False แล้วดึงรายการแตกหักเสียหายทั้งฐานเข้ามา
             stock_scrap_record = self.env['stock.scrap'].search([
-                ('picking_id', '=', picking_source.id),
+                ('picking_id', 'in', picking_source.ids),
                 ('reason_code_id', '=', self.reason_code_id.id),
                 ('state', 'in', scrap_states)
             ])
@@ -329,3 +334,9 @@ class AccountMoveLine(models.Model):
             if self.move_id.reason_code_id and self.move_id.reason_code_id.name == 'ใบแจ้งหนี้ค่าเช่า':
                 if self.invoice_origin:
                     raise UserError(f"❌ กรุณาเลือกช่องประเภทสินค้า ตามการแจ้งหนี้ลูกค้า ที่ไม่ใช่ {self.move_id.reason_code_id.name} ")
+
+        # เมธอดนี้ทับของ core ทั้งก้อน (ไม่ได้เรียก super) ทำให้บัญชีไม่เปลี่ยนตามสินค้า
+        # ดึงบัญชีจากสินค้า/หมวดสินค้ากลับมา ถ้าสินค้าไม่ได้ผูกบัญชีไว้ จะคงบัญชีเดิมของบรรทัด
+        for line in self:
+            if line.product_id and line.display_type not in ('line_section', 'line_note'):
+                line.account_id = line._get_computed_account() or line.account_id
