@@ -36,6 +36,7 @@
                     <field name="work_status"/>
                     <field name="resign_date" optional="show"/>
                     <field name="refund_status" widget="badge"
+                           decoration-info="refund_status == 'deducting'"
                            decoration-warning="refund_status == 'pending'"
                            decoration-success="refund_status == 'refunded'"/>
                     <field name="manual_refunded_date" string="วันที่คืน" optional="show"/>
@@ -66,6 +67,8 @@
                             domain="[('work_status', '=', 'transferred')]"/>
 
                     <separator/>
+                    <filter string="รอหัก (ยังหักไม่ครบ)" name="f_deducting"
+                            domain="[('refund_status', '=', 'deducting')]"/>
                     <filter string="รอคืนเงิน" name="f_pending"
                             domain="[('refund_status', '=', 'pending')]"/>
                     <filter string="คืนเงินแล้ว" name="f_refunded"
