@@ -1683,8 +1683,18 @@ class PayrollSalaryInherit(models.Model):
             )
             if resigned_in_period:
                 # 1) คืนเฉพาะ regular ที่ synced แล้ว
+                #    ข้ามใบที่ "คืนไปแล้ว" — ติ๊กคืนเอง (จ่ายสด/โอนนอกระบบ) หรือคืนไปในสลิปอื่น
+                #    ไม่งั้นการใส่วันที่ลาออกย้อนหลังจะทำให้คืนซ้ำในสลิปรอบนั้น
                 total_refund = 0.0
                 for line in resigned_in_period:
+                    if line.manual_refunded or (
+                            line.refund_payroll_id and line.refund_payroll_id.id != rec.id):
+                        _logger.info(
+                            "[DEPOSIT_HOOK] ข้ามคืนซ้ำ emp=%s line=%s (คืนแล้ว: %s)",
+                            rec.employee_id.employee_code, line.id,
+                            'ติ๊กคืนเอง' if line.manual_refunded
+                            else line.refund_payroll_id.display_name)
+                        continue
                     paid = line.payment_ids.filtered(
                         lambda p: p.is_synced and p.payment_type == 'regular'
                     )
@@ -1718,9 +1728,9 @@ class PayrollSalaryInherit(models.Model):
                     )
                     if to_sync:
                         to_sync.write({'is_synced': True, 'payroll_id': rec.id})
-                    # mark refund_payroll_id (เฉพาะ line ที่ยังไม่ตรง)
+                    # mark refund_payroll_id (เฉพาะ line ที่คืนในสลิปนี้จริง ๆ)
                     lines_to_update = resigned_in_period.filtered(
-                        lambda l: l.refund_payroll_id.id != rec.id
+                        lambda l: not l.manual_refunded and not l.refund_payroll_id
                     )
                     if lines_to_update:
                         lines_to_update.write({'refund_payroll_id': rec.id})
