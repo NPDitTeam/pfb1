@@ -139,6 +139,10 @@
             .preserve-whitespace {
                 white-space: pre;
             }
+            .note-text {
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
         </style>
         <br/>
         <table class="container-table1 invoice-table line-distance">
@@ -189,8 +193,8 @@
             <tr>
                 <td colspan="4">
                     <div class="row" style="margin-bottom: 5px;"></div>
-                    <t t-set="payments" t-value="doc.reversed_entry_id._get_reconciled_payments().filtered(lambda p: p.state == 'posted')"/>
-                    <p class="preserve-whitespace">อ้างอิงใบกำกับภาษีเลขที่                <t t-if="payments"><span t-esc="', '.join(payments.mapped('name'))"/></t><t t-else=""><span>ไม่พบข้อมูลการรับชำระ</span></t>                                                                                                       ลงวันที่        <span t-esc="doc.invoice_date.strftime('%d') + ' ' + {1: 'ม.ค.', 2: 'ก.พ.', 3: 'มี.ค.', 4: 'เม.ย.', 5: 'พ.ค.', 6: 'มิ.ย.', 7: 'ก.ค.', 8: 'ส.ค.', 9: 'ก.ย.', 10: 'ต.ค.', 11: 'พ.ย.', 12: 'ธ.ค.'}[int(doc.invoice_date.strftime('%m'))] + ' ' + str(int(doc.invoice_date.strftime('%Y')) + 543)[-2:]"/></p>
+                    <t t-set="payments" t-value="doc.get_reference_payments_debt_reduction()"/>
+                    <p class="preserve-whitespace">อ้างอิงใบกำกับภาษีเลขที่                <t t-if="payments"><span t-esc="', '.join(payments.mapped('name'))"/></t><t t-else=""><span>ไม่พบข้อมูลการรับชำระ</span></t>                                                                                                       ลงวันที่        <span t-esc="doc.get_reference_date_text_debt_reduction()"/></p>
                     <div class="row" style="margin-bottom: -10px;"></div>
                 </td>
             </tr>
@@ -201,12 +205,10 @@
                 <!-- <th class="text-center" width="15%">จำนวนวัน<br>NUMBER OF DAYS</br></th> -->
                 <th colspan="2" class="text-center" width="35%">จำนวนเงิน<br>AMOUNT</br></th>
             </tr>
-            <tr t-foreach="doc.invoice_line_ids" t-as="l">
-                <td class="text-center"><span t-esc="l_index + 1"/></td>
-                <td><span t-esc="l.name"/></td>
-                <!-- <td class="text-right"><span t-esc="'{0:,.2f}'.format(l.price_unit)"/></td> -->
-                <!-- <td class="text-center"><span t-esc="l.pfb_date_of_rent"/></td> -->
-                <td colspan="2" class="text-right"><span t-esc="'{0:,.2f}'.format(l.price_subtotal)"/></td>
+            <tr>
+                <td class="text-center">1</td>
+                <td>ค่าเช่าเครื่องมือก่อสร้าง</td>
+                <td colspan="2" class="text-right"><span t-esc="'{0:,.2f}'.format(doc.amount_untaxed)"/></td>
             </tr>
             <tr>
                 <td colspan="2" class="text-left" style="border-bottom: hidden;">เหตุผลในการลดหนี้</td>
@@ -214,19 +216,11 @@
                 <td class="text-right" style="border-bottom: hidden; border-left: hidden;"><span t-esc="'{0:,.2f}'.format(doc.reversed_entry_id.amount_total)"/></td>
             </tr>
             <tr>
-                <!--                <td colspan="2" class="text-left preserve-whitespace" style="border-bottom: hidden;">              <span t-esc="doc.narration"/></td>-->
-                <t t-set="nar" t-value="doc.narration or ''"/>
-                <!-- แปลงแพทเทิร์นที่ 'เหมือนว่าง' เป็นค่าว่าง โดยใช้ &lt; &gt; -->
-                <t t-set="nar_norm"
-                   t-value="nar.replace('&lt;p&gt;&lt;br&gt;&lt;/p&gt;', '')
-                            .replace('&lt;br/&gt;', '')
-                            .replace('&lt;p&gt;&amp;nbsp;&lt;/p&gt;', '')
-                            .strip()"/>
-
-                <!-- แสดงเฉพาะเมื่อหลัง normalize แล้วยังเหลือเนื้อหา -->
-                <t t-if="nar_norm">
-                  <td colspan="2" class="text-left" style="border-bottom: hidden;">
-                    <span t-raw="nar"/>
+                <!-- หมายเหตุ: ดึงจากแถบ "หมายเหตุ" ของเอกสารใบลดหนี้ (debt_reduction_note) -->
+                <t t-set="note" t-value="(doc.debt_reduction_note or '').strip()"/>
+                <t t-if="note">
+                  <td colspan="2" class="text-left note-text" style="border-bottom: hidden;">
+                    <span t-esc="note"/>
                   </td>
                 </t>
                 <t t-else="">

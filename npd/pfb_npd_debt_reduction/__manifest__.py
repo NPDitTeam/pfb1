@@ -6,6 +6,7 @@
     'author': 'Your Name',
     'depends': ['base', 'account'],
     'data': [
+        'views/account_move_views.xml',
         'report/pfb_npd_debt_reduction_form.xml'
     ],
 }
