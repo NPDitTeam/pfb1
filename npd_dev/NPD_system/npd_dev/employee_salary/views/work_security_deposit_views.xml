@@ -129,6 +129,7 @@
                                 <field name="line_ids"
                                        attrs="{'readonly': [('state', '!=', 'draft')]}">
                                     <tree string="พนักงาน"
+                                          limit="500"
                                           decoration-muted="employee_status == 'inactive'"
                                           decoration-danger="work_status == 'resigned' and refund_status != 'refunded'"
                                           decoration-info="refund_status == 'refunded'">

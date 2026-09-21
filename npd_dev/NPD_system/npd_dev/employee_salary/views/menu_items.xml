@@ -130,6 +130,13 @@
               action="action_work_security_deposit"
               sequence="80"/>
 
+    <!-- เมนูรายงานเงินประกันการทำงาน (รวมทุกสาขา อ่านสดจากเมนูจัดการฯ) -->
+    <menuitem id="sub_work_security_deposit_report_menu"
+              name="รายงานเงินประกันการทำงาน"
+              parent="main_employee_salary_menu"
+              action="action_work_security_deposit_report"
+              sequence="80"/>
+
     <!-- เมนูหักเงินสงเคราะห์ลูกจ้าง -->
     <menuitem id="sub_welfare_fund_menu"
               name="หักเงินสงเคราะห์ลูกจ้าง"

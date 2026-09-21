@@ -31,6 +31,7 @@
         'views/employee_warning_view.xml',
         'views/other_income_view.xml',
         'views/work_security_deposit_views.xml',
+        'views/work_security_deposit_report_views.xml',
         'views/allowance_management_views.xml',
         'views/saturday_leave_config_views.xml',
         'views/lateness_rule_views.xml',

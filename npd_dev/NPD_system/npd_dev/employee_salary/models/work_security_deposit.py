@@ -870,6 +870,29 @@ class WorkSecurityDepositLine(models.Model):
             else:
                 rec.schedule_summary = ''
 
+    # ---- ฟิลด์สำหรับรายงาน (คำนวณจากตารางหักโดยตรง จึงอัปเดตเองทุกครั้งที่ข้อมูลเปลี่ยน)
+    deposit_branch_id = fields.Many2one(
+        'hr.branch.custom', string='สาขา', related='deposit_id.branch_id',
+        store=True, readonly=True,
+    )
+    outstanding_amount = fields.Float(
+        string='คงเหลือที่ต้องหัก (บาท)',
+        compute='_compute_outstanding_amount', store=True,
+        help='ยอดตามตารางหักที่ยังไม่ถูกหักจริง = รวมที่ต้องหัก − ที่หักไปแล้ว',
+    )
+    deposit_progress = fields.Char(
+        string='ความคืบหน้า', compute='_compute_outstanding_amount', store=True,
+        help='หักไปแล้วกี่งวด จากทั้งหมดกี่งวด',
+    )
+
+    @api.depends('total_scheduled', 'refund_amount', 'deduction_months', 'months_deducted')
+    def _compute_outstanding_amount(self):
+        for rec in self:
+            remain = (rec.total_scheduled or 0.0) - (rec.refund_amount or 0.0)
+            rec.outstanding_amount = remain if remain > 0 else 0.0
+            rec.deposit_progress = '%d/%d งวด' % (rec.months_deducted or 0,
+                                                  rec.deduction_months or 0)
+
     @api.depends('payment_ids.amount', 'payment_ids.is_synced', 'payment_ids.payment_type')
     def _compute_resign_info(self):
         """นับเฉพาะ payment_type='regular' ที่ is_synced สำหรับ refund
