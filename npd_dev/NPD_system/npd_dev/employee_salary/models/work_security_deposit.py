@@ -424,6 +424,12 @@ class WorkSecurityDeposit(models.Model):
             old_synced_count = len(old_regular_synced)
             # เก็บ payroll_id ตามลำดับเดือนเดิม เพื่อ map กลับ
             old_payroll_ids = old_regular_synced.sorted('payment_date').mapped('payroll_id')
+            # ★ เก็บ "วันที่ -> payroll" ของงวดที่เคยหักแล้ว ไว้จับคู่แบบตรงเดือน
+            #   (เดิม map แบบ N ตัวแรกตามลำดับ ถ้างวดที่หักแล้วไม่ได้เรียงติดกัน
+            #    เช่น หัก มิ.ย./ก.ค./ก.ย. แต่ ส.ค. ยังไม่หัก จะทำให้ธงเพี้ยนและงวดหาย)
+            old_synced_by_date = {
+                p.payment_date: p.payroll_id.id for p in old_regular_synced if p.payment_date
+            }
             cmds = self._build_line_payments_from_defaults(
                 line.start_work_date, defaults, cutoff_start, cutoff_end,
             )
@@ -439,11 +445,29 @@ class WorkSecurityDeposit(models.Model):
             ).sorted('payment_date')
             # Re-apply is_synced + payroll_id ของรอบที่เคย sync แล้ว
             if old_synced_count:
-                for idx, new_p in enumerate(new_regular[:old_synced_count]):
-                    vals = {'is_synced': True}
-                    if idx < len(old_payroll_ids) and old_payroll_ids[idx]:
-                        vals['payroll_id'] = old_payroll_ids[idx].id
-                    new_p.write(vals)
+                # 1) จับคู่ด้วย "วันที่งวด" ก่อน — ตรงเดือนไหนคืนธงเดือนนั้น
+                matched_dates = set()
+                for new_p in new_regular:
+                    if new_p.payment_date in old_synced_by_date:
+                        vals = {'is_synced': True}
+                        payroll_id = old_synced_by_date[new_p.payment_date]
+                        if payroll_id:
+                            vals['payroll_id'] = payroll_id
+                        new_p.write(vals)
+                        matched_dates.add(new_p.payment_date)
+                # 2) ส่วนที่วันที่เปลี่ยนไป (เช่น แก้วันเริ่มงาน) ค่อย map ตามลำดับเดิม
+                remaining = old_synced_count - len(matched_dates)
+                if remaining > 0:
+                    unmatched = [p for p in new_regular if p.payment_date not in matched_dates]
+                    leftover_payrolls = [
+                        pid for d, pid in sorted(old_synced_by_date.items())
+                        if d not in matched_dates
+                    ]
+                    for idx, new_p in enumerate(unmatched[:remaining]):
+                        vals = {'is_synced': True}
+                        if idx < len(leftover_payrolls) and leftover_payrolls[idx]:
+                            vals['payroll_id'] = leftover_payrolls[idx]
+                        new_p.write(vals)
             else:
                 # ถ้าไม่มี synced เดิม + payment_dates ทุกอันอยู่ในอดีต → mark historical
                 today = fields.Date.context_today(self)
@@ -462,6 +486,74 @@ class WorkSecurityDeposit(models.Model):
                 'sticky': False,
             }
         }
+
+    @api.model
+    def _reconcile_synced_payments(self, deposits=None):
+        """กระทบยอด "งวดที่หักไปแล้ว" กับ payroll ที่มีอยู่จริง
+
+        ปัญหาที่เจอ: บาง payroll ถูกสร้าง/แก้ก่อนที่ตารางหักจะพร้อม หรือมีการกด
+        "ปรับตารางทั้งหมด" ทีหลัง ทำให้งวดบางเดือน (เช่น ส.ค.) ไม่ถูกตั้งธง "หักแล้ว"
+        ทั้งที่ payroll เดือนนั้นหักเงินไปแล้วจริง → ยอดเงินที่ต้องคืนขาดไปหนึ่งเดือน
+
+        วิธีกระทบยอด: งวด regular ที่เลยกำหนดแล้วและยังไม่ถูกตั้งธง ถ้ามี payroll
+        ของพนักงานคนนั้นในรอบตัดที่ครอบวันงวดนั้นอยู่ → ตั้งธง + ผูก payroll ให้
+        (รอบตัด 25–24: งวดวันที่ <= 24 เข้ารอบเดือนเดียวกัน, > 24 เข้ารอบเดือนถัดไป)
+        """
+        Payment = self.env['work.security.deposit.line.payment']
+        Payroll = self.env['payroll.salary']
+        today = fields.Date.context_today(self)
+        domain = [
+            ('payment_type', '=', 'regular'),
+            ('is_synced', '=', False),
+            ('payment_date', '<=', today),
+            ('line_id.deposit_id.state', '=', 'confirmed'),
+        ]
+        if deposits:
+            domain.append(('line_id.deposit_id', 'in', deposits.ids))
+        fixed = 0
+        for payment in Payment.search(domain):
+            employee = payment.line_id.employee_id
+            if not employee or not payment.payment_date:
+                continue
+            d = payment.payment_date
+            # งวดวันที่ 25 ขึ้นไป = รอบของเดือนถัดไป
+            month, year = (d.month, d.year) if d.day <= 24 else (
+                (1, d.year + 1) if d.month == 12 else (d.month + 1, d.year))
+            payroll = Payroll.search([
+                ('employee_id', '=', employee.id),
+                ('month', '=', str(month)),
+                ('year', '=', str(year)),
+            ], limit=1)
+            if not payroll:
+                continue
+            payment.write({'is_synced': True, 'payroll_id': payroll.id})
+            fixed += 1
+            _logger.info(
+                "[DEPOSIT_RECONCILE] emp=%s งวด %s -> payroll %s (%s/%s)",
+                employee.employee_code, d, payroll.id, month, year,
+            )
+        return fixed
+
+    def action_reconcile_synced_payments(self):
+        """ปุ่ม: กระทบยอดงวดที่หักแล้วกับ payroll ที่มีอยู่จริง"""
+        fixed = self._reconcile_synced_payments(deposits=self)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'กระทบยอดกับ Payroll',
+                'message': 'ตั้งงวดที่หักไปแล้วให้ถูกต้อง %d งวด' % fixed,
+                'type': 'success' if fixed else 'info',
+                'sticky': False,
+            }
+        }
+
+    @api.model
+    def _cron_reconcile_synced_payments(self):
+        """cron รายวัน: กระทบยอดให้อัตโนมัติ จะได้ไม่ต้องรอคนมากดปุ่ม"""
+        fixed = self._reconcile_synced_payments()
+        _logger.info("[DEPOSIT_RECONCILE] cron ปรับ %d งวด", fixed)
+        return fixed
 
     def action_sync_resign_dates(self):
         """ดึง resign_date จาก employee.salary ของแต่ละ line มาเซ็ตในตาราง

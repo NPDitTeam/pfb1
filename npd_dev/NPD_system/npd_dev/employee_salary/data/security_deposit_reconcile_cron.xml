@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    กระทบยอด "งวดหักเงินประกัน" กับ payroll ที่มีอยู่จริง — รันทุกวัน
+
+    ที่มา: เจอเคสพนักงานที่ payroll เดือนนั้นหักเงินประกันไปแล้วจริง แต่งวดในตาราง
+    ไม่ถูกตั้งเป็น "หักแล้ว" (เช่น กดปุ่มปรับตารางทีหลัง หรือ payroll ถูกสร้างก่อน
+    ตารางพร้อม) ทำให้ "เงินที่ต้องคืน" ขาดไปหนึ่งเดือนเวลาพนักงานลาออก
+
+    เปลี่ยนเวลารัน: Settings → Technical → Automation → Scheduled Actions
+    ค้นหา "กระทบยอดงวดเงินประกันกับ Payroll (รายวัน)"
+-->
+<odoo>
+    <data noupdate="1">
+        <record id="ir_cron_security_deposit_reconcile" model="ir.cron">
+            <field name="name">กระทบยอดงวดเงินประกันกับ Payroll (รายวัน)</field>
+            <field name="model_id" ref="model_work_security_deposit"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_reconcile_synced_payments()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active" eval="True"/>
+        </record>
+    </data>
+</odoo>

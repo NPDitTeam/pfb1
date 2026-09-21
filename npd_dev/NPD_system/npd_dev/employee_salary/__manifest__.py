@@ -50,6 +50,7 @@
         'data/medical_expense_voucher_config_data.xml',
         'data/employee_foreign_doc_status_data.xml',
         'data/commission_rate_data.xml',
+        'data/security_deposit_reconcile_cron.xml',
     ],
     'installable': True,
     'application': True,

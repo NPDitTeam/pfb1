@@ -54,6 +54,11 @@
                                 class="btn-secondary"
                                 confirm="ตั้งเป็น 'หักแล้ว' สำหรับพนักงานที่ payment_date ทุกเดือนอยู่ในอดีต (ใช้กับเศษย้อนหลัง — พนักงานเก่าที่หักครบไปก่อนใช้ระบบนี้)"
                                 help="วนพนักงานที่เริ่มงานนานแล้ว (payment_dates ทั้งหมดอยู่ในอดีต) → mark ทุก payment เป็น 'หักแล้ว'"/>
+                        <button name="action_reconcile_synced_payments"
+                                string="กระทบยอดกับ Payroll"
+                                type="object"
+                                class="btn-secondary"
+                                help="งวดที่เลยกำหนดแล้วและมี payroll ของรอบนั้นอยู่จริง แต่ยังไม่ถูกตั้งเป็น 'หักแล้ว' ระบบจะตั้งให้ถูกต้อง (แก้เคสยอดเงินคืนขาดไปหนึ่งเดือน)"/>
                         <button name="action_regenerate_all_schedules"
                                 string="ปรับตารางทั้งหมดตามค่าเริ่มต้นใหม่"
                                 type="object"
