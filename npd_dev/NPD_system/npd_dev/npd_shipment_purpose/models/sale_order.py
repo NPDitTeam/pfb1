@@ -128,6 +128,13 @@ class SaleOrder(models.Model):
 
     def _sync_shipment_purpose_fields(self, vals):
         """บังคับความสัมพันธ์ฝั่งเซิร์ฟเวอร์ด้วย (กันการเขียนผ่าน import/API)"""
+        # กรอก/เปลี่ยนเลขใบโยก -> เลขเอกสาร SO (ที่ซ่อนไว้) เดินตามเลขใบโยกเสมอ
+        if 'transfer_ref' in vals:
+            purposes = set(self.mapped('shipment_purpose')) | {vals.get('shipment_purpose')}
+            if 'branch_transfer' in purposes:
+                vals = dict(vals)
+                vals['so_number'] = (vals.get('transfer_ref') or '').strip() or False
+
         purpose = vals.get('shipment_purpose')
         if not purpose:
             return vals
