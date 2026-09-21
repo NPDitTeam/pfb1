@@ -28,6 +28,9 @@
                                 options="{'no_create_edit': True,'no_create': True, 'no_quick_create': True}"/>
                         <field name="strict_range" help="If checked the accounts will act strict to the date range
                                     else it will consider initial balance to account"/>
+                        <field name="show_initial_balance"
+                               help="If unchecked the Initial Balance columns are shown as 0.00 and the
+                                    Ending Balance shows the movement of the selected period only."/>
                     </group>
                     <footer>
                         <button name="action_pdf" type="object" string="PDF" class="oe_highlight"/>

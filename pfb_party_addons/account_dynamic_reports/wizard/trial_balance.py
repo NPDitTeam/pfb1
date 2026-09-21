@@ -167,6 +167,13 @@ class InsTrialBalance(models.TransientModel):
         string='Strict Range',
         default=lambda self: self.env.company.strict_range
     )
+    show_initial_balance = fields.Boolean(
+        string='Show Initial Balance',
+        default=True,
+        help="Uncheck to report only the movements of the selected period. "
+             "The Initial Balance columns are forced to 0.00 and the Ending "
+             "Balance shows the period movement only."
+    )
     show_hierarchy = fields.Boolean(
         string='Show hierarchy'
     )
@@ -276,6 +283,11 @@ class InsTrialBalance(models.TransientModel):
             filters['strict_range'] = True
         else:
             filters['strict_range'] = False
+
+        if data.get('show_initial_balance', True):
+            filters['show_initial_balance'] = True
+        else:
+            filters['show_initial_balance'] = False
 
         filters['journals_list'] = data.get('journals_list')
         filters['accounts_list'] = data.get('accounts_list')
@@ -439,6 +451,14 @@ class InsTrialBalance(models.TransientModel):
                 cr.execute(sql)
                 init_blns = cr.dictfetchone()
 
+                # Hide the brought-forward amounts: force every Initial Balance
+                # figure to 0.00 so that the report shows the selected period
+                # only (rows, totals and Ending Balance stay consistent).
+                if not self.show_initial_balance:
+                    init_blns = {'initial_debit': 0.0,
+                                 'initial_credit': 0.0,
+                                 'initial_balance': 0.0}
+
                 move_lines[account.code]['initial_balance'] = init_blns['initial_balance']
                 move_lines[account.code]['initial_debit'] = init_blns['initial_debit']
                 move_lines[account.code]['initial_credit'] = init_blns['initial_credit']
@@ -551,6 +571,7 @@ class InsTrialBalance(models.TransientModel):
             'display_accounts': self.display_accounts,
             'show_hierarchy': self.show_hierarchy,
             'strict_range': self.strict_range,
+            'show_initial_balance': self.show_initial_balance,
             'target_moves': self.target_moves,
 
             'journals_list': [(j.id, j.name) for j in journals],
