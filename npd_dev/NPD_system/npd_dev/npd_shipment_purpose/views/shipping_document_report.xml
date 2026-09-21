@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- ใบขนส่งสินค้า: เพิ่มบรรทัด "ประเภทการจัดส่ง" ไว้หัวเอกสาร
+         แสดงชื่อตามที่เลือกใน "ประเภทการจัดส่งสินค้า" ของใบสั่งขาย -->
+    <template id="so_form_title_shipment_purpose"
+              inherit_id="npd_shipping_document_form.so_form_title">
+        <xpath expr="//div[1]/table[1]" position="before">
+            <table class="table-container" style="margin-bottom:4px;">
+                <tr>
+                    <td class="box" style="width: 100%; font-size: 12px;">
+                        <strong>ประเภทการจัดส่ง: </strong>
+                        <span t-esc="dict(doc.sale_id._fields['delivery_type'].selection).get(doc.sale_id.delivery_type, '-') if doc.sale_id and doc.sale_id.delivery_type else '-'"/>
+                        <t t-if="doc.sale_id and doc.sale_id.shipment_note">
+                            <br/>
+                            <strong>หมายเหตุ: </strong>
+                            <span t-esc="doc.sale_id.shipment_note"/>
+                        </t>
+                    </td>
+                </tr>
+            </table>
+        </xpath>
+    </template>
+</odoo>

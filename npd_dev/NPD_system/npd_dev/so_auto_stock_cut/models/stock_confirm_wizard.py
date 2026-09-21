@@ -1010,16 +1010,19 @@ class StockCutConfirmWizard(models.TransientModel):
             return res
 
         # ----------------- ตรวจสอบ bk_reference_code ก่อนดำเนินการ -----------------
+        # รหัสเชื่อมโยงนี้ใช้เฉพาะตอนซิงก์บ้านเขียว (MySQL) ถ้าปิดซิงก์อยู่ก็ไม่ต้องบังคับ
+        # (สินค้าฝั่งขายไม่มีรหัสบ้านเขียว ถ้าบังคับจะตัดสต๊อกฝั่งขายไม่ได้เลย)
         missing_bk_products = []
-        for so_line in order.order_line.filtered(
-                lambda l: not l.display_type
-                          and l.product_id
-                          and l.product_id.type in ('product', 'consu')
-                          and (l.pfb_quantity or 0) > 0
-        ):
-            # ตรวจสอบว่ามี bk_reference_code หรือไม่
-            if not so_line.product_id.bk_reference_code:
-                missing_bk_products.append(so_line.product_id.display_name)
+        if GREENHOME_SYNC_ENABLED:
+            for so_line in order.order_line.filtered(
+                    lambda l: not l.display_type
+                              and l.product_id
+                              and l.product_id.type in ('product', 'consu')
+                              and l._sc_cut_qty() > 0
+            ):
+                # ตรวจสอบว่ามี bk_reference_code หรือไม่
+                if not so_line.product_id.bk_reference_code:
+                    missing_bk_products.append(so_line.product_id.display_name)
 
         # ถ้ามีสินค้าที่ไม่มี bk_reference_code ให้แจ้งเตือนทันที
         if missing_bk_products:
@@ -1033,20 +1036,22 @@ class StockCutConfirmWizard(models.TransientModel):
         # ----------------- เตรียมไลน์เดิม (ตัดสต๊อก) -----------------
         products_to_check = []
         base_lines = []
+        # _sc_cut_qty(): ฝั่งเช่าใช้ pfb_quantity / ฝั่งขายใช้ product_uom_qty
         for so_line in order.order_line.filtered(
                 lambda l: not l.display_type
                           and l.product_id
                           and l.product_id.type in ('product', 'consu')
-                          and (l.pfb_quantity or 0) > 0
+                          and l._sc_cut_qty() > 0
         ):
+            cut_qty = so_line._sc_cut_qty()
             products_to_check.append({
                 'pdn_id': so_line.product_id.bk_reference_code,
-                'quantity': so_line.pfb_quantity,
+                'quantity': cut_qty,
                 'product_id': so_line.product_id.id,
             })
             base_lines.append((0, 0, {
                 'product_id': so_line.product_id.id,
-                'quantity': so_line.pfb_quantity,
+                'quantity': cut_qty,
                 'location_name': location_name,
                 'odoo_stock_qty': self._get_odoo_stock_qty(so_line.product_id, location),
             }))
@@ -1407,10 +1412,12 @@ class StockCutConfirmWizard(models.TransientModel):
         picking = pickings[0]
 
         # ============ ตรวจสอบ bk_reference_code ก่อนตัดสต๊อก ============
+        # บังคับเฉพาะเมื่อเปิดซิงก์บ้านเขียว (สินค้าฝั่งขายไม่มีรหัสนี้)
         missing_bk_products = []
-        for line in self.confirm_line_ids.filtered(lambda l: l.product_id and (l.quantity or 0) > 0):
-            if not line.product_id.bk_reference_code:
-                missing_bk_products.append(line.product_id.display_name)
+        if GREENHOME_SYNC_ENABLED:
+            for line in self.confirm_line_ids.filtered(lambda l: l.product_id and (l.quantity or 0) > 0):
+                if not line.product_id.bk_reference_code:
+                    missing_bk_products.append(line.product_id.display_name)
 
         if missing_bk_products:
             product_list = '\n• '.join(missing_bk_products)
@@ -1454,16 +1461,20 @@ class StockCutConfirmWizard(models.TransientModel):
             lambda l: not l.display_type
                       and l.product_id
                       and l.product_id.type in ('product', 'consu')
-                      and (l.pfb_quantity or 0) > 0
+                      and l._sc_cut_qty() > 0
         )
-        # สร้าง mapping product_id -> {quantity, product, pdn_id}
+        # สร้าง mapping product_id -> {quantity, product, pdn_id, is_rent}
+        # is_rent: บรรทัดเช่า (มี pfb_quantity) — ใช้แยกพฤติกรรมเติมสต๊อกก่อนตัด
         cut_items = {}
         for sol in so_lines:
-            cut_items[sol.product_id.id] = {
+            item = cut_items.setdefault(sol.product_id.id, {
                 'product': sol.product_id,
-                'quantity': sol.pfb_quantity,
+                'quantity': 0.0,
                 'pdn_id': sol.product_id.bk_reference_code,
-            }
+                'is_rent': False,
+            })
+            item['quantity'] += sol._sc_cut_qty()
+            item['is_rent'] = item['is_rent'] or sol._sc_is_rent_line()
         _dbg(f"📊 cut_items from SO: {[(v['product'].display_name, v['quantity']) for v in cut_items.values()]}")
 
         # 📌 บันทึกสต๊อกคงเหลือใน Odoo ก่อนตัด (ต่อสินค้า) ไว้ตรวจ/เตือนกรณีสต๊อกไม่พอ
@@ -1536,11 +1547,28 @@ class StockCutConfirmWizard(models.TransientModel):
         #    _adjust_odoo_stock() จะเติมเฉพาะสินค้าที่สต๊อกปัจจุบัน < need เท่านั้น
         #    (ตัวที่สต๊อกพออยู่แล้วจะไม่ถูกแตะต้อง) — ช่วยกัน error "จองไม่ได้" ตอน action_assign
         #    และกัน backorder/ตัดไม่ครบ กรณีสต๊อกสาขาใน Odoo ไม่ตรงกับของจริง
+        #    ฝั่งขาย (ไม่ใช่บรรทัดเช่า) จะ 'ไม่' เติมสต๊อกให้ เพราะสต๊อกสินค้าขายต้องมีของจริง
+        #    ถ้าไม่พอให้ฟ้องชัด ๆ ไม่ใช่เสกสต๊อกขึ้นมาแล้วตัด
         if not GREENHOME_SYNC_ENABLED and not migrated:
+            sale_shortages = []
             for _pid, _item in cut_items.items():
                 _need = float(_item['quantity'] or 0.0)
-                if _need > 0:
+                if _need <= 0:
+                    continue
+                if _item.get('is_rent'):
                     self._adjust_odoo_stock(_item['product'], location, _need)
+                else:
+                    _have = float(pre_cut_available.get(_pid) or 0.0)
+                    if _need > _have:
+                        sale_shortages.append(
+                            f"• {_item['product'].display_name} — ต้องตัด {_need:.2f} / คงเหลือ {_have:.2f}")
+            if sale_shortages:
+                raise UserError(
+                    "❌ สต๊อกไม่พอสำหรับสินค้าฝั่งขาย:\n\n"
+                    + "\n".join(sale_shortages)
+                    + f"\n\nคลังต้นทาง: {location.display_name}\n"
+                      "กรุณารับสินค้าเข้าคลังหรือปรับปริมาณสินค้าคงคลังให้ตรงก่อนตัดสต๊อก"
+                )
 
         # ============ จัดการ moves + validate picking ============
         _dbg(f"🔧 picking {picking.name}: state={picking.state}, moves={len(picking.move_ids_without_package)}")

@@ -25,6 +25,17 @@ class SaleOrderAPIController(http.Controller):
                 'shipping_cost': order.shipping_cost if hasattr(order, 'shipping_cost') else None,
                 'shipping_cost_m': order.shipping_cost_m if hasattr(order, 'shipping_cost_m') else None,
                 'delivery_type': order.delivery_type if hasattr(order, 'delivery_type') else None,
+                # ประเภทการจัดส่งสินค้า (4 แบบ) + ชื่อภาษาไทย และหมายเหตุที่พนักงานระบุ
+                'shipment_purpose': order.shipment_purpose if hasattr(order, 'shipment_purpose') else None,
+                'shipment_purpose_label': (
+                    dict(order._fields['shipment_purpose'].selection).get(order.shipment_purpose)
+                    if hasattr(order, 'shipment_purpose') and order.shipment_purpose else None
+                ),
+                'shipment_note': order.shipment_note if hasattr(order, 'shipment_note') else None,
+                'transfer_ref': (
+                    order.transfer_ref_id.name
+                    if hasattr(order, 'transfer_ref_id') and order.transfer_ref_id else None
+                ),
                 'trip_allowance': order.trip_allowance if hasattr(order, 'trip_allowance') else None,
                 'daily_allowance': order.daily_allowance if hasattr(order, 'daily_allowance') else None,
                 'use_special_delivery_zero': order.use_special_delivery_zero if hasattr(order, 'use_special_delivery_zero') else None,
@@ -161,7 +172,7 @@ class SaleOrderAPIController(http.Controller):
                         'product_name': line.product_id.name if line.product_id else None,
                         'product_code': line.product_id.default_code if line.product_id else None,
                         'description': line.name or '',
-                        'quantity': line.product_uom_qty,
+                        'quantity': line.pfb_quantity if hasattr(line, 'pfb_quantity') else line.product_uom_qty,
                         'uom': line.product_uom.name if line.product_uom else None,
                         'price_unit': line.price_unit,
                         'discount': line.discount,
@@ -176,6 +187,8 @@ class SaleOrderAPIController(http.Controller):
                     # ข้อมูลพื้นฐาน
                     'id': order.id,
                     'name': order.name,
+                    # เลขเอกสาร SO ต้นทาง (อ้างถึงใบขาย/เช่าของอีกบริษัท) — ใช้จับกลุ่มงานขนส่งฝั่ง o18
+                    'so_number': order.so_number if hasattr(order, 'so_number') else None,
                     'branch_id': order.branch_id.name,
                     'state': order.state,
                     'state_text': dict(order._fields['state'].selection).get(order.state),
@@ -259,7 +272,7 @@ class SaleOrderAPIController(http.Controller):
                     'product_name': line.product_id.name if line.product_id else None,
                     'product_code': line.product_id.default_code if line.product_id else None,
                     'description': line.name or '',
-                    'quantity': line.product_uom_qty,
+                    'quantity': line.pfb_quantity if hasattr(line, 'pfb_quantity') else line.product_uom_qty,
                     'uom': line.product_uom.name if line.product_uom else None,
                     'price_unit': line.price_unit,
                     'discount': line.discount,
@@ -273,6 +286,8 @@ class SaleOrderAPIController(http.Controller):
                 # ข้อมูลพื้นฐาน
                 'id': order.id,
                 'name': order.name,
+                # เลขเอกสาร SO ต้นทาง (อ้างถึงใบขาย/เช่าของอีกบริษัท)
+                'so_number': order.so_number if hasattr(order, 'so_number') else None,
                 'branch_id': order.branch_id.name,
                 'state': order.state,
                 'state_text': dict(order._fields['state'].selection).get(order.state),

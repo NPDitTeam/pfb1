@@ -92,3 +92,65 @@ class SaleOrderAPI(http.Controller):
             "result": sale_order_data,
             "message": "Success"
         }
+
+
+class StockTransferAPI(http.Controller):
+    """ดึงข้อมูล "ใบโยกสินค้า" (stock.api.transfer) ของฐานนี้ ให้ฝั่งโลจิสติกส์เรียกใช้
+
+    ใบโยกถูกสร้างไว้ในฐานของบริษัทต้นทาง (S Group / อินเตอร์เทรดดิ้ง / กรุงเทพ ฯลฯ)
+    ฐานโลจิสติกส์จึงมองไม่เห็น ต้องเรียกผ่าน API เหมือนการดึงข้อมูลการเช่า
+    """
+
+    @http.route('/api/get_stock_transfer', type="json", methods=['POST'], auth="user", csrf=False)
+    def get_stock_transfer(self, **rec):
+        transfer_name = (rec.get('transfer_name') or '').strip()
+        database_selection = (rec.get('database_selection') or '').strip()
+
+        if not transfer_name or not database_selection:
+            return {"status": 400, "error": "กรุณาระบุ transfer_name และ database_selection"}
+
+        current_db = request.env.cr.dbname
+        if database_selection != current_db:
+            return {
+                "status": 403,
+                "error": f"ฐานข้อมูลไม่ตรงกัน (ขอ {database_selection} แต่ล็อกอินอยู่ที่ {current_db})",
+            }
+
+        transfer = request.env['stock.api.transfer'].sudo().search(
+            [('name', '=', transfer_name)], limit=1)
+        if not transfer:
+            return {"status": 404, "error": f"ไม่พบใบโยกสินค้า {transfer_name} ในฐาน {current_db}"}
+        if transfer.state != 'confirmed':
+            return {
+                "status": 409,
+                "error": f"ใบโยกสินค้า {transfer_name} ยังไม่อยู่สถานะ 'ยืนยันแล้ว' (สถานะปัจจุบัน: {transfer.state})",
+            }
+
+        lines = []
+        for line in transfer.line_ids:
+            product = request.env['product.product'].sudo().search(
+                [('name', '=', line.product_name)], limit=1)
+            lines.append({
+                "product_name": line.product_name,
+                "default_code": line.default_code or (product.default_code if product else ''),
+                "request_qty": line.request_qty,
+                "available_qty": line.available_qty,
+                "source_location": line.location_api_id.name if line.location_api_id else '',
+                "destination_location": line.destination_location_id.complete_name
+                if line.destination_location_id else '',
+            })
+
+        return {
+            "status": 200,
+            "result": {
+                "transfer_id": transfer.id,
+                "transfer_name": transfer.name,
+                "state": transfer.state,
+                "transfer_date": str(transfer.transfer_date) if transfer.transfer_date else '',
+                "note": transfer.note or '',
+                "destination_location": transfer.location_id.complete_name if transfer.location_id else '',
+                "lines": lines,
+                "lines_count": len(lines),
+            },
+            "message": "Success",
+        }

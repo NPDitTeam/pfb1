@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_order_form_shipment_purpose" model="ir.ui.view">
+        <field name="name">sale.order.form.shipment.purpose</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <!-- ต้องมาหลัง sale_api_rent (ที่แทรก database_selection/so_number) และ
+             หลัง pfb_npd_add_date_quatation_order (ที่แทรก debt_payment_type) -->
+        <field name="priority">200</field>
+        <field name="arch" type="xml">
+
+            <!-- ปุ่มดึงข้อมูลใบโยกสินค้า (ใบโยกอยู่ในฐานของบริษัทต้นทาง) -->
+            <xpath expr="/form/header" position="inside">
+                <button name="action_fetch_transfer_data" type="object"
+                        class="btn-primary"
+                        string="ดึงข้อมูลใบโยก"
+                        attrs="{'invisible': ['|', '|',
+                                 ('shipment_purpose', '!=', 'branch_transfer'),
+                                 ('transfer_ref', '=', False),
+                                 ('state', '=', 'sale')]}"/>
+            </xpath>
+
+            <!-- ปุ่ม "ดึงข้อมูลการเช่า" (ของ sale_api_rent) ใช้กับงานเช่าเท่านั้น
+                 งานโยกระหว่างสาขา/ส่งรถไปช่วยสาขา ให้ซ่อนไว้ กันพนักงานกดผิด -->
+            <xpath expr="//button[@name='action_fetch_rental_data']" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', '|',
+                    ('so_number', '=', False), ('state', '=', 'sale'),
+                    ('shipment_purpose', 'in', ['branch_transfer', 'help_branch'])]}</attribute>
+            </xpath>
+
+            <!-- ประเภทการจัดส่งสินค้า: วางไว้ "ก่อน" ดึงข้อมูลการเช่าจาก บ.อื่น + เลขเอกสาร SO -->
+            <xpath expr="//field[@name='database_selection']" position="before">
+                <field name="shipment_purpose" required="1"
+                       attrs="{'readonly': [('state', '=', 'sale')]}"/>
+            </xpath>
+
+            <!-- บังคับ/ล็อกช่องอ้างอิงตามประเภทที่เลือก -->
+            <xpath expr="//field[@name='database_selection']" position="attributes">
+                <attribute name="attrs">{
+                    'readonly': ['|', '|', ('state', '=', 'sale'), ('is_renew_green_house', '=', True),
+                                 ('shipment_purpose', 'in', ['help_branch'])],
+                    'required': [('shipment_purpose', 'in', ['to_customer', 'from_customer', 'branch_transfer'])]
+                }</attribute>
+            </xpath>
+
+            <!-- งานโยกระหว่างสาขาใช้ "เลขโยกสินค้า" แทน จึงซ่อนช่องเลขเอกสาร SO กันสับสน
+                 (ระบบยังเติมเลขใบโยกลงช่องนี้เบื้องหลัง เพื่อส่งต่อไป Odoo 18) -->
+            <xpath expr="//field[@name='so_number']" position="attributes">
+                <attribute name="attrs">{
+                    'readonly': ['|', '|', ('state', '=', 'sale'), ('is_renew_green_house', '=', True),
+                                 ('shipment_purpose', 'in', ['help_branch'])],
+                    'required': [('shipment_purpose', 'in', ['to_customer', 'from_customer'])],
+                    'invisible': [('shipment_purpose', '=', 'branch_transfer')]
+                }</attribute>
+            </xpath>
+
+            <!-- เลขโยกสินค้า: กรอกเอง แล้วกดปุ่ม "ดึงข้อมูลใบโยก" เพื่อดึงสินค้ามาใส่ -->
+            <xpath expr="//field[@name='so_number']" position="after">
+                <field name="transfer_ref"
+                       placeholder="กรอกเลขใบโยกสินค้าที่ยืนยันแล้ว แล้วกดปุ่ม ดึงข้อมูลใบโยก"
+                       attrs="{
+                           'invisible': [('shipment_purpose', '!=', 'branch_transfer')],
+                           'required': [('shipment_purpose', '=', 'branch_transfer')],
+                           'readonly': [('state', '=', 'sale')]
+                       }"/>
+                <field name="transfer_product_summary" readonly="1"
+                       attrs="{'invisible': ['|', ('shipment_purpose', '!=', 'branch_transfer'),
+                                             ('transfer_product_summary', '=', False)]}"/>
+            </xpath>
+
+            <!-- หมายเหตุ: ต่อจากช่อง "ประเภทการรับชำระหนี้" -->
+            <xpath expr="//field[@name='debt_payment_type']" position="after">
+                <field name="shipment_note" required="1" placeholder="อธิบายงานขนส่งครั้งนี้ให้ตรงกับประเภทการจัดส่งสินค้าที่เลือก"
+                       attrs="{'readonly': [('state', '=', 'sale')]}"/>
+                <field name="shipment_note_ai_state" readonly="1"
+                       attrs="{'invisible': [('shipment_note_ai_state', '=', False)]}"/>
+                <field name="shipment_note_ai_feedback" readonly="1"
+                       attrs="{'invisible': [('shipment_note_ai_feedback', '=', False)]}"/>
+            </xpath>
+
+            <!-- ประเภทการจัดส่ง (ช่องเดิม) เดินตามประเภทการจัดส่งสินค้า ล็อกไม่ให้แก้เอง -->
+            <!-- o14 ห้ามใช้ @string เป็นตัวชี้ใน xpath ของวิวสืบทอด จึงชี้ที่ชื่อฟิลด์ตรง ๆ -->
+            <xpath expr="//field[@name='delivery_type']" position="attributes">
+                <attribute name="readonly">1</attribute>
+                <attribute name="force_save">1</attribute>
+                <attribute name="help">ตั้งค่าอัตโนมัติจาก "ประเภทการจัดส่งสินค้า" ด้านบน</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
