@@ -13,6 +13,7 @@
             <field name="arch" type="xml">
                 <tree string="รายงานเงินประกันการทำงาน"
                       create="false" edit="false" delete="false"
+                      decoration-warning="status_mismatch == True"
                       decoration-muted="employee_status == 'inactive'"
                       decoration-danger="work_status == 'resigned' and refund_status == 'pending'"
                       decoration-success="refund_status == 'refunded'"
@@ -22,7 +23,8 @@
                     <field name="firstname"/>
                     <field name="lastname"/>
                     <field name="employee_department_id" optional="show"/>
-                    <field name="employee_status" optional="hide"/>
+                    <field name="employee_status" optional="show"/>
+                    <field name="status_mismatch" optional="show"/>
                     <field name="start_work_date"/>
                     <field name="total_amount" sum="รวมวงเงินประกัน"/>
                     <field name="total_scheduled" sum="รวมที่ต้องหัก"/>
@@ -80,6 +82,11 @@
                             domain="[('refund_amount', '&lt;=', 0)]"/>
                     <filter string="ไม่หักเงินประกัน" name="f_skip"
                             domain="[('skip_deduction', '=', True)]"/>
+
+                    <separator/>
+                    <filter string="สถานะไม่ตรงกับทะเบียนพนักงาน (ลืมใส่วันที่ลาออก)"
+                            name="f_mismatch"
+                            domain="[('status_mismatch', '=', True)]"/>
 
                     <separator/>
                     <filter string="มี Work Permit" name="f_work_permit"

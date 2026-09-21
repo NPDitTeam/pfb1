@@ -300,10 +300,12 @@ class EmployeeSalary(models.Model):
                     }
 
                     if existing_record:
-                        existing_record.write(values)
+                        # PHP เป็นคนคุมสถานะฝั่งนั้น — ข้ามการดักวันที่ลาออก
+                        # ไม่งั้นการซิงก์จะพังทั้งชุดเพราะพนักงานเก่าที่ยังไม่มีวันที่
+                        existing_record.with_context(skip_resign_date_check=True).write(values)
                         _logger.info("Updated record for employee_code: %s", employee_code)
                     else:
-                        self.create(values)
+                        self.with_context(skip_resign_date_check=True).create(values)
                         _logger.info("Created new record for employee_code: %s", employee_code)
 
             return {

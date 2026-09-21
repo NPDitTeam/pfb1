@@ -52,6 +52,7 @@
         'data/employee_foreign_doc_status_data.xml',
         'data/commission_rate_data.xml',
         'data/security_deposit_reconcile_cron.xml',
+        'data/employee_resign_sync_cron.xml',
     ],
     'installable': True,
     'application': True,

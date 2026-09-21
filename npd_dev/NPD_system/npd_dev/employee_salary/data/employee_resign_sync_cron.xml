@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ซิงก์สถานะ "ออกจากงาน" จากทะเบียนพนักงาน → รายการเงินประกันการทำงาน (รายวัน)
+
+    ที่มา: เจอพนักงาน 36 คน ทะเบียนขึ้น "ไม่ใช้งาน" แต่รายการเงินประกันยังเป็น
+    "ทำงานอยู่" เพราะลืมใส่ "วันที่ออกจากงาน" ทำให้ยอดเงินที่ต้องคืนไม่ขึ้น
+
+    cron นี้ทำ 2 อย่าง
+      1) ใครมีวันที่ลาออกแล้ว แต่รายการยังค้าง "ทำงานอยู่" → ปรับให้ตรงอัตโนมัติ
+      2) ใคร "ไม่ใช้งาน" แต่ยังไม่มีวันที่ลาออก → เขียน log เตือน (ระบบเดาวันให้ไม่ได้)
+         ดูรายชื่อได้ที่ รายงานเงินประกันการทำงาน → ตัวกรอง "สถานะไม่ตรงกับทะเบียนพนักงาน"
+
+    เปลี่ยนเวลารัน: Settings → Technical → Automation → Scheduled Actions
+-->
+<odoo>
+    <data noupdate="1">
+        <record id="ir_cron_employee_resign_sync" model="ir.cron">
+            <field name="name">ซิงก์สถานะออกจากงาน → เงินประกันการทำงาน (รายวัน)</field>
+            <field name="model_id" ref="model_employee_salary"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_sync_deposit_work_status()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active" eval="True"/>
+        </record>
+    </data>
+</odoo>

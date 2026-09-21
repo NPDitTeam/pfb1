@@ -811,6 +811,22 @@ class WorkSecurityDepositLine(models.Model):
     manual_refunded_date = fields.Date(string='วันที่คืน (ระบุเอง)')
     manual_refunded_note = fields.Char(string='หมายเหตุการคืน (ระบุเอง)')
 
+    status_mismatch = fields.Boolean(
+        string='สถานะไม่ตรงกับทะเบียนพนักงาน',
+        compute='_compute_status_mismatch', store=True,
+        help='ทะเบียนพนักงานขึ้น "ไม่ใช้งาน" แต่รายการนี้ยังเป็น "ทำงานอยู่" '
+             'มักเกิดจากลืมใส่ "วันที่ออกจากงาน" ในหน้าข้อมูลพนักงาน '
+             '— ต้องใส่ก่อน ระบบจึงจะคิดเงินประกันที่ต้องคืนได้',
+    )
+
+    @api.depends('employee_status', 'work_status', 'employee_id.resign_date')
+    def _compute_status_mismatch(self):
+        for rec in self:
+            rec.status_mismatch = bool(
+                rec.employee_status == 'inactive'
+                and rec.work_status == 'working'
+            )
+
     @api.depends('payment_ids', 'payment_ids.amount', 'payment_ids.payment_date',
                  'payment_ids.payment_type')
     def _compute_totals(self):
@@ -1436,21 +1452,105 @@ class EmployeeSalaryInherit(models.Model):
             else:
                 rec.deposit_refund_status = 'none'
 
+    @api.onchange('status')
+    def _onchange_status_require_resign_date(self):
+        """เตือนทันทีที่หน้าจอ: เปลี่ยนเป็น "ไม่ใช้งาน" ต้องมีวันที่ออกจากงาน"""
+        if self.status == 'inactive' and not self.resign_date:
+            return {'warning': {
+                'title': 'ต้องระบุวันที่ออกจากงาน',
+                'message': 'สถานะ "ไม่ใช้งาน" ต้องกรอก "วันที่ออกจากงาน" ด้วยทุกครั้ง\n'
+                           'เพราะระบบใช้วันที่นี้คำนวณเงินประกันการทำงานที่ต้องคืน '
+                           '(ถ้าไม่ใส่ รายการเงินประกันจะค้างเป็น "ทำงานอยู่" และไม่ขึ้นยอดต้องคืน)',
+            }}
+
+    @api.constrains('status', 'resign_date')
+    def _check_inactive_requires_resign_date(self):
+        """กันลืม: ปิดสถานะพนักงานโดยไม่ใส่วันที่ลาออกไม่ได้
+
+        ข้าม constraint ได้ด้วย context skip_resign_date_check (ใช้กับ import จาก PHP
+        ที่ระบบปลายทางเป็นคนกำหนดสถานะ — ไม่งั้นการซิงก์จะพังทั้งชุด)
+        """
+        if self.env.context.get('skip_resign_date_check'):
+            return
+        for emp in self:
+            if emp.status == 'inactive' and not emp.resign_date:
+                raise ValidationError(
+                    'พนักงาน %s %s (รหัส %s): เปลี่ยนสถานะเป็น "ไม่ใช้งาน" '
+                    'ต้องระบุ "วันที่ออกจากงาน" ด้วย\n\n'
+                    'วันที่ลาออกเป็นตัวกำหนดสูตรคืนเงินประกันการทำงาน '
+                    'ถ้าไม่ใส่ ระบบจะไม่รู้ว่าต้องคืนเงินประกันเมื่อไหร่และเท่าไหร่'
+                    % (emp.firstname or '', emp.lastname or '', emp.employee_code or '-')
+                )
+
+    def _sync_deposit_work_status(self):
+        """ทะเบียนพนักงานเป็นแหล่งความจริง — ดันสถานะ/วันที่ลาออกลงรายการเงินประกัน
+
+        - มีวันที่ลาออก → รายการเป็น "ออกจากงาน" + วันที่ตรงกัน
+        - ล้างวันที่ลาออก + สถานะกลับมา "ใช้งาน" (ยกเลิกลาออก) → คืนเป็น "ทำงานอยู่"
+        - รายการที่ "ย้ายแผนก/สาขา" ไม่แตะ (มีสายงานของตัวเอง)
+        """
+        for emp in self:
+            for line in emp.deposit_line_ids:
+                if line.work_status == 'transferred':
+                    continue
+                if emp.resign_date:
+                    if line.work_status != 'resigned' or line.resign_date != emp.resign_date:
+                        line.sudo().write({
+                            'resign_date': emp.resign_date,
+                            'work_status': 'resigned',
+                        })
+                elif emp.status == 'active' and line.work_status == 'resigned':
+                    line.sudo().write({
+                        'work_status': 'working',
+                        'resign_date': False,
+                    })
+
     def write(self, vals):
         res = super().write(vals)
+        if 'resign_date' in vals or 'status' in vals:
+            self._sync_deposit_work_status()
         if 'resign_date' in vals:
             for emp in self:
-                if emp.resign_date:
-                    for line in emp.deposit_line_ids:
-                        if line.work_status != 'resigned' or line.resign_date != emp.resign_date:
-                            line.sudo().write({
-                                'resign_date': emp.resign_date,
-                                'work_status': 'resigned',
-                            })
                 # ✅ auto-trigger: recompute payroll ของพนักงานคนนี้ ตามรอบที่เกี่ยวข้อง
                 # → calculate_lateness.php จะได้ resign_date ล่าสุด ไม่นับวันหลังลาออกเป็นขาด
                 emp._recompute_payroll_for_resign()
         return res
+
+    @api.model
+    def _cron_sync_deposit_work_status(self):
+        """กันข้อมูลสองหน้าจอเพี้ยนซ้ำ: ไล่เทียบทะเบียนพนักงานกับรายการเงินประกันทุกวัน
+
+        1) มีวันที่ลาออกแล้ว แต่รายการยังเป็น "ทำงานอยู่" → ปรับให้ตรง
+        2) "ไม่ใช้งาน" แต่ยังไม่มีวันที่ลาออก → ระบบเดาวันให้ไม่ได้ เขียน log เตือน
+           ให้ HR ไปใส่ (ดูรายชื่อได้จากรายงานเงินประกัน ตัวกรอง "สถานะไม่ตรงกับทะเบียนพนักงาน")
+        """
+        Line = self.env['work.security.deposit.line'].sudo()
+        todo = Line.search([
+            ('work_status', '=', 'working'),
+            ('employee_id.resign_date', '!=', False),
+        ])
+        fixed = 0
+        for line in todo:
+            line.write({
+                'work_status': 'resigned',
+                'resign_date': line.employee_id.resign_date,
+            })
+            fixed += 1
+        missing = Line.search([
+            ('work_status', '=', 'working'),
+            ('employee_status', '=', 'inactive'),
+            ('employee_id.resign_date', '=', False),
+        ])
+        if fixed:
+            _logger.info('[RESIGN-SYNC] ปรับรายการเงินประกันเป็น "ออกจากงาน" %d รายการ', fixed)
+        if missing:
+            _logger.warning(
+                '[RESIGN-SYNC] พนักงาน %d คน สถานะ "ไม่ใช้งาน" แต่ไม่มีวันที่ลาออก '
+                '— ยังคิดเงินประกันที่ต้องคืนไม่ได้: %s',
+                len(missing),
+                ', '.join('%s %s (%s)' % (l.firstname or '', l.lastname or '',
+                                          l.employee_code or '-') for l in missing[:50]))
+        return fixed
 
     def _recompute_payroll_for_resign(self):
         """recompute payroll.salary ของพนักงาน หลังแก้ resign_date

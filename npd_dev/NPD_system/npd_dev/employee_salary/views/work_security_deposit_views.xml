@@ -384,7 +384,8 @@
             <field name="arch" type="xml">
                 <!-- เพิ่มฟิลด์ resign_date ที่หน้าประวัติการทำงาน (ติดกับ probation_period) -->
                 <xpath expr="//field[@name='probation_period']" position="after">
-                    <field name="resign_date"/>
+                    <field name="resign_date"
+                           attrs="{'required': [('status', '=', 'inactive')]}"/>
                 </xpath>
 
                 <!-- เพิ่มแท็บใหม่ "เงินประกันการทำงาน" -->
@@ -393,7 +394,9 @@
                         <group>
                             <group string="สรุป">
                                 <field name="resign_date"
+                                       attrs="{'required': [('status', '=', 'inactive')]}"
                                        help="ระบุวันที่ออกจากงาน → ระบบจะอัพเดทรายการเงินประกันของพนักงานคนนี้ให้เป็น 'ออกจากงาน' โดยอัตโนมัติ"/>
+                                <field name="status" readonly="1"/>
                                 <field name="deposit_total_deducted"/>
                                 <field name="deposit_total_refund"/>
                                 <field name="deposit_refund_status"/>
