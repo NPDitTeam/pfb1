@@ -802,7 +802,8 @@ class WorkSecurityDepositLine(models.Model):
     refund_status = fields.Selection([
         ('none', 'ไม่ต้องคืน'),
         ('deducting', 'รอหัก'),
-        ('pending', 'รอคืนเงิน'),
+        ('holding', 'รอคืน'),
+        ('pending', 'รอคืนเงิน (ลาออกแล้ว)'),
         ('refunded', 'คืนแล้ว'),
     ], string='สถานะการคืนเงิน', compute='_compute_refund_status', store=True)
     manual_refunded = fields.Boolean(
@@ -928,12 +929,15 @@ class WorkSecurityDepositLine(models.Model):
             if rec.manual_refunded:
                 rec.refund_status = 'refunded'
             elif rec.work_status == 'working':
-                # ยังทำงานอยู่ = ยังไม่ถึงคิวคืนเงิน แต่ต้องแยกให้เห็นว่า
-                # "ยังหักไม่ครบ" (รอหัก) กับ "หักครบแล้ว" (ไม่ต้องคืน)
+                # ยังทำงานอยู่: ยกเว้นไม่หัก (ต่างชาติ ใช้หักค่า Work Permit แทน)
+                # = ไม่ต้องคืน / ยังหักไม่ครบ = รอหัก / หักครบแล้ว = รอคืน
+                # (เงินอยู่กับบริษัท ต้องคืนวันที่ลาออก จึงไม่ใช่ "ไม่ต้องคืน")
                 if rec.skip_deduction:
                     rec.refund_status = 'none'
                 elif rec._sd_has_remaining_installment():
                     rec.refund_status = 'deducting'
+                elif rec.refund_amount > 0:
+                    rec.refund_status = 'holding'
                 else:
                     rec.refund_status = 'none'
             elif rec.work_status != 'resigned' or rec.refund_amount <= 0:
@@ -1447,7 +1451,8 @@ class EmployeeSalaryInherit(models.Model):
     deposit_refund_status = fields.Selection([
         ('none', 'ไม่ต้องคืน'),
         ('deducting', 'รอหัก'),
-        ('pending', 'รอคืนเงิน'),
+        ('holding', 'รอคืน'),
+        ('pending', 'รอคืนเงิน (ลาออกแล้ว)'),
         ('refunded', 'คืนแล้ว'),
     ], string='สถานะการคืนเงิน', compute='_compute_deposit_refund_status')
 
@@ -1469,6 +1474,8 @@ class EmployeeSalaryInherit(models.Model):
                 rec.deposit_refund_status = 'pending'
             elif 'refunded' in statuses:
                 rec.deposit_refund_status = 'refunded'
+            elif 'holding' in statuses:
+                rec.deposit_refund_status = 'holding'
             elif 'deducting' in statuses:
                 rec.deposit_refund_status = 'deducting'
             else:
