@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        ฟิลด์ "ประเภทหนี้ (บ้านเขียว)" บนใบแจ้งหนี้
+
+        เป็นคนละตัวกับ "ประเภทสินค้า" (reason_code_id) ที่มีอยู่เดิม ซึ่งใช้กับงาน
+        ฝั่ง Odoo อยู่แล้ว จึงไม่แตะของเดิม เพิ่มฟิลด์ใหม่ต่างหากเท่านั้น
+
+        ใบที่ออกจากหน้าชำระหนี้บ้านเขียวจะถูกตั้งค่าให้อัตโนมัติ ส่วนใบที่ออกเองก็
+        เลือกเองได้ เพื่อให้รู้ว่าเงินที่รับมาตัดหนี้ประเภทไหน
+    -->
+    <record id="view_move_form_bk_debt_type" model="ir.ui.view">
+        <field name="name">account.move.form.bk.debt.type</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='invoice_date']" position="after">
+                <field name="bk_debt_type"
+                       attrs="{'invisible': [('move_type', 'not in', ('out_invoice', 'out_refund'))]}"/>
+                <field name="bk_debt_payment_id" readonly="1"
+                       attrs="{'invisible': [('bk_debt_payment_id', '=', False)]}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- คอลัมน์ในหน้ารายการใบแจ้งหนี้ (ซ่อนได้จากปุ่มเลือกคอลัมน์) -->
+    <record id="view_move_tree_bk_debt_type" model="ir.ui.view">
+        <field name="name">account.move.tree.bk.debt.type</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='payment_state']" position="after">
+                <field name="bk_debt_type" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ค้นหา/จัดกลุ่มตามประเภทหนี้ -->
+    <record id="view_account_invoice_filter_bk_debt_type" model="ir.ui.view">
+        <field name="name">account.invoice.select.bk.debt.type</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_account_invoice_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group" position="inside">
+                <filter string="ประเภทหนี้ (บ้านเขียว)" name="g_bk_debt_type"
+                        context="{'group_by': 'bk_debt_type'}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_court_adjust_wizard_form" model="ir.ui.view">
+        <field name="name">baankheaw.debt_payment_court_wizard.form</field>
+        <field name="model">baankheaw.debt_payment_court_wizard</field>
+        <field name="arch" type="xml">
+            <form string="เปลี่ยนยอดชำระจากศาล">
+                <div class="alert alert-info" role="alert">
+                    กรอกเฉพาะช่องที่ศาลสั่งให้ปรับ ช่องที่ไม่แก้จะใช้ยอดเดิมต่อไป
+                    <b>ยอดเดิมไม่ถูกแก้</b> ระบบเก็บยอดใหม่ไว้คนละช่อง
+                </div>
+                <group>
+                    <group>
+                        <field name="summary_id" invisible="1"/>
+                        <field name="doc_number"/>
+                        <field name="cus_fullname"/>
+                    </group>
+                    <group>
+                        <field name="bill_company_name"/>
+                        <field name="old_total" widget="monetary" options="{'currency_field': False}"/>
+                        <field name="new_total" widget="monetary" options="{'currency_field': False}"/>
+                    </group>
+                </group>
+                <field name="line_ids" nolabel="1">
+                    <tree editable="bottom" create="false" delete="false"
+                          decoration-warning="is_changed == True">
+                        <field name="field_name" invisible="1"/>
+                        <field name="label" string="ประเภทยอด" readonly="1"/>
+                        <field name="old_amount" string="ยอดเดิม" readonly="1" sum="รวมยอดเดิม"/>
+                        <field name="new_amount" string="ยอดใหม่ (ตามศาล)" sum="รวมยอดใหม่"/>
+                        <field name="is_changed" invisible="1"/>
+                        <field name="state_text" string="สถานะ" readonly="1"/>
+                    </tree>
+                </field>
+                <group string="หมายเหตุคำสั่งศาล">
+                    <field name="court_note" nolabel="1"
+                           placeholder="เลขคดี / วันที่ศาลสั่ง / รายละเอียดอื่น ๆ"/>
+                </group>
+                <footer>
+                    <button name="action_apply" string="บันทึกยอดตามศาล"
+                            type="object" class="btn-primary"/>
+                    <button string="ยกเลิก" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_bk_debt_payment_user,bk.debt.payment.user,model_baankheaw_debt_payment,base.group_user,1,1,1,1
+access_bk_debt_payment_bill_user,bk.debt.payment.bill.user,model_baankheaw_debt_payment_bill,base.group_user,1,1,1,1
+access_bk_debt_payment_product_user,bk.debt.payment.product.user,model_baankheaw_debt_payment_product,base.group_user,1,1,1,1
+access_bk_court_wizard_user,bk.court.wizard.user,model_baankheaw_debt_payment_court_wizard,base.group_user,1,1,1,1
+access_bk_court_wizard_line_user,bk.court.wizard.line.user,model_baankheaw_debt_payment_court_line,base.group_user,1,1,1,1

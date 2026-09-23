@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ===================== ค้นหา ===================== -->
+    <record id="view_debt_payment_search" model="ir.ui.view">
+        <field name="name">baankheaw.debt_payment.search</field>
+        <field name="model">baankheaw.debt_payment</field>
+        <field name="arch" type="xml">
+            <search string="ค้นหาลูกหนี้">
+                <field name="doc_number"/>
+                <field name="cus_fullname"/>
+                <field name="cus_id"/>
+                <field name="cus_cpnname"/>
+                <field name="branch_name"/>
+                <field name="bill_numbers" string="เลขใบกำกับเช่า"/>
+                <separator/>
+                <filter string="ค้างชำระ" name="f_unpaid" domain="[('payment_state','=','unpaid')]"/>
+                <filter string="ชำระแล้ว" name="f_paid" domain="[('payment_state','=','paid')]"/>
+                <separator/>
+                <filter string="ปรับตามคำสั่งศาล" name="f_court"
+                        domain="[('is_court_adjusted','=',True)]"/>
+                <filter string="ออกใบแจ้งหนี้แล้ว" name="f_invoiced"
+                        domain="[('invoice_ids','!=',False)]"/>
+                <separator/>
+                <filter string="ยังไม่ปิดบิล" name="f_open"
+                        domain="[('bill_status','=','ยังไม่ปิดบิล')]"/>
+                <group expand="0" string="จัดกลุ่มตาม">
+                    <filter string="สาขา" name="g_branch" context="{'group_by':'branch_name'}"/>
+                    <filter string="สถานะการชำระ" name="g_state"
+                            context="{'group_by':'payment_state'}"/>
+                    <filter string="สถานะบิล" name="g_bill" context="{'group_by':'bill_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ===================== ตาราง ===================== -->
+    <record id="view_debt_payment_tree" model="ir.ui.view">
+        <field name="name">baankheaw.debt_payment.tree</field>
+        <field name="model">baankheaw.debt_payment</field>
+        <field name="arch" type="xml">
+            <tree string="ชำระหนี้บ้านเขียว" create="false"
+                  decoration-success="payment_state == 'paid'"
+                  decoration-warning="is_court_adjusted == True and payment_state != 'paid'">
+                <field name="doc_number"/>
+                <field name="payment_state" widget="label_selection"
+                       options="{'classes': {'unpaid': 'warning', 'paid': 'success'}}"/>
+                <field name="cus_id"/>
+                <field name="cus_fullname"/>
+                <field name="cus_cpnname"/>
+                <field name="cus_tel" optional="hide"/>
+                <field name="branch_name"/>
+                <field name="bill_company_name" optional="hide"/>
+                <field name="amount" sum="รวม"/>
+                <field name="vat" sum="รวม"/>
+                <field name="tax" sum="รวม" optional="hide"/>
+                <field name="lost" sum="รวม"/>
+                <field name="broken" sum="รวม"/>
+                <field name="transport" sum="รวม" optional="hide"/>
+                <field name="total_debt" sum="รวม"/>
+                <field name="is_court_adjusted" optional="show"/>
+                <field name="court_total_debt" sum="รวม" optional="show"/>
+                <field name="invoiced_total" sum="รวม" optional="hide"/>
+                <field name="invoice_residual_total" sum="รวม" optional="show"/>
+                <field name="bill_count" sum="รวม" optional="hide"/>
+                <field name="date_start" optional="hide"/>
+                <field name="due_date" optional="hide"/>
+                <field name="debt_duration" optional="hide"/>
+                <field name="bill_status"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ===================== ฟอร์ม ===================== -->
+    <record id="view_debt_payment_form" model="ir.ui.view">
+        <field name="name">baankheaw.debt_payment.form</field>
+        <field name="model">baankheaw.debt_payment</field>
+        <field name="arch" type="xml">
+            <form string="ชำระหนี้บ้านเขียว" create="false">
+                <header>
+                    <button name="action_open_court_wizard" type="object"
+                            string="เปลี่ยนยอดชำระจากศาล" class="btn-warning"/>
+                    <button name="action_create_invoices" type="object"
+                            string="สร้างใบแจ้งหนี้" class="btn-primary"
+                            confirm="ระบบจะออกใบแจ้งหนี้แยกตามประเภทหนี้ (ประเภทละ 1 ใบ) เป็นฉบับร่าง ยืนยันหรือไม่"/>
+                    <button name="action_mark_paid" type="object" string="ทำเครื่องหมายว่าชำระแล้ว"
+                            attrs="{'invisible': [('payment_state','=','paid')]}"/>
+                    <button name="action_mark_unpaid" type="object" string="กลับเป็นค้างชำระ"
+                            attrs="{'invisible': [('payment_state','=','unpaid')]}"/>
+                    <button name="action_reset_court_amounts" type="object"
+                            string="ยกเลิกยอดตามศาล" class="btn-secondary"
+                            attrs="{'invisible': [('is_court_adjusted','=',False)]}"/>
+                    <field name="payment_state" widget="statusbar"
+                           statusbar_visible="unpaid,paid"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_invoices" type="object" class="oe_stat_button"
+                                icon="fa-file-text-o"
+                                attrs="{'invisible': [('invoice_count','=',0)]}">
+                            <field name="invoice_count" widget="statinfo" string="ใบแจ้งหนี้"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="ปรับตามคำสั่งศาล" bg_color="bg-warning"
+                            attrs="{'invisible': [('is_court_adjusted','=',False)]}"/>
+                    <div class="oe_title">
+                        <h1><field name="cus_fullname" readonly="1"/></h1>
+                        <h3><field name="doc_number" readonly="1"/></h3>
+                    </div>
+                    <group>
+                        <group string="ข้อมูลลูกค้า">
+                            <field name="cus_id" readonly="1"/>
+                            <field name="cus_cpnname" readonly="1"/>
+                            <field name="cus_tel" readonly="1"/>
+                            <field name="cus_cpntel" readonly="1"/>
+                            <field name="branch_name" readonly="1"/>
+                            <field name="bill_company_name" readonly="1"/>
+                            <field name="partner_id" readonly="1"/>
+                        </group>
+                        <group string="ที่อยู่">
+                            <field name="cus_address" readonly="1"/>
+                            <field name="cus_cpnadd" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="ยอดหนี้คงค้าง (ยอดเดิม)">
+                            <field name="amount" readonly="1"/>
+                            <field name="vat" readonly="1"/>
+                            <field name="tax" readonly="1"/>
+                            <field name="lost" readonly="1"/>
+                            <field name="broken" readonly="1"/>
+                            <field name="transport" readonly="1"/>
+                            <field name="total_debt" readonly="1"/>
+                        </group>
+                        <group string="ยอดตามคำสั่งศาล"
+                               attrs="{'invisible': [('is_court_adjusted','=',False)]}">
+                            <label for="court_amount"/>
+                            <div>
+                                <field name="court_amount" readonly="1" class="oe_inline"/>
+                                <field name="court_amount_state" readonly="1" class="oe_inline text-warning ml-2"/>
+                            </div>
+                            <label for="court_vat"/>
+                            <div>
+                                <field name="court_vat" readonly="1" class="oe_inline"/>
+                                <field name="court_vat_state" readonly="1" class="oe_inline text-warning ml-2"/>
+                            </div>
+                            <label for="court_tax"/>
+                            <div>
+                                <field name="court_tax" readonly="1" class="oe_inline"/>
+                                <field name="court_tax_state" readonly="1" class="oe_inline text-warning ml-2"/>
+                            </div>
+                            <label for="court_lost"/>
+                            <div>
+                                <field name="court_lost" readonly="1" class="oe_inline"/>
+                                <field name="court_lost_state" readonly="1" class="oe_inline text-warning ml-2"/>
+                            </div>
+                            <label for="court_broken"/>
+                            <div>
+                                <field name="court_broken" readonly="1" class="oe_inline"/>
+                                <field name="court_broken_state" readonly="1" class="oe_inline text-warning ml-2"/>
+                            </div>
+                            <label for="court_transport"/>
+                            <div>
+                                <field name="court_transport" readonly="1" class="oe_inline"/>
+                                <field name="court_transport_state" readonly="1" class="oe_inline text-warning ml-2"/>
+                            </div>
+                            <field name="court_total_debt" readonly="1"/>
+                            <field name="court_adjust_date" readonly="1"/>
+                            <field name="court_adjust_uid" readonly="1"/>
+                        </group>
+                        <group string="สรุปสถานะ">
+                            <field name="is_court_adjusted" invisible="1"/>
+                            <field name="insure_balance" readonly="1"/>
+                            <field name="total_paid" readonly="1"/>
+                            <field name="bill_count" readonly="1"/>
+                            <field name="date_start" readonly="1"/>
+                            <field name="due_date" readonly="1"/>
+                            <field name="debt_duration" readonly="1"/>
+                            <field name="bill_status" readonly="1"/>
+                        </group>
+                        <group string="ใบแจ้งหนี้">
+                            <field name="invoiced_total" readonly="1"/>
+                            <field name="invoice_paid_total" readonly="1"/>
+                            <field name="invoice_residual_total" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="ใบแจ้งหนี้ (แยกตามประเภทหนี้)">
+                            <field name="invoice_ids" readonly="1">
+                                <tree string="ใบแจ้งหนี้" create="false"
+                                      decoration-success="payment_state == 'paid'"
+                                      decoration-muted="state == 'cancel'">
+                                    <field name="bk_debt_type" string="ประเภทหนี้"/>
+                                    <field name="name" string="เลขที่ใบแจ้งหนี้"/>
+                                    <field name="invoice_date"/>
+                                    <field name="partner_id"/>
+                                    <field name="amount_total" sum="รวม"/>
+                                    <field name="amount_residual" string="คงเหลือ" sum="รวม"/>
+                                    <field name="state"/>
+                                    <field name="payment_state" string="สถานะชำระ"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="บิลค้างชำระ">
+                            <field name="bill_ids" readonly="1">
+                                <tree string="บิลค้างชำระ">
+                                    <field name="doc_id"/>
+                                    <field name="doc_date"/>
+                                    <field name="due_date"/>
+                                    <field name="amount" sum="รวม"/>
+                                    <field name="vat" sum="รวม"/>
+                                    <field name="tax" sum="รวม"/>
+                                    <field name="lost" sum="รวม"/>
+                                    <field name="broken" sum="รวม"/>
+                                    <field name="transport" sum="รวม"/>
+                                    <field name="total_debt" sum="รวม"/>
+                                    <field name="bill_status"/>
+                                    <field name="product_summary"/>
+                                </tree>
+                                <form string="บิลค้างชำระ">
+                                    <group>
+                                        <group>
+                                            <field name="doc_id" readonly="1"/>
+                                            <field name="doc_date" readonly="1"/>
+                                            <field name="due_date" readonly="1"/>
+                                            <field name="bill_status" readonly="1"/>
+                                        </group>
+                                        <group>
+                                            <field name="total_debt" readonly="1"/>
+                                            <field name="detail_text" readonly="1"/>
+                                        </group>
+                                    </group>
+                                    <field name="product_ids" readonly="1">
+                                        <tree string="รายการสินค้าในบิล">
+                                            <field name="product_code"/>
+                                            <field name="product_name"/>
+                                            <field name="qty" sum="รวม"/>
+                                            <field name="qty_return" sum="รวม"/>
+                                            <field name="qty_outstanding" sum="รวม"/>
+                                        </tree>
+                                    </field>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="หมายเหตุคำสั่งศาล">
+                            <field name="court_note" readonly="1" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- ===================== แอ็กชัน + เมนู ===================== -->
+    <record id="action_debt_payment" model="ir.actions.act_window">
+        <field name="name">ชำระหนี้บ้านเขียว</field>
+        <field name="res_model">baankheaw.debt_payment</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_debt_payment_search"/>
+        <field name="context">{'search_default_f_unpaid': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">ยังไม่มีข้อมูลลูกหนี้</p>
+            <p>กดปุ่ม "ดึงข้อมูลลูกหนี้" ที่เมนูด้านบน เพื่อดึงข้อมูลของบริษัทนี้เข้ามา</p>
+        </field>
+    </record>
+
+    <record id="action_debt_payment_fetch" model="ir.actions.server">
+        <field name="name">ดึงข้อมูลลูกหนี้ (บริษัทนี้)</field>
+        <field name="model_id" ref="model_baankheaw_debt_payment"/>
+        <field name="binding_model_id" ref="model_baankheaw_debt_payment"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = model.action_fetch_data()</field>
+    </record>
+
+    <menuitem id="menu_debt_payment_root"
+              name="ชำระหนี้บ้านเขียว"
+              parent="sale.sale_menu_root"
+              action="action_debt_payment"
+              sequence="90"/>
+
+</odoo>
