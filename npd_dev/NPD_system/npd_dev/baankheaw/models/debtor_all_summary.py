@@ -9,6 +9,17 @@ import pymysql
 
 _logger = logging.getLogger(__name__)
 
+# เลขใบกำกับเช่าขึ้นต้นด้วยรหัสบริษัทที่ออกบิล เช่น NSG-002367
+# ใช้แปลงกลับเป็นชื่อบริษัทให้แสดงบนฟอร์ม
+BILL_PREFIX_COMPANY = {
+    'NSG': 'บริษัท นภดล เอส กรุ๊ป จำกัด',
+    'NBK': 'บริษัท นภดล กรุงเทพ จำกัด',
+    'NPI': 'บริษัท นภดล อินเตอร์เทรดดิ้ง จำกัด',
+    'NST': 'บริษัท เอ็นพีดี สตีลเทค จำกัด',
+}
+# เลขที่ไม่ตรงรหัสไหนเลย (หรือไม่มีเลขบิล) ให้ถือเป็นบริษัทนี้
+DEFAULT_BILL_COMPANY = 'บริษัท นภดล เอส กรุ๊ป จำกัด'
+
 # --- ตั้งค่าเชื่อมต่อฐานข้อมูลภายนอก (เหมือนรายงานตัวอื่นในโมดูลนี้) ---
 DB_CONFIG = {
     'host': '150.95.26.61',
@@ -260,6 +271,12 @@ class DebtorAllSummary(models.Model):
     # บิล
     bill_count = fields.Integer(string='จำนวนบิลค้าง')
     bill_numbers = fields.Text(string='เลขใบกำกับเช่า')
+    bill_company_name = fields.Char(
+        string='บริษัท', compute='_compute_bill_company_name', store=True, index=True,
+        help='บริษัทที่ออกบิล อ่านจากคำนำหน้าเลขใบกำกับเช่าในแท็บ "บิลค้างชำระ"\n'
+             'NSG = เอส กรุ๊ป, NBK = กรุงเทพ, NPI = อินเตอร์เทรดดิ้ง, NST = สตีลเทค\n'
+             'ถ้าทุกบิลเป็นบริษัทเดียวกันจะแสดงชื่อเดียว ถ้ามีหลายบริษัทจะแสดงคั่นด้วย /')
+
     bill_ids = fields.One2many('baankheaw.debtor_all_summary_bill', 'summary_id',
                                string='รายละเอียดบิลค้าง')
 
@@ -280,6 +297,25 @@ class DebtorAllSummary(models.Model):
         """ปุ่ม 'ย้อนกลับเป็นค้างชำระ' (กดผิด หรือยกเลิกการรับชำระ)"""
         self.write({'payment_state': 'unpaid'})
         return True
+
+    # ------------------------------------------------------------------
+    # บริษัทที่ออกบิล
+    # ------------------------------------------------------------------
+    @api.depends('bill_ids.doc_id')
+    def _compute_bill_company_name(self):
+        """แปลงคำนำหน้าเลขใบกำกับเช่าเป็นชื่อบริษัทที่ออกบิล
+
+        ลูกหนี้ 1 ราย อาจมีบิลจากหลายบริษัท จึงไล่ดูทุกบิลแล้วเก็บชื่อที่ไม่ซ้ำ
+        ถ้าเหมือนกันหมดก็ได้ชื่อเดียว
+        """
+        for rec in self:
+            names = []
+            for doc_id in rec.bill_ids.mapped('doc_id'):
+                prefix = (doc_id or '').strip()[:3].upper()
+                name = BILL_PREFIX_COMPANY.get(prefix, DEFAULT_BILL_COMPANY)
+                if name not in names:
+                    names.append(name)
+            rec.bill_company_name = ' / '.join(names) if names else DEFAULT_BILL_COMPANY
 
     # ------------------------------------------------------------------
     # เลขที่เอกสาร

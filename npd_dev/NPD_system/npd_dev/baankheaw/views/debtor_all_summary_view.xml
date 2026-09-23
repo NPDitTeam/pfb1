@@ -12,6 +12,7 @@
                 <field name="cus_id"/>
                 <field name="cus_cpnname"/>
                 <field name="branch_name"/>
+                <field name="bill_company_name"/>
                 <field name="bill_numbers" string="เลขใบกำกับเช่า"/>
                 <filter name="filter_unpaid" string="ค้างชำระ"
                         domain="[('payment_state', '=', 'unpaid')]"/>
@@ -23,6 +24,8 @@
                 <filter name="filter_over_90" string="ค้างเกิน 90 วัน"
                         domain="[('debt_duration', '>', 90)]"/>
                 <group expand="0" string="จัดกลุ่มตาม">
+                    <filter string="บริษัท" name="group_by_bill_company"
+                            context="{'group_by': 'bill_company_name'}"/>
                     <filter name="group_branch" string="สาขา" context="{'group_by': 'branch_name'}"/>
                     <filter name="group_status" string="สถานะบิล" context="{'group_by': 'bill_status'}"/>
                     <filter name="group_payment_state" string="สถานะการชำระ"
@@ -47,6 +50,7 @@
                 <field name="cus_cpnname"/>
                 <field name="cus_tel"/>
                 <field name="branch_name"/>
+                <field name="bill_company_name" optional="show"/>
                 <field name="amount" sum="รวม"/>
                 <field name="vat" sum="รวม"/>
                 <field name="tax" sum="รวม"/>
@@ -111,6 +115,7 @@
                             <field name="total_debt" readonly="1"/>
                         </group>
                         <group string="สรุปสถานะ">
+                            <field name="bill_company_name" readonly="1"/>
                             <field name="insure_balance" readonly="1"/>
                             <field name="total_paid" readonly="1"/>
                             <field name="bill_count" readonly="1"/>
