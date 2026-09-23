@@ -249,7 +249,9 @@ class DebtorAllSummary(models.Model):
     # ข้อมูลลูกค้า
     cus_id = fields.Char(string='รหัสลูกค้า', index=True)
     cus_fullname = fields.Char(string='ลูกค้า')
-    cus_cpnname = fields.Char(string='บริษัท')
+    # ชื่อบริษัทของ 'ลูกค้า' — ตั้งชื่อให้ต่างจาก bill_company_name
+    # (บริษัทที่ออกบิล) ที่เพิ่มทีหลัง ไม่งั้นบนฟอร์มจะมีคำว่า 'บริษัท' สองที่
+    cus_cpnname = fields.Char(string='บริษัทลูกค้า')
     cus_tel = fields.Char(string='เบอร์ติดต่อ')
     cus_address = fields.Char(string='ที่อยู่ลูกค้า')
     cus_cpnadd = fields.Char(string='ที่อยู่บริษัท')
