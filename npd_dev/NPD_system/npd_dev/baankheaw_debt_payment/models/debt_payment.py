@@ -284,6 +284,15 @@ class BaankheawDebtPayment(models.Model):
     court_broken = fields.Float(string='ค่าปรับชำรุด (ศาล)', digits=(16, 2), copy=False, tracking=True)
     court_transport = fields.Float(string='ค่าขนส่ง (ศาล)', digits=(16, 2), copy=False, tracking=True)
 
+    # ธงบอกว่า "ศาลสั่งช่องนี้จริง" — จำเป็นเพราะยอดศาลเป็น 0 ได้
+    # (ศาลสั่งยกยอดทิ้ง) ถ้าดูแค่ตัวเลขจะแยกไม่ออกจาก "ยังไม่เคยปรับ"
+    court_amount_set = fields.Boolean(string='ศาลสั่งค่าเช่า', copy=False)
+    court_vat_set = fields.Boolean(string='ศาลสั่ง Vat', copy=False)
+    court_tax_set = fields.Boolean(string='ศาลสั่ง Tax', copy=False)
+    court_lost_set = fields.Boolean(string='ศาลสั่งค่าปรับหาย', copy=False)
+    court_broken_set = fields.Boolean(string='ศาลสั่งค่าปรับชำรุด', copy=False)
+    court_transport_set = fields.Boolean(string='ศาลสั่งค่าขนส่ง', copy=False)
+
     court_amount_state = fields.Char(string='สถานะค่าเช่า', compute='_compute_court_states', store=True)
     court_vat_state = fields.Char(string='สถานะ Vat', compute='_compute_court_states', store=True)
     court_tax_state = fields.Char(string='สถานะ Tax', compute='_compute_court_states', store=True)
@@ -304,21 +313,23 @@ class BaankheawDebtPayment(models.Model):
 
     @api.depends('amount', 'vat', 'tax', 'lost', 'broken', 'transport',
                  'court_amount', 'court_vat', 'court_tax',
-                 'court_lost', 'court_broken', 'court_transport')
+                 'court_lost', 'court_broken', 'court_transport',
+                 'court_amount_set', 'court_vat_set', 'court_tax_set',
+                 'court_lost_set', 'court_broken_set', 'court_transport_set')
     def _compute_court_states(self):
-        """ช่องไหนกรอกยอดศาลไว้ ให้ขึ้นสถานะ 'ปรับตามศาลสั่ง' และใช้ยอดนั้นคิดหนี้รวม
+        """ช่องไหนศาลสั่งไว้ ให้ขึ้นสถานะ 'ปรับตามศาลสั่ง' และใช้ยอดนั้นคิดหนี้รวม
 
-        เทียบกับยอดเดิม ถ้าเท่ากันพอดีถือว่าไม่ได้ปรับ
+        ยึดธง court_*_set ที่หน้าต่างปรับยอดเขียนไว้ ไม่ใช่เทียบตัวเลข เพราะ
+        ศาลสั่งให้เป็น 0 ได้ ถ้าเทียบตัวเลขจะกลายเป็นว่าลูกหนี้ทุกรายที่ยังไม่
+        เคยปรับ ถูกตีว่าศาลสั่งให้จ่าย 0 แล้วออกใบแจ้งหนี้ไม่ได้
         """
         for rec in self:
             total = 0.0
             adjusted = False
             for name in self.COURT_FIELDS:
-                old_value = rec[name] or 0.0
-                new_value = rec['court_%s' % name] or 0.0
-                changed = abs(new_value - old_value) > 0.005
+                changed = bool(rec['court_%s_set' % name])
                 rec['court_%s_state' % name] = COURT_STATE_TEXT if changed else ''
-                total += new_value if changed else old_value
+                total += (rec['court_%s' % name] or 0.0) if changed else (rec[name] or 0.0)
                 adjusted = adjusted or changed
             rec.court_total_debt = total
             rec.is_court_adjusted = adjusted
@@ -351,6 +362,8 @@ class BaankheawDebtPayment(models.Model):
         self.write({
             'court_amount': 0.0, 'court_vat': 0.0, 'court_tax': 0.0,
             'court_lost': 0.0, 'court_broken': 0.0, 'court_transport': 0.0,
+            'court_amount_set': False, 'court_vat_set': False, 'court_tax_set': False,
+            'court_lost_set': False, 'court_broken_set': False, 'court_transport_set': False,
             'court_adjust_date': False, 'court_adjust_uid': False,
         })
         return True
@@ -432,6 +445,10 @@ class BaankheawDebtPayment(models.Model):
                 'court_amount': rec.court_amount, 'court_vat': rec.court_vat,
                 'court_tax': rec.court_tax, 'court_lost': rec.court_lost,
                 'court_broken': rec.court_broken, 'court_transport': rec.court_transport,
+                'court_amount_set': rec.court_amount_set, 'court_vat_set': rec.court_vat_set,
+                'court_tax_set': rec.court_tax_set, 'court_lost_set': rec.court_lost_set,
+                'court_broken_set': rec.court_broken_set,
+                'court_transport_set': rec.court_transport_set,
                 'court_adjust_date': rec.court_adjust_date,
                 'court_adjust_uid': rec.court_adjust_uid.id,
                 'court_note': rec.court_note,

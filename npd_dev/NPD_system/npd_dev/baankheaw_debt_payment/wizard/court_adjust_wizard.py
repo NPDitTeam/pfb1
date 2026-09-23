@@ -57,13 +57,13 @@ class CourtAdjustWizard(models.TransientModel):
         lines = []
         for name, label in DEBT_FIELDS:
             old_value = summary[name] or 0.0
-            court_value = summary['court_%s' % name] or 0.0
+            already_set = summary['court_%s_set' % name]
             lines.append((0, 0, {
                 'field_name': name,
                 'label': label,
                 'old_amount': old_value,
                 # ยังไม่เคยปรับ -> ตั้งต้นเท่ายอดเดิม ผู้ใช้แก้เฉพาะช่องที่ศาลสั่ง
-                'new_amount': court_value if court_value else old_value,
+                'new_amount': (summary['court_%s' % name] or 0.0) if already_set else old_value,
             }))
         res['line_ids'] = lines
         res['court_note'] = summary.court_note or ''
@@ -74,10 +74,12 @@ class CourtAdjustWizard(models.TransientModel):
         self.ensure_one()
         vals = {'court_note': self.court_note}
         for line in self.line_ids:
-            # ช่องที่ไม่ได้แก้ เก็บเป็น 0 เพื่อให้สถานะว่าง = ใช้ยอดเดิม
+            # ช่องที่ไม่ได้แก้ ล้างธงทิ้ง = ใช้ยอดเดิม
+            # ช่องที่แก้ ปักธงไว้ แม้ยอดใหม่จะเป็น 0 (ศาลสั่งยกยอดทิ้ง) ก็ยังนับว่าปรับแล้ว
             vals['court_%s' % line.field_name] = (
                 line.new_amount if line.is_changed else 0.0)
-        if any(vals.get('court_%s' % name) for name, label in DEBT_FIELDS):
+            vals['court_%s_set' % line.field_name] = line.is_changed
+        if any(vals.get('court_%s_set' % name) for name, label in DEBT_FIELDS):
             vals['court_adjust_date'] = fields.Datetime.now()
             vals['court_adjust_uid'] = self.env.uid
         else:

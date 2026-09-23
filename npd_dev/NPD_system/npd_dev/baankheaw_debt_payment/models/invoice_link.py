@@ -75,9 +75,9 @@ class BaankheawDebtPaymentInvoice(models.Model):
         """ยอดที่จะใช้ออกบิล — ถ้าศาลสั่งปรับช่องนี้ ใช้ยอดศาล ถ้าไม่ ใช้ยอดเดิม"""
         self.ensure_one()
         field_name = DEBT_TYPE_FIELD[debt_type]
-        court_value = self['court_%s' % field_name] or 0.0
-        state = self['court_%s_state' % field_name]
-        return court_value if state else (self[field_name] or 0.0)
+        if self['court_%s_set' % field_name]:
+            return self['court_%s' % field_name] or 0.0
+        return self[field_name] or 0.0
 
     def _bk_find_partner(self):
         """หาผู้ติดต่อจากชื่อลูกค้า ถ้าไม่มีให้สร้างใหม่
