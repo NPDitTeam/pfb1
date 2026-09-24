@@ -6,8 +6,12 @@
 จำนวนสินค้าให้ยอดรวมใกล้ที่สุดโดยไม่ต่ำกว่า เหลือเศษเท่าไรค่อยทำส่วนลดต่อ
 ซึ่งน้อยกว่าเดิมมาก เพราะจำนวนถูกปรับมาให้ใกล้แล้ว
 """
+import logging
+
 from odoo import models, fields, api
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 from odoo.addons.baankheaw_debt_payment.models.lost_court_plan import _solve_quantities
 
@@ -145,20 +149,44 @@ class LostCourtWizard(models.TransientModel):
             else:
                 commands.append((2, line.id))
 
-        vals = {
+        # เขียนบรรทัดแยกจากฟิลด์หัว และจดค่าลูกค้าไว้ก่อน
+        #
+        # การเขียน invoice_line_ids ทำให้ Odoo เข้าเส้นทาง
+        # _move_autocomplete_invoice_lines_write ซึ่งสร้างใบจำลองในหน่วยความจำ
+        # แล้วเขียนค่าทั้งชุดกลับลงใบจริง บนฐานนี้ใบจำลองคืนค่า partner_id เป็น
+        # False ทำให้ช่องลูกค้าบนใบหายไป (เป็นพฤติกรรมของแกน Odoo กับโมดูลเสริม
+        # ในฐานนี้ ไม่ใช่ของโมดูลนี้) จึงต้องจดไว้แล้วใส่คืนถ้าหาย
+        keep_partner = {
+            'partner_id': move.partner_id.id,
+            'partner_shipping_id': move.partner_shipping_id.id,
+        }
+
+        if commands:
+            move.with_context(check_move_validity=False).write(
+                {'invoice_line_ids': commands})
+            restore = {field: value for field, value in keep_partner.items()
+                       if value and not move[field]}
+            if restore:
+                _logger.info('baankheaw lost_court: ใส่ค่าลูกค้าคืนให้ใบ %s (%s)',
+                             move.id, restore)
+                move.with_context(check_move_validity=False).write(restore)
+
+        header = {
             'bk_lost_court_amount': self.court_amount,
             'bk_lost_installment_no': self.installment_no or 1,
         }
-        if commands:
-            vals['invoice_line_ids'] = commands
         if self.due_date:
-            vals['invoice_date_due'] = self.due_date
-            vals['invoice_payment_term_id'] = False
+            header['invoice_date_due'] = self.due_date
+            header['invoice_payment_term_id'] = False
+        move.with_context(check_move_validity=False).write(header)
 
-        move.with_context(check_move_validity=False).write(vals)
         move.with_context(check_move_validity=False)._recompute_dynamic_lines(
             recompute_all_taxes=True, recompute_tax_base_amount=True)
         move.flush()
+
+        if not move.partner_id:
+            raise UserError('ระบบปรับจำนวนแล้วแต่ช่องลูกค้าหายไป '
+                            'ยกเลิกการแก้ไขเพื่อความปลอดภัย กรุณาแจ้งฝ่าย IT')
 
         body = ('ปรับจำนวนสินค้าตามคำสั่งศาล งวดที่ %s<br/>'
                 'ยอดตามศาล %s บาท | ใบนี้ตั้งไว้ %s บาท | '
