@@ -143,8 +143,8 @@ vendor_bills_expense AS (
     LEFT JOIN res_branch rb ON bill.branch_id = rb.id
     WHERE bill.state = 'posted'
         AND bill.move_type IN ('in_invoice', 'in_refund')
-        AND bill.invoice_date >= %(date_from)s
-        AND bill.invoice_date <= %(date_to)s
+        AND bill.date >= %(date_from)s
+        AND bill.date <= %(date_to)s
     GROUP BY rb.id, rb.name
 ),
 advance_clear_expense AS (

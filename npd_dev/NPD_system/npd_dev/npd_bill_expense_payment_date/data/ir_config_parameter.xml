@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- ย้ายวันที่ลงบัญชีได้ไกลสุดกี่เดือนย้อนหลังนับจากวันที่รับชำระ
+             ตั้ง 0 = ปิดการย้ายทั้งหมด -->
+        <record id="param_max_months_back" model="ir.config_parameter">
+            <field name="key">npd_bill_expense_payment_date.max_months_back</field>
+            <field name="value">2</field>
+        </record>
+    </data>
+</odoo>

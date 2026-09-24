@@ -137,17 +137,17 @@ class BranchPLReport(models.TransientModel):
         # ==============================================================
         # (1) Vendor Bills — ยอดที่จ่ายแล้ว (cash) เฉลี่ยลงบรรทัดบัญชีของบิลตามสัดส่วน
         #     -> ฐานไป 5xxx, VAT ไป 1154-00 โดยอัตโนมัติ (ตามบัญชีของบรรทัดในบิล)
-        #     branch = หัวบิล (branch_id), งวด = invoice_date  (เหมือน commission)
+        #     branch = หัวบิล (branch_id), งวด = date (วันที่ลงบัญชี = วันที่รับชำระ)
         # ==============================================================
         vendor_bills = self.env['account.move'].sudo().search([
-            ('invoice_date', '>=', date_from),
-            ('invoice_date', '<=', date_to),
+            ('date', '>=', date_from),
+            ('date', '<=', date_to),
             ('state', '=', 'posted'),
             ('move_type', 'in', ['in_invoice', 'in_refund']),
             ('branch_id', '=', branch.id),
         ])
         for bill in vendor_bills:
-            if not bill.invoice_payments_widget or not bill.invoice_date:
+            if not bill.invoice_payments_widget or not bill.date:
                 continue
             try:
                 data = json.loads(bill.invoice_payments_widget)
@@ -157,7 +157,7 @@ class BranchPLReport(models.TransientModel):
             paid = sum(p.get('amount', 0.0) for p in content)
             if not paid:
                 continue
-            m_idx = bill.invoice_date.month - 1
+            m_idx = bill.date.month - 1
             # บรรทัดที่ไม่ใช่ลูกหนี้/เจ้าหนี้ = บรรทัดค่าใช้จ่าย + บรรทัดภาษี
             alloc_lines = bill.line_ids.filtered(
                 lambda l: l.account_id

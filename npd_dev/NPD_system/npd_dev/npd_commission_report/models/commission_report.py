@@ -294,8 +294,8 @@ class CommissionReport(models.TransientModel):
 
             # ===== ดึงจาก Vendor Bills =====
             vendor_bills = self.env['account.move'].sudo().search([
-                ('invoice_date', '>=', date_from),
-                ('invoice_date', '<=', date_to),
+                ('date', '>=', date_from),
+                ('date', '<=', date_to),
                 ('state', '=', 'posted'),
                 ('move_type', 'in', ['in_invoice', 'in_refund']),
                 ('branch_id', '=', branch.id),
