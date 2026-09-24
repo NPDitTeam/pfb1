@@ -25,8 +25,8 @@
                     <tree editable="bottom" create="false" delete="false"
                           decoration-warning="is_changed == True">
                         <field name="field_name" invisible="1"/>
-                        <field name="label" string="ประเภทยอด" readonly="1"/>
-                        <field name="old_amount" string="ยอดเดิม" readonly="1" sum="รวมยอดเดิม"/>
+                        <field name="label" string="ประเภทยอด" readonly="1" force_save="1"/>
+                        <field name="old_amount" string="ยอดเดิม" readonly="1" force_save="1" sum="รวมยอดเดิม"/>
                         <field name="new_amount" string="ยอดใหม่ (ตามศาล)" sum="รวมยอดใหม่"/>
                         <field name="is_changed" invisible="1"/>
                         <field name="state_text" string="สถานะ" readonly="1"/>

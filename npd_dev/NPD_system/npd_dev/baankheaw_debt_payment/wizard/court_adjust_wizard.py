@@ -5,6 +5,7 @@
 ยอดเดิมไม่ถูกแก้ ยอดใหม่ไปเก็บที่ฟิลด์ court_* ของลูกหนี้
 """
 from odoo import models, fields, api
+from odoo.exceptions import UserError
 
 DEBT_FIELDS = [
     ('amount', 'ค่าเช่า'),
@@ -74,12 +75,20 @@ class CourtAdjustWizard(models.TransientModel):
         """บันทึกยอดใหม่ลงฟิลด์ศาล — ยอดเดิมคงไว้เหมือนเดิม"""
         self.ensure_one()
         vals = {'court_note': self.court_note}
-        for line in self.line_ids:
+        ordered = self.line_ids.sorted(key=lambda l: l.id)
+        names = [name for name, _label in DEBT_FIELDS]
+        for index, line in enumerate(ordered):
+            # ถ้าหน้าจอไม่ส่ง field_name กลับมา ให้ยึดลำดับบรรทัดแทน
+            # หน้าต่างนี้สร้างบรรทัดครบ 7 ช่องตามลำดับ DEBT_FIELDS เสมอ
+            # และห้ามเพิ่ม/ลบบรรทัด ลำดับจึงเชื่อถือได้
+            name = line.field_name or (names[index] if index < len(names) else False)
+            if not name:
+                raise UserError('ระบุประเภทยอดของบรรทัดที่ %s ไม่ได้ '
+                                'กรุณาปิดหน้าต่างแล้วเปิดใหม่' % (index + 1))
             # ช่องที่ไม่ได้แก้ ล้างธงทิ้ง = ใช้ยอดเดิม
             # ช่องที่แก้ ปักธงไว้ แม้ยอดใหม่จะเป็น 0 (ศาลสั่งยกยอดทิ้ง) ก็ยังนับว่าปรับแล้ว
-            vals['court_%s' % line.field_name] = (
-                line.new_amount if line.is_changed else 0.0)
-            vals['court_%s_set' % line.field_name] = line.is_changed
+            vals['court_%s' % name] = (line.new_amount if line.is_changed else 0.0)
+            vals['court_%s_set' % name] = line.is_changed
         if any(vals.get('court_%s_set' % name) for name, label in DEBT_FIELDS):
             vals['court_adjust_date'] = fields.Datetime.now()
             vals['court_adjust_uid'] = self.env.uid
@@ -97,9 +106,14 @@ class CourtAdjustWizardLine(models.TransientModel):
 
     wizard_id = fields.Many2one('baankheaw.debt_payment_court_wizard', required=True,
                                 ondelete='cascade')
-    field_name = fields.Char(string='ฟิลด์', readonly=True)
-    label = fields.Char(string='ประเภทยอด', readonly=True)
-    old_amount = fields.Float(string='ยอดเดิม', digits=(16, 2), readonly=True)
+    # ห้ามใส่ readonly=True ที่ฟิลด์พวกนี้
+    # หน้าจอ Odoo 14 จะไม่ส่งค่าฟิลด์ที่ readonly ของบรรทัดลูกกลับมาตอนบันทึก
+    # ถ้าใส่ field_name จะกลายเป็น False แล้วระบบไปประกอบชื่อฟิลด์เป็น
+    # 'court_False' จนพัง — กันไม่ให้แก้ด้วย readonly="1" ที่วิวแทน
+    # (พร้อม force_save="1" เพื่อให้ยังส่งค่ากลับมา)
+    field_name = fields.Char(string='ฟิลด์')
+    label = fields.Char(string='ประเภทยอด')
+    old_amount = fields.Float(string='ยอดเดิม', digits=(16, 2))
     new_amount = fields.Float(string='ยอดใหม่ (ตามศาล)', digits=(16, 2))
     is_changed = fields.Boolean(string='ปรับตามศาลสั่ง', compute='_compute_is_changed')
     state_text = fields.Char(string='สถานะ', compute='_compute_is_changed')
