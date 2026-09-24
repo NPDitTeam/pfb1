@@ -43,6 +43,7 @@
                 <field name="total_debt"/>
                 <field name="total_paid"/>
                 <field name="remaining_balance"/>
+                <field name="bill_count" string="จำนวนบิล"/>
                 <field name="arh_date"/>
                 <field name="due_date"/>
                 <field name="bill_status"/>
@@ -89,10 +90,73 @@
                         <field name="total_debt"/>
                         <field name="total_paid"/>
                         <field name="remaining_balance"/>
+                        <field name="bill_count"/>
                         <field name="arh_date"/>
                         <field name="due_date"/>
                         <field name="debt_duration"/>
                     </group>
+                    <notebook>
+                        <page string="บิลค้างชำระ" name="bills">
+                            <field name="bill_ids" nolabel="1" readonly="1">
+                                <tree string="บิลค้างชำระ" create="false" delete="false">
+                                    <field name="doc_id"/>
+                                    <field name="doc_date"/>
+                                    <field name="due_date"/>
+                                    <field name="bill_status"/>
+                                    <field name="amount" sum="รวม"/>
+                                    <field name="vat" sum="รวม"/>
+                                    <field name="tax" sum="รวม" optional="hide"/>
+                                    <field name="insure" sum="รวม"/>
+                                    <field name="lost" sum="รวม"/>
+                                    <field name="broken" sum="รวม" optional="hide"/>
+                                    <field name="transport" sum="รวม" optional="hide"/>
+                                    <field name="total_debt" sum="คงค้างรวม"/>
+                                    <field name="product_summary" optional="hide"/>
+                                </tree>
+                                <form string="บิลค้างชำระ">
+                                    <group>
+                                        <group>
+                                            <field name="doc_id"/>
+                                            <field name="doc_date"/>
+                                            <field name="due_date"/>
+                                            <field name="bill_status"/>
+                                        </group>
+                                        <group>
+                                            <field name="amount"/>
+                                            <field name="vat"/>
+                                            <field name="tax"/>
+                                            <field name="insure"/>
+                                            <field name="lost"/>
+                                            <field name="broken"/>
+                                            <field name="transport"/>
+                                            <field name="total_debt"/>
+                                        </group>
+                                    </group>
+                                    <field name="product_ids" nolabel="1">
+                                        <tree string="รายการสินค้าในบิล">
+                                            <field name="product_code"/>
+                                            <field name="product_name"/>
+                                            <field name="qty" sum="รวม"/>
+                                            <field name="qty_return" sum="รวม"/>
+                                            <field name="qty_outstanding" sum="รวม"/>
+                                        </tree>
+                                    </field>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="รายการสินค้า" name="products">
+                            <field name="product_ids" nolabel="1" readonly="1">
+                                <tree string="รายการสินค้า" create="false" delete="false">
+                                    <field name="doc_id"/>
+                                    <field name="product_code"/>
+                                    <field name="product_name"/>
+                                    <field name="qty" sum="รวม"/>
+                                    <field name="qty_return" sum="รวม"/>
+                                    <field name="qty_outstanding" sum="คงค้างรวม"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>

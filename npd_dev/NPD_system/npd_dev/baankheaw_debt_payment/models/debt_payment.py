@@ -30,14 +30,15 @@ COMPANY_NAME_HINT = [
 ]
 PREFIX_PARAM = 'baankheaw_debt_payment.prefix'
 
-# ประเภทหนี้ 6 ช่อง (ลำดับตามคิวรีต้นฉบับ)
+# ประเภทหนี้ 7 ช่อง เรียงตามเมนู "สรุปลูกหนี้ทั้งหมด" ซึ่งนับค่าประกันเป็นหนี้ด้วย
 DEBT_TYPES = [
-    ('b1', 'amount', 'ค่าเช่า'),
-    ('b2', 'vat', 'Vat'),
-    ('b3', 'tax', 'Tax'),
-    ('b4', 'lost', 'ค่าปรับหาย'),
-    ('b5', 'broken', 'ค่าปรับชำรุด'),
-    ('b6', 'transport', 'ค่าขนส่ง'),
+    ('n_amount', 'amount', 'ค่าเช่า'),
+    ('n_vat', 'vat', 'Vat'),
+    ('n_tax', 'tax', 'Tax'),
+    ('n_insure', 'insure', 'ค่าประกัน'),
+    ('n_lost', 'lost', 'ค่าปรับหาย'),
+    ('n_broken', 'broken', 'ค่าปรับชำรุด'),
+    ('n_transport', 'transport', 'ค่าขนส่ง'),
 ]
 COURT_STATE_TEXT = 'ปรับตามศาลสั่ง'
 
@@ -61,16 +62,110 @@ DB_CONFIG = {
     'cursorclass': pymysql.cursors.DictCursor,
 }
 
+HEAD_QUERY = """
+SELECT
+    d.customer_id,
+    d.branch_id,
+    d.ลูกค้า AS cus_fullname,
+    d.เบอร์ติดต่อ AS cus_tel,
+    d.ที่อยู่ลูกค้า AS cus_address,
+    d.บริษัท AS cus_cpnname,
+    d.เบอร์บริษัท AS cus_cpntel,
+    d.ที่อยู่บริษัท AS cus_cpnadd,
+    d.สาขา AS branch_name,
+    d.ค่าเช่า AS amount,
+    d.Vat AS vat,
+    d.tax AS tax,
+    d.ค่าประกัน AS insure,
+    d.ค่าปรับหาย AS lost,
+    d.ค่าปรับชำรุด AS broken,
+    d.ค่าขนส่ง AS transport,
+    d.หนี้รวม AS total_debt,
+    COALESCE(p.รับชำระ, 0) AS total_paid,
+    d.หนี้รวม - COALESCE(p.รับชำระ, 0) AS remaining_balance,
+    d.วันที่เริ่มหนี้ AS arh_date,
+    d.วันที่ครบกำหนดชำระ AS due_date,
+    DATEDIFF(CURDATE(), d.วันที่เริ่มหนี้) AS debt_duration,
+    CASE
+        WHEN DATEDIFF(CURDATE(), d.วันที่เริ่มหนี้) BETWEEN 0 AND 60 THEN 'สาขา & sales'
+        WHEN DATEDIFF(CURDATE(), d.วันที่เริ่มหนี้) BETWEEN 61 AND 90 THEN 'ส่วนกลาง'
+        WHEN DATEDIFF(CURDATE(), d.วันที่เริ่มหนี้) > 90
+            AND (d.หนี้รวม - COALESCE(p.รับชำระ, 0)) >= 500000 THEN 'นิติกร'
+        WHEN DATEDIFF(CURDATE(), d.วันที่เริ่มหนี้) > 90
+            AND (d.หนี้รวม - COALESCE(p.รับชำระ, 0)) < 500000 THEN 'ส่วนกลาง'
+        ELSE 'ไม่ระบุ'
+    END AS responsible_party,
+    CASE
+        WHEN d.bill_status = 'N' THEN 'ยังไม่ปิดบิล'
+        WHEN d.bill_status = 'Y' THEN 'ปิดบิล'
+        ELSE 'ไม่มีข้อมูล'
+    END AS bill_status_display
+FROM
+    (SELECT
+        c.cus_id AS customer_id,
+        c.cus_fullname AS ลูกค้า,
+        c.cus_cpnname AS บริษัท,
+        c.cus_tel AS เบอร์ติดต่อ,
+        c.cus_address AS ที่อยู่ลูกค้า,
+        c.cus_cpnadd AS ที่อยู่บริษัท,
+        c.cus_cpntel AS เบอร์บริษัท,
+        b.branch_name AS สาขา,
+        b.branch_id AS branch_id,
+        SUM(COALESCE(h.arh_amount, 0)) AS ค่าเช่า,
+        SUM(COALESCE(h.arh_vat, 0)) AS Vat,
+        SUM(COALESCE(h.arh_tax, 0)) AS tax,
+        SUM(COALESCE(h.arh_insure, 0)) AS ค่าประกัน,
+        SUM(COALESCE(h.arh_lost, 0)) AS ค่าปรับหาย,
+        SUM(COALESCE(h.arh_broken, 0)) AS ค่าปรับชำรุด,
+        SUM(COALESCE(h.arh_transport, 0)) AS ค่าขนส่ง,
+        SUM(COALESCE(h.arh_amount,0) + COALESCE(h.arh_vat,0) +
+            COALESCE(h.arh_tax,0) + COALESCE(h.arh_insure,0) +
+            COALESCE(h.arh_lost,0) + COALESCE(h.arh_transport,0) +
+            COALESCE(h.arh_broken,0)) AS หนี้รวม,
+        MIN(h.arh_date) AS วันที่เริ่มหนี้,
+        MAX(r.due_date) AS วันที่ครบกำหนดชำระ,
+        CASE
+            WHEN MAX(r.has_open) = 1 THEN 'N'
+            WHEN MAX(r.has_open) = 0 THEN 'Y'
+            ELSE NULL
+        END AS bill_status
+    FROM npd_db.ar_head h
+    JOIN npd_db.master_customer c ON TRIM(h.arh_cusid) = TRIM(c.cus_id)
+    JOIN npd_db.master_branch b ON TRIM(h.branchid) = TRIM(b.branch_id)
+    /* pre-aggregate กัน renth_id ซ้ำ ไม่ให้ยอดตั้งหนี้ถูกคูณตามจำนวนแถวที่ join ติด */
+    LEFT JOIN (
+        SELECT TRIM(CONVERT(r0.renth_id USING utf8mb4)) AS renth_id,
+               MAX(COALESCE(r0.renth_date_return, r0.renth_dateend))   AS due_date,
+               MAX(CASE WHEN r0.renth_return = 'N' THEN 1 ELSE 0 END)  AS has_open
+        FROM npd_db.rentorder_head r0
+        GROUP BY TRIM(CONVERT(r0.renth_id USING utf8mb4))
+    ) r ON TRIM(h.arh_docid) = r.renth_id
+    WHERE h.cancel = 'N'
+    GROUP BY c.cus_id, c.cus_fullname, c.cus_cpnname, c.cus_tel,
+             c.cus_address, c.cus_cpnadd, b.branch_name, b.branch_id
+    ) d
+LEFT JOIN
+    (SELECT
+        c.cus_id AS customer_id,
+        b.branch_id AS branch_id,
+        SUM(COALESCE(p.arp_amount,0) + COALESCE(p.arp_vat,0) +
+            COALESCE(p.arp_tax,0) + COALESCE(p.arp_insure,0) +
+            COALESCE(p.arp_lost,0) + COALESCE(p.arp_broken,0) +
+            COALESCE(p.arp_transport,0)) AS รับชำระ
+    FROM npd_db.ar_repay p
+    JOIN npd_db.master_customer c ON TRIM(p.arp_cusid) = TRIM(c.cus_id)
+    JOIN npd_db.master_branch b ON TRIM(p.branchid) = TRIM(b.branch_id)
+    WHERE p.cancel = 'N'
+    GROUP BY c.cus_id, b.branch_id
+    ) p ON d.customer_id = p.customer_id AND d.branch_id = p.branch_id
+WHERE d.หนี้รวม - COALESCE(p.รับชำระ, 0) > 0
+ORDER BY d.สาขา, d.ลูกค้า
+"""
+
 BILL_QUERY = """
 SELECT
     f.cus_key,
     f.branch_key,
-    COALESCE(c.cus_fullname, '')           AS cus_fullname,
-    COALESCE(c.cus_cpnname, '')            AS cus_cpnname,
-    COALESCE(c.cus_cpntel, '')             AS cus_cpntel,
-    COALESCE(c.cus_address, '')            AS cus_address,
-    COALESCE(c.cus_cpnadd, '')             AS cus_cpnadd,
-    COALESCE(bm.branch_name, f.branch_key) AS branch_name,
     f.docid,
     f.doc_date,
     r.due_date,
@@ -79,102 +174,73 @@ SELECT
         WHEN r.has_open = 0 THEN 'ปิดบิล'
         ELSE 'ไม่มีข้อมูล'
     END AS bill_status,
-    f.b1, f.b2, f.b3, f.b4, f.b5, f.b6, f.b_total
+    f.n_amount, f.n_vat, f.n_tax, f.n_insure,
+    f.n_lost, f.n_broken, f.n_transport, f.n_total
 FROM (
-    /* ===== ชั้น 4 : ต่อ 1 บิล -> ยอดคงค้างแยกตามประเภท ===== */
     SELECT
-        u.cus_key,
-        u.branch_key,
-        u.docid,
-        MIN(u.doc_date) AS doc_date,
-        SUM(CASE WHEN u.type_seq = 1 THEN u.balance ELSE 0 END) AS b1,
-        SUM(CASE WHEN u.type_seq = 2 THEN u.balance ELSE 0 END) AS b2,
-        SUM(CASE WHEN u.type_seq = 3 THEN u.balance ELSE 0 END) AS b3,
-        SUM(CASE WHEN u.type_seq = 4 THEN u.balance ELSE 0 END) AS b4,
-        SUM(CASE WHEN u.type_seq = 5 THEN u.balance ELSE 0 END) AS b5,
-        SUM(CASE WHEN u.type_seq = 6 THEN u.balance ELSE 0 END) AS b6,
-        SUM(u.balance) AS b_total
+        v.cus_key,
+        v.branch_key,
+        v.docid,
+        MIN(v.doc_date) AS doc_date,
+        ROUND(SUM(v.amount), 2)    AS n_amount,
+        ROUND(SUM(v.vat), 2)       AS n_vat,
+        ROUND(SUM(v.tax), 2)       AS n_tax,
+        ROUND(SUM(v.insure), 2)    AS n_insure,
+        ROUND(SUM(v.lost), 2)      AS n_lost,
+        ROUND(SUM(v.broken), 2)    AS n_broken,
+        ROUND(SUM(v.transport), 2) AS n_transport,
+        ROUND(SUM(v.amount + v.vat + v.tax + v.insure +
+                  v.lost + v.broken + v.transport), 2) AS n_total
     FROM (
-        /* ===== ชั้น 3 : กรองเฉพาะที่ยังค้าง ===== */
-        SELECT z.*
-        FROM (
-            /* ===== ชั้น 2 : unpivot 6 ประเภท ===== */
-            SELECT
-                m.cus_key,
-                m.branch_key,
-                m.docid,
-                m.doc_date,
-                t.type_seq,
-                ROUND(
-                    CASE t.type_seq
-                        WHEN 1 THEN m.n_amount
-                        WHEN 2 THEN m.n_vat
-                        WHEN 3 THEN m.n_tax
-                        WHEN 4 THEN m.n_lost
-                        WHEN 5 THEN m.n_broken
-                        WHEN 6 THEN m.n_transport
-                    END
-                , 2) AS balance
-            FROM (
-                /* ===== ชั้น 1 : ตั้งหนี้ - รับชำระ ต่อ 1 บิล ===== */
-                SELECT
-                    v.cus_key,
-                    v.branch_key,
-                    v.docid,
-                    MIN(v.doc_date)  AS doc_date,
-                    SUM(v.amount)    AS n_amount,
-                    SUM(v.vat)       AS n_vat,
-                    SUM(v.tax)       AS n_tax,
-                    SUM(v.lost)      AS n_lost,
-                    SUM(v.broken)    AS n_broken,
-                    SUM(v.transport) AS n_transport
-                FROM (
-                    SELECT
-                        TRIM(h.arh_cusid) AS cus_key,
-                        TRIM(h.branchid)  AS branch_key,
-                        COALESCE(NULLIF(TRIM(CONVERT(h.arh_docid USING utf8mb4)), ''),
-                                 'ไม่ระบุเลขที่บิล') AS docid,
-                        h.arh_date                   AS doc_date,
-                        COALESCE(h.arh_amount, 0)    AS amount,
-                        COALESCE(h.arh_vat, 0)       AS vat,
-                        COALESCE(h.arh_tax, 0)       AS tax,
-                        COALESCE(h.arh_lost, 0)      AS lost,
-                        COALESCE(h.arh_broken, 0)    AS broken,
-                        COALESCE(h.arh_transport, 0) AS transport
-                    FROM npd_db.ar_head h
-                    WHERE h.cancel = 'N'
+        SELECT
+            /* ยึดรหัสจากตารางหลัก ไม่ใช่รหัสที่พิมพ์ไว้ในบิล เพราะบางบิลพิมพ์ตัวเล็ก
+               (17-c002853 vs 17-C002853) MySQL join ผ่านเพราะไม่สนตัวพิมพ์
+               แต่ถ้าเอามาเป็นคีย์ตรง ๆ จะกลายเป็นลูกค้าคนละรายทันที */
+            TRIM(c.cus_id)    AS cus_key,
+            TRIM(b.branch_id) AS branch_key,
+            COALESCE(NULLIF(TRIM(CONVERT(h.arh_docid USING utf8mb4)), ''),
+                     'ไม่ระบุเลขที่บิล') AS docid,
+            h.arh_date                   AS doc_date,
+            COALESCE(h.arh_amount, 0)    AS amount,
+            COALESCE(h.arh_vat, 0)       AS vat,
+            COALESCE(h.arh_tax, 0)       AS tax,
+            COALESCE(h.arh_insure, 0)    AS insure,
+            COALESCE(h.arh_lost, 0)      AS lost,
+            COALESCE(h.arh_broken, 0)    AS broken,
+            COALESCE(h.arh_transport, 0) AS transport
+        FROM npd_db.ar_head h
+        JOIN npd_db.master_customer c ON TRIM(h.arh_cusid) = TRIM(c.cus_id)
+        JOIN npd_db.master_branch   b ON TRIM(h.branchid)  = TRIM(b.branch_id)
+        WHERE h.cancel = 'N'
 
-                    UNION ALL
+        UNION ALL
 
-                    SELECT
-                        TRIM(p.arp_cusid),
-                        TRIM(p.branchid),
-                        COALESCE(NULLIF(TRIM(CONVERT(p.arp_docid USING utf8mb4)), ''),
-                                 'ไม่ระบุเลขที่บิล'),
-                        NULL,
-                        -COALESCE(p.arp_amount, 0),
-                        -COALESCE(p.arp_vat, 0),
-                        -COALESCE(p.arp_tax, 0),
-                        -COALESCE(p.arp_lost, 0),
-                        -COALESCE(p.arp_broken, 0),
-                        -COALESCE(p.arp_transport, 0)
-                    FROM npd_db.ar_repay p
-                    WHERE p.cancel = 'N'
-                ) v
-                GROUP BY v.cus_key, v.branch_key, v.docid
-            ) m
-            CROSS JOIN (
-                          SELECT 1 AS type_seq
-                UNION ALL SELECT 2
-                UNION ALL SELECT 3
-                UNION ALL SELECT 4
-                UNION ALL SELECT 5
-                UNION ALL SELECT 6
-            ) t
-        ) z
-        WHERE z.balance > 0.01
-    ) u
-    GROUP BY u.cus_key, u.branch_key, u.docid
+        SELECT
+            TRIM(c.cus_id),
+            TRIM(b.branch_id),
+            COALESCE(NULLIF(TRIM(CONVERT(p.arp_docid USING utf8mb4)), ''),
+                     'ไม่ระบุเลขที่บิล'),
+            NULL,
+            -COALESCE(p.arp_amount, 0),
+            -COALESCE(p.arp_vat, 0),
+            -COALESCE(p.arp_tax, 0),
+            -COALESCE(p.arp_insure, 0),
+            -COALESCE(p.arp_lost, 0),
+            -COALESCE(p.arp_broken, 0),
+            -COALESCE(p.arp_transport, 0)
+        FROM npd_db.ar_repay p
+        JOIN npd_db.master_customer c ON TRIM(p.arp_cusid) = TRIM(c.cus_id)
+        JOIN npd_db.master_branch   b ON TRIM(p.branchid)  = TRIM(b.branch_id)
+        WHERE p.cancel = 'N'
+    ) v
+    GROUP BY v.cus_key, v.branch_key, v.docid
+    HAVING ABS(SUM(v.amount)) > 0.005
+        OR ABS(SUM(v.vat)) > 0.005
+        OR ABS(SUM(v.tax)) > 0.005
+        OR ABS(SUM(v.insure)) > 0.005
+        OR ABS(SUM(v.lost)) > 0.005
+        OR ABS(SUM(v.broken)) > 0.005
+        OR ABS(SUM(v.transport)) > 0.005
 ) f
 LEFT JOIN (
     /* pre-aggregate กัน renth_id ซ้ำ ไม่ให้ยอดถูกคูณ */
@@ -185,32 +251,7 @@ LEFT JOIN (
     FROM npd_db.rentorder_head r
     GROUP BY TRIM(CONVERT(r.renth_id USING utf8mb4))
 ) r ON r.docid = f.docid
-LEFT JOIN npd_db.master_customer c  ON TRIM(c.cus_id)     = f.cus_key
-LEFT JOIN npd_db.master_branch   bm ON TRIM(bm.branch_id) = f.branch_key
-ORDER BY branch_name, cus_fullname, f.docid
-"""
-
-INSURE_QUERY = """
-SELECT
-    w.cus_key,
-    w.branch_key,
-    ROUND(SUM(w.insure), 2) AS insure_balance,
-    ROUND(SUM(w.paid), 2)   AS total_paid
-FROM (
-    SELECT TRIM(h.arh_cusid) AS cus_key, TRIM(h.branchid) AS branch_key,
-           SUM(COALESCE(h.arh_insure, 0)) AS insure, 0 AS paid
-    FROM npd_db.ar_head h WHERE h.cancel = 'N'
-    GROUP BY TRIM(h.arh_cusid), TRIM(h.branchid)
-    UNION ALL
-    SELECT TRIM(p.arp_cusid), TRIM(p.branchid),
-           -SUM(COALESCE(p.arp_insure, 0)),
-           SUM(COALESCE(p.arp_amount,0) + COALESCE(p.arp_vat,0) + COALESCE(p.arp_tax,0)
-             + COALESCE(p.arp_insure,0) + COALESCE(p.arp_lost,0) + COALESCE(p.arp_broken,0)
-             + COALESCE(p.arp_transport,0))
-    FROM npd_db.ar_repay p WHERE p.cancel = 'N'
-    GROUP BY TRIM(p.arp_cusid), TRIM(p.branchid)
-) w
-GROUP BY w.cus_key, w.branch_key
+ORDER BY f.cus_key, f.branch_key, f.docid
 """
 
 PRODUCT_QUERY = """
@@ -254,17 +295,22 @@ class BaankheawDebtPayment(models.Model):
     bill_company_name = fields.Char(string='บริษัท', index=True,
                                     help='บริษัทที่ออกบิล อ่านจากคำนำหน้าเลขใบกำกับเช่า')
 
-    # ===== ยอดเดิม =====
+    responsible_party = fields.Char(string='ผู้รับผิดชอบ')
+
+    # ===== ยอดค้างของบริษัทนี้ แยกตามประเภท (ตั้งหนี้ - รับชำระ) =====
     amount = fields.Float(string='ค่าเช่า', digits=(16, 2))
     vat = fields.Float(string='Vat', digits=(16, 2))
     tax = fields.Float(string='Tax', digits=(16, 2))
+    insure = fields.Float(string='ค่าประกัน', digits=(16, 2))
     lost = fields.Float(string='ค่าปรับหาย', digits=(16, 2))
     broken = fields.Float(string='ค่าปรับชำรุด', digits=(16, 2))
     transport = fields.Float(string='ค่าขนส่ง', digits=(16, 2))
     total_debt = fields.Float(string='หนี้รวม', digits=(16, 2))
 
-    insure_balance = fields.Float(string='ค่าประกันคงเหลือ', digits=(16, 2))
-    total_paid = fields.Float(string='รับชำระ', digits=(16, 2))
+    # ===== ยอดของลูกหนี้รายนี้รวมทุกบริษัท (ตามสรุปลูกหนี้ทั้งหมด) =====
+    customer_gross_debt = fields.Float(string='ตั้งหนี้รวม (ทุกบริษัท)', digits=(16, 2))
+    customer_total_paid = fields.Float(string='รับชำระแล้ว (ทุกบริษัท)', digits=(16, 2))
+    customer_remaining = fields.Float(string='ค้างชำระสุทธิ (ทุกบริษัท)', digits=(16, 2))
 
     bill_count = fields.Integer(string='จำนวนบิลค้าง')
     bill_numbers = fields.Text(string='เลขใบกำกับเช่า')
@@ -280,6 +326,7 @@ class BaankheawDebtPayment(models.Model):
     court_amount = fields.Float(string='ค่าเช่า (ศาล)', digits=(16, 2), copy=False, tracking=True)
     court_vat = fields.Float(string='Vat (ศาล)', digits=(16, 2), copy=False, tracking=True)
     court_tax = fields.Float(string='Tax (ศาล)', digits=(16, 2), copy=False, tracking=True)
+    court_insure = fields.Float(string='ค่าประกัน (ศาล)', digits=(16, 2), copy=False, tracking=True)
     court_lost = fields.Float(string='ค่าปรับหาย (ศาล)', digits=(16, 2), copy=False, tracking=True)
     court_broken = fields.Float(string='ค่าปรับชำรุด (ศาล)', digits=(16, 2), copy=False, tracking=True)
     court_transport = fields.Float(string='ค่าขนส่ง (ศาล)', digits=(16, 2), copy=False, tracking=True)
@@ -289,6 +336,7 @@ class BaankheawDebtPayment(models.Model):
     court_amount_set = fields.Boolean(string='ศาลสั่งค่าเช่า', copy=False)
     court_vat_set = fields.Boolean(string='ศาลสั่ง Vat', copy=False)
     court_tax_set = fields.Boolean(string='ศาลสั่ง Tax', copy=False)
+    court_insure_set = fields.Boolean(string='ศาลสั่งค่าประกัน', copy=False)
     court_lost_set = fields.Boolean(string='ศาลสั่งค่าปรับหาย', copy=False)
     court_broken_set = fields.Boolean(string='ศาลสั่งค่าปรับชำรุด', copy=False)
     court_transport_set = fields.Boolean(string='ศาลสั่งค่าขนส่ง', copy=False)
@@ -296,6 +344,7 @@ class BaankheawDebtPayment(models.Model):
     court_amount_state = fields.Char(string='สถานะค่าเช่า', compute='_compute_court_states', store=True)
     court_vat_state = fields.Char(string='สถานะ Vat', compute='_compute_court_states', store=True)
     court_tax_state = fields.Char(string='สถานะ Tax', compute='_compute_court_states', store=True)
+    court_insure_state = fields.Char(string='สถานะค่าประกัน', compute='_compute_court_states', store=True)
     court_lost_state = fields.Char(string='สถานะค่าปรับหาย', compute='_compute_court_states', store=True)
     court_broken_state = fields.Char(string='สถานะค่าปรับชำรุด', compute='_compute_court_states', store=True)
     court_transport_state = fields.Char(string='สถานะค่าขนส่ง', compute='_compute_court_states', store=True)
@@ -309,12 +358,12 @@ class BaankheawDebtPayment(models.Model):
     court_adjust_uid = fields.Many2one('res.users', string='ผู้ปรับยอด', readonly=True, copy=False)
     court_note = fields.Text(string='หมายเหตุคำสั่งศาล', copy=False)
 
-    COURT_FIELDS = ['amount', 'vat', 'tax', 'lost', 'broken', 'transport']
+    COURT_FIELDS = ['amount', 'vat', 'tax', 'insure', 'lost', 'broken', 'transport']
 
-    @api.depends('amount', 'vat', 'tax', 'lost', 'broken', 'transport',
-                 'court_amount', 'court_vat', 'court_tax',
+    @api.depends('amount', 'vat', 'tax', 'insure', 'lost', 'broken', 'transport',
+                 'court_amount', 'court_vat', 'court_tax', 'court_insure',
                  'court_lost', 'court_broken', 'court_transport',
-                 'court_amount_set', 'court_vat_set', 'court_tax_set',
+                 'court_amount_set', 'court_vat_set', 'court_tax_set', 'court_insure_set',
                  'court_lost_set', 'court_broken_set', 'court_transport_set')
     def _compute_court_states(self):
         """ช่องไหนศาลสั่งไว้ ให้ขึ้นสถานะ 'ปรับตามศาลสั่ง' และใช้ยอดนั้นคิดหนี้รวม
@@ -359,13 +408,11 @@ class BaankheawDebtPayment(models.Model):
 
     def action_reset_court_amounts(self):
         """ยกเลิกการปรับยอด กลับไปใช้ยอดเดิมทั้งหมด"""
-        self.write({
-            'court_amount': 0.0, 'court_vat': 0.0, 'court_tax': 0.0,
-            'court_lost': 0.0, 'court_broken': 0.0, 'court_transport': 0.0,
-            'court_amount_set': False, 'court_vat_set': False, 'court_tax_set': False,
-            'court_lost_set': False, 'court_broken_set': False, 'court_transport_set': False,
-            'court_adjust_date': False, 'court_adjust_uid': False,
-        })
+        vals = {'court_adjust_date': False, 'court_adjust_uid': False}
+        for _src, name, _label in DEBT_TYPES:
+            vals['court_%s' % name] = 0.0
+            vals['court_%s_set' % name] = False
+        self.write(vals)
         return True
 
     def action_fetch_data(self):
@@ -427,7 +474,11 @@ class BaankheawDebtPayment(models.Model):
 
     @api.model
     def fetch_and_store(self):
-        """ดึงข้อมูลลูกหนี้ของบริษัทนี้จากฐาน MySQL แล้วแทนที่ข้อมูลเดิม
+        """ดึงลูกหนี้ของบริษัทนี้จากฐาน MySQL แล้วแทนที่ข้อมูลเดิม
+
+        ยึดชุดลูกหนี้เดียวกับเมนู "สรุปลูกหนี้ทั้งหมด" คือรายที่ค้างชำระสุทธิ > 0
+        แล้วแบ่งบิลของลูกหนี้แต่ละรายเข้าบริษัทตามคำนำหน้าเลขใบกำกับเช่า
+        ยอดแต่ละประเภทที่เก็บไว้จึงเป็น "ค้างสุทธิของบริษัทนี้" (ตั้งหนี้ - รับชำระ)
 
         ยอดที่ปรับตามคำสั่งศาลและสถานะชำระแล้ว ถูกเก็บไว้แล้วนำกลับมาใส่หลังดึง
         โดยจับคู่ด้วย (รหัสลูกค้า, สาขา)
@@ -439,20 +490,16 @@ class BaankheawDebtPayment(models.Model):
         # เก็บของเดิมที่ต้องรักษาไว้
         keep = {}
         for rec in self.sudo().search([]):
-            key = (rec.cus_id or '', rec.branch_name or '')
-            keep[key] = {
+            saved = {
                 'payment_state': rec.payment_state,
-                'court_amount': rec.court_amount, 'court_vat': rec.court_vat,
-                'court_tax': rec.court_tax, 'court_lost': rec.court_lost,
-                'court_broken': rec.court_broken, 'court_transport': rec.court_transport,
-                'court_amount_set': rec.court_amount_set, 'court_vat_set': rec.court_vat_set,
-                'court_tax_set': rec.court_tax_set, 'court_lost_set': rec.court_lost_set,
-                'court_broken_set': rec.court_broken_set,
-                'court_transport_set': rec.court_transport_set,
                 'court_adjust_date': rec.court_adjust_date,
                 'court_adjust_uid': rec.court_adjust_uid.id,
                 'court_note': rec.court_note,
             }
+            for _src, name, _label in DEBT_TYPES:
+                saved['court_%s' % name] = rec['court_%s' % name]
+                saved['court_%s_set' % name] = rec['court_%s_set' % name]
+            keep[(rec.cus_id or '', rec.branch_name or '')] = saved
 
         try:
             connection = pymysql.connect(**DB_CONFIG)
@@ -461,119 +508,120 @@ class BaankheawDebtPayment(models.Model):
 
         try:
             with connection.cursor() as cursor:
-                cursor.execute(BILL_QUERY)
-                all_rows = cursor.fetchall()
-                bill_rows = [r for r in all_rows if self._belongs_here(r['docid'], prefix)]
-                _logger.info('baankheaw.debt_payment: บิลทั้งหมด %s ใบ เป็นของบริษัทนี้ %s ใบ',
-                             len(all_rows), len(bill_rows))
+                cursor.execute(HEAD_QUERY)
+                heads = {}
+                for row in cursor.fetchall():
+                    heads[((row.get('customer_id') or '').strip(),
+                           (row.get('branch_id') or '').strip())] = row
 
-                cursor.execute(INSURE_QUERY)
-                insure_map = {
-                    (r['cus_key'], r['branch_key']): r for r in cursor.fetchall()
-                }
+                cursor.execute(BILL_QUERY)
+                all_bills = cursor.fetchall()
+                mine = {}
+                for row in all_bills:
+                    key = ((row.get('cus_key') or '').strip(),
+                           (row.get('branch_key') or '').strip())
+                    if key in heads and self._belongs_here(row['docid'], prefix):
+                        mine.setdefault(key, []).append(row)
+
                 product_map = self._fetch_products(
-                    cursor, {r['docid'] for r in bill_rows})
+                    cursor, {r['docid'] for rows in mine.values() for r in rows})
         finally:
             connection.close()
 
-        summaries = {}
-        for row in bill_rows:
-            key = (row['cus_key'], row['branch_key'])
-            summary = summaries.get(key)
-            if not summary:
-                summary = summaries[key] = {
-                    'cus_id': row['cus_key'],
-                    'cus_fullname': row['cus_fullname'],
-                    'cus_cpnname': row['cus_cpnname'],
-                    'cus_tel': row['cus_cpntel'],
-                    'cus_cpntel': row['cus_cpntel'],
-                    'cus_address': row['cus_address'],
-                    'cus_cpnadd': row['cus_cpnadd'],
-                    'branch_name': row['branch_name'],
-                    'bill_company_name': BILL_PREFIX_COMPANY.get(prefix, ''),
-                    'amount': 0.0, 'vat': 0.0, 'tax': 0.0,
-                    'lost': 0.0, 'broken': 0.0, 'transport': 0.0,
-                    'total_debt': 0.0, 'bill_count': 0,
-                    'date_start': None, 'due_date': None,
-                    'bill_ids': [], 'bill_texts': [], 'bill_numbers': [],
-                    'bill_status': '',
-                }
-
-            values = {}
-            for src_key, field_name, label in DEBT_TYPES:
-                values[field_name] = float(row.get(src_key) or 0.0)
-                summary[field_name] += values[field_name]
-            bill_total = float(row.get('b_total') or 0.0)
-            summary['total_debt'] += bill_total
-            summary['bill_count'] += 1
-            summary['bill_numbers'].append(row['docid'])
-
-            doc_date = row.get('doc_date')
-            bill_due = row.get('due_date')
-            if doc_date and (not summary['date_start'] or doc_date < summary['date_start']):
-                summary['date_start'] = doc_date
-            if bill_due and (not summary['due_date'] or bill_due > summary['due_date']):
-                summary['due_date'] = bill_due
-            if row.get('bill_status') == 'ยังไม่ปิดบิล':
-                summary['bill_status'] = 'ยังไม่ปิดบิล'
-            elif not summary['bill_status']:
-                summary['bill_status'] = row.get('bill_status') or ''
-
-            detail_text = ' / '.join(
-                '%s %s' % (label, _fmt(values[field_name]))
-                for src_key, field_name, label in DEBT_TYPES
-                if values[field_name] > 0.01
-            )
-            summary['bill_texts'].append('%s : %s' % (row['docid'], detail_text))
-
-            product_vals = []
-            product_texts = []
-            for product in product_map.get(row['docid'], []):
-                qty = float(product['qty'] or 0.0)
-                qty_return = float(product['qty_return'] or 0.0)
-                product_vals.append((0, 0, {
-                    'doc_id': row['docid'],
-                    'cus_fullname': row['cus_fullname'],
-                    'branch_name': row['branch_name'],
-                    'product_code': product['product_code'],
-                    'product_name': product['product_name'],
-                    'qty': qty,
-                    'qty_return': qty_return,
-                    'qty_outstanding': qty - qty_return,
-                }))
-                product_texts.append('%s (จำนวน: %s)' % (
-                    product['product_name'] or product['product_code'] or '-', _fmt(qty)))
-
-            summary['bill_ids'].append((0, 0, {
-                'cus_id': row['cus_key'],
-                'cus_fullname': row['cus_fullname'],
-                'branch_name': row['branch_name'],
-                'doc_id': row['docid'],
-                'doc_date': doc_date,
-                'due_date': bill_due,
-                'bill_status': row['bill_status'],
-                'amount': values['amount'],
-                'vat': values['vat'],
-                'tax': values['tax'],
-                'lost': values['lost'],
-                'broken': values['broken'],
-                'transport': values['transport'],
-                'total_debt': bill_total,
-                'detail_text': detail_text,
-                'product_summary': ', '.join(product_texts),
-                'product_ids': product_vals,
-            }))
+        _logger.info('baankheaw.debt_payment: ลูกหนี้ในรายงาน %s ราย / บิลทั้งหมด %s ใบ '
+                     '-> เป็นของบริษัทนี้ %s ราย %s ใบ',
+                     len(heads), len(all_bills), len(mine),
+                     sum(len(v) for v in mine.values()))
 
         today = date.today()
+        company_name = BILL_PREFIX_COMPANY.get(prefix, '')
         vals_list = []
-        for key, summary in summaries.items():
-            insure = insure_map.get(key) or {}
-            summary['insure_balance'] = float(insure.get('insure_balance') or 0.0)
-            summary['total_paid'] = float(insure.get('total_paid') or 0.0)
-            summary['bill_numbers'] = ', '.join(summary['bill_numbers'])
-            summary.pop('bill_texts', None)
+        for key, bills in mine.items():
+            head = heads[key]
+            summary = {
+                'cus_id': head.get('customer_id'),
+                'cus_fullname': head.get('cus_fullname'),
+                'cus_cpnname': head.get('cus_cpnname'),
+                'cus_tel': head.get('cus_tel'),
+                'cus_cpntel': head.get('cus_cpntel'),
+                'cus_address': head.get('cus_address'),
+                'cus_cpnadd': head.get('cus_cpnadd'),
+                'branch_name': head.get('branch_name'),
+                'bill_company_name': company_name,
+                'responsible_party': head.get('responsible_party'),
+                'bill_status': head.get('bill_status_display'),
+                'date_start': head.get('arh_date'),
+                'due_date': head.get('due_date'),
+                'debt_duration': head.get('debt_duration') or 0,
+                # ยอดรวมของลูกหนี้รายนี้ทุกบริษัท ไว้ดูเทียบ
+                'customer_gross_debt': float(head.get('total_debt') or 0.0),
+                'customer_total_paid': float(head.get('total_paid') or 0.0),
+                'customer_remaining': float(head.get('remaining_balance') or 0.0),
+                'total_debt': 0.0,
+                'bill_count': 0,
+            }
+            for _src, name, _label in DEBT_TYPES:
+                summary[name] = 0.0
+
+            bill_vals = []
+            numbers = []
+            for bill in bills:
+                docid = bill['docid']
+                numbers.append(docid)
+                values = {}
+                for src_key, name, _label in DEBT_TYPES:
+                    values[name] = float(bill.get(src_key) or 0.0)
+                    summary[name] += values[name]
+                bill_total = float(bill.get('n_total') or 0.0)
+                summary['total_debt'] += bill_total
+                summary['bill_count'] += 1
+
+                detail_text = ' / '.join(
+                    '%s %s' % (label, _fmt(values[name]))
+                    for _src, name, label in DEBT_TYPES
+                    if abs(values[name]) > 0.005
+                )
+
+                product_vals = []
+                product_texts = []
+                for product in product_map.get(docid, []):
+                    qty = float(product['qty'] or 0.0)
+                    qty_return = float(product['qty_return'] or 0.0)
+                    product_vals.append((0, 0, {
+                        'doc_id': docid,
+                        'cus_fullname': head.get('cus_fullname'),
+                        'branch_name': head.get('branch_name'),
+                        'product_code': product['product_code'],
+                        'product_name': product['product_name'],
+                        'qty': qty,
+                        'qty_return': qty_return,
+                        'qty_outstanding': qty - qty_return,
+                    }))
+                    product_texts.append('%s (จำนวน: %s)' % (
+                        product['product_name'] or product['product_code'] or '-',
+                        _fmt(qty)))
+
+                bill_line = {
+                    'cus_id': head.get('customer_id'),
+                    'cus_fullname': head.get('cus_fullname'),
+                    'branch_name': head.get('branch_name'),
+                    'doc_id': docid,
+                    'doc_date': bill.get('doc_date'),
+                    'due_date': bill.get('due_date'),
+                    'bill_status': bill.get('bill_status'),
+                    'total_debt': bill_total,
+                    'detail_text': detail_text,
+                    'product_summary': ', '.join(product_texts),
+                    'product_ids': product_vals,
+                }
+                bill_line.update(values)
+                bill_vals.append((0, 0, bill_line))
+
             start = summary.get('date_start')
-            summary['debt_duration'] = (today - start).days if start else 0
+            if start:
+                summary['debt_duration'] = summary['debt_duration'] or (today - start).days
+            summary['bill_ids'] = bill_vals
+            summary['bill_numbers'] = ', '.join(numbers)
             vals_list.append(summary)
 
         self.sudo().search([]).unlink()
@@ -593,8 +641,8 @@ class BaankheawDebtPayment(models.Model):
                 restored += 1
 
         self._assign_doc_numbers()
-        _logger.info('baankheaw.debt_payment: สร้าง %s ราย / %s บิล (คืนค่าเดิม %s ราย)',
-                     len(vals_list), len(bill_rows), restored)
+        _logger.info('baankheaw.debt_payment: สร้าง %s ราย (คืนค่าเดิม %s ราย)',
+                     len(vals_list), restored)
         return True
 
     @api.model
@@ -642,6 +690,7 @@ class BaankheawDebtPaymentBill(models.Model):
     amount = fields.Float(string='ค่าเช่า', digits=(16, 2))
     vat = fields.Float(string='Vat', digits=(16, 2))
     tax = fields.Float(string='Tax', digits=(16, 2))
+    insure = fields.Float(string='ค่าประกัน', digits=(16, 2))
     lost = fields.Float(string='ค่าปรับหาย', digits=(16, 2))
     broken = fields.Float(string='ค่าปรับชำรุด', digits=(16, 2))
     transport = fields.Float(string='ค่าขนส่ง', digits=(16, 2))

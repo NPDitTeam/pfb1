@@ -10,6 +10,7 @@ DEBT_FIELDS = [
     ('amount', 'ค่าเช่า'),
     ('vat', 'Vat'),
     ('tax', 'Tax'),
+    ('insure', 'ค่าประกัน'),
     ('lost', 'ค่าปรับหาย'),
     ('broken', 'ค่าปรับชำรุด'),
     ('transport', 'ค่าขนส่ง'),

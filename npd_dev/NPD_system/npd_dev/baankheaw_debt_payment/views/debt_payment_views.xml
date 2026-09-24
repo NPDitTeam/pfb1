@@ -54,6 +54,7 @@
                 <field name="amount" sum="รวม"/>
                 <field name="vat" sum="รวม"/>
                 <field name="tax" sum="รวม" optional="hide"/>
+                <field name="insure" sum="รวม"/>
                 <field name="lost" sum="รวม"/>
                 <field name="broken" sum="รวม"/>
                 <field name="transport" sum="รวม" optional="hide"/>
@@ -123,10 +124,11 @@
                         </group>
                     </group>
                     <group>
-                        <group string="ยอดหนี้คงค้าง (ยอดเดิม)">
+                        <group string="ยอดหนี้คงค้างของบริษัทนี้ (ยอดเดิม)">
                             <field name="amount" readonly="1"/>
                             <field name="vat" readonly="1"/>
                             <field name="tax" readonly="1"/>
+                            <field name="insure" readonly="1"/>
                             <field name="lost" readonly="1"/>
                             <field name="broken" readonly="1"/>
                             <field name="transport" readonly="1"/>
@@ -149,6 +151,11 @@
                                 <field name="court_tax" readonly="1" class="oe_inline"/>
                                 <field name="court_tax_state" readonly="1" class="oe_inline text-warning ml-2"/>
                             </div>
+                            <label for="court_insure"/>
+                            <div>
+                                <field name="court_insure" readonly="1" class="oe_inline"/>
+                                <field name="court_insure_state" readonly="1" class="oe_inline text-warning ml-2"/>
+                            </div>
                             <label for="court_lost"/>
                             <div>
                                 <field name="court_lost" readonly="1" class="oe_inline"/>
@@ -170,13 +177,18 @@
                         </group>
                         <group string="สรุปสถานะ">
                             <field name="is_court_adjusted" invisible="1"/>
-                            <field name="insure_balance" readonly="1"/>
-                            <field name="total_paid" readonly="1"/>
+                            <field name="responsible_party" readonly="1"/>
                             <field name="bill_count" readonly="1"/>
                             <field name="date_start" readonly="1"/>
                             <field name="due_date" readonly="1"/>
                             <field name="debt_duration" readonly="1"/>
                             <field name="bill_status" readonly="1"/>
+                        </group>
+                        <group string="ยอดของลูกหนี้รายนี้ รวมทุกบริษัท"
+                               help="ตัวเลขชุดเดียวกับเมนู สรุปลูกหนี้ทั้งหมด">
+                            <field name="customer_gross_debt" readonly="1"/>
+                            <field name="customer_total_paid" readonly="1"/>
+                            <field name="customer_remaining" readonly="1"/>
                         </group>
                         <group string="ใบแจ้งหนี้">
                             <field name="invoiced_total" readonly="1"/>
@@ -210,6 +222,7 @@
                                     <field name="amount" sum="รวม"/>
                                     <field name="vat" sum="รวม"/>
                                     <field name="tax" sum="รวม"/>
+                                    <field name="insure" sum="รวม"/>
                                     <field name="lost" sum="รวม"/>
                                     <field name="broken" sum="รวม"/>
                                     <field name="transport" sum="รวม"/>
