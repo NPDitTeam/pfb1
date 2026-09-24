@@ -2556,6 +2556,26 @@ class PayrollSalary(models.Model):
          leave_log,  # [{date, type, deduction}]
          lateness_warning_dict) = self._prepare_lateness_data()
 
+        # พักงาน: ตัดวันที่ถูกพักงานออกจากการคิดขาด/สาย/ออกก่อนเวลา/ลา ก่อน
+        # ไม่งั้นวันเดียวกันจะโดนหักสองชั้น (ขาดงานเต็มวัน + พักงานอีกครึ่งวัน)
+        # แล้วค่อยเติมบรรทัดพักงานวันละ 50% เข้าไปแทน
+        _susp = self._apply_suspension(
+            missed_days_log, late_log, early_log, leave_log,
+            late_checkin_minutes, early_checkout_minutes, missed_days,
+            deduction_absent, early_checkout_deduction,
+            deduction_absent_total, leave_deduction_total)
+        missed_days_log = _susp['missed_days_log']
+        late_log = _susp['late_log']
+        early_log = _susp['early_log']
+        leave_log = _susp['leave_log']
+        late_checkin_minutes = _susp['late_checkin_minutes']
+        early_checkout_minutes = _susp['early_checkout_minutes']
+        missed_days = _susp['missed_days']
+        deduction_absent = _susp['deduction_absent']
+        early_checkout_deduction = _susp['early_checkout_deduction']
+        deduction_absent_total = _susp['deduction_absent_total']
+        leave_deduction_total = _susp['leave_deduction_total']
+
         if not self.manual_override:
             # set lateness values
             self.late_checkin_minutes = late_checkin_minutes
@@ -2612,10 +2632,17 @@ class PayrollSalary(models.Model):
             self.deduction_leave = round(self.leave_deduction_total, 2)
 
             # ✅ ห้ามบวก early_checkout_deduction ซ้ำอีก เพราะรวมอยู่ใน deduction_absent แล้ว
+            # พักงาน — เก็บค่าไว้แสดง และรวมเข้ายอดหักรวม
+            self.suspension_days = _susp['suspension_days']
+            self.suspension_worked_days = _susp['suspension_worked_days']
+            self.suspension_deduction = round_half_up(_susp['suspension_deduction'])
+            self.suspension_detail = _susp['suspension_detail']
+
             self.lateness_deduction = (
                     self.deduction_late +
                     self.deduction_leave +
-                    self.deduction_absent
+                    self.deduction_absent +
+                    self.suspension_deduction
             )
 
             # ✅ แจกแจงรายละเอียดการหัก ให้ HR ตรวจสอบได้ว่าหักอะไรบ้างแต่ละวัน
@@ -2628,6 +2655,7 @@ class PayrollSalary(models.Model):
             detail_vals = self._build_deduction_line_vals(
                 late_log, early_log, leave_log, missed_days_log,
                 salary_per_minute, salary_per_day)
+            detail_vals += _susp['suspension_lines']
             self.deduction_line_ids = [(5, 0, 0)] + [(0, 0, v) for v in detail_vals]
 
             _logger.info(
@@ -3471,6 +3499,7 @@ class PayrollDeductionLine(models.Model):
         ('early', 'ออกก่อนเวลา'),
         ('absent', 'ขาดงาน'),
         ('leave', 'ลา'),
+        ('suspension', 'พักงาน'),
     ], string='ประเภท')
     description = fields.Char(string='รายละเอียด')
     time_detail = fields.Char(string='เวลา')

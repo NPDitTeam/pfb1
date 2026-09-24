@@ -280,6 +280,25 @@
                                 <field name="lateness_grace_period"/>
                                 <field name="cutoff_day"/>
                             </group>
+                            <group string="พักงาน">
+                                <div class="text-muted" colspan="2">
+                                    ระบุช่วงวันที่ถูกสั่งพักงาน ระบบจะนับทุกวันในช่วงนั้น
+                                    <b>รวมวันหยุดด้วย</b> และหักวันละ 50% ของค่าจ้างรายวัน<br/>
+                                    วันที่อยู่ในช่วงพักงานจะไม่ถูกคิดเป็นขาดงาน/สาย/ลา ซ้ำอีก
+                                    และถ้ายังมีการลงเวลาอยู่ ระบบถือว่าขาดงานตามคำสั่งพักงาน
+                                    จ่าย 50% เท่าเดิม พร้อมนับไว้ให้ตรวจสอบ
+                                </div>
+                                <field name="suspension_start"/>
+                                <field name="suspension_end"/>
+                                <field name="suspension_deduct_percent"/>
+                                <field name="suspension_reason"/>
+                                <field name="suspension_days" readonly="1"
+                                       attrs="{'invisible': [('suspension_days', '=', 0)]}"/>
+                                <field name="suspension_worked_days" readonly="1"
+                                       attrs="{'invisible': [('suspension_days', '=', 0)]}"/>
+                                <field name="suspension_detail" readonly="1"
+                                       attrs="{'invisible': [('suspension_days', '=', 0)]}"/>
+                            </group>
                             <group string="สรุปเวลา (นาที)">
                                 <field name="lateness_minutes" readonly="1"/>
                                 <field name="late_checkin_minutes" readonly="1"/>
@@ -294,6 +313,8 @@
                                 <field name="early_checkout_deduction" readonly="1"/>
                                 <field name="missed_days_deduction" readonly="1"/>
                                 <field name="leave_deduction_total" readonly="1"/>
+                                <field name="suspension_deduction" readonly="1"
+                                       attrs="{'invisible': [('suspension_days', '=', 0)]}"/>
                                 <field name="lateness_deduction" readonly="1"/>
                             </group>
                             <separator string="รายละเอียดการหัก (แจกแจงรายวัน)"/>

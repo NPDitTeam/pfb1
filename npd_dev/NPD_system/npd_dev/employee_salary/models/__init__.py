@@ -30,3 +30,4 @@ from . import pnd1_report
 from . import lateness_rule
 from . import employee_warning_auto
 from . import employee_foreign_worker
+from . import payroll_suspension
