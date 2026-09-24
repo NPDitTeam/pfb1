@@ -1,6 +1,6 @@
 {
     'name': 'ใบขนส่งสินค้า',
-    'version': '14.0.0.1',
+    'version': '14.0.0.2',
     'summary': 'Module for managing custom features',
     'description': """Module for managing custom features""",
     'author': 'Your Name',

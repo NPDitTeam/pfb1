@@ -12,12 +12,12 @@
         <field name="default" eval="False"/>
         <field name="format">A4</field>
         <field name="orientation">Portrait</field>
-        <field name="margin_top">75</field>
+        <field name="margin_top">8</field>
         <field name="margin_bottom">85</field>
         <field name="margin_left">5</field>
         <field name="margin_right">5</field>
         <field name="header_line" eval="False"/>
-        <field name="header_spacing">75</field>
+        <field name="header_spacing">0</field>
         <field name="dpi">90</field>
     </record>
 
@@ -485,7 +485,10 @@
                 <t t-set="total_weight" t-value="sum((l.total_weight or 0.0) for l in (doc.sale_id.order_line or []))"/>
 
                 <t t-call="web.basic_layout">
-                    <div class="header">
+                    <t t-set="lines" t-value="doc.sale_id.order_line.filtered(lambda l: l.price_subtotal &gt;= 0)"/>
+                    <t t-set="rows_per_page" t-value="14"/>
+                    <t t-set="page_starts" t-value="list(range(0, len(lines), rows_per_page)) or [0]"/>
+                    <t t-foreach="page_starts" t-as="page_start">
                         <table width="100%" border="1">
                             <tr>
                                 <td>
@@ -497,13 +500,8 @@
                                     <t t-call="npd_shipping_document_form.so_form_title"/>
                                 </td>
                             </tr>
-
                         </table>
-
-                    </div>
-                    <t t-set="lines" t-value="doc.sale_id.order_line.filtered(lambda l: l.price_subtotal &gt;= 0)"/>
-                    <t t-set="rows_per_page" t-value="18"/>
-                    <t t-foreach="range(0, len(lines), rows_per_page)" t-as="page_start">
+                        <div style="height: 6px;"/>
                         <table width="100%" style="font-size: 13px;">
                             <thead>
                                 <tr style="border-bottom: 1px solid black !important;">
