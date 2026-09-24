@@ -148,6 +148,30 @@
                                     </group>
                                 </group>
                             </page>
+                            <page string="พักงาน" name="suspension">
+                                <div class="alert alert-info" role="alert">
+                                    บันทึกช่วงวันที่ถูกสั่งพักงาน <b>ไม่ต้องระบุรอบเงินเดือน</b>
+                                    ระบบหาเองว่าตกรอบไหน ตอนรันรอบหรือกดคำนวณใหม่
+                                    จะดึงไปคิดให้อัตโนมัติ<br/>
+                                    นับทุกวันในช่วงนั้น <b>รวมวันหยุดด้วย</b>
+                                    และหักตาม % ที่ตั้งไว้ (ค่าเริ่มต้น 50%)<br/>
+                                    เหตุผลที่กรอกจะถูกแสดงในแอปตอนพนักงานกดเข้าหน้าลงเวลา
+                                </div>
+                                <field name="is_suspended_today" invisible="1"/>
+                                <field name="suspension_ids" nolabel="1">
+                                    <tree editable="bottom"
+                                          decoration-muted="not active">
+                                        <field name="date_start"/>
+                                        <field name="date_end"/>
+                                        <field name="day_count" readonly="1"/>
+                                        <field name="deduct_percent"/>
+                                        <field name="reason"/>
+                                        <field name="period_hint" readonly="1"/>
+                                        <field name="note" optional="hide"/>
+                                        <field name="active" optional="show"/>
+                                    </tree>
+                                </field>
+                            </page>
                             <page string="ข้อมูลต่างชาติ" name="foreign_worker">
                                 <!-- เตือนแทนการ "ขึ้นสีแดงก่อนหนึ่งเดือน" ในชีทเดิม -->
                                 <div class="alert alert-danger" role="alert"

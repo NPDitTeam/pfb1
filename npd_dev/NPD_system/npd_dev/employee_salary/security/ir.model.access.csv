@@ -90,3 +90,4 @@ access_welfare_fund_config_user,welfare.fund.config.user,model_welfare_fund_conf
 access_welfare_fund_line_user,welfare.fund.line.user,model_welfare_fund_line,base.group_user,1,1,1,1
 access_welfare_fund_report,access_welfare_fund_report,model_welfare_fund_report,base.group_user,1,1,1,1
 access_welfare_fund_report_line,access_welfare_fund_report_line,model_welfare_fund_report_line,base.group_user,1,1,1,1
+access_employee_suspension,employee.suspension,model_employee_suspension,base.group_user,1,1,1,1

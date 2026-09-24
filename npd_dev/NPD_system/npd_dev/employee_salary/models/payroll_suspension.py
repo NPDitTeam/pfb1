@@ -32,17 +32,12 @@ DEFAULT_SUSPENSION_DEDUCT_PERCENT = 50.0
 class PayrollSalarySuspension(models.Model):
     _inherit = 'payroll.salary'
 
-    suspension_start = fields.Date(
-        string='วันที่เริ่มพักงาน',
-        help='วันแรกที่ถูกสั่งพักงาน ปล่อยว่างไว้ถ้าไม่มีการพักงาน')
-    suspension_end = fields.Date(
-        string='วันที่สิ้นสุดพักงาน',
-        help='วันสุดท้ายที่ถูกพักงาน (นับรวมวันนี้ด้วย)')
-    suspension_deduct_percent = fields.Float(
-        string='หักกี่ % ต่อวัน', default=DEFAULT_SUSPENSION_DEDUCT_PERCENT,
-        help='ค่าเริ่มต้น 50 คือจ่ายครึ่งหนึ่งของค่าจ้างรายวัน '
-             'ถ้าเคสไหนศาล/บริษัทสั่งเป็นอย่างอื่นค่อยแก้เฉพาะใบนั้น')
-    suspension_reason = fields.Char(string='เหตุผลที่พักงาน')
+    # ช่องพวกนี้เป็นแค่ที่แสดงผล คนกรอกจริงอยู่ที่แท็บ "พักงาน" ของพนักงาน
+    # ตั้งใจไม่ให้กรอกที่ใบเงินเดือน เพราะถ้ากรอกได้สองที่จะขัดกันเอง
+    # และข้อมูลที่ผูกกับใบจะหายทุกครั้งที่ลบใบแล้วสร้างใหม่
+    suspension_start = fields.Date(string='วันที่เริ่มพักงาน', readonly=True)
+    suspension_end = fields.Date(string='วันที่สิ้นสุดพักงาน', readonly=True)
+    suspension_reason = fields.Char(string='เหตุผลที่พักงาน', readonly=True)
 
     suspension_days = fields.Integer(
         string='จำนวนวันพักงาน (ในรอบนี้)', readonly=True,
@@ -56,44 +51,28 @@ class PayrollSalarySuspension(models.Model):
     suspension_detail = fields.Text(string='รายละเอียดวันพักงาน', readonly=True)
 
     # ------------------------------------------------------------------
-    @api.constrains('suspension_start', 'suspension_end')
-    def _check_suspension_range(self):
-        for rec in self:
-            if rec.suspension_start and rec.suspension_end \
-                    and rec.suspension_end < rec.suspension_start:
-                raise ValidationError(_(
-                    'วันที่สิ้นสุดพักงาน (%s) ต้องไม่ก่อนวันที่เริ่มพักงาน (%s)'
-                ) % (rec.suspension_end, rec.suspension_start))
-            if bool(rec.suspension_start) != bool(rec.suspension_end):
-                raise ValidationError(_(
-                    'พักงานต้องระบุทั้งวันที่เริ่มและวันที่สิ้นสุด'))
-
-    @api.constrains('suspension_deduct_percent')
-    def _check_suspension_percent(self):
-        for rec in self:
-            if not (0.0 <= (rec.suspension_deduct_percent or 0.0) <= 100.0):
-                raise ValidationError(_(
-                    'หักกี่ % ต่อวัน ต้องอยู่ระหว่าง 0 ถึง 100 (ใส่มา %s)'
-                ) % rec.suspension_deduct_percent)
-
-    # ------------------------------------------------------------------
     def _suspension_dates_in_cycle(self):
-        """วันที่ถูกพักงานที่ตกอยู่ในรอบเงินเดือนนี้ (รวมวันหยุด) เรียงจากน้อยไปมาก"""
+        """วันที่ถูกพักงานที่ตกอยู่ในรอบเงินเดือนนี้ (รวมวันหยุด)
+
+        อ่านจากคำสั่งพักงานของพนักงาน รองรับหลายคำสั่งในรอบเดียวกัน
+        และรองรับคำสั่งที่คร่อมสองรอบ โดยตัดเอาเฉพาะส่วนที่อยู่ในรอบนี้
+        คืน dict {วันที่: % ที่ต้องหัก} เพื่อให้แต่ละคำสั่งใช้ % ของตัวเองได้
+        """
         self.ensure_one()
-        if not (self.suspension_start and self.suspension_end):
-            return []
         cycle_start, cycle_end = self._security_deposit_cycle_window()
-        if not (cycle_start and cycle_end):
-            return []
-        first = max(self.suspension_start, cycle_start)
-        last = min(self.suspension_end, cycle_end)
-        if first > last:
-            return []
-        out, cur = [], first
-        while cur <= last:
-            out.append(cur)
-            cur += datetime.timedelta(days=1)
-        return out
+        if not (cycle_start and cycle_end and self.employee_id):
+            return {}
+        orders = self.env['employee.suspension'].suspensions_in_range(
+            self.employee_id, cycle_start, cycle_end)
+        out = {}
+        for order in orders:
+            first = max(order.date_start, cycle_start)
+            last = min(order.date_end, cycle_end)
+            cur = first
+            while cur <= last:
+                out[cur] = order.deduct_percent
+                cur += datetime.timedelta(days=1)
+        return dict(sorted(out.items()))
 
     def _suspension_working_weekdays(self):
         """ชุดเลขวัน (0=จันทร์) ที่พนักงานคนนี้ต้องมาทำงานตามตารางกะ
@@ -143,12 +122,9 @@ class PayrollSalarySuspension(models.Model):
         if not susp_dates:
             return result
 
+        # susp_dates = {วันที่: % ที่ต้องหักของวันนั้น} แต่ละคำสั่งใช้ % ของตัวเอง
         susp_str = {d.strftime('%Y-%m-%d') for d in susp_dates}
         salary_per_day = (self.base_salary or 0.0) / 30.0
-        percent = self.suspension_deduct_percent
-        if percent is None:
-            percent = DEFAULT_SUSPENSION_DEDUCT_PERCENT
-        per_day_deduct = salary_per_day * (percent / 100.0)
 
         def _date_of(item):
             return (item or {}).get('date')
@@ -194,7 +170,10 @@ class PayrollSalarySuspension(models.Model):
         absent_dates = set(missed_days_log or [])
 
         lines, detail_rows, worked_days = [], [], 0
-        for day in susp_dates:
+        total_deduct = 0.0
+        for day, percent in susp_dates.items():
+            per_day_deduct = salary_per_day * ((percent or 0.0) / 100.0)
+            total_deduct += per_day_deduct
             key = day.strftime('%Y-%m-%d')
             is_workday = (day.weekday() in work_weekdays) and (key not in holidays)
             still_checked_in = (
@@ -217,11 +196,20 @@ class PayrollSalarySuspension(models.Model):
                 'minutes': 0.0,
                 'amount': round(per_day_deduct, 2),
             })
-            detail_rows.append('• %s (%s) %s' % (
+            detail_rows.append('• %s (%s) %s — หัก %.2f บาท (%.0f%%)' % (
                 day.strftime('%d/%m/%Y'),
-                self.THAI_DOW_NAMES.get(day.weekday(), ''), note))
+                self.THAI_DOW_NAMES.get(day.weekday(), ''), note,
+                per_day_deduct, percent or 0.0))
 
-        total_deduct = round(per_day_deduct * len(susp_dates), 2)
+        total_deduct = round(total_deduct, 2)
+        # เก็บช่วงกับเหตุผลไว้แสดงบนใบ (คนกรอกจริงอยู่ที่แท็บพักงานของพนักงาน)
+        days_sorted = sorted(susp_dates)
+        orders = self.env['employee.suspension'].suspensions_in_range(
+            self.employee_id, days_sorted[0], days_sorted[-1])
+        self.suspension_start = days_sorted[0]
+        self.suspension_end = days_sorted[-1]
+        self.suspension_reason = ' / '.join(
+            o.reason for o in orders if o.reason) or ''
 
         result.update({
             'missed_days_log': kept_missed,
@@ -245,13 +233,12 @@ class PayrollSalarySuspension(models.Model):
             'suspension_deduction': total_deduct,
             'suspension_lines': lines,
             'suspension_detail': '\n'.join(
-                ['หักวันละ %.2f บาท (%.0f%% ของค่าจ้างรายวัน %.2f บาท)'
-                 % (per_day_deduct, percent, salary_per_day)] + detail_rows),
+                ['ค่าจ้างรายวัน %.2f บาท' % salary_per_day] + detail_rows),
         })
         _logger.info(
             '[SUSPENSION] emp=%s ช่วง %s ถึง %s | ในรอบนี้ %d วัน | '
             'ยังลงเวลา %d วัน | หัก %.2f | ถอดขาดงานออก %d วัน ลา %.2f สาย %d นาที',
-            self.employee_code, self.suspension_start, self.suspension_end,
+            self.employee_code, days_sorted[0], days_sorted[-1],
             len(susp_dates), worked_days, total_deduct,
             removed_missed, removed_leave_amount, removed_late_minutes)
         return result
