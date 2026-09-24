@@ -96,13 +96,24 @@ class BaankheawDebtPaymentInvoice(models.Model):
             raise UserError('ลูกหนี้รายนี้ไม่มีชื่อ จึงออกใบแจ้งหนี้ไม่ได้')
         partner = Partner.search([('name', '=', name)], limit=1)
         if not partner:
-            partner = Partner.create({
-                'name': name,
-                'phone': self.cus_tel or self.cus_cpntel or False,
-                'street': self.cus_cpnadd or self.cus_address or False,
-                'customer_rank': 1,
-                'comment': 'สร้างจากหน้าชำระหนี้บ้านเขียว (รหัสลูกค้า %s)' % (self.cus_id or '-'),
-            })
+            # บางฐานบังคับกรอกช่องเพิ่มบนผู้ติดต่อ (เช่น อีเมล) การสร้างอัตโนมัติจึงล้ม
+            # ให้บอกทางแก้ตรง ๆ แทนที่จะเด้งข้อความของช่องนั้นออกมาลอย ๆ
+            try:
+                with self.env.cr.savepoint():
+                    partner = Partner.create({
+                        'name': name,
+                        'phone': self.cus_tel or self.cus_cpntel or False,
+                        'street': self.cus_cpnadd or self.cus_address or False,
+                        'customer_rank': 1,
+                        'comment': 'สร้างจากหน้าชำระหนี้บ้านเขียว (รหัสลูกค้า %s)' % (
+                            self.cus_id or '-'),
+                    })
+            except Exception as err:
+                raise UserError(
+                    'สร้างผู้ติดต่อ "%s" อัตโนมัติไม่ได้ จึงออกใบแจ้งหนี้ไม่ได้\n\n'
+                    'ให้เลือกผู้ติดต่อเองที่ช่อง "ผู้ติดต่อสำหรับออกบิล" '
+                    'หรือไปสร้างผู้ติดต่อรายนี้ที่เมนูผู้ติดต่อก่อน\n\n'
+                    'สาเหตุจากระบบ: %s' % (name, err))
         self.partner_id = partner.id
         return partner
 

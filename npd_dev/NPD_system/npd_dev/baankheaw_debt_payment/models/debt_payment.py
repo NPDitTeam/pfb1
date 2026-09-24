@@ -49,6 +49,11 @@ def _doc_number(seq, year_be):
     return u'%s %04d/%d' % (DOC_PREFIX, seq, year_be)
 
 
+def _manual_doc_number(seq, year_be):
+    """เลขของรายการที่สร้างเอง แยกซีรีส์ด้วย M กันชนกับเลขที่ไล่ใหม่ทุกครั้งที่ดึง"""
+    return u'%s M%04d/%d' % (DOC_PREFIX, seq, year_be)
+
+
 def _fmt(value):
     return '{:,.2f}'.format(value or 0.0)
 
@@ -283,6 +288,11 @@ class BaankheawDebtPayment(models.Model):
 
     doc_number = fields.Char(string='เลขที่เอกสาร', index=True, copy=False, readonly=True)
 
+    is_manual = fields.Boolean(
+        string='สร้างเอง', default=True, copy=False, readonly=True, index=True,
+        help='รายการที่กดปุ่มสร้างเอง จะไม่ถูกลบตอนกดดึงข้อมูลลูกหนี้ '
+             'ต่างจากรายการที่ดึงมาจากฐานบ้านเขียว ซึ่งถูกลบแล้วสร้างใหม่ทุกครั้งที่ดึง')
+
     # ===== ข้อมูลลูกค้า =====
     cus_id = fields.Char(string='รหัสลูกค้า', index=True)
     cus_fullname = fields.Char(string='ลูกค้า')
@@ -382,6 +392,46 @@ class BaankheawDebtPayment(models.Model):
                 adjusted = adjusted or changed
             rec.court_total_debt = total
             rec.is_court_adjusted = adjusted
+
+    # ------------------------------------------------------------------
+    # สร้างเอง
+    # ------------------------------------------------------------------
+    @api.model_create_multi
+    def create(self, vals_list):
+        """รายการที่สร้างเองต้องมีเลขที่เอกสารของตัวเอง
+
+        เลขของรายการที่ดึงมาถูกไล่ใหม่หมดทุกครั้งที่ดึง (_assign_doc_numbers)
+        จึงแยกซีรีส์ของรายการที่สร้างเองออกมา ไม่ให้ถูกไล่ทับหรือเลขชนกัน
+        """
+        records = super(BaankheawDebtPayment, self).create(vals_list)
+        pending = records.filtered(lambda r: r.is_manual and not r.doc_number)
+        if pending:
+            year_be = date.today().year + 543
+            seq = self._next_manual_seq()
+            for rec in pending:
+                rec.doc_number = _manual_doc_number(seq, year_be)
+                seq += 1
+        return records
+
+    @api.model
+    def _next_manual_seq(self):
+        """เลขลำดับถัดไปของซีรีส์ที่สร้างเอง"""
+        top = 0
+        marker = '%s M' % DOC_PREFIX
+        for rec in self.sudo().search([('is_manual', '=', True),
+                                       ('doc_number', 'like', marker + '%')]):
+            try:
+                top = max(top, int((rec.doc_number or '').split('M')[1].split('/')[0]))
+            except (IndexError, ValueError):
+                continue
+        return top + 1
+
+    @api.onchange('amount', 'vat', 'tax', 'insure', 'lost', 'broken', 'transport')
+    def _onchange_manual_amounts(self):
+        """กรอกยอดแยกประเภทแล้วรวมหนี้ให้เอง เฉพาะรายการที่สร้างเอง"""
+        for rec in self:
+            if rec.is_manual:
+                rec.total_debt = sum((rec[name] or 0.0) for name in self.COURT_FIELDS)
 
     # ------------------------------------------------------------------
     # ปุ่ม
@@ -489,7 +539,7 @@ class BaankheawDebtPayment(models.Model):
 
         # เก็บของเดิมที่ต้องรักษาไว้
         keep = {}
-        for rec in self.sudo().search([]):
+        for rec in self.sudo().search([('is_manual', '=', False)]):
             saved = {
                 'payment_state': rec.payment_state,
                 'court_adjust_date': rec.court_adjust_date,
@@ -622,9 +672,11 @@ class BaankheawDebtPayment(models.Model):
                 summary['debt_duration'] = summary['debt_duration'] or (today - start).days
             summary['bill_ids'] = bill_vals
             summary['bill_numbers'] = ', '.join(numbers)
+            summary['is_manual'] = False
             vals_list.append(summary)
 
-        self.sudo().search([]).unlink()
+        # ลบเฉพาะรายการที่ดึงมา รายการที่สร้างเองต้องอยู่ต่อ
+        self.sudo().search([('is_manual', '=', False)]).unlink()
 
         created = self.sudo().browse()
         for i in range(0, len(vals_list), 100):
@@ -647,7 +699,7 @@ class BaankheawDebtPayment(models.Model):
 
     @api.model
     def _assign_doc_numbers(self):
-        records = self.sudo().search([])
+        records = self.sudo().search([('is_manual', '=', False)])
         if not records:
             return 0
         year_be = date.today().year + 543
