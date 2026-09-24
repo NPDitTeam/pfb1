@@ -433,6 +433,34 @@ class BaankheawDebtPayment(models.Model):
             if rec.is_manual:
                 rec.total_debt = sum((rec[name] or 0.0) for name in self.COURT_FIELDS)
 
+    @api.onchange('date_start')
+    def _onchange_manual_debt_duration(self):
+        """กรอกวันที่เริ่มหนี้แล้วนับจำนวนวันที่เป็นหนี้ให้เอง เฉพาะรายการที่สร้างเอง
+
+        นับแบบเดียวกับรายการที่ดึงมา คือจากวันที่เริ่มหนี้ถึงวันนี้
+        """
+        for rec in self:
+            if rec.is_manual:
+                rec.debt_duration = ((date.today() - rec.date_start).days
+                                     if rec.date_start else 0)
+
+    @api.model
+    def _refresh_manual_durations(self):
+        """นับจำนวนวันที่เป็นหนี้ใหม่ให้รายการที่สร้างเอง ตอนกดดึงข้อมูล
+
+        รายการที่ดึงมาได้ค่าใหม่ทุกครั้งที่ดึงอยู่แล้ว ของที่สร้างเองจึงต้องตามให้ทัน
+        ไม่งั้นจะค้างอยู่ที่จำนวนวัน ณ วันที่กรอก
+        """
+        today = date.today()
+        updated = 0
+        for rec in self.sudo().search([('is_manual', '=', True),
+                                       ('date_start', '!=', False)]):
+            days = (today - rec.date_start).days
+            if rec.debt_duration != days:
+                rec.with_context(tracking_disable=True).write({'debt_duration': days})
+                updated += 1
+        return updated
+
     # ------------------------------------------------------------------
     # ปุ่ม
     # ------------------------------------------------------------------
@@ -693,8 +721,10 @@ class BaankheawDebtPayment(models.Model):
                 restored += 1
 
         self._assign_doc_numbers()
-        _logger.info('baankheaw.debt_payment: สร้าง %s ราย (คืนค่าเดิม %s ราย)',
-                     len(vals_list), restored)
+        refreshed = self._refresh_manual_durations()
+        _logger.info('baankheaw.debt_payment: สร้าง %s ราย (คืนค่าเดิม %s ราย '
+                     'นับวันของรายการที่สร้างเองใหม่ %s ราย)',
+                     len(vals_list), restored, refreshed)
         return True
 
     @api.model
