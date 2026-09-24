@@ -2798,6 +2798,14 @@ class PayrollSalary(models.Model):
             'amount': self.missed_days_deduction
         }))
 
+        # หักพักงาน — ต้องมีบรรทัดของตัวเอง ไม่งั้นยอดโชว์ในแท็บคำนวณขาดลามาสาย
+        # แต่ไม่ถูกหักออกจากเงินเดือนจริง (วันพักงานถูกถอดออกจากหักขาดงานไปแล้ว)
+        lines_to_create.append((0, 0, {
+            'name': 'หักพักงาน',
+            'type': 'deduction',
+            'amount': self.suspension_deduction
+        }))
+
         # บุคคลพิเศษ — config ล็อกภาษี + ปกส.
         exec_cfg = self.EXECUTIVE_TAX_CONFIG.get(self.employee_code or '')
 
