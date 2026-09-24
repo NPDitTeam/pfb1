@@ -20,6 +20,27 @@
                        attrs="{'invisible': [('move_type', 'not in', ('out_invoice', 'out_refund'))]}"/>
                 <field name="bk_debt_payment_id" readonly="1"
                        attrs="{'invisible': [('bk_debt_payment_id', '=', False)]}"/>
+                <field name="bk_reason_is_lost" invisible="1"/>
+                <field name="bk_lost_installment_no" readonly="1"
+                       attrs="{'invisible': [('bk_lost_court_amount', '=', 0)]}"/>
+                <field name="bk_lost_court_amount" readonly="1"
+                       attrs="{'invisible': [('bk_lost_court_amount', '=', 0)]}"/>
+                <field name="bk_lost_court_diff" readonly="1"
+                       attrs="{'invisible': [('bk_lost_court_amount', '=', 0)]}"/>
+            </xpath>
+
+            <!--
+                ปุ่ม "จ่ายค่าปรับหายตามศาล"
+                ขึ้นเฉพาะใบร่างที่ประเภทหนี้ = ค่าปรับหาย และประเภทสินค้า = สินค้าหาย
+                ใช้ตอนศาลสั่งให้ผ่อนเป็นงวด ระบบจะปรับจำนวนสินค้าให้เท่ายอดงวดนั้น
+            -->
+            <xpath expr="//header" position="inside">
+                <button name="action_open_lost_court_wizard" type="object"
+                        string="จ่ายค่าปรับหายตามศาล" class="btn-primary"
+                        attrs="{'invisible': ['|', '|',
+                                ('state', '!=', 'draft'),
+                                ('bk_debt_type', '!=', 'lost'),
+                                ('bk_reason_is_lost', '=', False)]}"/>
             </xpath>
         </field>
     </record>

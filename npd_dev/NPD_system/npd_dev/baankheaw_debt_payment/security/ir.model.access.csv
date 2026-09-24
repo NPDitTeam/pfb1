@@ -4,3 +4,4 @@ access_bk_debt_payment_bill_user,bk.debt.payment.bill.user,model_baankheaw_debt_
 access_bk_debt_payment_product_user,bk.debt.payment.product.user,model_baankheaw_debt_payment_product,base.group_user,1,1,1,1
 access_bk_court_wizard_user,bk.court.wizard.user,model_baankheaw_debt_payment_court_wizard,base.group_user,1,1,1,1
 access_bk_court_wizard_line_user,bk.court.wizard.line.user,model_baankheaw_debt_payment_court_line,base.group_user,1,1,1,1
+access_baankheaw_lost_court_wizard,access_baankheaw_lost_court_wizard,model_baankheaw_lost_court_wizard,base.group_user,1,1,1,1
