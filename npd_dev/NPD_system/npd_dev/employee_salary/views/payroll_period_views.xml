@@ -14,6 +14,7 @@
                     <field name="cutoff_end_day"/>
                     <field name="payment_date"/>
                     <field name="auto_run_date"/>
+                    <field name="update_until_date" string="อัพเดทถึง"/>
                     <field name="payroll_count"/>
                     <field name="success_count"/>
                     <field name="error_count"/>
@@ -67,6 +68,10 @@
                                 <field name="year"/>
                                 <field name="payment_date"/>
                                 <field name="auto_run_date"/>
+                            </group>
+                            <group string="การอัพเดทข้อมูล">
+                                <field name="update_until_day"/>
+                                <field name="update_until_date"/>
                             </group>
                             <group string="การตัดรอบ">
                                 <field name="cutoff_start_day"/>

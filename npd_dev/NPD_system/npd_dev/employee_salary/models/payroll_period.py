@@ -6,7 +6,7 @@ import time
 from datetime import date, datetime, timedelta
 from psycopg2 import IntegrityError, OperationalError
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -29,6 +29,16 @@ class PayrollPeriod(models.Model):
     cutoff_end_day = fields.Integer(string="วันสิ้นสุดรอบ", default=24, required=True,
                                      help="วันที่สิ้นสุดคิดเงินเดือน (ของเดือนนี้)")
     payment_date = fields.Date(string="วันที่จ่ายเงินเดือน")
+    update_until_day = fields.Integer(
+        string="อัพเดทถึงวันที่", default=26, required=True,
+        help="ระบบจะอัพเดทข้อมูลเงินเดือน (OT/สาย/ขาด/ลา) ของรอบนี้ให้ทุกวัน "
+             "จนถึงวันที่นี้ของเดือนรอบ หลังจากนั้นจะหยุดอัพเดท "
+             "แก้เลขนี้ได้ทีละรอบ พอแก้แล้ววันที่อัพเดทถึงจะขยับตามเองทันที")
+    update_until_date = fields.Date(
+        string="อัพเดทถึงวันที่ (คำนวณ)", compute="_compute_update_until_date",
+        store=True, readonly=True,
+        help="วันสุดท้ายที่ระบบจะอัพเดทข้อมูลรอบนี้ คำนวณจาก เดือน/ปี ของรอบ "
+             "กับเลข 'อัพเดทถึงวันที่' เดือนที่ไม่มีวันนั้นจะเลื่อนมาวันสุดท้ายของเดือน")
     auto_run_date = fields.Date(string="วันที่รัน Auto",
                                  help="ระบบจะรันทำเงินเดือนอัตโนมัติในวันนี้")
     state = fields.Selection([
@@ -83,6 +93,36 @@ class PayrollPeriod(models.Model):
         if 'payment_date' in fields_list:
             res['payment_date'] = date(next_y, next_m, min(28, last_day))
         return res
+
+    @api.depends('month', 'year', 'update_until_day')
+    def _compute_update_until_date(self):
+        """วันสุดท้ายที่จะอัพเดทข้อมูลรอบนี้
+
+        เป็นฟิลด์คำนวณแบบเก็บค่า พอผู้ใช้แก้เลข "อัพเดทถึงวันที่"
+        ระบบคำนวณวันใหม่ให้ทันทีโดยไม่ต้องกดอะไรเพิ่ม
+        เดือนที่ไม่มีวันนั้น (เช่น ก.พ. กับวันที่ 30) เลื่อนมาวันสุดท้ายของเดือน
+        """
+        for rec in self:
+            day = rec.update_until_day or 26
+            try:
+                month = int(rec.month or 0)
+                year = int(rec.year or 0)
+            except (TypeError, ValueError):
+                rec.update_until_date = False
+                continue
+            if not (1 <= month <= 12) or year < 1900:
+                rec.update_until_date = False
+                continue
+            last_day = calendar.monthrange(year, month)[1]
+            rec.update_until_date = date(year, month, min(max(day, 1), last_day))
+
+    @api.constrains('update_until_day')
+    def _check_update_until_day(self):
+        for rec in self:
+            if not (1 <= (rec.update_until_day or 0) <= 31):
+                raise ValidationError(
+                    'อัพเดทถึงวันที่ ต้องอยู่ระหว่าง 1 ถึง 31 (ใส่มา %s)'
+                    % rec.update_until_day)
 
     @api.depends('month', 'year')
     def _compute_name(self):
@@ -364,6 +404,7 @@ class PayrollPeriod(models.Model):
                 'cutoff_end_day': self.cutoff_end_day,
                 'auto_run_date': auto_run,
                 'payment_date': pay_date,
+                'update_until_day': self.update_until_day or 26,
                 'state': 'draft',
             })
             created += 1
@@ -683,11 +724,18 @@ class PayrollPeriod(models.Model):
 
         # 2) อัพเดตข้อมูลรอบที่เสร็จแล้ว (ติดตามทุกวัน)
         # อัพเดตเฉพาะรอบของเดือนปัจจุบัน หรือรอบที่ยังไม่ผ่านวันจ่ายเงิน
+        # เดิมยึด payment_date (วันที่ 28) ทำให้หยุดอัพเดทตามวันจ่ายเงินเสมอ
+        # เปลี่ยนมายึด update_until_date ซึ่งตั้งได้เองรายรอบ (ค่าเริ่มต้นวันที่ 26)
+        # พอแก้เลขในรอบไหน วันที่หยุดอัพเดทของรอบนั้นขยับตามทันที
+        #
+        # รอบเก่าที่ยังไม่มีค่า (อัพเกรดมาจากของเดิม) ให้ถอยไปใช้ payment_date
+        # เหมือนเดิม จะได้ไม่หยุดอัพเดทกะทันหันโดยไม่มีใครตั้งใจ
         active_periods = self.search([
             ('state', '=', 'done'),
-            '|',
-            ('payment_date', '>=', today),
-            ('payment_date', '=', False),
+            '|', '|',
+            ('update_until_date', '>=', today),
+            '&', ('update_until_date', '=', False), ('payment_date', '>=', today),
+            '&', ('update_until_date', '=', False), ('payment_date', '=', False),
         ])
         for period in active_periods:
             _logger.info("[CRON] อัพเดตข้อมูลรอบ %s", period.name)
