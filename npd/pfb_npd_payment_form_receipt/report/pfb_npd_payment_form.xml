@@ -97,7 +97,12 @@
                                 <p class="number-line" style="line-height: 1.3;font-size: 15px;">
                                     เลขประจำตัวผู้เสียภาษี <span t-esc="doc.company_id.vat"></span>
 <!--                                    <span t-if="doc.company_id.branch == '00000'">(สำนักงานใหญ่)</span>-->
-                                    <span t-if="user.branch_id.telephone == '00000'">(สำนักงานใหญ่)</span>
+                                    <!-- (สำนักงานใหญ่) ขึ้นเฉพาะสาขาที่รหัสสาขาเป็นศูนย์ทั้งหมด
+                                         รหัสสาขาเก็บในช่อง Telephone No ของ res.branch
+                                         ว่างหรือไม่ใช่ศูนย์ทั้งหมด = ไม่ขึ้น
+                                         เดิมยึดสาขาของ "คนที่กดพิมพ์" ใบเดียวกันจึงออกคนละแบบ
+                                         แล้วแต่ใครพิมพ์ ต้องยึดสาขาของ "ใบ" เหมือนที่อยู่ด้านบน -->
+                                    <span t-if="doc.branch_id.telephone and doc.branch_id.telephone.strip() and not doc.branch_id.telephone.strip().strip('0')">(สำนักงานใหญ่)</span>
 
                                 </p>
             </div>
