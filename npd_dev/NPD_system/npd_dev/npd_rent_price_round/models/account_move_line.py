@@ -3,6 +3,13 @@ from odoo import api, fields, models
 
 _logger = logging.getLogger(__name__)
 
+# ความคลาดเคลื่อนสูงสุดที่ยังถือว่า target_amount_total "ยังใช้ได้อยู่"
+# wizard "แก้ไขยอดทศนิยม" จำกัดการปรับไว้ < 1.00 บาทอยู่แล้ว ดังนั้นถ้ายอดฐาน
+# (SUM(price_total) ของบรรทัดในแท็บใบแจ้งหนี้) ต่างจากตอนที่ตั้ง target เกิน
+# ค่านี้ แปลว่าบรรทัดถูกแก้ไปแล้ว (ใส่ส่วนลด / แก้ราคา / เพิ่ม-ลบบรรทัด)
+# → target หมดอายุ ต้องเลิกใช้ ไม่งั้นส่วนต่างจะถูกดันเข้าบรรทัด VAT
+TARGET_STALE_TOLERANCE = 1.00
+
 
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
@@ -216,6 +223,111 @@ class AccountMoveLine(models.Model):
             result[line.id] = (new_subtotal, new_total)
         return result
 
+    def _npd_compute_discount_line(self):
+        """ส่วนลดรายบรรทัด (bi_sale_purchase_discount_with_tax) — คำนวณ
+        price_subtotal / price_total ให้ 'ลดส่วนลดแล้ว' อย่างสอดคล้องกันทั้งคู่
+
+        ปัญหาเดิม: บนใบที่ไม่ผ่าน Method A (Debit Note / use_baan_kheaw /
+        use_new_calc=False) price_total รายบรรทัดค้างเป็น 'ยอดก่อนลด' ขณะที่
+        price_subtotal ถูก bi module ลดไปแล้ว → tax = SUM(price_total) -
+        SUM(price_subtotal) บวม และ amount_total เด้งกลับยอดเดิมหลัง save
+        (ส่วนลดถูกดันกลับไปเป็น VAT)
+
+        วิธีคิด — ยึด 'ส่วนลดบนยอด incl-VAT' (ตรงกับคอลัมน์ discount_amt /
+        lost_item_amount = qty×price − ส่วนลด) แล้ว forward-derive อีกฝั่งด้วย
+        อัตรา 7%:
+            - per: total(incl) = price_unit×qty × (1 − %/100)
+                   subtotal(ex) = round(total / 1.07, 2)
+            - fix: ส่วนลดหักบนฐาน ex-VAT (ตามนิยาม bi module)
+                   subtotal(ex) = round(price_unit×qty/1.07 − disc, 2)
+                   total(incl)  = round(subtotal × 1.07, 2)
+            - tax = total − subtotal
+
+        *ไม่* ผูกกับ use_baan_kheaw อีกต่อไป — ใช้เงื่อนไข idempotent แทน
+        (แก้เฉพาะบรรทัดที่ price_subtotal/price_total ยัง 'ไม่ตรง' ยอดที่ควร
+        เป็นหลังลด) จึงครอบทุก flag combination และไม่รบกวนบรรทัดที่ถูกอยู่แล้ว
+        (เช่นบรรทัดที่ไม่มีส่วนลด disc=0 หรือส่วนลดถูก bake ลง price_unit ไปแล้ว)
+        return dict line_id -> (new_subtotal, new_total, new_tax)
+        """
+        result = {}
+        for line in self:
+            if not line.move_id.is_invoice(include_receipts=True):
+                continue
+            # ข้ามบรรทัดที่ไม่อยู่ในแท็บใบแจ้งหนี้ (tax line / receivable /
+            # บรรทัด "Discount" ที่ bi module สร้าง)
+            if line.exclude_from_invoice_tab:
+                continue
+            method = getattr(line, 'discount_method', False)
+            disc_val = getattr(line, 'discount_amount', 0.0) or 0.0
+            if method not in ('per', 'fix') or disc_val <= 0:
+                continue
+            if not line.price_unit or not line.quantity or not line.tax_ids:
+                continue
+            # 'ไม่' บังคับ price_include — ยึด convention ของทั้งระบบที่ถือว่า
+            # ราคา/หน่วย เป็น incl-VAT เสมอ (Method A หาร 1.07, คอลัมน์
+            # Subtotal without = ราคา×qty×100/107) เพราะภาษี 'ขายยังไม่ถึง
+            # กำหนด' (deferred VAT) มักตั้ง price_include=False แต่ราคายังเป็น
+            # incl-VAT อยู่ดี — ถ้าบังคับ price_include จะพลาดบรรทัดพวกนี้
+            has_vat_7 = any(
+                abs(t.amount - 7.0) < 0.01 for t in line.tax_ids
+            )
+            if not has_vat_7:
+                continue
+            gross = line.price_unit * line.quantity          # ยอดเต็ม incl-VAT
+            if method == 'per':
+                new_total = round(gross * (1 - disc_val / 100.0), 2)
+                new_subtotal = round(new_total / 1.07, 2)
+            else:  # 'fix' — ส่วนลดหักบนฐาน ex-VAT
+                base_ex = round(gross / 1.07, 2)
+                new_subtotal = round(base_ex - disc_val, 2)
+                new_total = round(new_subtotal * 1.07, 2)
+            if new_subtotal < 0:
+                new_subtotal = new_total = 0.0
+            new_tax = round(new_total - new_subtotal, 2)
+            # idempotent + flag-agnostic: แก้เฉพาะเมื่อค่าใน DB ยัง 'ไม่ตรง'
+            # (ทั้ง subtotal และ total ตรงแล้ว = ไม่ต้องแตะ — กันการเขียนซ้ำ
+            # และกันไปแตะบรรทัดที่ Method A จัดการถูกต้องอยู่แล้ว)
+            if (abs((line.price_subtotal or 0.0) - new_subtotal) < 0.01
+                    and abs((line.price_total or 0.0) - new_total) < 0.01):
+                continue
+            result[line.id] = (new_subtotal, new_total, new_tax)
+        return result
+
+    def _npd_write_discount_line_sql(self, line, new_subtotal, new_total):
+        """เขียนยอด 'ลดส่วนลดแล้ว' ของบรรทัดที่มีส่วนลดรายบรรทัด ลง DB
+
+        ต่างจาก _npd_write_subtotal_sql ตรงที่ 'ไม่' แตะ
+        price_subtotal_without_discount และ lost_item_amount — สองฟิลด์นี้เป็น
+        'ยอดก่อนหักส่วนลด' ต้องคงค่าเดิมไว้ (ดูแลโดย bi_lost_item_discount /
+        bi_sale_purchase_discount_with_tax) ไม่งั้นคอลัมน์ Subtotal without
+        Discount / Lost Item Amount จะเพี้ยน
+        """
+        cr = self.env.cr
+        sign = 1 if line.move_id.move_type in line.move_id.get_outbound_types() else -1
+        new_amount_currency = round(new_subtotal * sign, 2)
+        balance = line.currency_id._convert(
+            new_amount_currency,
+            line.company_id.currency_id,
+            line.company_id,
+            line.date or fields.Date.context_today(line),
+        )
+        new_debit = round(balance, 2) if balance > 0 else 0.0
+        new_credit = round(-balance, 2) if balance < 0 else 0.0
+        cr.execute(
+            """
+            UPDATE account_move_line
+            SET price_subtotal = %s,
+                price_total = %s,
+                amount_currency = %s,
+                debit = %s,
+                credit = %s,
+                balance = %s
+            WHERE id = %s
+            """,
+            (new_subtotal, new_total, new_amount_currency,
+             new_debit, new_credit, round(balance, 2), line.id),
+        )
+
     def _npd_sync_full_amount_fields(self):
         """Sync ฟิลด์ 'ยอดเต็มก่อนหักส่วนลด' ให้ถูกต้องเสมอ ทุก save/post
 
@@ -295,6 +407,13 @@ class AccountMoveLine(models.Model):
 
         rounded = self._npd_compute_method_a()
         baan_kheaw_resets = self._npd_compute_baan_kheaw_reset()
+        # ส่วนลดรายบรรทัดบนใบที่ปิด Method A (Debit Note) — คิดยอด 'ลดแล้ว'
+        # ให้ price_subtotal/price_total สอดคล้องกัน
+        discount_lines = self._npd_compute_discount_line()
+        # บรรทัดที่มีส่วนลดต้องใช้ผล discount_lines เท่านั้น — ตัดออกจาก
+        # baan_kheaw_resets (สูตร Odoo default ที่อาจไม่หักส่วนลด) กันเขียนทับกัน
+        for line_id in discount_lines:
+            baan_kheaw_resets.pop(line_id, None)
         cr = self.env.cr
 
         # === target_amount_total — บังคับยอดรวมเป๊ะ ===
@@ -303,23 +422,37 @@ class AccountMoveLine(models.Model):
         # ผ่าน lambda อ่านได้เป็น 0 ทำให้ has_target = False ทั้งที่ user
         # เพิ่งกำหนด target ไว้
         target_value_by_move = {}  # {move_id: target_amount_total}
+        target_base_by_move = {}   # {move_id: target_base_total (snapshot)}
+        has_target_base_col = False
         moves_with_vat_from_total_ids = set()
         moves_refund_ids = set()
         if self:
             all_move_ids = list(set(self.mapped('move_id').ids))
             if all_move_ids:
+                # target_base_total เป็นฟิลด์ใหม่ (v34) — เช็คที่ระดับ "คอลัมน์
+                # ใน DB" ไม่ใช่ _fields เพราะระหว่างทยอย -u ทีละ DB โค้ดใหม่จะ
+                # ถูกโหลดให้ทุก DB แต่คอลัมน์ยังไม่ถูกสร้างใน DB ที่ยังไม่ -u
                 cr.execute("""
-                    SELECT id, COALESCE(target_amount_total, 0)
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'account_move'
+                      AND column_name = 'target_base_total'
+                """)
+                has_target_base_col = cr.fetchone() is not None
+                base_col = ('COALESCE(target_base_total, 0)'
+                            if has_target_base_col else '0')
+                cr.execute("""
+                    SELECT id, COALESCE(target_amount_total, 0), %s
                     FROM account_move
-                    WHERE id IN %s
+                    WHERE id IN %%s
                       AND target_amount_total IS NOT NULL
                       AND target_amount_total > 0
                       AND move_type IN ('out_invoice', 'in_invoice',
                           'out_refund', 'in_refund',
                           'out_receipt', 'in_receipt')
-                """, (tuple(all_move_ids),))
+                """ % base_col, (tuple(all_move_ids),))
                 for row in cr.fetchall():
                     target_value_by_move[row[0]] = float(row[1])
+                    target_base_by_move[row[0]] = float(row[2] or 0)
                 # Method B (vat_from_total) — ถ้าติ๊ก ต้อง override move totals
                 # + tax line แม้ Method A/baan_kheaw จะไม่ active ก็ตาม
                 cr.execute("""
@@ -343,8 +476,17 @@ class AccountMoveLine(models.Model):
                 """, (tuple(all_move_ids),))
                 moves_refund_ids = set(row[0] for row in cr.fetchall())
         moves_with_target_ids = set(target_value_by_move.keys())
+        # moves ที่ถูกบังคับให้คำนวณใหม่แม้ไม่มีบรรทัดไหนเปลี่ยน — ใช้ตอนที่
+        # target_amount_total ถูกแก้/ล้าง (เช่นกด "รีเซ็ตยอดเดิม" ใน wizard)
+        # ไม่งั้นจะ early-return แล้วบรรทัดภาษียังค้างยอดที่ target บังคับไว้
+        forced_move_ids = (
+            set(self._context.get('npd_force_move_ids') or ())
+            & set(self.mapped('move_id').ids)
+        )
 
         if (not rounded and not baan_kheaw_resets
+                and not discount_lines
+                and not forced_move_ids
                 and not moves_with_target_ids
                 and not moves_with_vat_from_total_ids
                 and not moves_refund_ids):
@@ -352,7 +494,13 @@ class AccountMoveLine(models.Model):
 
         moves_changed = set()
         for line in self:
-            if line.id in rounded:
+            if line.id in discount_lines:
+                # ส่วนลดรายบรรทัด (Debit Note) มาก่อน — เขียนยอดลดแล้ว
+                # โดยไม่แตะ subtotal_without_discount / lost_item_amount
+                new_subtotal, new_total, new_tax = discount_lines[line.id]
+                self._npd_write_discount_line_sql(line, new_subtotal, new_total)
+                moves_changed.add(line.move_id.id)
+            elif line.id in rounded:
                 new_subtotal, new_total, new_tax = rounded[line.id]
                 self._npd_write_subtotal_sql(
                     line, new_subtotal, new_total, new_tax)
@@ -374,6 +522,12 @@ class AccountMoveLine(models.Model):
         # account_move_tax_invoice (แถบ Tax Invoice) — การคำนวณ tax/totals
         # ในรอบนี้เป็น idempotent สำหรับใบที่ไม่ติ๊กอะไร (tax = total - subtotal)
         moves_changed |= moves_refund_ids
+        moves_changed |= forced_move_ids
+
+        # เก็บ target ที่ถูกล้างเพราะหมดอายุ ไว้ post ข้อความท้ายสุด
+        # (message_post = ORM write → ห้ามแทรกกลางชุด SQL ไม่งั้น flush ของ ORM
+        #  อาจเขียนค่าเก่าจาก cache ทับค่าที่เราเพิ่ง UPDATE ไป)
+        stale_targets = []
 
         for move_id in moves_changed:
             move = self.env['account.move'].browse(move_id)
@@ -400,6 +554,65 @@ class AccountMoveLine(models.Model):
             # cache mismatch — guarantee ว่าค่าตรงกับ DB จริงๆ
             target_value = target_value_by_move.get(move_id, 0.0)
             has_target = target_value > 0
+            # === Guard: target หมดอายุเมื่อยอดฐานเปลี่ยน (v34) ===
+            # target_amount_total เก็บเป็น "ยอดตายตัว" ที่ไม่ผูกกับบรรทัดใด ๆ
+            # ถ้าผู้ใช้ตั้ง target ไว้ตอนหนึ่ง แล้วมาแก้บรรทัดทีหลัง (เช่นใส่
+            # ส่วนลด) สูตร tax = target − subtotal จะดันส่วนต่างทั้งก้อนเข้า
+            # บรรทัด VAT และยอดรวมจะ "เด้งกลับ" เป็นยอดเดิม → ต้องตรวจก่อนใช้
+            # อ่านยอดฐานสด ๆ จาก DB ณ จุดนี้ (หลังเขียนบรรทัดเสร็จแล้ว)
+            if has_target:
+                cr.execute(
+                    """
+                    SELECT COALESCE(SUM(price_total), 0)
+                    FROM account_move_line
+                    WHERE move_id = %s
+                    AND (exclude_from_invoice_tab = FALSE
+                         OR exclude_from_invoice_tab IS NULL)
+                    """,
+                    (move_id,),
+                )
+                cur_base_total = round(float(cr.fetchone()[0] or 0), 2)
+                # เอกสารที่ตั้ง target ไว้ก่อนมีฟิลด์ snapshot (หรือ DB ที่ยัง
+                # ไม่ -u) → ใช้ target เองเป็นตัวอ้างอิง ซึ่งใช้แทนกันได้เพราะ
+                # ตอนตั้ง target ค่ามันคือ "ยอดฐาน ± เศษไม่ถึง 1 บาท" อยู่แล้ว
+                ref_base = target_base_by_move.get(move_id) or target_value
+                # cur_base_total = 0 → บรรทัดยังไม่ถูก compute หรือไม่มีบรรทัด
+                # เลย ตัดสินไม่ได้ว่า target หมดอายุจริงไหม → ปล่อยไว้ก่อน
+                is_stale = (
+                    cur_base_total > 0
+                    and abs(cur_base_total - ref_base) > TARGET_STALE_TOLERANCE)
+                if is_stale and move.state != 'draft':
+                    # เอกสารที่ลงบัญชี/ยกเลิกไปแล้ว — ห้ามแตะยอด เพราะการ write
+                    # ใด ๆ (เช่นตอนรับชำระ) จะกลายเป็นการแก้ VAT ของเอกสารที่
+                    # ออกไปแล้วเงียบ ๆ ต้องให้ฝ่ายบัญชีตัดสินใจเอง
+                    _logger.warning(
+                        "NPD: move %s (%s) มี target_amount_total %.2f ค้างและ "
+                        "ไม่ตรงยอดฐาน %.2f — ข้ามการล้างเพราะสถานะ %s",
+                        move_id, move.name, target_value, cur_base_total,
+                        move.state)
+                    is_stale = False
+                if is_stale:
+                    cr.execute(
+                        "UPDATE account_move SET target_amount_total = 0 "
+                        "WHERE id = %s", (move_id,))
+                    if has_target_base_col:
+                        cr.execute(
+                            "UPDATE account_move SET target_base_total = 0 "
+                            "WHERE id = %s", (move_id,))
+                    _logger.info(
+                        "NPD: ล้าง target_amount_total %.2f ของ move %s "
+                        "(ยอดฐาน %.2f → %.2f)",
+                        target_value, move_id, ref_base, cur_base_total)
+                    stale_targets.append(
+                        (move_id, target_value, ref_base, cur_base_total))
+                    target_value = 0.0
+                    has_target = False
+                elif has_target_base_col and not target_base_by_move.get(move_id):
+                    # back-fill snapshot ให้เอกสารเก่าที่ยังไม่มี — ตั้งแต่นี้ไป
+                    # จะถูกป้องกันด้วยเงื่อนไขเดียวกับเอกสารใหม่
+                    cr.execute(
+                        "UPDATE account_move SET target_base_total = %s "
+                        "WHERE id = %s", (cur_base_total, move_id))
             # Method B flag — ถ้า move นี้ติ๊ก vat_from_total
             use_method_b = move_id in moves_with_vat_from_total_ids
             if move.is_invoice(include_receipts=True):
@@ -685,6 +898,17 @@ class AccountMoveLine(models.Model):
 
         self.env.cache.invalidate()
 
+        # แจ้งในเอกสารว่า target ถูกล้างเพราะหมดอายุ — ทำหลัง invalidate cache
+        # เพื่อให้ ORM อ่านค่าใหม่จาก DB (target = 0) ไม่ใช่ค่าเก่าใน cache
+        for move_id, old_target, ref_base, cur_base in stale_targets:
+            self.env['account.move'].browse(move_id).message_post(
+                body='ยอดเป้าหมาย (Target Total) %.2f ถูกล้างอัตโนมัติ '
+                     'เพราะรายการในเอกสารเปลี่ยนไป '
+                     '(ยอดฐานรวม VAT %.2f → %.2f) '
+                     'ระบบกลับไปใช้ยอดที่คำนวณจากบรรทัดตามปกติ '
+                     '— ถ้ายังต้องการปรับเศษ ให้กดปุ่ม "แก้ไขยอดทศนิยม" ใหม่'
+                     % (old_target, ref_base, cur_base))
+
     def _compute_amount(self):
         res = super()._compute_amount()
         rounded = self._npd_compute_method_a()
@@ -741,6 +965,21 @@ class AccountMove(models.Model):
              '(ใช้สำหรับใบลดหนี้ที่ต้อง hit ยอดเป๊ะตามเงื่อนไขภายใน). '
              'ปล่อยเป็น 0 = ไม่ override ใช้สูตร Method A ปกติ. '
              'หลังกรอกแล้วกด Save → ยอดจะอัพเดทอัตโนมัติ',
+    )
+
+    target_base_total = fields.Monetary(
+        string='ยอดฐานตอนตั้งเป้า',
+        currency_field='currency_id',
+        # ตั้งใจ "ไม่" ใส่ default — ถ้าใส่ Odoo จะยิง UPDATE เติมค่าให้ทุกแถว
+        # ของ account_move ตอน -u (หลักแสนแถวบน prod) และล็อกตารางโดยเปล่า
+        # ประโยชน์ ปล่อยเป็น NULL แล้วอ่านผ่าน COALESCE(...,0) เอา
+        copy=False,
+        tracking=True,
+        help='SUM(price_total) ของบรรทัดในแท็บใบแจ้งหนี้ ณ เวลาที่ตั้ง '
+             'ยอดเป้าหมาย — ใช้ตรวจว่ายอดเป้าหมายยัง "ใช้ได้" อยู่ไหม '
+             'ถ้ายอดฐานปัจจุบันต่างจากค่านี้เกิน %.2f บาท (เช่นมีการใส่ส่วนลด '
+             'หรือแก้ราคา/จำนวน) ระบบจะล้างยอดเป้าหมายทิ้งอัตโนมัติ '
+             'แล้วกลับไปคำนวณจากบรรทัดตามปกติ' % TARGET_STALE_TOLERANCE,
     )
 
     can_edit_use_new_calc = fields.Boolean(
@@ -835,7 +1074,11 @@ class AccountMove(models.Model):
         # การเช็ค balance ก่อนเรา rebalance ทำให้ credit note พังด้วย
         # "Cannot create unbalanced journal entry" (diff = VAT amount)
         res = super(AccountMove, self.with_context(check_move_validity=False)).write(vals)
-        self.with_context(npd_skip_round=True).invoice_line_ids._npd_force_round_sql()
+        # ถ้ามีการแก้/ล้าง target → บังคับให้คำนวณใหม่แม้บรรทัดไม่เปลี่ยน
+        round_ctx = {'npd_skip_round': True}
+        if 'target_amount_total' in vals:
+            round_ctx['npd_force_move_ids'] = tuple(self.ids)
+        self.with_context(**round_ctx).invoice_line_ids._npd_force_round_sql()
         # validate ยอดสุดท้าย เฉพาะ moves ที่ posted + มี line
         # — draft/cancel state ไม่ต้อง balanced (กรณีกดยกเลิกใบรับชำระ
         # state จะเปลี่ยนเป็น cancel ระหว่างทางและบรรทัดอาจถูกแก้/ลบ

@@ -1,9 +1,61 @@
 {
     'name': 'NPD Rent Price Subtotal Rounding',
-    'version': '14.0.1.0.32',
+    'version': '14.0.1.0.34',
     'category': 'Sales',
     'summary': 'ปัดเศษราคาต่อหน่วยหลังถอด VAT ให้ตรงกับรายงาน',
     'description': """
+v14.0.1.0.34: แก้ "ใส่ส่วนลดแล้วยอดเด้งกลับเป็นยอดก่อนลดหลัง save"
+เคสที่เจอ: ILS-2609050002 (ใบเพิ่มหนี้ ค่าปรับหาย ส่วนลด 30%) — บรรทัดสินค้า
+ถูกต้องหมด (subtotal 9,898.13 / total 10,591) แต่บรรทัด VAT เป็น 5,231.87
+และลูกหนี้ 15,130 = ยอดก่อนหักส่วนลด
+สาเหตุ: ผู้ใช้กดปุ่ม "แก้ไขยอดทศนิยม" ตอนยอดยังเป็น 15,130 → ระบบจำ
+target_amount_total = 15,130 ไว้ แล้วอีก 38 วินาทีถัดมาจึงใส่ส่วนลด 30%
+target เก็บเป็น "ยอดตายตัว" ที่ไม่ผูกกับบรรทัด + มีลำดับสูงสุด
+(target > Method B > สูตรปกติ) → บังคับ tax = target − SUM(price_subtotal)
+= 15,130 − 9,898.13 = 5,231.87 → ส่วนลดทั้งก้อนถูกดันเข้าไปเป็น VAT เงียบ ๆ
+แก้ 3 จุด:
+1) เพิ่มฟิลด์ target_base_total (snapshot ของ SUM(price_total) ณ เวลาที่ตั้ง
+   target) — จดไว้ตอน wizard เขียน target และล้างพร้อมกันตอนกด reset
+2) _npd_force_round_sql: ก่อนใช้ target เทียบยอดฐานปัจจุบันกับ snapshot
+   ถ้าต่างเกิน TARGET_STALE_TOLERANCE (1.00 บาท — wizard จำกัด delta < 1.00
+   อยู่แล้ว) → ถือว่า target หมดอายุ → ล้างเป็น 0 + message_post แจ้งใน
+   เอกสาร + กลับไปใช้สูตรปกติ (tax = price_total − price_subtotal) ในรอบ
+   เดียวกัน ผู้ใช้จึงไม่ต้องไปรีเซ็ตเองก่อน
+   - เอกสารเก่าที่ยังไม่มี snapshot → ใช้ target เองเป็นตัวอ้างอิง (ตอนตั้ง
+     target ค่ามัน = ยอดฐาน ± เศษไม่ถึง 1 บาทอยู่แล้ว) และ back-fill
+     snapshot ให้อัตโนมัติถ้ายังไม่หมดอายุ
+   - เช็คการมีอยู่ของคอลัมน์ผ่าน information_schema ไม่ใช่ _fields เพราะ
+     ระหว่างทยอย -u ทีละ DB โค้ดใหม่ถูกโหลดให้ทุก DB แต่คอลัมน์ยังไม่มี
+3) ปุ่ม "รีเซ็ตยอดเดิม" เดิมล้าง target แล้ว "ไม่" คำนวณบรรทัดภาษีใหม่
+   (early-return เพราะไม่มีบรรทัดไหนเปลี่ยน) → เพิ่ม context
+   npd_force_move_ids ตอน write ที่มี target_amount_total เพื่อบังคับให้
+   move นั้นเข้า loop คำนวณใหม่เสมอ
+
+v14.0.1.0.33: แก้เศษ 0.01 ของยอดรวม — เปลี่ยน VAT เป็น "ถอดย้อนจากยอดรวม"
+เคสที่เจอ: SO เช่า price_unit=1200 (incl VAT 7%) → ยอดรวมแสดง 1,200.01
+(เกิน 0.01) แทนที่จะเป็น 1,200.00
+สาเหตุ: Method A/B คำนวณ VAT แบบ "เดินหน้า" คือ round(subtotal × 0.07)
+โดย subtotal = round(1200/1.07, 2) = 1121.50 ถูกปัดขึ้นจาก 1121.4953
+→ round(1121.50 × 0.07, 2) = round(78.505, 2) = 78.51 → รวม 1200.01
+แก้ (ทั้ง SO และ Invoice ให้ตรงกัน): คิด VAT แบบ "ถอดย้อน" จากราคารวม incl
+ซึ่งเป็นความจริง: tax = price_total - price_subtotal
+  - price_total = round(price_unit × qty, 2)  (ยอดรวม incl = ความจริง)
+  - tax = round(price_total - price_subtotal, 2) = 1200 - 1121.50 = 78.50
+  - amount_total = SUM(price_total) ตรงราคารวมเป๊ะ ไม่มีเศษ
+จุดที่แก้ 6 จุด:
+1) sale_order_line._npd_compute_method_a: tax = price_total - subtotal
+2) sale_order_line._npd_force_round_sql (move totals): vat_from_total →
+   total = SUM(price_total), tax = total - untaxed
+3) sale_order_line._npd_sync_baan_kheaw_orders: เช่นเดียวกัน
+4) account_move_line._npd_compute_method_a: tax = price_total - subtotal
+5) account_move_line tax-line Method B: tax = base_total - base_subtotal
+6) account_move_line move-totals Method B: VAT 7% = per_line_tax_7
+   (= SUM(price_total - price_subtotal) ของบรรทัด 7%)
+หมายเหตุ: ฝั่ง Invoice การถอดย้อนทำให้ Method B วิ่งผ่าน formula เดียวกับ
+default path (total - subtotal) ที่ทดสอบมาแล้ว → balance ไม่พัง
+ผลกระทบ (แนวทาง A): เอกสารเก่าใน DB ค่าไม่เปลี่ยนจนกว่าจะถูกแก้/save/duplicate
+แล้วจึง reflow เป็นสูตรใหม่ — เอกสารใหม่ใช้สูตรใหม่ทันที
+
 v14.0.1.0.32: แก้ใบเงินประกัน/ใบไม่มี VAT ติ๊ก vat_from_total อัตโนมัติ
 + ยอดไม่ตรง
 เคสที่เจอ: SO เช่า (VAT 7%) → กดปุ่ม "รับเงินประกัน" → สร้างใบเงินประกัน

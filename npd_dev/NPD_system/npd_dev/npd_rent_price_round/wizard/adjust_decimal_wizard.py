@@ -197,6 +197,8 @@ class NpdAdjustDecimalWizard(models.TransientModel):
         # === Reset path: ล้าง target_amount_total ===
         if self.adjustment_choice == 'reset':
             move.target_amount_total = 0.0
+            if 'target_base_total' in move._fields:
+                move.target_base_total = 0.0
             return self._flush_and_refresh(move)
 
         # === Adjustment path ===
@@ -228,6 +230,13 @@ class NpdAdjustDecimalWizard(models.TransientModel):
             )
 
         # set target → trigger _npd_force_round_sql ผ่าน write hook
-        move.target_amount_total = new_target
+        # พร้อมจดยอดฐาน ณ ตอนนี้ไว้ด้วย — ถ้าบรรทัดถูกแก้ทีหลัง (ใส่ส่วนลด /
+        # แก้ราคา / เพิ่ม-ลบบรรทัด) _npd_force_round_sql จะเห็นว่ายอดฐานเปลี่ยน
+        # แล้วล้าง target ทิ้งเอง แทนที่จะบังคับยอดเดิมค้างไว้
+        vals = {'target_amount_total': new_target}
+        if 'target_base_total' in move._fields:
+            vals['target_base_total'] = round(
+                sum(move.invoice_line_ids.mapped('price_total')), 2)
+        move.write(vals)
 
         return self._flush_and_refresh(move)
