@@ -173,6 +173,12 @@ class LeaveRequest(models.Model):
     start_time = fields.Char(string="เวลาที่ลาเริ่มต้น", required=True)
     leave_end_date = fields.Date(string='วันที่ลาสิ้นสุด', required=True)
     end_time = fields.Char(string="เวลาที่ลาสิ้นสุด", required=True)
+    # จอนี้แสดงวันเริ่ม/วันสิ้นสุดแยกคอลัมน์ ทำให้ใบที่ลาหลายวันดูเหมือนใบละ 1 วัน
+    # (เคยนับ 5 ใบเป็น 5 วัน ทั้งที่เป็น 7 วัน) จึงโชว์จำนวนวันตรง ๆ ไปเลย
+    # นับแบบเดียวกับที่ PHP หักยอดคงเหลือ: รวมวันเริ่มและวันสิ้นสุด
+    leave_days = fields.Integer(
+        string='จำนวนวันลา', compute='_compute_leave_days', store=True,
+        help='นับรวมวันเริ่มและวันสิ้นสุด เช่น 25–27 = 3 วัน')
     leave_type = fields.Selection(selection=LEAVE_TYPE_SELECTION, string='ประเภทการลา', required=True)
     note = fields.Text(string='หมายเหตุผู้ใช้')
     reason = fields.Char(string="หมายเหตุผู้อนุมัติ")
@@ -185,6 +191,15 @@ class LeaveRequest(models.Model):
     created_at = fields.Char(string='วันที่บันทึกข้อมูลการลา')
     file_link = fields.Char(string='ลิงก์ไฟล์แนบ', store=True)
     company = fields.Selection(selection=HRMS_COMPANY, string='บริษัท')
+
+    @api.depends('leave_start_date', 'leave_end_date')
+    def _compute_leave_days(self):
+        for rec in self:
+            if rec.leave_start_date and rec.leave_end_date:
+                rec.leave_days = max(
+                    (rec.leave_end_date - rec.leave_start_date).days + 1, 1)
+            else:
+                rec.leave_days = 0
 
     def _get_department_by_name(self, name):
         if not name:

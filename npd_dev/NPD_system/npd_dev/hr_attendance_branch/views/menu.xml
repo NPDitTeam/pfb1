@@ -26,6 +26,7 @@
           <field name="start_time"/>
           <field name="leave_end_date"/>
           <field name="end_time"/>
+          <field name="leave_days"/>
           <field name="leave_type"/>
           <field name="state"/>
           <field name="company"/>
@@ -60,6 +61,7 @@
         <field name="start_time"/>
         <field name="leave_end_date"/>
         <field name="end_time"/>
+        <field name="leave_days" sum="รวมวันลา"/>
         <field name="leave_type"/>
         <field name="state"/>
         <field name="company"/>
