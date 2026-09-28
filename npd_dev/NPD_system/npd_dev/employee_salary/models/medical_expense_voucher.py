@@ -63,8 +63,10 @@ class MedicalExpenseVoucherConfig(models.Model):
         string='บัญชีวิเคราะห์ (analytic) id',
         help='ใบเบิกค่ารักษาพยาบาลจะลงบัญชีวิเคราะห์นี้เสมอ ไม่แปรตามสาขาของพนักงาน '
              '(ปกติตั้งเป็นสำนักงานใหญ่ เพราะเป็นสวัสดิการระดับบริษัท)')
-    target_default_branch_id = fields.Integer(string='สาขาเริ่มต้น (res.branch) id', required=True,
-                                              help='ใช้เมื่อจับคู่สาขาของพนักงานไม่ได้')
+    target_default_branch_id = fields.Integer(
+        string='สาขาในใบการรับ (res.branch) id', required=True,
+        help='ใบเบิกค่ารักษาพยาบาลลงสาขานี้เสมอ ไม่แปรตามสาขาของพนักงาน '
+             '(ตั้งเป็นสำนักงานใหญ่ เพราะเป็นสวัสดิการระดับบริษัท เหมือนบัญชีวิเคราะห์)')
 
     line_label = fields.Char(string='ชื่อรายการในบิล', required=True,
                              default='ค่ารักษาพยาบาล-พนง.ขาย')
@@ -117,7 +119,7 @@ class MedicalExpenseVoucherConfig(models.Model):
                 ('account.journal', self.target_journal_id, 'สมุดรายวัน'),
                 ('payment.method', self.target_payment_method_id, 'Payment Method'),
                 ('account.account', self.target_account_id, 'บัญชี'),
-                ('res.branch', self.target_default_branch_id, 'สาขาเริ่มต้น'),
+                ('res.branch', self.target_default_branch_id, 'สาขาในใบการรับ'),
             ]
             if self.target_payment_journal_id:
                 checks.append(('account.journal', self.target_payment_journal_id,
@@ -174,13 +176,14 @@ class MedicalExpenseVoucherConfig(models.Model):
             employee.lastname or '',
         ])).strip() or (expense.username or '')
 
-        branch_name = employee.branch_id.name if employee.branch_id else ''
         attachments = self._collect_attachments(expense)
         today = fields.Date.context_today(self)
 
         with self._target_env() as env:
             partner = self._find_or_create_partner(env, employee, full_name)
-            branch_id = self._resolve_branch(env, branch_name)
+            # ฝ่ายบัญชีให้ใบเบิกค่ารักษาพยาบาลลงสำนักงานใหญ่ทุกใบ ไม่แยกตามสาขาพนักงาน
+            # (เป็นสวัสดิการระดับบริษัท เหมือนที่บัญชีวิเคราะห์ลงสำนักงานใหญ่อยู่แล้ว)
+            branch_id = self.target_default_branch_id
             analytic_id = self._resolve_analytic()
 
             line_vals = {
@@ -207,9 +210,10 @@ class MedicalExpenseVoucherConfig(models.Model):
                 'company_id': self.target_company_id,
                 'branch_id': branch_id,
                 'payment_method_id': self.target_payment_method_id,
-                # 2 ฟิลด์นี้มีครบทุกฐาน จึงตั้งตรง ๆ ไม่เช็ค _fields
-                # (เคยเช็คแล้วเจอกรณีคีย์หายเงียบ ๆ จนหาสาเหตุไม่เจอ)
-                'head_office_branch_id': branch_id,
+                # ไม่ตั้ง head_office_branch_id เอง — เป็น stored compute ของโมดูล
+                # npd_head_office_branch ที่ depends บน branch_id แล้วเติมจากหน้า
+                # "กำหนดค่าสาขา (สำนักงานใหญ่)" ค่าที่ยัดเองจะถูกคำนวณทับอยู่ดี
+                # (และฐานที่ยังไม่ติดโมดูลนี้จะสร้างใบไม่ผ่านเพราะไม่มีฟิลด์)
                 'check_type_show_selection': 'false',
             }
             if self.target_payment_journal_id:
@@ -370,14 +374,6 @@ class MedicalExpenseVoucherConfig(models.Model):
         _logger.info('สร้างผู้จำหน่ายใหม่ใน %s: %s (id=%s)',
                      self.db_name, partner_name, partner.id)
         return partner
-
-    def _resolve_branch(self, env, branch_name):
-        """จับคู่สาขาของพนักงานกับ res.branch ปลายทางด้วยชื่อ ไม่เจอใช้สาขาเริ่มต้น"""
-        if branch_name:
-            branch = env['res.branch'].search([('name', '=', branch_name)], limit=1)
-            if branch:
-                return branch.id
-        return self.target_default_branch_id
 
     def _resolve_analytic(self):
         """บัญชีวิเคราะห์ของใบเบิกค่ารักษาพยาบาล — ใช้ค่าที่ตั้งไว้เสมอ
