@@ -3,6 +3,7 @@ import base64
 import json
 import requests
 import logging
+from dateutil.relativedelta import relativedelta
 from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
 
@@ -14,6 +15,24 @@ _logger = logging.getLogger(__name__)
 BANK_CODES = {b['code'] for b in THAI_BANKS}
 
 API_URL = "https://npdhrms.com/api/api_medical_expense.php"
+
+
+def _thai_date(value):
+    """วันที่แบบไทย dd/mm/พ.ศ."""
+    return '%02d/%02d/%d' % (value.day, value.month, value.year + 543)
+
+
+def _service_length(start, ref):
+    """อายุงานเป็นข้อความไทย เช่น 7 เดือน 12 วัน"""
+    diff = relativedelta(ref, start)
+    parts = []
+    if diff.years:
+        parts.append('%d ปี' % diff.years)
+    if diff.months:
+        parts.append('%d เดือน' % diff.months)
+    if diff.days or not parts:
+        parts.append('%d วัน' % diff.days)
+    return ' '.join(parts)
 
 
 class MedicalExpense(models.Model):
@@ -100,11 +119,47 @@ class MedicalExpense(models.Model):
     remaining_amount = fields.Float(string='จำนวนเงินคงเหลือที่ขอได้ (บาท)',
                                     compute='_compute_remaining_amount')
 
+    # อายุงานไม่ครบ 1 ปี — เตือนอย่างเดียว ไม่ปิดกั้นการขอหรืออนุมัติ
+    service_warning = fields.Char(string='แจ้งเตือนอายุงาน',
+                                  compute='_compute_service_warning')
+
     @api.depends('work_date')
     def _compute_expense_year(self):
         for rec in self:
             d = rec.work_date or fields.Date.context_today(rec)
             rec.expense_year = d.year
+
+    @api.depends('employee_id', 'employee_id.start_date', 'work_date')
+    def _compute_service_warning(self):
+        for rec in self:
+            rec.service_warning = rec._build_service_warning()
+
+    def _build_service_warning(self):
+        """ข้อความเตือนอายุงานไม่ครบ 1 ปี (ว่าง = ไม่ต้องเตือน)
+
+        ยึด "วันที่ทำงาน" บนคำขอ ไม่ใช่วันนี้ — คำขอย้อนหลังต้องตัดสินด้วย
+        อายุงาน ณ วันที่เกิดค่าใช้จ่ายจริง
+        เตือนอย่างเดียว ไม่ได้บล็อกการขอหรืออนุมัติ และไม่ส่งออกไปที่แอป
+        """
+        self.ensure_one()
+        employee = self.employee_id
+        if not employee:
+            return False
+        start = employee.start_date
+        if not start:
+            return ('ยังไม่ได้กรอก "วันที่เริ่มงาน" ในข้อมูลพนักงาน '
+                    'จึงตรวจสอบอายุงานไม่ได้')
+        ref = self.work_date or fields.Date.context_today(self)
+        if start > ref:
+            return ('วันที่เริ่มงาน (%s) อยู่หลังวันที่ทำงานในคำขอ (%s) '
+                    'ให้ตรวจสอบข้อมูลพนักงาน'
+                    % (_thai_date(start), _thai_date(ref)))
+        if start + relativedelta(years=1) <= ref:
+            return False
+        return ('อายุงานยังไม่ครบ 1 ปี — เริ่มงาน %s นับถึงวันที่ทำงาน %s '
+                'เป็นอายุงาน %s'
+                % (_thai_date(start), _thai_date(ref),
+                   _service_length(start, ref)))
 
     @api.depends('employee_id', 'expense_year', 'state', 'amount')
     def _compute_remaining_amount(self):
