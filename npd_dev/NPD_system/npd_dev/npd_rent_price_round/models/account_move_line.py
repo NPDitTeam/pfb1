@@ -1,7 +1,30 @@
 import logging
+from decimal import Decimal, ROUND_HALF_UP
+
 from odoo import api, fields, models
 
 _logger = logging.getLogger(__name__)
+
+
+def npd_vat_amount(base, rate):
+    """ภาษีมูลค่าเพิ่ม ปัดครึ่งสตางค์ขึ้นเสมอ ตามที่สรรพากรและลูกค้าใช้
+
+    ห้ามใช้ round() ของ python คิดภาษีตรงนี้ ด้วยสองเหตุผล
+
+    1. round() ปัดครึ่งไปหาเลขคู่ ไม่ใช่ปัดขึ้น
+           round(3272.325, 2) = 3272.32   แต่ที่ถูกคือ 3272.33
+    2. เลขทศนิยมฐานสองทำให้สองสูตรที่ควรเท่ากันได้คนละค่า
+           46747.50 * 7.0 / 100.0 = 3272.325
+           46747.50 * 0.07        = 3272.3250000000003
+       เดิมบรรทัดภาษีใช้สูตรแรก หัวใบใช้สูตรหลัง ใบเดียวกันจึงได้
+       3272.32 ที่สมุดรายวัน แต่ 3272.33 ที่หัวใบ (เคส INV-0918260026)
+
+    คิดด้วย Decimal จากสตริง จึงไม่มีความคลาดเคลื่อนฐานสอง และได้ค่าเดียวกัน
+    ทุกจุดที่เรียก
+    """
+    value = (Decimal(str(base or 0.0)) * Decimal(str(rate or 0.0))
+             / Decimal('100'))
+    return float(value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
 
 # ความคลาดเคลื่อนสูงสุดที่ยังถือว่า target_amount_total "ยังใช้ได้อยู่"
 # wizard "แก้ไขยอดทศนิยม" จำกัดการปรับไว้ < 1.00 บาทอยู่แล้ว ดังนั้นถ้ายอดฐาน
@@ -642,16 +665,16 @@ class AccountMoveLine(models.Model):
                         # Method B: VAT 7% ปัดครั้งเดียวจากยอดรวม (subtotal × 7%)
                         # ให้ตรงกับ iTax/การปัดยอดรวมทีเดียว
                         # (ใช้เฉพาะภาษี 7% — ภาษีอื่น เช่น WHT ใช้สูตรเดิม)
-                        new_tax_amount = round(
-                            base_subtotal * tax_obj.amount / 100.0, 2)
+                        new_tax_amount = npd_vat_amount(
+                            base_subtotal, tax_obj.amount)
                     else:
                         # Default: tax = SUM(price_total) - SUM(price_subtotal)
                         new_tax_amount = round(base_total - base_subtotal, 2)
                         # Fallback: ถ้า price_total ยังไม่ถูก compute (= 0) ใช้
                         # formula เดิม round(subtotal × rate)
                         if new_tax_amount == 0.0 and base_subtotal:
-                            new_tax_amount = round(
-                                base_subtotal * tax_obj.amount / 100.0, 2)
+                            new_tax_amount = npd_vat_amount(
+                                base_subtotal, tax_obj.amount)
                     new_tax_ac = round(new_tax_amount * move_sign, 2)
                     tl_balance = tax_line.currency_id._convert(
                         new_tax_ac,
@@ -825,7 +848,7 @@ class AccountMoveLine(models.Model):
                 if taxable_7_subtotal > 0:
                     # มีบรรทัด VAT 7% → Method B: ปัด VAT 7% ครั้งเดียวจากยอดรวม
                     # ของบรรทัด 7% (subtotal × 7%) ให้ตรง iTax/การปัดยอดรวมทีเดียว
-                    method_b_vat = round(taxable_7_subtotal * 0.07, 2)
+                    method_b_vat = npd_vat_amount(taxable_7_subtotal, 7.0)
                     # ภาษีอื่น (WHT ฯลฯ) = ผลรวม per-line tax ลบส่วนของ 7%
                     other_taxes = round(per_line_tax_all - per_line_tax_7, 2)
                     tax = round(method_b_vat + other_taxes, 2)
@@ -838,7 +861,7 @@ class AccountMoveLine(models.Model):
                 tax = round(total_with_tax - untaxed, 2)
                 # Fallback: ถ้า price_total ยังไม่ compute (= 0) ใช้ formula เดิม
                 if tax == 0.0 and untaxed:
-                    tax = round(untaxed * 0.07, 2)
+                    tax = npd_vat_amount(untaxed, 7.0)
                 total = round(untaxed + tax, 2)
             cr.execute(
                 """

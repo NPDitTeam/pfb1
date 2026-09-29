@@ -1,6 +1,6 @@
 {
     'name': 'NPD Rent Price Subtotal Rounding',
-    'version': '14.0.1.0.34',
+    'version': '14.0.1.0.35',
     'category': 'Sales',
     'summary': 'ปัดเศษราคาต่อหน่วยหลังถอด VAT ให้ตรงกับรายงาน',
     'description': """
