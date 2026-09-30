@@ -298,9 +298,32 @@ class SaleOrder(models.Model):
     def write(self, vals):
         vals = self._sync_shipment_purpose_fields(vals)
         res = super().write(vals)
+        # มีคนเขียนช่องเดิมมาทับโดยไม่ได้เปลี่ยนประเภทการจัดส่งสินค้า -> ดึงกลับให้ตรง
+        if 'delivery_type' in vals and 'shipment_purpose' not in vals:
+            self._force_delivery_type_follow_purpose()
         if 'shipment_note' in vals or 'shipment_purpose' in vals:
             self._run_shipment_note_ai_check()
         return res
+
+    def _force_delivery_type_follow_purpose(self):
+        u"""ช่อง "ประเภทการจัดส่ง" (ของเดิม) ต้องเดินตาม "ประเภทการจัดส่งสินค้า" เสมอ
+
+        ปุ่ม "ดึงข้อมูลการเช่า" คัดลอกค่าทั้งชุดจากใบของบริษัทต้นทางมาทับ รวมถึง
+        delivery_type ของใบนั้นด้วย พนักงานเลือกประเภทการจัดส่งสินค้าไว้ก่อนแล้ว
+        ค่าที่ตั้งให้อัตโนมัติจึงถูกเขียนทับ สองช่องเลยขัดกันเอง
+
+        เห็นชัดเฉพาะ "รับสินค้าจากลูกค้ามายังสาขา" เพราะเป็นประเภทเดียวที่ค่าที่ถูก
+        (branch) ต่างจากค่าของใบต้นทาง (customer) ประเภทอื่นบังเอิญตรงกันอยู่แล้ว
+        จึงดูเหมือนบางใบตรงบางใบไม่ตรง (เจอจริง SO-260929-0011)
+        """
+        for order in self:
+            target = PURPOSE_TO_DELIVERY_TYPE.get(order.shipment_purpose)
+            if target and order.delivery_type != target:
+                _logger.info(
+                    '[SHIPMENT_PURPOSE] %s: ดึงประเภทการจัดส่งกลับเป็น %s '
+                    'ให้ตรงกับประเภทการจัดส่งสินค้า %s',
+                    order.name, target, order.shipment_purpose)
+                super(SaleOrder, order).write({'delivery_type': target})
 
     def _run_shipment_note_ai_check(self):
         """ให้ AI อ่านหมายเหตุเทียบกับประเภทการจัดส่งสินค้า — ไม่ตรง/คลุมเครือ = บันทึกไม่ผ่าน
