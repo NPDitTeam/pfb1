@@ -2,6 +2,7 @@
 from . import ai_it_gemini
 from . import ai_it_topic
 from . import ai_it_stock_fix
+from . import ai_it_stock_transfer_fix
 from . import ai_it_invoice_fix
 from . import ai_it_picking_fix
 from . import ai_it_rental_fix

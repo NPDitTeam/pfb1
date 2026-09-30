@@ -240,6 +240,9 @@ class NpdAiItSession(models.Model):
         ('ask_qty', 'รอจำนวนสต๊อกจริง'),
         ('confirm', 'รอการยืนยัน'),
         ('ask_cut', 'เติมสต๊อกแล้ว รอสั่งตัดสต๊อกต่อ'),
+        ('pick_transfer', 'รอเลือกใบโยกสินค้า'),
+        ('ask_transfer_qty', 'รอจำนวนสต๊อกจริงของใบโยกสินค้า'),
+        ('confirm_transfer', 'รอยืนยันการเติมสต๊อกให้ใบโยกสินค้า'),
         ('ask_url', 'รอ URL ของเอกสาร'),
         ('ask_return_doc', 'รอเลขที่ใบคืน'),
         ('ask_return_date', 'รอวันที่คืนใหม่'),
@@ -472,7 +475,10 @@ class NpdAiItSession(models.Model):
             self._post_bot(_block(
                 heading,
                 'พิมพ์ <b>เลขที่เอกสาร</b> ที่ตัดสต๊อกไม่ผ่าน<br/>'
-                + _hint('ใช้ได้ทั้งเลขใบสั่งขาย และเลขใบจัดส่ง'),
+                + _hint('ใช้ได้ทั้งเลขใบสั่งขาย ใบจัดส่ง และใบโยกสินค้า')
+                + '<br/>'
+                + _hint('ใบโยกสินค้าที่ยังไม่มีเลขที่ พิมพ์ "โยก" '
+                        'แล้วผมจะแสดงรายการที่ค้างอยู่ให้เลือก'),
             ))
             return
         if topic.code == 'invoice_date_fix':
@@ -763,6 +769,12 @@ class NpdAiItSession(models.Model):
             self._step_confirm(text)
         elif self.state == 'ask_cut':
             self._step_ask_cut(text)
+        elif self.state == 'pick_transfer':
+            self._step_pick_transfer(text)
+        elif self.state == 'ask_transfer_qty':
+            self._step_ask_transfer_qty(text)
+        elif self.state == 'confirm_transfer':
+            self._step_confirm_transfer(text)
         else:
             self._recover_unknown_state()
 
@@ -771,11 +783,18 @@ class NpdAiItSession(models.Model):
         Fix = self.env['npd.ai.it.stock.fix']
         doc_ref, document = self._parse_doc_number(text)
         if not document:
+            # ใบโยกสินค้า (stock.api.transfer) ต้องหาแยก เพราะใบที่ตัดไม่ผ่าน
+            # ยังไม่มีเลขที่ — เลขรันออกตอนกดยืนยันสำเร็จเท่านั้น
+            if self._try_start_transfer(text):
+                return
             self._post_bot(
-                'ไม่พบเอกสาร%s ในระบบ 🙏<br/>'
-                'กรุณาพิมพ์เฉพาะ <b>เลขที่เอกสาร</b> อีกครั้ง '
-                '(เลขใบสั่งขาย หรือเลขใบจัดส่ง)'
-                % (' "%s"' % html_escape(doc_ref) if doc_ref else '')
+                ('ไม่พบเอกสาร%s ในระบบ 🙏<br/>'
+                 'กรุณาพิมพ์เฉพาะ <b>เลขที่เอกสาร</b> อีกครั้ง '
+                 '(เลขใบสั่งขาย ใบจัดส่ง หรือใบโยกสินค้า)'
+                 % (' "%s"' % html_escape(doc_ref) if doc_ref else ''))
+                + '<br/>'
+                + _hint('ใบโยกสินค้าที่ยังไม่มีเลขที่ พิมพ์ "โยก" '
+                        'เพื่อดูรายการที่ค้างอยู่')
             )
             return
 
@@ -867,6 +886,298 @@ class NpdAiItSession(models.Model):
             _rows('กรุณานับของจริงในคลัง แล้วแจ้ง <b>จำนวนสต็อกจริง</b> ของแต่ละรายการ',
                   example),
         ))
+
+    # ==================================================================
+    # ใบโยกสินค้า (stock.api.transfer) — ของไม่พออยู่ที่ฐานต้นทางคนละฐาน
+    # ==================================================================
+    def _transfer_label(self, transfer):
+        """ชื่อที่ใช้เรียกใบโยก — ใบที่ยังตัดไม่ผ่านมักยังไม่มีเลขที่"""
+        if transfer.name and transfer.name != 'New':
+            return transfer.name
+        return 'ใบโยกสินค้า #%d' % transfer.id
+
+    def _transfer_item_label(self, item):
+        code = (item.get('code') or '').strip()
+        name = item.get('name') or code
+        return '[%s] %s' % (code, name) if code else name
+
+    def _try_start_transfer(self, text):
+        """ตีความว่าพนักงานหมายถึงใบโยกสินค้าไหม — คืน True ถ้ารับเรื่องแล้ว"""
+        TFix = self.env['npd.ai.it.stock.transfer.fix']
+        if not TFix.available():
+            return False
+
+        transfer = TFix.find_transfer(text)
+        if transfer:
+            self._start_transfer(transfer)
+            return True
+
+        lowered = (text or '').strip().lower()
+        if any(word in lowered for word in ('โยก', 'transfer', 'ใบโยก')):
+            self._show_transfer_list()
+            return True
+        return False
+
+    def _show_transfer_list(self):
+        """แสดงใบโยกที่ยังตัดสต๊อกไม่สำเร็จ ให้เลือกตามลำดับ"""
+        TFix = self.env['npd.ai.it.stock.transfer.fix']
+        transfers = TFix.pending_transfers()
+        if not transfers:
+            self._post_bot(_block(
+                _title('ตอนนี้ไม่มีใบโยกสินค้าที่ค้างอยู่', '📦'),
+                _hint('ใบที่ยืนยันสำเร็จไปแล้วจะไม่อยู่ในรายการนี้ '
+                      'ถ้ามีเลขที่เอกสารอยู่แล้วพิมพ์เลขมาได้เลย'),
+            ))
+            return
+
+        rows = []
+        for index, transfer in enumerate(transfers, start=1):
+            rows.append(_rows(
+                '<b>%d.</b> %s' % (index, html_escape(self._transfer_label(transfer))),
+                _indent('%s <span class="text-muted">· ต้นทาง</span> %s'
+                        ' <span class="text-muted">·</span> %d รายการ'
+                        % (transfer.transfer_date or '—',
+                           html_escape(transfer.database_selection or '—'),
+                           len(transfer.line_ids))),
+            ))
+
+        self._set_data({'transfer_ids': transfers.ids})
+        self.sudo().write({'state': 'pick_transfer'})
+        self._post_bot(_block(
+            _title('ใบโยกสินค้าที่ยังตัดสต๊อกไม่สำเร็จ', '📦'),
+            _rows(*rows),
+            'พิมพ์ <b>ลำดับ</b> ของใบที่ต้องการให้ผมช่วยดู',
+        ))
+
+    def _step_pick_transfer(self, text):
+        data = self._get_data()
+        ids = data.get('transfer_ids') or []
+        TFix = self.env['npd.ai.it.stock.transfer.fix']
+
+        picked = None
+        numbers = re.findall(r'\d+', text or '')
+        if numbers:
+            index = int(numbers[0])
+            if 1 <= index <= len(ids):
+                picked = self.env['stock.api.transfer'].sudo().browse(
+                    ids[index - 1]).exists()
+        if not picked:
+            picked = TFix.find_transfer(text)
+        if not picked:
+            self._post_bot('ยังไม่แน่ใจว่าหมายถึงใบไหน 🙏 '
+                           'พิมพ์ <b>ลำดับ</b> ของใบในรายการด้านบน')
+            return
+        self._start_transfer(picked)
+
+    def _start_transfer(self, transfer):
+        """อ่านสต๊อกที่ฐานต้นทางแล้วบอกว่าขาดอะไรเท่าไร"""
+        TFix = self.env['npd.ai.it.stock.transfer.fix']
+        all_items, shortage, error = TFix.analyze(transfer)
+
+        header = _rows(
+            _title(html_escape(self._transfer_label(transfer)), '📦'),
+            _kv('ฐานต้นทาง', html_escape(transfer.database_selection or '—')),
+        )
+
+        if error:
+            self._post_bot(_block(
+                header,
+                _title('ตรวจสต๊อกที่ฐานต้นทางไม่ได้', '⛔'),
+                html_escape(error),
+            ))
+            self.sudo().write({'state': 'cancelled'})
+            return
+
+        self.sudo().write({
+            'document_ref': self._transfer_label(transfer),
+            'document_model': transfer._name,
+            'document_id': transfer.id,
+        })
+
+        if not all_items:
+            self._post_bot(_block(header, 'ใบนี้ยังไม่มีรายการสินค้าที่ต้องตัด'))
+            self.sudo().write({'state': 'done'})
+            return
+
+        if not shortage:
+            self._post_bot(_block(
+                header,
+                _rows(
+                    _title('สต๊อกที่ต้นทางพอตัดครบทุกรายการ', '✅'),
+                    'กลับไปที่ใบโยกแล้วกดปุ่ม "ยืนยันการโอน" ได้เลย',
+                ),
+                _hint('ถ้ายังยืนยันไม่ผ่าน แสดงว่าติดสาเหตุอื่น '
+                      'กรุณาแจ้งฝ่าย IT พร้อมข้อความ error ที่ขึ้นบนหน้าจอ'),
+            ))
+            self.sudo().write({'state': 'done'})
+            return
+
+        self._set_data({'transfer_id': transfer.id, 'items': shortage})
+        self.sudo().write({'state': 'ask_transfer_qty'})
+
+        item_rows = []
+        for index, item in enumerate(shortage, start=1):
+            item_rows.append(_rows(
+                '<b>%d.</b> %s' % (index,
+                                   html_escape(self._transfer_item_label(item))),
+                _indent(
+                    '<span class="text-muted">คลังต้นทาง</span> %s'
+                    ' <span class="text-muted">· ต้องตัด</span> %s'
+                    ' <span class="text-muted">· มีอยู่</span> %s'
+                    ' <span class="text-muted">· ขาด</span> <b class="text-danger">%s</b>'
+                    % (html_escape(item.get('location_name')
+                                   or 'id=%s' % item['location_id']),
+                       _fmt(item['need']), _fmt(item['current']),
+                       _fmt(item['missing']))
+                ),
+            ))
+
+        if len(shortage) == 1:
+            example = _hint('ตอบเป็นตัวเลขได้เลย เช่น %s' % _fmt(shortage[0]['need']))
+        else:
+            example = _hint('ตอบเช่น %s' % ', '.join(
+                '%d=%s' % (i + 1, _fmt(it['need'])) for i, it in enumerate(shortage)))
+
+        self._post_bot(_block(
+            header,
+            _title('สต๊อกที่ต้นทางไม่พอตัด %d รายการ' % len(shortage), '⚠️'),
+            _rows(*item_rows),
+            _rows('กรุณานับของจริงที่คลังต้นทาง แล้วแจ้ง '
+                  '<b>จำนวนสต็อกจริง</b> ของแต่ละรายการ', example),
+        ))
+
+    def _step_ask_transfer_qty(self, text):
+        data = self._get_data()
+        items = data.get('items') or []
+        if not items:
+            self._post_bot('ข้อมูลรายการหายไป กรุณาเริ่มใหม่จากแท็บ "ตัวช่วย AI-IT"')
+            self.sudo().write({'state': 'cancelled'})
+            return
+
+        quantities = self._parse_quantities(text, items)
+        missing_index = [i + 1 for i in range(len(items)) if (i + 1) not in quantities]
+        if missing_index:
+            self._post_bot(_block(
+                'ยังไม่ได้รับจำนวนสต็อกจริงของรายการนี้ 🙏',
+                _rows(*['<b>%d.</b> %s %s'
+                        % (i, html_escape(self._transfer_item_label(items[i - 1])),
+                           _hint('(ต้องตัด %s)' % _fmt(items[i - 1]['need'])))
+                        for i in missing_index]),
+                _hint('ตอบเช่น %s' % ', '.join('%d=จำนวน' % i for i in missing_index)),
+            ))
+            return
+
+        for index, item in enumerate(items, start=1):
+            item['target'] = quantities[index]
+        self._set_data({'transfer_id': data.get('transfer_id'), 'items': items})
+        self.sudo().write({'state': 'confirm_transfer'})
+
+        item_rows, warnings = [], []
+        for index, item in enumerate(items, start=1):
+            add = max(item['target'] - item['current'], 0.0)
+            item_rows.append(_rows(
+                '<b>%d.</b> %s' % (index,
+                                   html_escape(self._transfer_item_label(item))),
+                _indent('%s → <b>%s</b> <span class="text-success">(เติม +%s)</span>'
+                        % (_fmt(item['current']), _fmt(item['target']), _fmt(add))),
+            ))
+            if item['target'] < item['need']:
+                warnings.append(
+                    '%s <span class="text-muted">·</span> แจ้ง %s แต่ต้องตัด %s'
+                    % (html_escape(self._transfer_item_label(item)),
+                       _fmt(item['target']), _fmt(item['need']))
+                )
+
+        warning_block = None
+        if warnings:
+            warning_block = _rows(
+                '<b class="text-danger">⚠️ รายการที่แจ้งมาน้อยกว่าที่ต้องตัด</b>',
+                _bullets(warnings),
+                _hint('ระบบจะเติมให้เท่าที่แจ้ง แต่จะยังตัดไม่ครบ'),
+            )
+
+        transfer = self.env['stock.api.transfer'].sudo().browse(
+            data.get('transfer_id'))
+        self._post_bot(_block(
+            _rows(
+                _title('ตรวจทานก่อนเติมสต๊อกที่ฐานต้นทาง', '📋'),
+                _kv('ฐานต้นทาง', html_escape(transfer.database_selection or '—')),
+            ),
+            _rows(*item_rows),
+            warning_block,
+            _hint('สต๊อกจะถูกเติมที่ฐานต้นทาง ไม่ใช่ฐานนี้ '
+                  'และเติมได้อย่างเดียว ไม่มีการลดสต๊อก'),
+            'พิมพ์ <b>"ยืนยัน"</b> เพื่อให้ระบบเติมสต๊อก '
+            'หรือ <b>"ยกเลิก"</b> เพื่อออกจากรายการนี้',
+        ))
+
+    def _step_confirm_transfer(self, text):
+        if not _is_command(text, CONFIRM_WORDS):
+            self._post_bot('กรุณาพิมพ์ <b>"ยืนยัน"</b> เพื่อดำเนินการ, '
+                           '<b>"ยกเลิก"</b> เพื่อยกเลิกรายการนี้ '
+                           'หรือ <b>"เริ่มใหม่"</b> เพื่อกลับไปเลือกหัวข้อ')
+            return
+
+        data = self._get_data()
+        items = data.get('items') or []
+        transfer = self.env['stock.api.transfer'].sudo().browse(
+            data.get('transfer_id') or 0).exists()
+        if not items or not transfer:
+            self._post_bot('ข้อมูลรายการหายไป กรุณาเริ่มใหม่จากแท็บ "ตัวช่วย AI-IT"')
+            self.sudo().write({'state': 'cancelled'})
+            return
+
+        TFix = self.env['npd.ai.it.stock.transfer.fix']
+        applied, error = TFix.apply_topup(transfer, items)
+        if error:
+            self._post_bot(_block(
+                _title('เติมสต๊อกที่ฐานต้นทางไม่สำเร็จ', '⛔'),
+                html_escape(error),
+                _hint('ยังไม่มีอะไรถูกแก้ กรุณาแจ้งฝ่าย IT พร้อมข้อความนี้'),
+            ))
+            self.sudo().write({'state': 'cancelled'})
+            return
+
+        item_rows = []
+        for index, row in enumerate(applied, start=1):
+            if row['added'] > 0:
+                detail = ('%s → <b>%s</b> <span class="text-success">(+%s)</span>'
+                          % (_fmt(row['before']), _fmt(row['after']),
+                             _fmt(row['added'])))
+            else:
+                detail = '%s %s' % (_fmt(row['after']),
+                                    _hint('(พออยู่แล้ว ไม่ต้องเติม)'))
+            item_rows.append(_rows(
+                '<b>%d.</b> %s' % (index, html_escape(
+                    self._transfer_item_label(row))),
+                _indent(detail),
+            ))
+
+        lines = [_block(
+            _rows(
+                _title('เติมสต๊อกที่ฐานต้นทางเรียบร้อยแล้ว', '✅'),
+                _kv('ฐานต้นทาง', html_escape(transfer.database_selection or '—')),
+            ),
+            _rows(*item_rows),
+            _rows('กลับไปที่ใบโยก <b>%s</b> แล้วกดปุ่ม "ยืนยันการโอน" อีกครั้งได้เลย'
+                  % html_escape(self._transfer_label(transfer)),
+                  _hint('มีใบอื่นอีกไหม? พิมพ์ "เริ่มใหม่" ได้เลย')),
+        )]
+        summary = html2plaintext('<br/>'.join(lines))
+        self.sudo().write({'state': 'done', 'summary': summary})
+        self._log_history('stock_transfer_topup', html2plaintext(
+            'ฐานต้นทาง: %s<br/>%s'
+            % (transfer.database_selection or '-',
+               '<br/>'.join('%s @ คลัง %s : %s → %s (+%s)'
+                            % (self._transfer_item_label(row),
+                               row['location_name'] or row['location_id'],
+                               _fmt(row['before']), _fmt(row['after']),
+                               _fmt(row['added']))
+                            for row in applied))
+        ))
+        self._post_bot('<br/>'.join(lines))
+        _logger.info('ตัวช่วย AI-IT: %s เติมสต๊อกข้ามฐานให้ %s (%d รายการ)',
+                     self.user_id.display_name, self.document_ref, len(applied))
 
     # ---- คลังของสาขาที่ตัวช่วยสร้าง/ผูกให้เอง ------------------------
     def _location_fail_reason(self, info):

@@ -325,3 +325,103 @@ class StockAPIController(http.Controller):
             _logger.exception("❌ ROLLBACK ERROR")
             return {'status': 500, 'error': str(e)}
 
+    # ==================================================================
+    # เติมสต๊อกที่คลังต้นทาง — ใช้ตอนใบโยกสินค้าตัดไม่ผ่านเพราะของในระบบน้อยกว่าจริง
+    # ==================================================================
+    @http.route('/api/adjust_stock', type='json', auth='user',
+                methods=['POST'], csrf=False)
+    def adjust_stock(self):
+        """ปรับสต๊อกที่คลังต้นทางให้เท่ากับจำนวนที่นับได้จริงหน้างาน
+
+        ฝั่งที่เรียกคือตัวช่วย AI-IT ของฐานปลายทาง เวลาใบโยกสินค้าตัดสต๊อก
+        ไม่ผ่านเพราะ /api/transfer_stock เจอของไม่พอที่คลังต้นทาง
+
+        รับ  {'items': [{'default_code': 'REE-0115',
+                         'location_id': 55,
+                         'target_qty': 80}]}
+        คืน  {'status': 200, 'result': [{default_code, location_id,
+                                         before, added, after}]}
+
+        กันของงอก: เติมได้อย่างเดียว ถ้าจำนวนที่แจ้งน้อยกว่าหรือเท่าของในระบบ
+        จะไม่แตะอะไรเลย ไม่มีเส้นทางที่ลดสต๊อกผ่าน endpoint นี้
+        """
+        try:
+            post = request.jsonrequest or {}
+            items = post.get('items') or []
+            if not items:
+                return {'status': 400, 'error': 'Missing items'}
+
+            Product = request.env['product.product'].sudo()
+            Location = request.env['stock.location'].sudo()
+            Quant = request.env['stock.quant'].sudo()
+            result = []
+
+            for item in items:
+                code = (item.get('default_code') or '').strip()
+                location_id = int(item.get('location_id') or 0)
+                target = float(item.get('target_qty') or 0.0)
+                if not code or not location_id:
+                    return self._fail('ข้อมูลไม่ครบ ต้องมีทั้ง default_code และ location_id')
+
+                product = Product.search([('default_code', '=', code)], limit=1)
+                if not product:
+                    return self._fail('ไม่พบสินค้ารหัส %s ในฐานนี้' % code)
+
+                location = Location.browse(location_id)
+                if not location.exists():
+                    return self._fail('ไม่พบคลัง id=%s ในฐานนี้' % location_id)
+                if location.usage != 'internal':
+                    return self._fail(
+                        'คลัง id=%s (%s) ไม่ใช่คลังภายใน จึงปรับสต๊อกให้ไม่ได้'
+                        % (location_id, location.complete_name))
+
+                before = self._onhand_qty(product, location_id)
+                if target <= before:
+                    result.append({
+                        'default_code': code,
+                        'location_id': location_id,
+                        'before': before,
+                        'added': 0.0,
+                        'after': before,
+                    })
+                    continue
+
+                quant = Quant.search([
+                    ('product_id', '=', product.id),
+                    ('location_id', '=', location_id),
+                    ('lot_id', '=', False),
+                    ('package_id', '=', False),
+                    ('owner_id', '=', False),
+                ], limit=1)
+                inv_ctx = {'inventory_mode': True}
+                if quant:
+                    # ยอดที่ตั้งต้องเป็นยอดของ quant ใบนี้ + ส่วนที่ขาด
+                    # (คลังเดียวกันอาจมีหลาย quant เช่นแยก lot ผลรวมถึงจะเท่า before)
+                    quant.with_context(**inv_ctx).write({
+                        'inventory_quantity': quant.quantity + (target - before),
+                    })
+                else:
+                    Quant.with_context(**inv_ctx).create({
+                        'product_id': product.id,
+                        'location_id': location_id,
+                        'inventory_quantity': target - before,
+                    })
+
+                after = self._onhand_qty(product, location_id)
+                _logger.info(
+                    "📦 adjust_stock %s @ location %s : %.2f -> %.2f (+%.2f)",
+                    code, location_id, before, after, after - before)
+                result.append({
+                    'default_code': code,
+                    'location_id': location_id,
+                    'before': before,
+                    'added': after - before,
+                    'after': after,
+                })
+
+            return {'status': 200, 'result': result}
+
+        except Exception as e:
+            request.env.cr.rollback()
+            _logger.exception("❌ ADJUST STOCK ERROR")
+            return {'status': 500, 'error': str(e)}

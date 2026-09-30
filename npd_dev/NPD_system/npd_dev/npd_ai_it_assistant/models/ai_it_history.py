@@ -9,6 +9,7 @@ from odoo import api, fields, models
 
 ACTION_TYPES = [
     ('stock_topup', u'เติมสต๊อกให้พอตัด'),
+    ('stock_transfer_topup', u'เติมสต๊อกให้ใบโยกสินค้า'),
     ('stock_location', u'สร้าง/ผูกคลังของสาขา'),
     ('stock_cut', u'ตัดสต๊อกให้'),
     ('invoice_date', u'แก้วันที่ใบแจ้งหนี้'),
