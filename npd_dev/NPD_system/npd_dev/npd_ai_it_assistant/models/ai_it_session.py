@@ -477,8 +477,8 @@ class NpdAiItSession(models.Model):
                 'พิมพ์ <b>เลขที่เอกสาร</b> ที่ตัดสต๊อกไม่ผ่าน<br/>'
                 + _hint('ใช้ได้ทั้งเลขใบสั่งขาย ใบจัดส่ง และใบโยกสินค้า')
                 + '<br/>'
-                + _hint('ใบโยกสินค้าที่ยังไม่มีเลขที่ พิมพ์ "โยก" '
-                        'แล้วผมจะแสดงรายการที่ค้างอยู่ให้เลือก'),
+                + _hint('ใบโยกสินค้าที่ยังไม่มีเลขที่ วาง URL ของหน้าใบมาได้ '
+                        'หรือพิมพ์ "โยก" แล้วผมจะแสดงรายการที่ค้างอยู่ให้เลือก'),
             ))
             return
         if topic.code == 'invoice_date_fix':
@@ -781,6 +781,9 @@ class NpdAiItSession(models.Model):
     # ---- ขั้นที่ 1: รับเลขเอกสาร -------------------------------------
     def _step_ask_doc(self, text):
         Fix = self.env['npd.ai.it.stock.fix']
+        # วาง URL ของใบโยกมา ต้องดูก่อน ไม่งั้นตัวเลขใน URL อาจไปชนเอกสารอื่น
+        if 'stock.api.transfer' in (text or '') and self._try_start_transfer(text):
+            return
         doc_ref, document = self._parse_doc_number(text)
         if not document:
             # ใบโยกสินค้า (stock.api.transfer) ต้องหาแยก เพราะใบที่ตัดไม่ผ่าน

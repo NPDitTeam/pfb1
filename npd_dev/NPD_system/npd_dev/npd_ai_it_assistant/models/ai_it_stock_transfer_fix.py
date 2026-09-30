@@ -13,6 +13,7 @@
     stock_api_transfer.api_password
 """
 import logging
+import re
 
 from odoo import api, models
 
@@ -64,12 +65,55 @@ class NpdAiItStockTransferFix(models.AbstractModel):
         if rec:
             return rec
 
-        digits = ref.lstrip('#').strip()
-        if digits.isdigit():
-            rec = Transfer.browse(int(digits))
+        transfer_id, model_in_url = self._parse_transfer_ref(ref)
+        # URL ของหน้าอื่น อย่าเดาว่าเป็นใบโยก ไม่งั้นเลขใน URL จะพาไปผิดใบ
+        if model_in_url and model_in_url != TRANSFER_MODEL:
+            return None
+        if transfer_id:
+            rec = Transfer.browse(transfer_id)
             if rec.exists():
                 return rec
         return None
+
+    @api.model
+    def _parse_transfer_ref(self, text):
+        """ดึงเลขที่ระบบของใบโยกจากสิ่งที่พนักงานวางมา
+
+        รองรับทั้ง
+            206 หรือ #206
+            .../web#id=206&model=stock.api.transfer&view_type=form   (Odoo 14)
+            .../odoo/stock.api.transfer/206                          (Odoo 18)
+            .../odoo/action-123/206
+
+        คืน (transfer_id, model_in_url) — ค่าไหนอ่านไม่ออกเป็น None
+        """
+        text = (text or '').strip()
+
+        model_match = re.search(r'model=([a-zA-Z0-9_.]+)', text)
+        model_in_url = model_match.group(1) if model_match else None
+
+        # URL แบบใหม่ของ Odoo 18 ใส่ชื่อโมเดลไว้ใน path
+        if not model_in_url:
+            path_model = re.search(
+                r'/odoo/(?:[a-z0-9-]+/)*?([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)/(\d+)', text)
+            if path_model:
+                return int(path_model.group(2)), path_model.group(1)
+
+        id_match = re.search(r'(?:^|[#&?])id=(\d+)', text)
+        if id_match:
+            return int(id_match.group(1)), model_in_url
+
+        bare = text.lstrip('#').strip()
+        if bare.isdigit():
+            return int(bare), model_in_url
+
+        # ท้าย URL เป็นตัวเลข เช่น /odoo/action-123/206
+        if '/' in text:
+            tail = re.search(r'/(\d+)(?:[/?#]|$)', text)
+            if tail:
+                return int(tail.group(1)), model_in_url
+
+        return None, model_in_url
 
     @api.model
     def pending_transfers(self, limit=15):
