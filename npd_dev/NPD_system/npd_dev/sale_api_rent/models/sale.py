@@ -137,7 +137,8 @@ class SaleOrder(models.Model):
             'delivery_type': so_data.get('delivery_type'),
             'trip_allowance': so_data.get('trip_allowance'),
             'daily_allowance': so_data.get('daily_allowance'),
-            'use_special_delivery_zero': so_data.get('use_special_delivery_zero', 0.0)
+            'use_special_delivery_zero': so_data.get('use_special_delivery_zero', 0.0),
+            'npd_free_shipping_zero_set': bool(so_data.get('npd_free_shipping_zero_set'))
         })
 
         if self.order_line:

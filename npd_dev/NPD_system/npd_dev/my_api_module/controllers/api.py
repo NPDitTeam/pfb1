@@ -72,6 +72,9 @@ class SaleOrderAPI(http.Controller):
             "trip_allowance": sale_order.trip_allowance if hasattr(sale_order, 'trip_allowance') else None,
             "daily_allowance": sale_order.daily_allowance if hasattr(sale_order, 'daily_allowance') else None,
             "use_special_delivery_zero": sale_order.use_special_delivery_zero if hasattr(sale_order, 'use_special_delivery_zero') else None,
+            # ค่าขนส่งเป็น 0 เพราะโปรของบริษัท ไม่ใช่คนกดเอง
+            # ฝั่งโลจิสติกส์ใช้ข้ามขั้นขออนุมัติค่าขนส่งพิเศษ
+            "npd_free_shipping_zero_set": sale_order.npd_free_shipping_zero_set if hasattr(sale_order, 'npd_free_shipping_zero_set') else False,
             "sale_order_lines": [
                 {
                     "product_id": line.product_id.id,
