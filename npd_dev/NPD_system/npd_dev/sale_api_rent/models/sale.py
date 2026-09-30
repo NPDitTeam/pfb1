@@ -12,6 +12,37 @@ class SaleOrder(models.Model):
     #     ('test_2025_import004', 'test_2025_import004'),
     #     ('test_2025_import003', 'test_2025_import003')
     # ], string="ดึงข้อมูลการเช่าจาก บ.อื่น")
+    def _npd_marketing_values(self, so_data):
+        u"""แปลงชื่อแคมเปญ/สื่อ/แหล่งที่มาจากฐานต้นทาง เป็นรายการของฐานนี้
+
+        ข้ามฐานกันจึงจับคู่ด้วยชื่อ ไม่ใช่ id เพราะเลข id ของแต่ละฐานเป็นคนละชุด
+        ไม่มีของชื่อเดียวกันก็สร้างให้ เพื่อให้ใบฝั่งนี้รู้ที่มาของงาน
+        และดูรายงานแยกตามแคมเปญได้เหมือนต้นทาง
+        """
+        values = {}
+        pairs = (
+            ('campaign_name', 'campaign_id', 'utm.campaign'),
+            ('medium_name', 'medium_id', 'utm.medium'),
+            ('source_name', 'source_id', 'utm.source'),
+        )
+        for key, field_name, model in pairs:
+            name = (so_data.get(key) or '').strip()
+            if not name:
+                continue
+            record = self.env[model].sudo().search([('name', '=', name)], limit=1)
+            if not record:
+                create_vals = {'name': name}
+                if model == 'utm.campaign' and so_data.get('campaign_free_shipping'):
+                    # ยกเงื่อนไขโปรมาด้วย ไม่งั้นได้แคมเปญชื่อเหมือนแต่ไม่มีเงื่อนไข
+                    if 'npd_free_shipping' in self.env[model]._fields:
+                        create_vals['npd_free_shipping'] = True
+                        create_vals['npd_free_shipping_max_km'] = (
+                            so_data.get('campaign_free_shipping_max_km') or 0.0)
+                record = self.env[model].sudo().create(create_vals)
+                _logger.info('[FETCH_RENTAL] สร้าง %s ใหม่จากต้นทาง: %s', model, name)
+            values[field_name] = record.id
+        return values
+
     def _get_database_options(self):
         data_list = [
             ('NPD_S_Group_New_V2', 'NPD_S_Group_New_V2'),
@@ -138,7 +169,8 @@ class SaleOrder(models.Model):
             'trip_allowance': so_data.get('trip_allowance'),
             'daily_allowance': so_data.get('daily_allowance'),
             'use_special_delivery_zero': so_data.get('use_special_delivery_zero', 0.0),
-            'npd_free_shipping_zero_set': bool(so_data.get('npd_free_shipping_zero_set'))
+            'npd_free_shipping_zero_set': bool(so_data.get('npd_free_shipping_zero_set')),
+            **self._npd_marketing_values(so_data),
         })
 
         if self.order_line:

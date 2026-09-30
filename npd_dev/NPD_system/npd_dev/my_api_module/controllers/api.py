@@ -75,6 +75,18 @@ class SaleOrderAPI(http.Controller):
             # ค่าขนส่งเป็น 0 เพราะโปรของบริษัท ไม่ใช่คนกดเอง
             # ฝั่งโลจิสติกส์ใช้ข้ามขั้นขออนุมัติค่าขนส่งพิเศษ
             "npd_free_shipping_zero_set": sale_order.npd_free_shipping_zero_set if hasattr(sale_order, 'npd_free_shipping_zero_set') else False,
+            # แท็บการตลาด — ส่งเป็น "ชื่อ" ไม่ใช่ id เพราะปลายทางคนละฐาน
+            # เลข id จึงเป็นคนละชุดกัน ส่งเลขไปจะชี้ผิดรายการ
+            "campaign_name": sale_order.campaign_id.name or False,
+            "medium_name": sale_order.medium_id.name or False,
+            "source_name": sale_order.source_id.name or False,
+            # เงื่อนไขโปรของแคมเปญ ปลายทางใช้ตอนต้องสร้างแคมเปญใหม่
+            "campaign_free_shipping": (
+                sale_order.campaign_id.npd_free_shipping
+                if hasattr(sale_order.campaign_id, 'npd_free_shipping') else False),
+            "campaign_free_shipping_max_km": (
+                sale_order.campaign_id.npd_free_shipping_max_km
+                if hasattr(sale_order.campaign_id, 'npd_free_shipping_max_km') else 0.0),
             "sale_order_lines": [
                 {
                     "product_id": line.product_id.id,
