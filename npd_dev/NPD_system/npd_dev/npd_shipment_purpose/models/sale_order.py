@@ -210,13 +210,26 @@ class SaleOrder(models.Model):
             if not product:
                 missing.append('%s (%s)' % (name or '-', code or 'ไม่มีรหัส'))
                 continue
-            self.env['sale.order.line'].create({
+            unit_weight = item.get('unit_weight') or 0.0
+            values = {
                 'order_id': self.id,
                 'product_id': product.id,
                 'name': product.name,
+                # จำนวนหลักของรายการสินค้า ต้องเท่ากับจำนวนขอตัดในใบโยก
+                # เดิมใส่แต่ pfb_quantity ช่อง "จำนวน" บนจอจึงค้างที่ 1
+                'product_uom_qty': qty or 0,
                 'pfb_quantity': int(qty or 0),
-            })
-            summary.append('• %s  จำนวนขอตัด %s' % (name or product.name, qty))
+            }
+            if unit_weight:
+                # น้ำหนักรวมของใบโยกไม่ได้คำนวณให้เอง เพราะตัวคำนวณข้ามไป
+                # เมื่อใบมีการอ้างอิงฐานอื่น จึงต้องใส่ค่าตรง ๆ
+                values['second_uom_qty'] = unit_weight
+                values['total_weight'] = (qty or 0) * unit_weight
+            self.env['sale.order.line'].create(values)
+            weight_text = ('  น้ำหนักรวม %s กก.' % '{:,.2f}'.format((qty or 0) * unit_weight)
+                           if unit_weight else '')
+            summary.append('• %s  จำนวนขอตัด %s%s' % (
+                name or product.name, qty, weight_text))
 
         if missing:
             raise UserError(_('❌ ไม่พบสินค้าเหล่านี้ในฐานโลจิสติกส์:\n• %s') % '\n• '.join(missing))

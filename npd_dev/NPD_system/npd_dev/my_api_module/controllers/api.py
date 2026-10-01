@@ -142,13 +142,21 @@ class StockTransferAPI(http.Controller):
             }
 
         lines = []
+        Product = request.env['product.product'].sudo()
         for line in transfer.line_ids:
-            product = request.env['product.product'].sudo().search(
-                [('name', '=', line.product_name)], limit=1)
+            # หาด้วยรหัสสินค้าก่อน เพราะบรรทัดใบโยกหลายใบไม่ได้กรอกชื่อไว้
+            # (ของจริงเจอ product_name เป็นค่าว่าง แต่มีรหัส RII-xxxx ครบ)
+            product = Product.search(
+                [('default_code', '=', line.default_code)], limit=1) if line.default_code else Product
+            if not product and line.product_name:
+                product = Product.search([('name', '=', line.product_name)], limit=1)
             lines.append({
-                "product_name": line.product_name,
+                "product_name": line.product_name or (product.name if product else ''),
                 "default_code": line.default_code or (product.default_code if product else ''),
                 "request_qty": line.request_qty,
+                # น้ำหนักต่อหน่วยจากข้อมูลสินค้าฝั่งต้นทาง ใบโยกไม่มีช่องน้ำหนัก
+                # และสินค้าฝั่งโลจิสติกส์ส่วนใหญ่ไม่ได้กรอกน้ำหนักไว้
+                "unit_weight": product.weight if product else 0.0,
                 "available_qty": line.available_qty,
                 "source_location": line.location_api_id.name if line.location_api_id else '',
                 "destination_location": line.destination_location_id.complete_name
