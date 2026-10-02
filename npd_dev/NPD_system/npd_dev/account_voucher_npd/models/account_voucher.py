@@ -1723,6 +1723,7 @@ class AccountVoucher(models.Model):
     def action_cancel_draft(self):
         """Set voucher กลับเป็น Draft, ยกเลิก Payment ที่เกี่ยวข้อง และเคลียร์ค่าอ้างอิง (รวม Snapshot)"""
         self.ensure_one()
+        self._sync_wht_cert_state('draft')
         self.write({'state': 'draft'})
 
         # ----------------------------------------------------------------------
@@ -1842,6 +1843,32 @@ class AccountVoucher(models.Model):
 
         return True
 
+    def _sync_wht_cert_state(self, target):
+        """ให้หนังสือรับรองหัก ณ ที่จ่ายเดินตามสถานะเอกสาร
+
+        รายงาน Withholding Tax Report กรองด้วย cert_id.state != 'draft'
+        ถ้าเอกสารลงบันทึกแล้วแต่ cert ยังค้าง draft รายการจะหายไปจากรายงาน
+        และถ้ายกเลิกเอกสารแล้ว cert ยัง done รายการที่ยกเลิกจะยังโผล่ในรายงาน
+
+        เปลี่ยนเฉพาะใบที่สถานะยังไม่ตรงเป้าหมาย จะได้ไม่เขียนทับของที่ตั้งใจแก้มือ
+        """
+        for rec in self:
+            certs = rec.wt_cert_ids
+            if not certs:
+                continue
+            if target == 'done':
+                todo = certs.filtered(lambda c: c.state == 'draft')
+                if todo:
+                    todo.action_done()
+            elif target == 'cancel':
+                todo = certs.filtered(lambda c: c.state != 'cancel')
+                if todo:
+                    todo.action_cancel()
+            elif target == 'draft':
+                todo = certs.filtered(lambda c: c.state == 'done')
+                if todo:
+                    todo.action_draft()
+
     def cancel_voucher(self):
         for voucher in self:
             voucher.old_move_name = voucher.move_id.name
@@ -1851,6 +1878,7 @@ class AccountVoucher(models.Model):
                                       "<p><b>Cancel Date:</b> %s </p>"
                                       "<p><b>Total:</b> %s </p>" % (
                                           datetime.today().strftime('%d/%m/%Y'), voucher.amount))
+        self._sync_wht_cert_state('cancel')
         self.write({'state': 'cancel', 'move_id': False})
 
     def unlink(self):
@@ -2175,6 +2203,7 @@ class AccountVoucher(models.Model):
                 'number': self.get_seq_voucher()
             })
             move.post()
+            voucher._sync_wht_cert_state('done')
         return True
 
     def _track_subtype(self, init_values):

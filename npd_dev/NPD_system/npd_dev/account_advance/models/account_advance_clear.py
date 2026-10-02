@@ -261,9 +261,36 @@ class AccountAdvanceClear(models.Model):
         # self.action_move_line_create()
         self.state = 'confirm'
 
+    def _sync_wht_cert_state(self, target):
+        """ให้หนังสือรับรองหัก ณ ที่จ่ายเดินตามสถานะเอกสาร
+
+        รายงาน Withholding Tax Report กรองด้วย cert_id.state != 'draft'
+        ถ้าเอกสารลงบันทึกแล้วแต่ cert ยังค้าง draft รายการจะหายไปจากรายงาน
+        และถ้ายกเลิกเอกสารแล้ว cert ยัง done รายการที่ยกเลิกจะยังโผล่ในรายงาน
+
+        เปลี่ยนเฉพาะใบที่สถานะยังไม่ตรงเป้าหมาย จะได้ไม่เขียนทับของที่ตั้งใจแก้มือ
+        """
+        for rec in self:
+            certs = rec.wt_cert_ids
+            if not certs:
+                continue
+            if target == 'done':
+                todo = certs.filtered(lambda c: c.state == 'draft')
+                if todo:
+                    todo.action_done()
+            elif target == 'cancel':
+                todo = certs.filtered(lambda c: c.state != 'cancel')
+                if todo:
+                    todo.action_cancel()
+            elif target == 'draft':
+                todo = certs.filtered(lambda c: c.state == 'done')
+                if todo:
+                    todo.action_draft()
+
     def confirm(self):
         self.action_move_line_create()
         self.state = 'post'
+        self._sync_wht_cert_state('done')
 
     def first_move_line_get(self, move_id, company_currency, current_currency):
         debit = credit = 0.0
@@ -484,9 +511,11 @@ class AccountAdvanceClear(models.Model):
         return True
 
     def action_cancel_draft(self):
+        self._sync_wht_cert_state('cancel')
         self.write({'state': 'cancel'})
 
     def set_draft(self):
+        self._sync_wht_cert_state('draft')
         self.write({'state': 'draft'})
         self.ensure_one()
         query = """
@@ -500,6 +529,7 @@ class AccountAdvanceClear(models.Model):
         for advance in self:
             advance.move_id.button_cancel()
             advance.move_id.unlink()
+        self._sync_wht_cert_state('cancel')
         self.write({'state': 'cancel', 'move_id': False})
 
     def _get_tax_vals(self):

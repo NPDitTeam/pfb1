@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'NPD Product Withholding Tax',
-    'version': '14.0.1.1.0',
+    'version': '14.0.1.2.0',
     'summary': 'Auto-create WHT accounts and link products to withholding tax configuration',
     'description': """
         - เพิ่มฟิลด์ Withholding Tax บน Product Template
