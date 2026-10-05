@@ -90,6 +90,7 @@ try {
                 'state' => $record['state'],
                 'reason' => $record['reason'],
                 'approved_by' => $approved_by_name,
+                'approved_at' => $record['approved_at'],
                 'branch' => $user_branch,
                 'department' => $record['department'],
                 'position' => $record['position'],

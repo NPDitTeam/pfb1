@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ใบลา NPD/HR.03 — ตัดช่องหมายเหตุ / เอกสารประกอบใบลา / ช่องเจ้าหน้าที่บันทึก
+         / ลายเซ็นอนุมัติกรรมการผู้จัดการ ออกตามแบบที่ฝ่ายบุคคลกำหนด
+         แอปมือถือเปิดไฟล์เดียวกันนี้ (api_leave_form_pdf) -->
+
+    <record id="paperformat_leave_form_a4" model="report.paperformat">
+        <field name="name">Leave Form A4</field>
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">10</field>
+        <field name="margin_bottom">10</field>
+        <field name="margin_left">15</field>
+        <field name="margin_right">15</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <record id="action_report_leave_form" model="ir.actions.report">
+        <field name="name">ใบลา (NPD/HR.03)</field>
+        <field name="model">hr.attendance.branch.leave</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">hr_attendance_branch.report_leave_form_document</field>
+        <field name="report_file">hr_attendance_branch.report_leave_form_document</field>
+        <field name="print_report_name">'ใบลา_%s' % (object.hr_id_attendance_branch_leave or object.id)</field>
+        <field name="binding_model_id" ref="model_hr_attendance_branch_leave"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="paperformat_leave_form_a4"/>
+    </record>
+
+    <template id="report_leave_form_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="v" t-value="o._leave_form_values()"/>
+                <div class="article leave-form">
+                    <style>
+                        @font-face {
+                            font-family: 'THSarabun';
+                            src: url('/employee_salary/static/src/fonts/THSarabun.ttf') format('truetype');
+                            font-weight: normal;
+                            font-style: normal;
+                        }
+                        @font-face {
+                            font-family: 'THSarabun';
+                            src: url('/employee_salary/static/src/fonts/THSarabunBold.ttf') format('truetype');
+                            font-weight: bold;
+                            font-style: normal;
+                        }
+                        .leave-form, .leave-form * {
+                            font-family: 'THSarabun', 'Sarabun', 'TH Sarabun New', sans-serif !important;
+                        }
+                        .leave-form { font-size: 16pt; color: #000; line-height: 1.5; }
+                        .leave-form .fill {
+                            display: inline-block;
+                            border-bottom: 1px dotted #000;
+                            text-align: center;
+                            line-height: 1.2;
+                        }
+                        .leave-form .cb {
+                            display: inline-block;
+                            width: 13px; height: 13px;
+                            border: 1.5px solid #000;
+                            vertical-align: middle;
+                            margin-right: 4px;
+                            position: relative;
+                        }
+                        .leave-form .cb .on {
+                            position: absolute;
+                            left: 2px; top: 2px; right: 2px; bottom: 2px;
+                            background: #000;
+                        }
+                        .leave-form table.types { width: 92%; margin: 4px auto 0 auto; border-collapse: collapse; }
+                        .leave-form table.types th, .leave-form table.types td {
+                            border: 1px solid #000; padding: 0 8px; height: 26px;
+                        }
+                        .leave-form table.types td { border-top: 1px dotted #000; border-bottom: 1px dotted #000; }
+                        .leave-form table.types th { text-align: center; font-weight: bold; }
+                        .leave-form .box { border: 1px solid #000; padding: 10px 16px; }
+                    </style>
+                    <div class="page">
+
+                        <!-- หัวกระดาษ -->
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="width: 25%;"/>
+                                <td style="width: 50%; text-align: center; font-size: 22pt; font-weight: bold;">
+                                    ใบลา <span class="fill" style="min-width: 150px; border-bottom-style: solid;" t-esc="v['leave_type']"/>
+                                </td>
+                                <td style="width: 25%; text-align: right; vertical-align: top; line-height: 1.2;">
+                                    NPD / HR.03<br/>
+                                    <span style="font-size: 13pt;">(ส่วนกลาง)</span>
+                                </td>
+                            </tr>
+                        </table>
+                        <div style="text-align: right; font-size: 14pt;">
+                            เลขที่ <span class="fill" style="min-width: 90px;" t-esc="v['doc_no']"/>
+                        </div>
+                        <div style="text-align: right;">
+                            เขียนที่ <span class="fill" style="min-width: 300px;" t-esc="v['written_at']"/>
+                        </div>
+                        <div style="text-align: right;">
+                            วันที่ <span class="fill" style="min-width: 40px;" t-esc="v['created']['day']"/>
+                            เดือน <span class="fill" style="min-width: 130px;" t-esc="v['created']['month']"/>
+                            พ.ศ. <span class="fill" style="min-width: 60px;" t-esc="v['created']['year']"/>
+                        </div>
+
+                        <!-- ผู้ลา -->
+                        <div style="margin-top: 14px;">
+                            ชื่อ-สกุล <span class="fill" style="min-width: 260px;" t-esc="v['fullname']"/>
+                            ตำแหน่ง <span class="fill" style="min-width: 200px;" t-esc="v['position']"/>
+                        </div>
+
+                        <!-- ลาเป็นชั่วโมง -->
+                        <div>
+                            <span class="cb"><span t-if="v['is_hourly']" class="on"/></span>
+                            ขอลาในเวลาทำงาน ตั้งแต่เวลา
+                            <span class="fill" style="min-width: 70px;"><t t-if="v['is_hourly']" t-esc="v['start_time']"/></span> น.
+                            ถึง เวลา
+                            <span class="fill" style="min-width: 70px;"><t t-if="v['is_hourly']" t-esc="v['end_time']"/></span> น.
+                            รวมเป็นเวลา
+                            <span class="fill" style="min-width: 45px;" t-esc="v['hours']"/> ชม.
+                            <span class="fill" style="min-width: 45px;" t-esc="v['minutes']"/> นาที
+                        </div>
+
+                        <!-- ลาเป็นวัน -->
+                        <div style="white-space: nowrap;">
+                            <span class="cb"><span t-if="not v['is_hourly']" class="on"/></span>
+                            ขอลาหยุดตั้งแต่วันที่
+                            <t t-if="not v['is_hourly']">
+                                <span class="fill" style="min-width: 26px;" t-esc="v['start']['day']"/>
+                                เดือน <span class="fill" style="min-width: 72px;" t-esc="v['start']['month']"/>
+                                พ.ศ. <span class="fill" style="min-width: 42px;" t-esc="v['start']['year']"/>
+                                ถึง วันที่ <span class="fill" style="min-width: 26px;" t-esc="v['end']['day']"/>
+                                เดือน <span class="fill" style="min-width: 72px;" t-esc="v['end']['month']"/>
+                                พ.ศ. <span class="fill" style="min-width: 42px;" t-esc="v['end']['year']"/>
+                                รวมเป็นเวลา <span class="fill" style="min-width: 26px;" t-esc="v['days']"/> วัน
+                            </t>
+                            <t t-else="">
+                                <span class="fill" style="min-width: 26px;"/>
+                                เดือน <span class="fill" style="min-width: 72px;"/>
+                                พ.ศ. <span class="fill" style="min-width: 42px;"/>
+                                ถึง วันที่ <span class="fill" style="min-width: 26px;"/>
+                                เดือน <span class="fill" style="min-width: 72px;"/>
+                                พ.ศ. <span class="fill" style="min-width: 42px;"/>
+                                รวมเป็นเวลา <span class="fill" style="min-width: 26px;"/> วัน
+                            </t>
+                        </div>
+                        <!-- ลาเป็นชั่วโมงก็ยังต้องรู้ว่าวันไหน -->
+                        <div t-if="v['is_hourly']" style="padding-left: 22px;">
+                            ในวันที่ <span class="fill" style="min-width: 30px;" t-esc="v['start']['day']"/>
+                            เดือน <span class="fill" style="min-width: 90px;" t-esc="v['start']['month']"/>
+                            พ.ศ. <span class="fill" style="min-width: 50px;" t-esc="v['start']['year']"/>
+                        </div>
+
+                        <!-- ประเภท / เหตุผล (ไม่มีช่องหมายเหตุ) -->
+                        <table class="types">
+                            <thead>
+                                <tr>
+                                    <th style="width: 38%;">ประเภทของการลาหยุด</th>
+                                    <th>เหตุผลที่ลาหยุด</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- ประเภทตามแอป (LEAVE_TYPE_SELECTION) ไม่ใช่ 4 ช่องในกระดาษเดิม -->
+                                <tr t-foreach="v['type_rows']" t-as="row">
+                                    <td><span class="cb"><span t-if="row[0] == v['leave_type']" class="on"/></span> <t t-esc="row[1]"/></td>
+                                    <td><t t-if="row[0] == v['leave_type']" t-esc="v['note']"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- ผลพิจารณา (ซ้าย) + ลายเซ็นผู้ลา (ขวา) -->
+                        <table style="width: 100%; margin-top: 30px;">
+                            <tr>
+                                <td style="width: 55%; vertical-align: top;">
+                                    <div class="box">
+                                        <div>
+                                            พิจารณาแล้วเห็นสมควร
+                                            <span style="white-space: nowrap; margin-left: 6px;">
+                                                <span class="cb"><span t-if="v['state'] == 'รออนุมัติ'" class="on"/></span>รออนุมัติ
+                                            </span>
+                                            <span style="white-space: nowrap; margin-left: 6px;">
+                                                <span class="cb"><span t-if="v['state'] == 'อนุมัติ'" class="on"/></span>สมควร
+                                            </span>
+                                            <span style="white-space: nowrap; margin-left: 6px;">
+                                                <span class="cb"><span t-if="v['state'] == 'ไม่อนุมัติ'" class="on"/></span>ไม่สมควร
+                                            </span>
+                                        </div>
+                                        <div t-if="v['state'] == 'ยกเลิก'" style="color: #b00020; font-weight: bold;">
+                                            ** ผู้ลายกเลิกคำขอลานี้แล้ว **
+                                        </div>
+                                        <div t-if="v['reason']" style="font-size: 15pt;">
+                                            เหตุผล: <t t-esc="v['reason']"/>
+                                        </div>
+                                        <div style="margin-top: 18px; text-align: center;">
+                                            ลงชื่อ <span class="fill" style="min-width: 230px;"/>
+                                        </div>
+                                        <div style="text-align: center;">
+                                            ( <span class="fill" style="min-width: 230px;">
+                                                <t t-if="v['state'] in ('อนุมัติ', 'ไม่อนุมัติ')" t-esc="v['approver']"/>
+                                            </span> )
+                                        </div>
+                                        <div style="text-align: center;">
+                                            <t t-if="v['state'] in ('อนุมัติ', 'ไม่อนุมัติ') and v['approved']['short']" t-esc="v['approved']['short']"/>
+                                            <t t-else="">........../........../..........</t>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="width: 45%; vertical-align: top; text-align: center; padding-top: 30px;">
+                                    <div>ลงชื่อ <span class="fill" style="min-width: 190px;"/> (ผู้ลาหยุด)</div>
+                                    <div>( <span class="fill" style="min-width: 220px;" t-esc="v['fullname']"/> )</div>
+                                    <div t-esc="v['created']['short'] or '........../........../..........'"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

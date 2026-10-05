@@ -4,6 +4,7 @@ from odoo import models, fields, api
 from odoo.exceptions import UserError
 from datetime import date, datetime
 import base64
+import re
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -140,6 +141,22 @@ TIME_STATES = [
     ("ยกเลิก", "ยกเลิก"),
 ]
 
+# ฟิลด์ที่พิมพ์อยู่บนใบลา — เปลี่ยนเมื่อไหร่ต้องออก PDF ใหม่
+LEAVE_FORM_FIELDS = (
+    'username', 'employee_id', 'position', 'branch', 'company',
+    'leave_start_date', 'start_time', 'leave_end_date', 'end_time',
+    'leave_type', 'note', 'state', 'reason', 'approved_by', 'approved_at',
+    'created_at',
+)
+
+THAI_MONTHS = [
+    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
+]
+
+# ลาเกิน 8 ชม. ในวันเดียว (เช่น 08:00–17:00) นับเป็นลาทั้งวัน
+HOURLY_LEAVE_MAX_MINUTES = 8 * 60
+
 HRMS_COMPANY = [
     ("นภดลเอสกรุ๊ปจำกัด", "นภดลเอสกรุ๊ปจำกัด"),
     ("เอ็นพีดีสตีลเทคจำกัด", "เอ็นพีดีสตีลเทคจำกัด"),
@@ -191,6 +208,11 @@ class LeaveRequest(models.Model):
     created_at = fields.Char(string='วันที่บันทึกข้อมูลการลา')
     file_link = fields.Char(string='ลิงก์ไฟล์แนบ', store=True)
     company = fields.Selection(selection=HRMS_COMPANY, string='บริษัท')
+    approved_at = fields.Char(string='วันที่อนุมัติ')
+    # ใบลา NPD/HR.03 ที่ระบบออกให้ (แอปเปิดดู/แชร์ไฟล์เดียวกันนี้)
+    # สร้างใหม่ทุกครั้งที่ข้อมูลบนใบเปลี่ยน เช่น สถานะจาก cron sync
+    leave_form_pdf = fields.Binary(string='ใบลา (PDF)', attachment=True, readonly=True)
+    leave_form_filename = fields.Char(string='ชื่อไฟล์ใบลา', readonly=True)
 
     @api.depends('leave_start_date', 'leave_end_date')
     def _compute_leave_days(self):
@@ -268,7 +290,14 @@ class LeaveRequest(models.Model):
             raise UserError("เชื่อมต่อ API เพื่อลบข้อมูลไม่สำเร็จ: %s" % e)
 
     def write(self, vals):
+        # cron sync เขียนทุกฟิลด์ซ้ำทุก 15 นาที จึงต้องเทียบค่าจริง
+        # ไม่งั้นจะสร้าง PDF ใหม่ทุกใบทุกรอบ
+        form_fields = [f for f in LEAVE_FORM_FIELDS if f in vals]
+        before = {rec.id: [rec[f] for f in form_fields] for rec in self} if form_fields else {}
         res = super(LeaveRequest, self).write(vals)
+        if form_fields:
+            stale = self.filtered(lambda r: [r[f] for f in form_fields] != before[r.id])
+            stale._generate_leave_form_pdf()
         # ข้ามถ้าเป็นการเขียนจาก cron sync (กันยิงกลับเป็นวงวน)
         if not self.env.context.get('skip_api_sync'):
             changed = [f for f in SQL_FIELD_MAP if f in vals]
@@ -304,71 +333,7 @@ class LeaveRequest(models.Model):
                 raise UserError('ไม่พบข้อมูลการลาสำหรับวันนี้จาก API')
 
             for record in leave_records:
-                existing_record = self.env['hr.attendance.branch.leave'].search([
-                    ('hr_id_attendance_branch_leave', '=', str(record['id'])),
-                ], limit=1)
-
-                # หา employee: ลำดับ 1.employee_code จาก API 2.ชื่อ-นามสกุล
-                employee = False
-                emp_code = record.get('employee_code')
-                username = record.get('username', '')
-
-                if emp_code:
-                    employee = self.env['employee.salary'].sudo().search(
-                        [('employee_code', '=', str(emp_code))], limit=1
-                    )
-
-                if not employee and username:
-                    parts = username.strip().split(' ', 1)
-                    if len(parts) == 2:
-                        employee = self.env['employee.salary'].sudo().search([
-                            ('firstname', '=', parts[0]),
-                            ('lastname', '=', parts[1]),
-                        ], limit=1)
-
-                # เขียน field Selection เดิมเฉพาะค่าที่อยู่ในลิสต์
-                branch_val = record.get('branch') if record.get('branch') in dict(BRANCH_SELECTION) else False
-                dept_val = record.get('department') if record.get('department') in dict(DEPARTMENT_SELECTION) else False
-                pos_val = record.get('position') if record.get('position') in dict(POSITION_SELECTION) else False
-
-                data_to_write = {
-                    'hr_id_attendance_branch_leave': str(record.get('id', False)),
-                    'user_id': record.get('user_id'),
-                    'employee_id': employee.id if employee else False,
-                    'username': record.get('username'),
-                    'leave_start_date': record.get('leave_start_date'),
-                    'start_time': record.get('leave_start_time'),
-                    'leave_end_date': record.get('leave_end_date'),
-                    'end_time': record.get('leave_end_time'),
-                    'leave_type': record.get('leave_type'),
-                    'note': record.get('note'),
-                    'state': record.get('state'),
-                    'reason': record.get('reason'),
-                    'approved_by': record.get('approved_by'),
-                    'branch': branch_val,
-                    'department': dept_val,
-                    'position': pos_val,
-                    'file_path': record.get('file_path'),
-                    'created_at': record.get('created_at'),
-                    'company': record.get('company'),
-                }
-
-                if record.get('file_path'):
-                    try:
-                        file_url = f"{BASE_URL}{record['file_path']}"
-                        file_resp = requests.get(file_url, timeout=10)
-                        if file_resp.status_code == 200:
-                            data_to_write['attachment'] = base64.b64encode(file_resp.content).decode('utf-8')
-                            data_to_write['filename'] = record['file_path'].split('/')[-1]
-                    except Exception as e:
-                        _logger.warning(f"โหลดไฟล์แนบไม่สำเร็จ: {e}")
-
-                data_to_write = {k: v for k, v in data_to_write.items() if v}
-
-                if existing_record:
-                    existing_record.with_context(skip_api_sync=True).write(data_to_write)
-                else:
-                    self.env['hr.attendance.branch.leave'].with_context(skip_api_sync=True).create(data_to_write)
+                self._upsert_from_api_record(record)
 
         except requests.exceptions.RequestException as e:
             raise UserError(f"มีข้อผิดพลาดในการเชื่อมต่อกับ API: {e}")
@@ -376,3 +341,211 @@ class LeaveRequest(models.Model):
             raise UserError(f"มีข้อผิดพลาดในการถอดรหัส JSON: {e}")
         except Exception as e:
             raise UserError(f"มีข้อผิดพลาดในการนำเข้าข้อมูล: {e}")
+
+    @api.model
+    def _upsert_from_api_record(self, record, always_fetch_attachment=True):
+        """สร้าง/อัปเดตใบลา 1 ใบจากแถว leave_requests ฝั่ง PHP
+
+        record ใช้รูปแบบเดียวกับ json_leave_requests.php
+        (leave_start_time, approved_by = ชื่อผู้อนุมัติ) ทั้ง cron และแอปส่งมาแบบนี้
+        """
+        existing_record = self.search([
+            ('hr_id_attendance_branch_leave', '=', str(record['id'])),
+        ], limit=1)
+
+        # หา employee: ลำดับ 1.employee_code จาก API 2.ชื่อ-นามสกุล
+        employee = False
+        emp_code = record.get('employee_code')
+        username = record.get('username') or ''
+
+        if emp_code:
+            employee = self.env['employee.salary'].sudo().search(
+                [('employee_code', '=', str(emp_code))], limit=1
+            )
+
+        if not employee and username:
+            parts = username.strip().split(' ', 1)
+            if len(parts) == 2:
+                employee = self.env['employee.salary'].sudo().search([
+                    ('firstname', '=', parts[0]),
+                    ('lastname', '=', parts[1]),
+                ], limit=1)
+
+        # เขียน field Selection เดิมเฉพาะค่าที่อยู่ในลิสต์
+        branch_val = record.get('branch') if record.get('branch') in dict(BRANCH_SELECTION) else False
+        dept_val = record.get('department') if record.get('department') in dict(DEPARTMENT_SELECTION) else False
+        pos_val = record.get('position') if record.get('position') in dict(POSITION_SELECTION) else False
+        company_val = record.get('company') if record.get('company') in dict(HRMS_COMPANY) else False
+
+        data_to_write = {
+            'hr_id_attendance_branch_leave': str(record.get('id', False)),
+            'user_id': record.get('user_id') and str(record['user_id']),
+            'employee_id': employee.id if employee else False,
+            'username': record.get('username'),
+            'leave_start_date': record.get('leave_start_date'),
+            'start_time': _normalize_time(record.get('leave_start_time')),
+            'leave_end_date': record.get('leave_end_date'),
+            'end_time': _normalize_time(record.get('leave_end_time')),
+            'leave_type': record.get('leave_type'),
+            'note': record.get('note'),
+            'state': record.get('state'),
+            'reason': record.get('reason'),
+            'approved_by': record.get('approved_by'),
+            'approved_at': record.get('approved_at'),
+            'branch': branch_val,
+            'department': dept_val,
+            'position': pos_val,
+            'file_path': record.get('file_path'),
+            'created_at': record.get('created_at'),
+            'company': company_val,
+        }
+
+        need_attachment = always_fetch_attachment or not existing_record.attachment
+        if record.get('file_path') and need_attachment:
+            try:
+                file_url = f"{BASE_URL}{record['file_path']}"
+                file_resp = requests.get(file_url, timeout=10)
+                if file_resp.status_code == 200:
+                    data_to_write['attachment'] = base64.b64encode(file_resp.content).decode('utf-8')
+                    data_to_write['filename'] = record['file_path'].split('/')[-1]
+            except Exception as e:
+                _logger.warning(f"โหลดไฟล์แนบไม่สำเร็จ: {e}")
+
+        data_to_write = {k: v for k, v in data_to_write.items() if v and v != 'NULL'}
+
+        if existing_record:
+            existing_record.with_context(skip_api_sync=True).write(data_to_write)
+            return existing_record
+        new_record = self.with_context(skip_api_sync=True).create(data_to_write)
+        new_record._generate_leave_form_pdf()
+        return new_record
+
+    # ---------------------------------------------------------------
+    # ใบลา NPD/HR.03 (PDF)
+    # ---------------------------------------------------------------
+    @api.model
+    def api_leave_form_pdf(self, record):
+        """สำหรับแอปมือถือ: คืนใบลา PDF ของคำขอลา 1 ใบ
+
+        เรียกผ่าน JSON-RPC:
+            callKw('hr.attendance.branch.leave', 'api_leave_form_pdf', [record])
+
+        record = แถวจาก get_leave_history.php แปลงเป็นรูปแบบเดียวกับ
+        json_leave_requests.php — อัปเดตข้อมูลเข้า Odoo ก่อน (ใบที่ยังรออนุมัติ
+        ไม่ต้องรอ cron 15 นาที) แล้วคืนไฟล์ที่เก็บไว้บนเรคคอร์ด
+        คืน {'id', 'filename', 'pdf' (base64)}
+        """
+        if not record or not record.get('id'):
+            raise UserError('ไม่พบเลขที่คำขอลา')
+        rec = self._upsert_from_api_record(record, always_fetch_attachment=False)
+        if not rec.leave_form_pdf:
+            rec._generate_leave_form_pdf()
+        return {
+            'id': rec.id,
+            'filename': rec.leave_form_filename,
+            'pdf': rec.leave_form_pdf.decode('ascii') if rec.leave_form_pdf else False,
+        }
+
+    def _generate_leave_form_pdf(self):
+        """ออกใบลาใหม่แล้วเก็บไว้ที่ leave_form_pdf
+
+        ห้ามทำให้งานหลักล้ม (cron sync / การบันทึก) — ออก PDF ไม่ได้ก็แค่ log ไว้
+        แล้วรอบหน้าค่อยออกใหม่
+        """
+        report = self.env.ref('hr_attendance_branch.action_report_leave_form', raise_if_not_found=False)
+        if not report:
+            return
+        for rec in self:
+            try:
+                pdf, _ = report.sudo()._render_qweb_pdf(rec.ids)
+            except Exception as e:
+                _logger.warning("ออกใบลา PDF ไม่สำเร็จ (id=%s): %s", rec.id, e)
+                continue
+            rec.with_context(skip_api_sync=True).write({
+                'leave_form_pdf': base64.b64encode(pdf),
+                'leave_form_filename': 'ใบลา_%s.pdf' % (rec.hr_id_attendance_branch_leave or rec.id),
+            })
+
+    def _leave_form_values(self):
+        """ค่าที่พิมพ์ลงใบลา (ใช้ใน QWeb report_leave_form_document)"""
+        self.ensure_one()
+
+        def thai_date(d):
+            if not d:
+                return {'day': '', 'month': '', 'year': '', 'short': ''}
+            return {
+                'day': d.day,
+                'month': THAI_MONTHS[d.month - 1],
+                'year': d.year + 543,
+                'short': '%02d/%02d/%d' % (d.day, d.month, d.year + 543),
+            }
+
+        def parse_date(value):
+            if not value or value == 'NULL':
+                return None
+            try:
+                return fields.Date.from_string(str(value)[:10])
+            except Exception:
+                return None
+
+        def minutes(t):
+            m = re.match(r'^(\d{1,2}):(\d{2})', t or '')
+            return int(m.group(1)) * 60 + int(m.group(2)) if m else None
+
+        emp = self.employee_id
+        fullname = ('%s %s' % (emp.firstname or '', emp.lastname or '')).strip() if emp else ''
+        company_key = (emp.company if emp else False) or self.company
+        company_name = self.env['payroll.salary']._company_info_by_key(company_key)['name']
+        branch_name = self.branch_id.name or self.branch or ''
+
+        start_min, end_min = minutes(self.start_time), minutes(self.end_time)
+        duration = (end_min - start_min) if start_min is not None and end_min is not None else None
+        is_hourly = (self.leave_start_date == self.leave_end_date
+                     and duration is not None and 0 < duration < HOURLY_LEAVE_MAX_MINUTES)
+
+        leave_type = self.leave_type or ''
+
+        if branch_name and branch_name != 'สำนักงานใหญ่':
+            branch_name = 'สาขา' + branch_name
+        created = parse_date(self.created_at) or self.date_requested
+        return {
+            'doc_no': self.hr_id_attendance_branch_leave or '',
+            'written_at': ('%s %s' % (company_name, branch_name)).strip(),
+            'created': thai_date(created),
+            'fullname': fullname or self.username or '',
+            'position': self.position_id.name or self.position or '',
+            'leave_type': leave_type,
+            'is_hourly': is_hourly,
+            'start_time': (self.start_time or '')[:5],
+            'end_time': (self.end_time or '')[:5],
+            'hours': duration // 60 if is_hourly else '',
+            'minutes': duration % 60 if is_hourly else '',
+            'start': thai_date(self.leave_start_date),
+            'end': thai_date(self.leave_end_date),
+            'days': self.leave_days,
+            # แถวประเภทการลาบนใบ = ประเภทเดียวกับในแอป
+            # ค่าเก่าที่ไม่อยู่ในลิสต์แล้วต่อท้ายไว้ ไม่งั้นใบนั้นจะไม่มีช่องไหนถูกติ๊ก
+            'type_rows': LEAVE_TYPE_SELECTION + (
+                [(leave_type, leave_type)]
+                if leave_type and leave_type not in dict(LEAVE_TYPE_SELECTION) else []),
+            'note': self.note or '',
+            'state': self.state or 'รออนุมัติ',
+            'reason': self.reason or '',
+            'approver': self.approved_by or '',
+            'approved': thai_date(parse_date(self.approved_at)),
+        }
+
+    def action_regenerate_leave_form(self):
+        self._generate_leave_form_pdf()
+
+
+def _normalize_time(value):
+    """'8:00' / '08:00' / '08:00:00' -> '08:00:00' (รูปแบบเดียวกับที่ cron เก็บไว้)
+
+    แอปได้เวลาแบบ HH:mm ส่วน cron ได้ HH:mm:ss ถ้าไม่ทำให้ตรงกัน
+    สองทางจะเขียนทับกันไปมาแล้วออก PDF ใหม่ทุกรอบ
+    """
+    m = re.match(r'^(\d{1,2}):(\d{2})(?::(\d{2}))?', value or '')
+    if not m:
+        return value
+    return '%02d:%s:%s' % (int(m.group(1)), m.group(2), m.group(3) or '00')
