@@ -203,7 +203,9 @@
                                             เหตุผล: <t t-esc="v['reason']"/>
                                         </div>
                                         <div style="margin-top: 18px; text-align: center;">
-                                            ลงชื่อ <span class="fill" style="min-width: 230px;"/>
+                                            ลงชื่อ <span class="fill" style="min-width: 230px;">
+                                                <t t-if="v['state'] in ('อนุมัติ', 'ไม่อนุมัติ')" t-esc="v['approver']"/>
+                                            </span>
                                         </div>
                                         <div style="text-align: center;">
                                             ( <span class="fill" style="min-width: 230px;">
@@ -217,7 +219,7 @@
                                     </div>
                                 </td>
                                 <td style="width: 45%; vertical-align: top; text-align: center; padding-top: 30px;">
-                                    <div>ลงชื่อ <span class="fill" style="min-width: 190px;"/> (ผู้ลาหยุด)</div>
+                                    <div>ลงชื่อ <span class="fill" style="min-width: 190px;" t-esc="v['fullname']"/> (ผู้ลาหยุด)</div>
                                     <div>( <span class="fill" style="min-width: 220px;" t-esc="v['fullname']"/> )</div>
                                     <div t-esc="v['created']['short'] or '........../........../..........'"/>
                                 </td>
