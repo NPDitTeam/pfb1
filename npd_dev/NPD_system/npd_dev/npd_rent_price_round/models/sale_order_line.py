@@ -135,7 +135,21 @@ class SaleOrderLine(models.Model):
             result[line.id] = (new_subtotal, new_price_total, new_tax)
         return result
 
+    def _npd_flush_line_amounts(self):
+        """ดันค่าบรรทัดที่ค้างอยู่ใน cache ของ ORM ลง DB ก่อนรวมยอดด้วย SQL
+
+        ตอนกดบันทึกจากฟอร์ม (เช่นแก้ "วันที่ต้องเช่า" ที่หัวเอกสาร onchange เติม
+        จำนวนวัน/จำนวนสินค้าใหม่ให้ทุกบรรทัด) write ของบรรทัดถูกเรียกขณะที่ยอด
+        price_subtotal/price_total ใหม่ยังไม่ลง DB ถ้า SELECT SUM ตรงนี้เลย จะได้
+        ยอดบรรทัดเก่าแล้ว UPDATE ทับหัวเอกสาร — เคส SO-26100300013 ต่ออายุ 4 วัน
+        แต่หัวเอกสารค้างยอด 7 วันของบิลเดิม (710.08) ทั้งที่บรรทัดถูก (405.76)
+        """
+        self.env['sale.order.line'].flush(
+            ['product_uom_qty', 'price_unit', 'discount', 'tax_id',
+             'price_subtotal', 'price_tax', 'price_total'])
+
     def _npd_force_round_sql(self):
+        self._npd_flush_line_amounts()
         rounded = self._npd_compute_method_a()
         if not rounded:
             # ถ้าไม่มีอะไรต้อง force-round แต่อาจมี order ที่ติ๊ก use_baan_kheaw
@@ -207,6 +221,7 @@ class SaleOrderLine(models.Model):
         baan_kheaw_orders = self.mapped('order_id').filtered('use_baan_kheaw')
         if not baan_kheaw_orders:
             return
+        self._npd_flush_line_amounts()
         cr = self.env.cr
         for order in baan_kheaw_orders:
             cr.execute(
