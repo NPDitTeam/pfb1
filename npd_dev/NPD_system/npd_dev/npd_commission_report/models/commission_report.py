@@ -397,18 +397,17 @@ class CommissionReport(models.TransientModel):
             # ✅ ดึง JV จากสมุดรายวันทั่วไป (account_move ที่เลขขึ้นต้นด้วย 'JV-')
             #    เงื่อนไข: state='posted' (ลงบันทึกแล้ว) + branch ตรง + วันที่ลงบัญชี (date) อยู่ในเดือน/ปีรอบนี้
             #    ยอด = SUM(debit) ของบรรทัดทั้งหมดในใบ (= ขนาดของรายการสมุดบัญชี เพราะ debit = credit ในแต่ละใบ)
-            jv_moves = self.env['account.move'].sudo().search([
-                ('name', '=like', 'JV-%'),
-                ('branch_id', '=', branch.id),
+            #    สาขา = สาขาของ "บรรทัด" (แก้รายบรรทัดได้) — บรรทัดที่ไม่ได้แก้เท่าหัวเอกสาร
+            jv_lines = self.env['account.move.line'].sudo().search([
+                ('move_id.name', '=like', 'JV-%'),
+                ('parent_state', '=', 'posted'),
                 ('date', '>=', date_from),
                 ('date', '<=', date_to),
-                ('state', '=', 'posted'),
+                ('debit', '>', 0),
+                '|', ('branch_id', '=', branch.id),
+                '&', ('branch_id', '=', False), ('move_id.branch_id', '=', branch.id),
             ])
-            jv_expense = 0.0
-            for mv in jv_moves:
-                for line in mv.line_ids:
-                    if line.debit and line.debit > 0:
-                        jv_expense += line.debit
+            jv_expense = sum(jv_lines.mapped('debit'))
             total_expense += jv_expense
 
             # ✅ บวกค่าจ้างพนักงาน (จากรายงาน "รายได้รวมตามสาขา") เข้าไปใน total_expense

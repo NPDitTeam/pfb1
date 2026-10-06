@@ -227,17 +227,18 @@ credit_note_expense AS (
 ),
 jv_expense AS (
     -- JV (สมุดทั่วไป name ขึ้นต้น JV- , state=posted) SUM(debit) — ตรงกับรายงาน
-    SELECT am.branch_id AS branch_id, rb.name AS branch_name,
+    -- สาขา = สาขาของบรรทัด (แก้รายบรรทัดได้) ไม่มีค่อยใช้สาขาหัวเอกสาร
+    SELECT rb.id AS branch_id, rb.name AS branch_name,
            COALESCE(SUM(aml.debit), 0) AS jv_expense
     FROM account_move am
     JOIN account_move_line aml ON aml.move_id = am.id
-    JOIN res_branch rb ON rb.id = am.branch_id
+    JOIN res_branch rb ON rb.id = COALESCE(aml.branch_id, am.branch_id)
     WHERE am.state = 'posted'
         AND am.name LIKE 'JV-%%'
         AND am.date >= %(date_from)s
         AND am.date <= %(date_to)s
         AND aml.debit > 0
-    GROUP BY am.branch_id, rb.name
+    GROUP BY rb.id, rb.name
 ),
 salary_expense AS (
     -- salary จาก snapshot npd_salary_branch_report_line (กรอง company แล้วต่อ DB)
@@ -508,7 +509,8 @@ SELECT
     COALESCE(SUM(aml.debit), 0) AS jv_expense
 FROM account_move am
 JOIN account_move_line aml ON aml.move_id = am.id
-LEFT JOIN res_branch rb ON am.branch_id = rb.id
+-- สาขา = สาขาของบรรทัด (แก้รายบรรทัดได้) ไม่มีค่อยใช้สาขาหัวเอกสาร
+LEFT JOIN res_branch rb ON rb.id = COALESCE(aml.branch_id, am.branch_id)
 WHERE am.state = 'posted'
     AND am.name LIKE 'JV-%%'
     AND am.date >= %(date_from)s
