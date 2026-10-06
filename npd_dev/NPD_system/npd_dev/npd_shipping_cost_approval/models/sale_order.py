@@ -88,13 +88,13 @@ class SaleOrder(models.Model):
                 result = _('ยังไม่ขออนุมัติ')
             order.ship_approval_result = result
 
-    @api.depends('ship_approval_state', 'ship_approver_id')
+    @api.depends('ship_approval_state')
     @api.depends_context('uid')
     def _compute_ship_can_approve(self):
+        # ใครก็ได้ที่มีสิทธิ์ "ผู้อนุมัติค่าขนส่งพิเศษ" อนุมัติแทนคนที่ถูกเลือกได้
+        is_approver = self.env.user.has_group('npd_shipping_cost_approval.group_ship_cost_approver')
         for order in self:
-            order.ship_can_approve = (
-                order.ship_approval_state == 'waiting' and order.ship_approver_id.id == self.env.uid
-            )
+            order.ship_can_approve = order.ship_approval_state == 'waiting' and is_approver
 
     # ---------------------------------------------------------------- buttons
 
@@ -134,10 +134,8 @@ class SaleOrder(models.Model):
         self.ensure_one()
         if self.ship_approval_state != 'waiting':
             raise UserError(_('ใบนี้ไม่ได้อยู่ในสถานะรออนุมัติค่าขนส่ง'))
-        if self.ship_approver_id.id != self.env.uid:
-            raise UserError(_('เฉพาะ %s เท่านั้นที่อนุมัติค่าขนส่งของใบนี้ได้') % self.ship_approver_id.name)
         if not self.env.user.has_group('npd_shipping_cost_approval.group_ship_cost_approver'):
-            raise UserError(_('คุณไม่มีสิทธิ์ "ผู้อนุมัติค่าขนส่งพิเศษ" แล้ว กรุณาให้ผู้ขอส่งขออนุมัติใหม่'))
+            raise UserError(_('คุณไม่มีสิทธิ์ "ผู้อนุมัติค่าขนส่งพิเศษ"'))
 
     # ------------------------------------------------------------ workflow
 
