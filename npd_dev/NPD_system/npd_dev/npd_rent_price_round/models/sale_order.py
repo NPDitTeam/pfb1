@@ -57,6 +57,39 @@ class SaleOrder(models.Model):
         self.order_line.invalidate_cache(['price_unit_no_vat'])
         self.order_line._compute_price_unit_no_vat()
 
+    def _amount_all(self):
+        """Method B (vat_from_total) ตอน ORM คำนวณยอดหัวเอกสารเอง
+
+        _npd_force_round_sql เขียน VAT แบบ Method B ลงหัวด้วย SQL ตอนแก้บรรทัด
+        แต่หลัง line.write เสร็จ ORM ยัง mark ยอดหัวให้ recompute อีกรอบ
+        (modified('order_line') ใน sale.order.write) → ตอน flush ท้าย request
+        compute มาตรฐานเขียนทับเป็น SUM(price_tax) รายบรรทัด ทำให้ VAT เพี้ยน
+        ±0.01 เคส QT-261006-0007: 28,477.20 → VAT 1,993.41 แทน 1,993.40
+        จึงปรับ VAT ตรงนี้ด้วย ไม่ว่า recompute จะเกิดตอนไหนก็ได้ยอดเดียวกับ SQL
+
+        ปรับด้วยส่วนต่าง (delta) จาก SUM(price_tax) แทนการเขียนทับ เพื่อไม่ล้าง
+        ส่วนต่างที่โมดูลอื่นบวกไว้ (เช่น ปัดเศษยอดรวม npd_sale_order_rounding)
+        ทำเฉพาะ order ที่ทุกบรรทัดที่มียอดมีแต่ภาษี 7% (ไม่มี WHT/ภาษีอื่นปน)
+        """
+        res = super()._amount_all()
+        for order in self:
+            if not order.vat_from_total:
+                continue
+            lines = order.order_line.filtered(lambda l: not l.display_type)
+            taxed = lines.filtered(lambda l: l.price_subtotal)
+            if not taxed or not all(
+                    l.tax_id and all(abs(t.amount - 7.0) < 0.01 for t in l.tax_id)
+                    for l in taxed):
+                continue
+            untaxed = round(sum(lines.mapped('price_subtotal')), 2)
+            line_tax = round(sum(lines.mapped('price_tax')), 2)
+            delta = round(round(untaxed * 0.07, 2) - line_tax, 2)
+            if not delta:
+                continue
+            order.amount_tax = round(order.amount_tax + delta, 2)
+            order.amount_total = round(order.amount_total + delta, 2)
+        return res
+
     def _prepare_invoice(self):
         vals = super()._prepare_invoice()
         vals['use_new_calc'] = self.use_new_calc
