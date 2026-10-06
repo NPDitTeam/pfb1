@@ -41,10 +41,12 @@
                                        options="{'no_quick_create':True,'no_create_edit':True,'no_open': True,}"
                                        attrs="{'readonly': [('state','!=','draft')]}"/>
                                 <field name="move_id" readonly="1" force_save="1"/>
-                                  
+                                <field name="expense_move_id" readonly="1" attrs="{'invisible': [('expense_move_id','=',False)]}"/>
+
                             </group>
                             <group>
                                 <field name="doc_date" attrs="{'readonly': [('state','!=','draft')]}"/>
+                                <field name="advance_date" attrs="{'readonly': [('state','!=','draft')]}" force_save="1"/>
                                  <field name="description" attrs="{'readonly': [('state','!=','draft')]}"/>
                                 <field name="company_id" attrs="{'readonly': [('state','!=','draft')]}" options="{'no_create': True}" />
                                  <field name="currency_id" attrs="{'readonly': [('state','!=','draft')]}"/>

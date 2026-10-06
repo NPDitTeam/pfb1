@@ -272,16 +272,13 @@ class AccountAdvanceClearAI(models.Model):
                 u'คุณไม่ได้รับอนุญาตให้ Reset to Draft (Keep AI)\n'
                 u'กรุณาติดต่อผู้ดูแลระบบ'
             ))
-        # Cancel + unlink existing move_id to prevent duplicate entries on re-post
-        if self.move_id:
-            self.move_id.button_cancel()
-            self.move_id.unlink()
+        # Cancel + unlink existing move_id (+ expense_move_id) to prevent duplicate entries on re-post
+        self._unlink_clear_moves()
         # Reset state to draft but KEEP AI fields + set flag
         self.write({
             'state': 'draft',
             'reset_keep_ai': True,
             'has_zero_amount_receipt': False,
-            'move_id': False,
         })
         # ลบ tax_invoice records เพื่อป้องกันรายการซ้ำเมื่อ Post ใหม่
         query = """

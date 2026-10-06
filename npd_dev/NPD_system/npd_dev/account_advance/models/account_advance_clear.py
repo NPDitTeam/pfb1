@@ -1,7 +1,9 @@
+from datetime import date
 
 from odoo import fields, models, api, _
 from odoo.addons import decimal_precision as dp
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools.misc import format_date
 
 class AccountAdvanceClear(models.Model):
     _name = 'account.advance.clear'
@@ -119,6 +121,23 @@ class AccountAdvanceClear(models.Model):
         required=False,
         track_visibility='onchange'
     )
+    # ค่าใช้จ่ายลงบัญชีตามวันที่เบิก (ไม่ใช่วันที่เคลียร์) กันค่าใช้จ่ายไปตกเดือนถัดไปเมื่อเคลียร์ข้ามเดือน
+    # ถ้าวันที่เบิก != Doc Date จะแยกบรรทัดค่าใช้จ่าย + ภาษีซื้อไปไว้ใน expense_move_id ส่วน WHT/เงินคืนอยู่ใน move_id ตาม Doc Date
+    advance_date = fields.Date(
+        string="วันที่เบิก",
+        compute='_compute_advance_date',
+        store=True,
+        readonly=False,
+        copy=False,
+        track_visibility='onchange',
+        help="วันที่ลงบัญชีค่าใช้จ่าย ดึงจากวันที่ของใบ Advance",
+    )
+    expense_move_id = fields.Many2one(
+        comodel_name="account.move",
+        string="Move Entry (ค่าใช้จ่าย)",
+        readonly=True,
+        copy=False,
+    )
     tax_line = fields.One2many(
         comodel_name="account.move.tax.invoice",
         inverse_name="advance_clear_id",
@@ -147,6 +166,11 @@ class AccountAdvanceClear(models.Model):
         string="Note",
         required=False,
     )
+
+    @api.depends('advance_id')
+    def _compute_advance_date(self):
+        for rec in self:
+            rec.advance_date = rec.advance_id.advance_date
 
     @api.depends('journal_id', 'company_id')
     def _get_journal_currency(self):
@@ -442,10 +466,15 @@ class AccountAdvanceClear(models.Model):
             ctx['check_move_validity'] = False
             # Create the account move record.
             move = self.env['account.move'].create(advance_clear.account_move_get())
+            expense_move = self.env['account.move']
+            if advance_clear._is_split_expense_move():
+                advance_clear._check_advance_date_lock()
+                expense_move = self.env['account.move'].create(advance_clear.expense_move_get())
             # Get the name of the account_move just created
             # Create the first line of the advance_clear
             move_line = self.env['account.move.line'].with_context(ctx).create(
                     advance_clear.with_context(ctx).first_move_line_get(move.id, company_currency, current_currency))
+            first_line = move_line
             line_total = move_line.debit - move_line.credit
 
             line_total = line_total + advance_clear._convert(advance_clear.tax_amount)
@@ -459,19 +488,24 @@ class AccountAdvanceClear(models.Model):
                 move_line = self.env['account.move.line'].with_context(ctx).create(
                     advance_clear.with_context(ctx).wht_move_line_get(move.id, company_currency, current_currency, wht_line))
             # Create one move line per advance_clear line where amount is not 0.0
-            line_total = advance_clear.with_context(ctx).advance_clear_move_line_create(line_total, move.id, company_currency,
-                                                                            current_currency)
+            # ค่าใช้จ่าย + ภาษีซื้อ ไปอยู่ใน expense_move (วันที่เบิก) ถ้ามี
+            # รายงานภาษี Thai Tax ใช้ tax_invoice_date ของแต่ละบรรทัด ไม่กระทบจากวันที่ JE
+            expense_move_id = (expense_move or move).id
+            line_total = advance_clear.with_context(ctx).advance_clear_move_line_create(line_total, expense_move_id,
+                                                                            company_currency, current_currency)
             # Create move line vat
-            advance_clear.with_context(ctx).vat_move_line_create(move.id, company_currency, current_currency)
+            advance_clear.with_context(ctx).vat_move_line_create(expense_move_id, company_currency, current_currency)
 
             # Add tax correction to move line if any tax correction specified
             if advance_clear.tax_correction != 0.0:
                 tax_move_line = self.env['account.move.line'].search(
-                    [('move_id', '=', move.id), ('tax_line_id', '!=', False)], limit=1)
+                    [('move_id', '=', expense_move_id), ('tax_line_id', '!=', False)], limit=1)
                 if len(tax_move_line):
                     tax_move_line.write(
                         {'debit': tax_move_line.debit + advance_clear.tax_correction if tax_move_line.debit > 0 else 0,
                          'credit': tax_move_line.credit + advance_clear.tax_correction if tax_move_line.credit > 0 else 0})
+            if expense_move:
+                advance_clear.with_context(ctx)._balance_expense_move(expense_move, first_line)
             print('line_total2')
 
             # --- Auto-balance rounding residual (permanent fix) ---
@@ -506,9 +540,74 @@ class AccountAdvanceClear(models.Model):
             # We post the advance_clear.
             advance_clear.write({
                 'move_id': move.id,
+                'expense_move_id': expense_move.id,
             })
+            if expense_move:
+                expense_move.post()
             move.post()
         return True
+
+    def _is_split_expense_move(self):
+        self.ensure_one()
+        return bool(self.advance_date) and self.advance_date != self.doc_date
+
+    def expense_move_get(self):
+        move = self.account_move_get()
+        move['date'] = self.advance_date
+        return move
+
+    def _check_advance_date_lock(self):
+        """ห้าม Post ถ้าวันที่เบิกอยู่ในงวดที่ล็อกแล้ว (ล็อกบริษัท หรือล็อกสมุดรายวัน)"""
+        self.ensure_one()
+        lock_date = self.company_id._get_user_fiscal_lock_date()
+        journal = self.journal_id
+        journal_fiscal = getattr(journal, 'fiscalyear_lock_date', False) or date.min
+        journal_period = getattr(journal, 'period_lock_date', False) or date.min
+        if self.user_has_groups('account.group_account_manager'):
+            lock_date = max(lock_date, journal_fiscal)
+        else:
+            lock_date = max(lock_date, journal_fiscal, journal_period)
+        if self.advance_date <= lock_date:
+            raise UserError(_(
+                "วันที่เบิก %s อยู่ในงวดที่ปิดบัญชีแล้ว (ล็อกถึงวันที่ %s)\n"
+                "ค่าใช้จ่ายของใบเคลียร์นี้ต้องลงบัญชีตามวันที่เบิก "
+                "กรุณาให้ฝ่ายบัญชีปลดล็อกงวดก่อน แล้วกด Post ใหม่"
+            ) % (format_date(self.env, self.advance_date), format_date(self.env, lock_date)))
+
+    def _balance_expense_move(self, expense_move, first_line):
+        """ตัดเงินทดรอง (1111-60) ใน expense_move เท่ากับยอดค่าใช้จ่าย+ภาษีซื้อ แล้วลดยอดบรรทัดเงินทดรองใน move หลักเท่ากัน"""
+        self.ensure_one()
+        expense_lines = expense_move.line_ids
+        expense_total = sum(expense_lines.mapped('debit')) - sum(expense_lines.mapped('credit'))
+        expense_currency_total = sum(expense_lines.mapped('amount_currency'))
+        if not expense_total:
+            return
+        self.env['account.move.line'].with_context(check_move_validity=False).create({
+            'name': 'Advance Clear %s' % self.advance_id.name,
+            'debit': expense_total < 0 and -expense_total or 0.0,
+            'credit': expense_total > 0 and expense_total or 0.0,
+            'account_id': self.account_id.id,
+            'move_id': expense_move.id,
+            'journal_id': self.journal_id.id,
+            'currency_id': first_line.currency_id.id or False,
+            'amount_currency': -expense_currency_total if first_line.currency_id else 0.0,
+            'date_maturity': self.advance_date,
+        })
+        balance = first_line.debit - first_line.credit + expense_total
+        first_line.with_context(check_move_validity=False).write({
+            'debit': balance > 0 and balance or 0.0,
+            'credit': balance < 0 and -balance or 0.0,
+            'amount_currency': (first_line.amount_currency + expense_currency_total
+                                if first_line.currency_id else 0.0),
+        })
+
+    def _unlink_clear_moves(self):
+        for rec in self:
+            moves = rec.move_id | rec.expense_move_id
+            if moves:
+                moves.button_cancel()
+                moves.unlink()
+        self.write({'move_id': False, 'expense_move_id': False})
 
     def action_cancel_draft(self):
         self._sync_wht_cert_state('cancel')
@@ -526,11 +625,9 @@ class AccountAdvanceClear(models.Model):
         return True
 
     def cancel_advance(self):
-        for advance in self:
-            advance.move_id.button_cancel()
-            advance.move_id.unlink()
+        self._unlink_clear_moves()
         self._sync_wht_cert_state('cancel')
-        self.write({'state': 'cancel', 'move_id': False})
+        self.write({'state': 'cancel'})
 
     def _get_tax_vals(self):
         for voucher in self:
