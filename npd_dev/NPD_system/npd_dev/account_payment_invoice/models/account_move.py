@@ -39,7 +39,11 @@ class AccountMove(models.Model):
         # ใบ CABA ยังไม่ผูก payment_id ตอน post → ใช้ context ที่ _create_tax_cash_basis_moves ส่งมา
         payment = tax_invoice.payment_id or move.payment_id or self.env['account.payment'].browse(
             self._context.get('payment_id') or [])
-        if payment.name and payment.name != '/':
+        if len(payment) == 1 and not payment.name and hasattr(payment, 'get_seq_payment'):
+            # ยืนยันครั้งแรก: account_payment_sequence ตั้งเลข CUST.IN หลัง action_post จบ
+            # แต่เลขภาษีออกระหว่างนั้น → ออกเลขให้ใบรับชำระตรงนี้ (ตัวนั้นเห็นว่ามีเลขแล้วจะข้าม)
+            payment.name = payment.get_seq_payment()
+        if len(payment) == 1 and payment.name and payment.name != '/':
             number = payment.name
         return number, invoice_date
 
