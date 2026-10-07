@@ -19,29 +19,6 @@ class AccountPayment(models.Model):
         wht = (base * Decimal('5') / Decimal('100')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return float(wht)
 
-    # วันที่เริ่มใช้เลข Tax Invoice Number เป็น "เลขที่" ของใบกำกับภาษี/ใบเสร็จรับเงิน
-    # ใบก่อนวันนี้ยังเป็นเลขรันหน้ารับชำระ (ใบที่พิมพ์/ส่งลูกค้าไปแล้วต้องได้เลขเดิม)
-    # ปรับได้ที่ ตั้งค่า > ระบบ > System Parameters โดยไม่ต้องแก้โค้ด
-    RECEIPT_TAX_NUMBER_PARAM = 'pfb_npd_payment_form_receipt.tax_number_from'
-    RECEIPT_TAX_NUMBER_FROM = '2026-10-07'
-
-    def get_form_receipt_number(self):
-        """เลขที่ / NO. ของใบกำกับภาษี/ใบเสร็จรับเงิน
-
-        ตั้งแต่วันที่กำหนด และมี Tax Invoice Number (แท็บ Tax Invoice ของรับชำระ)
-        → ใช้ Tax Invoice Number; นอกนั้นใช้เลขรันหน้ารับชำระเหมือนเดิม
-        """
-        self.ensure_one()
-        start = self.env['ir.config_parameter'].sudo().get_param(
-            self.RECEIPT_TAX_NUMBER_PARAM, self.RECEIPT_TAX_NUMBER_FROM)
-        if self.date and str(self.date) >= start:
-            numbers = self.tax_invoice_ids.filtered(
-                lambda t: t.tax_invoice_number and not t.reversing_id and not t.reversed_id
-            ).mapped('tax_invoice_number')
-            if numbers:
-                return ', '.join(dict.fromkeys(numbers))
-        return self.name
-
     def get_baht_text_form_receipt(self):
         total_untaxed_amount = sum(i.amount_untaxed_signed for i in self.reconciled_invoice_ids)
         total_amount = self.amount - self.round_half_up(total_untaxed_amount * 5 / 100)

@@ -203,7 +203,7 @@
                     <td colspan="2">
                         <p>
                             <span class="text-left">เลขที่ / NO.</span>
-                            <span t-esc="doc.get_form_receipt_number()"/>
+                            <span t-esc="doc.name"/>
                         </p>
                         <p class="customer-info">
                             <span class="text-left">วันที่ / DATE</span>

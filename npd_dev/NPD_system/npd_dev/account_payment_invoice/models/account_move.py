@@ -24,6 +24,25 @@ class AccountMove(models.Model):
     )
     payment_id = fields.Many2one('account.payment', string='Payment', readonly=True)
 
+    def _get_tax_invoice_number(self, move, tax_invoice, tax):
+        """ภาษีขายแบบรับชำระ (ไม่มี Tax Invoice Sequence) ใช้เลขรันหน้ารับชำระ (CUST.IN...)
+        ให้ตรงกับเลขที่บนใบกำกับภาษี/ใบเสร็จรับเงิน
+        - เดิมแถวภาษีเกิดบนใบ CABA ตอนกระทบยอด จึงได้เลข CABA ก่อนถูกย้ายมาไว้ที่ใบรับชำระ
+          (group_account_tax_invoice) ส่วนใบที่รีเซ็ตแล้วยืนยันใหม่ได้ CUST.IN — เลขไม่เหมือนกัน
+        - ใบที่มีเลขอยู่แล้วไม่เปลี่ยน (ของเก่าคงเดิม)"""
+        was_empty = not tax_invoice.tax_invoice_number
+        number, invoice_date = super()._get_tax_invoice_number(move, tax_invoice, tax)
+        if not (was_empty and tax and not tax.taxinv_sequence_id
+                and tax.type_tax_use == 'sale' and tax.tax_exigibility == 'on_payment'
+                and move.move_type == 'entry' and not move.reversed_entry_id):
+            return number, invoice_date
+        # ใบ CABA ยังไม่ผูก payment_id ตอน post → ใช้ context ที่ _create_tax_cash_basis_moves ส่งมา
+        payment = tax_invoice.payment_id or move.payment_id or self.env['account.payment'].browse(
+            self._context.get('payment_id') or [])
+        if payment.name and payment.name != '/':
+            number = payment.name
+        return number, invoice_date
+
     def _post(self, soft=True):
         """Additional tax invoice info (tax_invoice_number, tax_invoice_date)
         Case sales tax, use Odoo's info, as document is issued out.
