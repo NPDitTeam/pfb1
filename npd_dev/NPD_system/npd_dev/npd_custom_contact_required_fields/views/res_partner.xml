@@ -10,6 +10,21 @@
                 <attribute name="placeholder"></attribute>
             </xpath>
 
+            <!-- เลขผู้เสียภาษี: ตัวเลขล้วน 13 หลักขึ้นไป (ตรวจจริงที่ _check_vat_digits)
+                 เอา placeholder ออก และทำ label เองเพื่อใส่หมายเหตุไว้ใต้ชื่อช่อง -->
+            <xpath expr="//field[@name='vat']" position="attributes">
+                <attribute name="placeholder"></attribute>
+                <attribute name="nolabel">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='vat']" position="before">
+                <div class="o_td_label">
+                    <label for="vat"/>
+                    <div class="text-muted small" style="font-weight: normal;">
+                        (หากเปิดใบเสนอราคาและยังไม่ได้ข้อมูลจากลูกค้าให้ใส่ 0000000000000)
+                    </div>
+                </div>
+            </xpath>
+
             <!-- ปรับฟิลด์ Mobile ไม่ให้มีค่า placeholder -->
             <xpath expr="//field[@name='mobile']" position="attributes">
                 <attribute name="placeholder"></attribute>
