@@ -69,9 +69,10 @@ class SaleOrder(models.Model):
         self._npd_check_header(_('ยืนยันใบสั่งขาย'))
         return super().action_confirm()
 
-    def _create_invoices(self, grouped=False, final=False, date=None):
+    def _create_invoices(self, *args, **kwargs):
+        # ส่งต่อตามที่ได้รับ (Odoo 14 มีแค่ grouped/final — date เพิ่งมีใน 15)
         self._npd_check_header(_('สร้างใบแจ้งหนี้'))
-        return super()._create_invoices(grouped=grouped, final=final, date=date)
+        return super()._create_invoices(*args, **kwargs)
 
 
 class SaleOrderLine(models.Model):
