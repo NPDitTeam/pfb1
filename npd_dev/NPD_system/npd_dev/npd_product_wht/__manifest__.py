@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'NPD Product Withholding Tax',
-    'version': '14.0.1.2.0',
+    'version': '14.0.1.3.0',
     'summary': 'Auto-create WHT accounts and link products to withholding tax configuration',
     'description': """
         - เพิ่มฟิลด์ Withholding Tax บน Product Template
@@ -27,6 +27,7 @@
         'views/product_template_views.xml',
         'views/wht_category_views.xml',
         'views/account_voucher_views.xml',
+        'views/wt_cert_link_wizard_views.xml',
     ],
     'installable': True,
     'auto_install': False,

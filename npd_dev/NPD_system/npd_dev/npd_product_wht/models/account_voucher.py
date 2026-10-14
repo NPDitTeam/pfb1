@@ -148,6 +148,17 @@ class AccountVoucher(models.Model):
         )
         self.invalidate_cache()
 
+    def _detach_cancelled_wht_certs(self):
+        """ปลดใบ WT ที่ยกเลิกแล้วออกจาก voucher
+
+        ใบที่ผู้ใช้ยกเลิกเอง (เช่น วันที่ผิด ต้องออกเลขใหม่) ยังเก็บไว้เป็นประวัติ
+        แต่ต้องไม่ผูกกับ voucher ไม่งั้นยอด WHT จะนับใบที่ยกเลิกซ้ำเข้าไป
+        """
+        for rec in self:
+            cancelled = rec.wt_cert_ids.filtered(lambda c: c.state == 'cancel')
+            if cancelled:
+                cancelled.write({'voucher_id': False})
+
     def _set_wht_certs_draft(self):
         """set WHT cert ทุกใบของ voucher นี้ เป็น draft ผ่าน SQL"""
         for rec in self:
@@ -197,7 +208,7 @@ class AccountVoucher(models.Model):
 
         # rate ที่มี cert แล้ว
         existing_rates = set()
-        for cert in self.wt_cert_ids:
+        for cert in self.wt_cert_ids.filtered(lambda c: c.state != 'cancel'):
             first_line = cert.wt_line[:1]
             if first_line:
                 existing_rates.add('%g' % first_line.wt_percent)
@@ -223,6 +234,7 @@ class AccountVoucher(models.Model):
 
     def proforma_voucher(self):
         """Override: เช็ค WHT ก่อนกดปุ่ม ตรวจสอบ"""
+        self._detach_cancelled_wht_certs()
         for rec in self:
             rec._check_wht_cert_before_validate()
         return super(AccountVoucher, self).proforma_voucher()
@@ -261,6 +273,7 @@ class AccountVoucher(models.Model):
         ถ้ามี cert อยู่แล้ว -> update ใช้เลขรันเดิม
         ถ้า key เดิมไม่มี line ที่เข้าเกณฑ์ -> ลบ cert / recycle ให้ key ใหม่
         """
+        self._detach_cancelled_wht_certs()
         for rec in self:
             # อัปเดต wht_total บนทุก line (ใช้ helper เพื่อรองรับ is_deduct_vat)
             for line in rec.line_ids:
@@ -325,6 +338,13 @@ class AccountVoucher(models.Model):
                     ckey, self.env['withholding.tax.cert']
                 )
                 existing_certs_by_key[ckey] |= cert
+
+            # เลขที่ฝังวันที่ไว้ ถ้าวันที่ voucher เปลี่ยน ห้ามแก้วันที่ใบเดิม
+            # ให้ผู้ใช้ยกเลิกใบเดิมเอง แล้วกดปุ่มนี้ใหม่เพื่อออกเลขตามวันที่ใหม่
+            if wht_data:
+                rec.wt_cert_ids.filtered(
+                    lambda c: c.date != doc_date
+                )._check_wt_cert_date_locked()
 
             # cert ที่ key เดิมหายไป -> เอามา recycle
             recyclable_certs = self.env['withholding.tax.cert']
@@ -402,15 +422,8 @@ class AccountVoucher(models.Model):
                     )
                 else:
                     # key ใหม่ - ขอเลขรันใหม่
-                    seq_ids = self.env['ir.sequence'].search(
-                        [('code', '=', 'withholding.tax'),
-                         ('company_id', '=', company.id)],
-                        order='company_id', limit=1,
-                    )
-                    if seq_ids:
-                        cert_name = seq_ids[0].next_by_id(sequence_date=doc_date)
-                    else:
-                        cert_name = self.env['ir.sequence'].next_by_code('withholding.tax')
+                    cert_name = self.env['withholding.tax.cert']._npd_next_wt_number(
+                        doc_date, company)
 
                     cert_vals = {
                         'name': cert_name,

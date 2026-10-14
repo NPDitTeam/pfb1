@@ -126,6 +126,17 @@ class AccountAdvanceClear(models.Model):
         )
         self.invalidate_cache()
 
+    def _detach_cancelled_wht_certs(self):
+        """ปลดใบ WT ที่ยกเลิกแล้วออกจากเอกสาร
+
+        ใบที่ผู้ใช้ยกเลิกเอง (เช่น วันที่ผิด ต้องออกเลขใหม่) ยังเก็บไว้เป็นประวัติ
+        แต่ต้องไม่ผูกกับเอกสาร ไม่งั้นยอด WHT ของเอกสารจะนับใบที่ยกเลิกซ้ำเข้าไป
+        """
+        for rec in self:
+            cancelled = rec.wt_cert_ids.filtered(lambda c: c.state == 'cancel')
+            if cancelled:
+                cancelled.write({'advance_clear_id': False})
+
     def _set_wht_certs_draft(self):
         """set WHT cert ทุกใบของ advance clear นี้ เป็น draft ผ่าน SQL"""
         for rec in self:
@@ -164,7 +175,7 @@ class AccountAdvanceClear(models.Model):
 
         # รวบรวม key ของ cert ที่มีอยู่แล้ว
         existing = set()
-        for cert in self.wt_cert_ids:
+        for cert in self.wt_cert_ids.filtered(lambda c: c.state != 'cancel'):
             for cl in cert.wt_line:
                 existing.add(
                     (cert.supplier_partner_id.id, cert.date, cl.wt_percent)
@@ -204,6 +215,7 @@ class AccountAdvanceClear(models.Model):
 
     def confirm(self):
         """Override: เช็ค WHT ก่อน Post"""
+        self._detach_cancelled_wht_certs()
         for rec in self:
             rec._check_wht_cert_before_post()
         return super(AccountAdvanceClear, self).confirm()
@@ -247,6 +259,7 @@ class AccountAdvanceClear(models.Model):
         ถ้า partner เดิมมี cert อยู่แล้ว -> update ใช้เลขรันเดิม
         ถ้า partner เดิมไม่มี line ที่เข้าเกณฑ์ -> ลบ cert ของ partner นั้น
         """
+        self._detach_cancelled_wht_certs()
         for rec in self:
             doc_date = rec.doc_date or fields.Date.today()
 
@@ -318,18 +331,31 @@ class AccountAdvanceClear(models.Model):
             ]
 
             # จับคู่ recycle: ใส่ cert เก่าเข้า map ของ key ใหม่ตามลำดับ
+            # เลขที่ฝังวันที่ไว้ จึง recycle ได้เฉพาะเข้า key ที่วันที่เดียวกัน
             recycle_map = {}  # new_key -> existing_cert
-            recyclable_iter = iter(recyclable_certs)
+            recycled_ids = set()
             for new_key in new_keys:
-                cert = next(recyclable_iter, None)
+                cert = next((
+                    c for c in recyclable_certs
+                    if c.id not in recycled_ids
+                    and (c.date == new_key[1] or not c.name)
+                ), None)
                 if cert is None:
-                    break
+                    continue
                 recycle_map[new_key] = cert
+                recycled_ids.add(cert.id)
                 # เพิ่มเข้า existing_certs_by_key เพื่อให้ flow ด้านล่าง update เหมือน key เดิม
                 existing_certs_by_key[new_key] = cert
 
+            # ใบเดิมจะถูกลบ แต่ยังมีรายการที่ต้องออกเลขใหม่ (เช่น เปลี่ยนวันที่)
+            # → ห้ามลบใบที่มีเลขแล้วเงียบ ๆ ให้ผู้ใช้ยกเลิกใบเดิมเอง
+            # แล้วกดปุ่มนี้ใหม่เพื่อออกเลขตามวันที่ใหม่
+            if any(k not in recycle_map for k in new_keys):
+                recyclable_certs.filtered(
+                    lambda c: c.id not in recycled_ids
+                )._check_wt_cert_date_locked()
+
             # cert เก่าที่ยัง recycle ไม่หมด → ลบ
-            recycled_ids = set(c.id for c in recycle_map.values())
             cert_ids_to_delete = [
                 c.id for c in recyclable_certs if c.id not in recycled_ids
             ]
@@ -405,15 +431,8 @@ class AccountAdvanceClear(models.Model):
                     )
                 else:
                     # key ใหม่ - สร้าง cert พร้อมขอเลขรันใหม่
-                    seq_ids = self.env['ir.sequence'].search(
-                        [('code', '=', 'withholding.tax'),
-                         ('company_id', '=', company.id)],
-                        order='company_id', limit=1,
-                    )
-                    if seq_ids:
-                        cert_name = seq_ids[0].next_by_id(sequence_date=cert_date)
-                    else:
-                        cert_name = self.env['ir.sequence'].next_by_code('withholding.tax')
+                    cert_name = self.env['withholding.tax.cert']._npd_next_wt_number(
+                        cert_date, company)
 
                     cert_vals = {
                         'name': cert_name,
