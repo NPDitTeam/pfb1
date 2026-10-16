@@ -88,8 +88,13 @@ class NpdSsoReportWizard(models.TransientModel):
                 ('year', '=', self.year), ('month', '=', int(self.month)), ('state', '!=', 'draft')]):
             raise UserError(_('เดือน %s/%s ยังไม่มีรอบทำเงินเดือน') % (self.month, self.year))
         payrolls = self.env['payroll.salary'].search([
-            ('year', '=', self.year), ('month', '=', int(self.month)),
-            ('employee_id.company', '=', self.company), ('sso_total', '>', 0)])
+            ('year', '=', self.year), ('month', '=', int(self.month)), ('sso_total', '>', 0)])
+        # บริษัทที่จ่ายในเดือนนั้น (รายงาน ภ.ง.ด.1 จำไว้) — พนักงานที่ย้ายบริษัทภายหลัง
+        # เดือนเก่าต้องยื่นในนามบริษัทเดิม
+        paid_by = {l.payroll_id.id: l.company for l in self.env['pnd1.line'].search([
+            ('payroll_id', 'in', payrolls.ids), ('source_type', '=', 'system')])}
+        payrolls = payrolls.filtered(
+            lambda p: (paid_by.get(p.id) or p.employee_id.company) == self.company)
         sheets, warnings = {}, []
         for pay in payrolls.sorted(lambda p: (p.employee_id.firstname or '', p.id)):
             emp = pay.employee_id

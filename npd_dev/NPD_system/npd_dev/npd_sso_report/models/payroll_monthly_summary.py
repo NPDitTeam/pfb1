@@ -46,7 +46,9 @@ class NpdPayrollMonthlySummary(models.Model):
                        regexp_replace(COALESCE(NULLIF(e.id_card_number, ''), e.passport_number, ''),
                                       '[^0-9A-Za-z]', '', 'g') AS taxid,
                        TRIM(CONCAT_WS(' ', e.prefix_th, e.firstname, e.lastname)) AS employee_name,
-                       e.company AS company,
+                       -- บริษัทที่จ่ายในเดือนนั้น (รายงาน ภ.ง.ด.1 จำไว้) ไม่ใช่สังกัดปัจจุบัน
+                       -- พนักงานย้ายบริษัท ส.ค. 2569 หลายคน เดือนเก่าต้องอยู่บริษัทเดิม
+                       COALESCE(lc.company, e.company) AS company,
                        e.branch_id AS branch_id,
                        p.year AS year,
                        p.month AS month,
@@ -60,6 +62,10 @@ class NpdPayrollMonthlySummary(models.Model):
                        COALESCE(p.sso_total, 0) AS sso_total
                   FROM payroll_salary p
                   JOIN employee_salary e ON e.id = p.employee_id
+                  LEFT JOIN LATERAL (
+                        SELECT l.company FROM pnd1_line l
+                         WHERE l.payroll_id = p.id AND l.source_type = 'system'
+                         ORDER BY l.id LIMIT 1) lc ON TRUE
                  WHERE EXISTS (SELECT 1 FROM payroll_period pp
                                 WHERE pp.year = p.year AND pp.month = p.month
                                   AND COALESCE(pp.state, '') <> 'draft')
