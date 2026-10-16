@@ -93,7 +93,8 @@ class EmployeeSalary(models.Model):
     advance_payment_limit = fields.Float(string='วงเงินเบิกล่วงหน้า')
 
     # Financial Information
-    enable_social_security = fields.Boolean(string='ประกันสังคม', default=True)
+    # ติ๊ก = คิดประกันสังคมในสลิปและยื่น สปส. (เดิมชื่อ "ประกันสังคม")
+    enable_social_security = fields.Boolean(string='ยื่นประกันสังคม', default=True)
     social_security_condition = fields.Selection(
         [('คิดตามฐานเงินเดือนจริงที่ได้รับ', 'คิดตามฐานเงินเดือนจริงที่ได้รับ')], string='เงื่อนไขประกันสังคม')
     social_security_fixed_amount = fields.Float(string='ค่าคงที่ของประกันสังคม')
@@ -172,7 +173,6 @@ class EmployeeSalary(models.Model):
     # ยื่นแบบ (คนละเรื่องกับการหักในสลิป) — ไม่ส่งไป npdhrms เพราะ api_employee_salary.php
     # สร้างคอลัมน์ตามชื่อช่องที่ส่งไป ตาราง users ไม่มีคอลัมน์นี้ ส่งไปแล้วบันทึกพนักงานไม่ได้
     file_pnd1 = fields.Boolean(string='ยื่นภ.ง.ด.1', default=True)
-    file_social_security = fields.Boolean(string='ยื่นประกันสังคม', default=True)
 
     # Work Behavior
     behavior_ids = fields.One2many('employee.work.behavior', 'employee_id', string='พฤติกรรมการทำงาน')

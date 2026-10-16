@@ -2903,9 +2903,9 @@ class PayrollSalary(models.Model):
         # บุคคลพิเศษที่ skip_sso → ไม่หักประกันสังคม
         if exec_cfg and exec_cfg.get('skip_sso'):
             sso_amount = 0.0
-        # ไม่ติ๊ก "ยื่นประกันสังคม" ที่ข้อมูลพนักงาน → ไม่คิดประกันสังคม
+        # ไม่ติ๊ก "ยื่นประกันสังคม" (enable_social_security) ที่ข้อมูลพนักงาน → ไม่คิดประกันสังคม
         # (ยังยอมให้ HR กรอกค่าเองได้ ถ้าติ๊กปรับแก้ด้วยมือ/กรอกยอดไว้)
-        elif (not self.employee_id.file_social_security
+        elif (not self.employee_id.enable_social_security
               and not self.manual_override_sso and not (self.manual_sso_amount or 0) > 0):
             sso_amount = 0.0
         # ✅ ติ๊ก "ปรับแก้ด้วยมือ" หรือกรอก "ประกันสังคม (กรอกเอง)" > 0 → ยึดค่านี้ ไม่คำนวณทับ
@@ -2943,6 +2943,9 @@ class PayrollSalary(models.Model):
         # บุคคลพิเศษ — ล็อกภาษีต่อเดือนคงที่ (เฉพาะที่กำหนด tax_monthly ไว้)
         elif exec_cfg and exec_cfg.get('tax_monthly') is not None:
             temp_tax = exec_cfg['tax_monthly']
+        # ไม่ติ๊ก "ภาษี" ที่ข้อมูลพนักงาน → ไม่หักภาษีในสลิป (เหมือน o18)
+        elif not self.employee_id.enable_tax:
+            temp_tax = 0.0
 
         lines_to_create.append((0, 0, {
             'name': 'ภาษีหัก ณ ที่จ่าย',

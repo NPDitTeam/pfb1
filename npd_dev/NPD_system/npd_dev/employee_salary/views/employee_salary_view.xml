@@ -90,7 +90,6 @@
                             <page string="ข้อมูลเงินเดือนและภาษี">
                                 <group>
                                     <group>
-                                        <field name="enable_social_security"/>
                                         <field name="social_security_condition"/>
                                         <field name="social_security_fixed_amount"/>
                                         <field name="social_security_start_date"/>
@@ -101,7 +100,7 @@
                                     </group>
                                     <group string="การยื่นแบบ">
                                         <field name="file_pnd1"/>
-                                        <field name="file_social_security"/>
+                                        <field name="enable_social_security"/>
                                     </group>
                                 </group>
                             </page>

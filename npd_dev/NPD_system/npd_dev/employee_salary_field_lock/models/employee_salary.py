@@ -46,6 +46,7 @@ class EmployeeSalary(models.Model):
         'tax_condition',
         'tax_exception',
         'tax_start_date_condition',
+        'file_pnd1',
     ]
 
     def _salary_lock_active(self):
