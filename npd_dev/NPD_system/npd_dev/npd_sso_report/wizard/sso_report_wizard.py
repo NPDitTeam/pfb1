@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""รายงานประกันสังคม — ไฟล์ .xls แบบเดียวกับที่ยื่น สปส.
+"""รายงานประกันสังคม — ไฟล์ .xlsx รูปแบบเดียวกับที่ยื่น สปส.
 
 หนึ่งไฟล์ต่อบริษัท แยกชีตตามรหัสสาขา สปส. (000000, 200002, ...)
 คอลัมน์: เลขบัตรประชาชน | คำนำหน้า | ชื่อ | สกุล | ค่าจ้าง | เงินสมทบ
@@ -115,7 +115,7 @@ class NpdSsoReportWizard(models.TransientModel):
     def _file_name(self, config):
         be_year = int(self.year) + 543
         prefix = config.employer_account or 'สปส'
-        return '%s_%d%02d_%s.xls' % (prefix, be_year, int(self.month), self.company)
+        return '%s_%d%02d_%s.xlsx' % (prefix, be_year, int(self.month), self.company)
 
     # ------------------------------------------------------------------
     def action_preview(self):
@@ -152,32 +152,32 @@ class NpdSsoReportWizard(models.TransientModel):
 
     def action_export(self):
         self.ensure_one()
-        import xlwt
+        import xlsxwriter
         config, sheets, _warnings = self._collect()
         if not sheets:
             raise UserError(_('ไม่พบสลิปที่มียอดประกันสังคมในเดือนนี้'))
-        book = xlwt.Workbook(encoding='utf-8')
-        head = xlwt.easyxf('font: bold on; align: horiz center')
-        id_style = xlwt.easyxf(num_format_str='0000000000000')
-        num_style = xlwt.easyxf(num_format_str='0')
+        buf = io.BytesIO()
+        book = xlsxwriter.Workbook(buf, {'in_memory': True})
+        head = book.add_format({'bold': True, 'align': 'center'})
+        id_fmt = book.add_format({'num_format': '0000000000000'})
+        num_fmt = book.add_format({'num_format': '0'})
         for code, lines in sheets.items():
-            sheet = book.add_sheet(code)
+            sheet = book.add_worksheet(code)
             for col, title in enumerate(HEADERS):
                 sheet.write(0, col, title, head)
             for r, line in enumerate(lines, start=1):
                 if line['id'].isdigit():
-                    sheet.write(r, 0, int(line['id']), id_style)
+                    sheet.write_number(r, 0, int(line['id']), id_fmt)
                 else:
-                    sheet.write(r, 0, line['id'])
-                sheet.write(r, 1, line['prefix'])
-                sheet.write(r, 2, line['firstname'])
-                sheet.write(r, 3, line['lastname'])
-                sheet.write(r, 4, line['wage'], num_style)
-                sheet.write(r, 5, line['contribution'], num_style)
+                    sheet.write_string(r, 0, line['id'])
+                sheet.write_string(r, 1, line['prefix'])
+                sheet.write_string(r, 2, line['firstname'])
+                sheet.write_string(r, 3, line['lastname'])
+                sheet.write_number(r, 4, line['wage'], num_fmt)
+                sheet.write_number(r, 5, line['contribution'], num_fmt)
             for col, width in enumerate((16, 10, 18, 18, 10, 10)):
-                sheet.col(col).width = 256 * width
-        buf = io.BytesIO()
-        book.save(buf)
+                sheet.set_column(col, col, width)
+        book.close()
         self.write({'file_data': base64.b64encode(buf.getvalue()), 'file_name': self._file_name(config)})
         return self._reopen()
 

@@ -21,7 +21,7 @@
                 </group>
                 <footer>
                     <button name="action_preview" type="object" string="ดูตัวอย่าง" class="btn-primary"/>
-                    <button name="action_export" type="object" string="สร้างไฟล์ยื่น สปส. (.xls)" class="btn-secondary"/>
+                    <button name="action_export" type="object" string="สร้างไฟล์ยื่น สปส. (.xlsx)" class="btn-secondary"/>
                     <button string="ปิด" class="btn-link" special="cancel"/>
                 </footer>
             </form>
