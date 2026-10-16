@@ -26,10 +26,14 @@ class NpdPayrollMonthlySummary(models.Model):
     year = fields.Char(string='ปี', readonly=True)
     month = fields.Integer(string='เดือน', readonly=True, group_operator=False)
     period = fields.Char(string='งวด', readonly=True)
-    # รายได้สุทธิ = รวมรายรับในสลิป (ก่อนหักรายการใด ๆ) ตามที่ HR กำหนด
-    net_income = fields.Float(string='รายได้สุทธิ', readonly=True)
-    sso_total = fields.Float(string='ประกันสังคม', readonly=True)
-    tax_monthly = fields.Float(string='ภาษี', readonly=True)
+    # ตามแบบที่ HR กำหนด (ตัวอย่างเดือน 9/2569)
+    net_income = fields.Float(string='รายได้ (รวมรายรับทั้งหมด)', readonly=True)
+    tax_monthly = fields.Float(string='ภงด.1', readonly=True,
+                               help='ภาษีหัก ณ ที่จ่ายในสลิปเดือนนั้น (ยอดเดียวกับรายงาน ภ.ง.ด.1)')
+    sso_wage = fields.Float(string='ประกันสังคม (ฐานค่าจ้าง)', readonly=True,
+                            help='เงินเดือน + เงินประจำตำแหน่ง + ค่าประสบการณ์ + ค่าวิชาชีพ + ค่าครองชีพ')
+    sso_total = fields.Float(string='ยื่นประกันสังคม', readonly=True,
+                             help='เงินสมทบประกันสังคมที่หักในสลิป')
 
     def init(self):
         tools.drop_view_if_exists(self.env.cr, self._table)
@@ -48,8 +52,12 @@ class NpdPayrollMonthlySummary(models.Model):
                        p.month AS month,
                        CONCAT(p.year, '/', LPAD(p.month::text, 2, '0')) AS period,
                        COALESCE(p.total_gross, 0) AS net_income,
-                       COALESCE(p.sso_total, 0) AS sso_total,
-                       COALESCE(p.tax_monthly, 0) AS tax_monthly
+                       COALESCE(p.tax_monthly, 0) AS tax_monthly,
+                       COALESCE(p.base_salary, 0) + COALESCE(p.income_position_allowance, 0)
+                         + COALESCE(p.income_experience_allowance, 0)
+                         + COALESCE(p.income_professional_allowance, 0)
+                         + COALESCE(p.income_cost_of_living, 0) AS sso_wage,
+                       COALESCE(p.sso_total, 0) AS sso_total
                   FROM payroll_salary p
                   JOIN employee_salary e ON e.id = p.employee_id
                  WHERE EXISTS (SELECT 1 FROM payroll_period pp

@@ -12,8 +12,9 @@
                 <field name="employee_code" optional="hide"/>
                 <field name="employee_name"/>
                 <field name="net_income" sum="รวม"/>
-                <field name="sso_total" sum="รวม"/>
                 <field name="tax_monthly" sum="รวม"/>
+                <field name="sso_wage" sum="รวม"/>
+                <field name="sso_total" sum="รวม"/>
             </tree>
         </field>
     </record>
