@@ -98,6 +98,8 @@ class HRWithholdingTaxCert(models.Model):
     employee_id = fields.Many2one(
         comodel_name="employee.salary",
         string="ชื่อพนักงาน",
+        # เลือกได้เฉพาะคนที่ติ๊ก "ยื่นภ.ง.ด.1" (ใบเดิมของคนที่เลิกติ๊กยังเปิดดูได้)
+        domain=[("file_pnd1", "=", True)],
         required=True,
         readonly=True,
         states={"draft": [("readonly", False)]},

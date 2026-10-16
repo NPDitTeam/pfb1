@@ -40,6 +40,8 @@ class GenerateHRWTCert(models.TransientModel):
         payrolls = Payroll.search([("year", "=", self.year)])
         pnd1_lines = self.env["pnd1.line"].search(Cert._pnd1_year_domain(self.year))
         employees = self._get_employees_in_year(payrolls, pnd1_lines)
+        # ไม่ติ๊ก "ยื่นภ.ง.ด.1" ที่ข้อมูลพนักงาน → ไม่ออกหนังสือรับรอง (50 ทวิ)
+        employees = employees.filtered("file_pnd1")
         if not employees:
             raise UserError(
                 _("ไม่พบข้อมูลเงินเดือนหรือรายงาน ภ.ง.ด.1 ในปี %s") % self.year

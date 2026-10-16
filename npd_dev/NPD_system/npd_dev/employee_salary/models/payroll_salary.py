@@ -808,6 +808,10 @@ class PayrollSalary(models.Model):
             'late_checkin_deduction': self.late_checkin_deduction,
             'early_checkout_deduction': self.early_checkout_deduction,
             'missed_days_deduction': self.missed_days_deduction,
+            # ✅ หักพักงาน — ยอดนี้ถูกนับรวมใน total_deduction อยู่แล้ว
+            #    แต่เดิมไม่ได้ส่งค่าแยกไป รายงานเงินเดือนฝั่ง PHP จึงไล่ไม่ออก
+            #    ว่ายอดหักมาจากไหน (อ่านจาก MySQL ไม่ได้อ่านจาก Odoo)
+            'suspension_deduction': self.suspension_deduction,
 
             'lateness_deduction': self.lateness_deduction,
             # ✅ รายได้เสริม
@@ -924,6 +928,38 @@ class PayrollSalary(models.Model):
 
                 rec._compute_total()
 
+
+    # ── ห้ามสร้างสลิปให้คนที่ลาออกไปก่อนรอบนี้จะเริ่ม ────────────────────────
+    # เคสจริง: พนักงานลาออก 24 ส.ค. (วันสุดท้ายของรอบเดือน 8) แต่ยังถูกสร้าง
+    # สลิปรอบเดือน 9 (25 ส.ค.–24 ก.ย.) ขึ้นมา รายได้เป็นศูนย์แต่ยังหัก กยศ.
+    # และประกันสังคม ทำให้ยอดสุทธิติดลบและไปโผล่ในรายงานเงินเดือน
+    #
+    # ตัวกรอง _eligible ใน payroll.period กันไว้แล้ว แต่กันได้เฉพาะทาง cron
+    # ทำเงินเดือน Auto — กฎนี้อยู่ที่ตัวโมเดลจึงกันครบทุกทาง ทั้งสร้างมือ
+    # สร้างผ่าน API และการแก้งวด/สลับพนักงานบนสลิปที่มีอยู่แล้ว
+    #
+    # ยกเว้นด้วย context skip_resign_cycle_check=True เผื่อกรณียกข้อมูลเก่า
+    # หรือ HR ต้องการออกสลิปย้อนหลังที่รู้ตัวว่าทำอะไรอยู่
+    @api.constrains('employee_id', 'month', 'year', 'cutoff_day')
+    def _check_resigned_before_cycle(self):
+        if self.env.context.get('skip_resign_cycle_check'):
+            return
+        for rec in self:
+            emp = rec.employee_id
+            if not emp or not emp.resign_date:
+                continue
+            cycle_start, _cycle_end = rec._security_deposit_cycle_window()
+            if not cycle_start:
+                continue
+            if emp.resign_date < cycle_start:
+                raise ValidationError(
+                    "สร้างรายการเงินเดือนงวด %s/%s ให้ %s (%s) ไม่ได้ "
+                    "เพราะลาออกวันที่ %s ซึ่งก่อนวันเริ่มรอบ %s "
+                    "— รอบเงินเดือนสุดท้ายของพนักงานคนนี้ถูกตัดจ่ายไปแล้ว"
+                    % (rec.month, rec.year,
+                       emp.firstname or '', emp.employee_code or '',
+                       emp.resign_date.strftime('%d/%m/%Y'),
+                       cycle_start.strftime('%d/%m/%Y')))
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -2015,6 +2051,32 @@ class PayrollSalary(models.Model):
                                 'message': _("ไม่สามารถเชื่อมต่อ API ได้: %s") % e}
                 }
                 ot_logs = []
+            except ValueError:
+                # API ตอบกลับ 200 แต่เนื้อหาว่างหรือไม่ใช่ JSON ซึ่งเกิดขึ้นจริง
+                # ตอนกดคำนวณใหม่ทั้งรอบ เพราะยิงไปหลายร้อยครั้งรวดเดียวจนถูก
+                # ฝั่ง PHP จำกัดอัตราแล้วตอบตัวเปล่ากลับมา
+                #
+                # เดิมข้อผิดพลาดนี้หลุดออกไปทำให้ทั้งหน้าจอพัง และคนกดไม่รู้ว่า
+                # เกิดอะไรขึ้น ที่ถูกคือคิดต่อโดยไม่มี OT แล้วบอกให้ชัดว่า OT
+                # ยังไม่ได้ดึงมา จะได้กดซ้ำทีหลัง ไม่ใช่เข้าใจว่าคนนี้ไม่มี OT
+                preview = (response.text or '')[:80]
+                _logger.warning(
+                    "[OT-API] รหัส %s งวด %s/%s ตอบกลับไม่ใช่ JSON (ยาว %s ตัวอักษร): %r",
+                    self.employee_code, self.month, self.year,
+                    len(response.text or ''), preview)
+                warning_dict = {
+                    'warning': {
+                        'title': _("ดึงข้อมูล OT ไม่สำเร็จ"),
+                        'message': _(
+                            "ระบบ OT ตอบกลับมาไม่ครบ จึงยังไม่ได้ดึง OT ของ %s "
+                            "งวด %s/%s\n\nยอด OT ในรอบนี้จึงยังไม่รวมของคนนี้ "
+                            "กรุณากดคำนวณใหม่อีกครั้งในอีกสักครู่\n"
+                            "ถ้ายังเป็นเหมือนเดิม ให้แจ้งฝ่าย IT ตรวจสอบ "
+                            "การจำกัดสิทธิ์เรียก API ของเซิร์ฟเวอร์"
+                        ) % (self.employee_code or '-', self.month, self.year),
+                    }
+                }
+                ot_logs = []
 
         for log in ot_logs:
             # ดึงวันที่จาก log['work_date']
@@ -2522,6 +2584,29 @@ class PayrollSalary(models.Model):
                 'warning': {'title': _("API Connection Error"), 'message': _("ไม่สามารถเชื่อมต่อ API ได้: %s") % e}
             }
             return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], [], [], [], warning_dict
+        except ValueError:
+            # เหมือนฝั่ง OT — ตอบ 200 แต่เนื้อหาว่าง มักเกิดตอนยิงถี่ ๆ
+            # ต้องคืนค่าศูนย์พร้อมคำเตือน ไม่ใช่ปล่อยให้ทั้งหน้าจอพัง
+            # ระวัง: ค่าที่คืนเป็นศูนย์แปลว่า "ยังไม่ได้ดึง" ไม่ใช่ "ไม่มีสาย/ขาด"
+            # จึงต้องเตือนให้ชัด ไม่งั้นจะเข้าใจว่าคนนี้มาตรงเวลาทั้งเดือน
+            preview = (response.text or '')[:80]
+            _logger.warning(
+                "[LATENESS-API] รหัส %s งวด %s/%s ตอบกลับไม่ใช่ JSON "
+                "(ยาว %s ตัวอักษร): %r",
+                self.employee_code, self.month, self.year,
+                len(response.text or ''), preview)
+            warning_dict = {
+                'warning': {
+                    'title': _("ดึงข้อมูลขาด ลา มาสาย ไม่สำเร็จ"),
+                    'message': _(
+                        "ระบบลงเวลาตอบกลับมาไม่ครบ จึงยังไม่ได้ดึงข้อมูลขาด ลา "
+                        "มาสาย ของ %s งวด %s/%s\n\n"
+                        "ตัวเลขที่เห็นเป็นศูนย์เพราะยังดึงไม่ได้ ไม่ได้แปลว่า "
+                        "มาตรงเวลาทั้งเดือน กรุณากดคำนวณใหม่อีกครั้งในอีกสักครู่"
+                    ) % (self.employee_code or '-', self.month, self.year),
+                }
+            }
+            return 0, 0, 0, 0, 0, 0, 0, 0, 0, [], [], [], [], warning_dict
 
     def _populate_all_lines(self):
         self.ensure_one()
@@ -2817,6 +2902,11 @@ class PayrollSalary(models.Model):
         sso_amount = float(round_half_up(sso_base * (self.sso_rate / 100.0)))
         # บุคคลพิเศษที่ skip_sso → ไม่หักประกันสังคม
         if exec_cfg and exec_cfg.get('skip_sso'):
+            sso_amount = 0.0
+        # ไม่ติ๊ก "ยื่นประกันสังคม" ที่ข้อมูลพนักงาน → ไม่คิดประกันสังคม
+        # (ยังยอมให้ HR กรอกค่าเองได้ ถ้าติ๊กปรับแก้ด้วยมือ/กรอกยอดไว้)
+        elif (not self.employee_id.file_social_security
+              and not self.manual_override_sso and not (self.manual_sso_amount or 0) > 0):
             sso_amount = 0.0
         # ✅ ติ๊ก "ปรับแก้ด้วยมือ" หรือกรอก "ประกันสังคม (กรอกเอง)" > 0 → ยึดค่านี้ ไม่คำนวณทับ
         elif self.manual_override_sso or (self.manual_sso_amount and self.manual_sso_amount > 0):

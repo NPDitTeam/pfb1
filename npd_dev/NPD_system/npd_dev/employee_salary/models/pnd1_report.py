@@ -133,7 +133,8 @@ class Pnd1Line(models.Model):
             skipped = []
             for payroll in prd.payroll_ids:
                 emp = payroll.employee_id
-                if not emp:
+                # ไม่ติ๊ก "ยื่นภ.ง.ด.1" ที่ข้อมูลพนักงาน → ไม่เข้ารายงาน
+                if not emp or not emp.file_pnd1:
                     continue
                 company = company_by_payroll.get(payroll.id) or emp.company
                 # ต้องมีบริษัท มิฉะนั้นจะไม่แสดงในเมนูบริษัทใด และ company เป็น required
@@ -175,6 +176,14 @@ class Pnd1Line(models.Model):
             months = self._managed_months()
         payrolls = payrolls.filtered(
             lambda p: p.employee_id and (p.year, p.month) in months)
+        # ไม่ติ๊ก "ยื่นภ.ง.ด.1" → ไม่เข้ารายงาน แถวระบบเดิมของคนนั้นลบออก (แถว excel ไม่แตะ)
+        not_filed = payrolls.filtered(lambda p: not p.employee_id.file_pnd1)
+        if not_filed:
+            stale = self.search([('source_type', '=', 'system'), ('payroll_id', 'in', not_filed.ids)])
+            if stale:
+                result['removed_not_filed'] = len(stale)
+                stale.unlink()
+            payrolls -= not_filed
         if not payrolls:
             return result
 

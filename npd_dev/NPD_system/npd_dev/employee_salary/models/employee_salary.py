@@ -169,6 +169,10 @@ class EmployeeSalary(models.Model):
                                      string='เงื่อนไขภาษี')
     tax_exception = fields.Float(string='จำนวนภาษีคงที่ต่อเดือน')
     tax_start_date_condition = fields.Date(string='เงื่อนไขที่เริ่มคำนวณภาษี')
+    # ยื่นแบบ (คนละเรื่องกับการหักในสลิป) — ไม่ส่งไป npdhrms เพราะ api_employee_salary.php
+    # สร้างคอลัมน์ตามชื่อช่องที่ส่งไป ตาราง users ไม่มีคอลัมน์นี้ ส่งไปแล้วบันทึกพนักงานไม่ได้
+    file_pnd1 = fields.Boolean(string='ยื่นภ.ง.ด.1', default=True)
+    file_social_security = fields.Boolean(string='ยื่นประกันสังคม', default=True)
 
     # Work Behavior
     behavior_ids = fields.One2many('employee.work.behavior', 'employee_id', string='พฤติกรรมการทำงาน')

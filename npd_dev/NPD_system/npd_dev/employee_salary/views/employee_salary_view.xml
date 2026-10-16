@@ -99,6 +99,10 @@
                                         <field name="tax_exception"/>
                                         <field name="tax_start_date_condition"/>
                                     </group>
+                                    <group string="การยื่นแบบ">
+                                        <field name="file_pnd1"/>
+                                        <field name="file_social_security"/>
+                                    </group>
                                 </group>
                             </page>
                             <page string="ประวัติการทำงาน">
