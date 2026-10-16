@@ -83,6 +83,10 @@ class NpdSsoReportWizard(models.TransientModel):
         if not config:
             raise UserError(_('ยังไม่ได้กำหนดค่ารายงานประกันสังคมของ %s '
                               '(เมนู กำหนดค่ารายงานประกันสังคม)') % self.company)
+        # นับเฉพาะเดือนที่มีรอบทำเงินเดือน (ไม่ใช่ร่าง) เหมือนรายงาน ภ.ง.ด.1
+        if not self.env['payroll.period'].search_count([
+                ('year', '=', self.year), ('month', '=', int(self.month)), ('state', '!=', 'draft')]):
+            raise UserError(_('เดือน %s/%s ยังไม่มีรอบทำเงินเดือน') % (self.month, self.year))
         payrolls = self.env['payroll.salary'].search([
             ('year', '=', self.year), ('month', '=', int(self.month)),
             ('employee_id.company', '=', self.company), ('sso_total', '>', 0)])

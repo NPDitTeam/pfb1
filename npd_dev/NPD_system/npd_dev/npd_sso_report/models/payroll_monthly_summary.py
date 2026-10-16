@@ -7,7 +7,10 @@ def _hrms_companies(self):
 
 
 class NpdPayrollMonthlySummary(models.Model):
-    """รายงานสรุปรายได้ต่อเดือน — อ่านจากหน้าทำเงินเดือนตรง ๆ (ไม่เก็บข้อมูลซ้ำ)"""
+    """รายงานสรุปรายได้ต่อเดือน — อ่านจากหน้าทำเงินเดือนตรง ๆ (ไม่เก็บข้อมูลซ้ำ)
+
+    นับเฉพาะเดือนที่มีรอบทำเงินเดือน (ไม่ใช่ร่าง) แล้ว เหมือนรายงาน ภ.ง.ด.1 — สลิปที่สร้างเอง
+    ก่อนเริ่มใช้รอบ (เดือน 4/2569) ไม่นับ ส่วนสลิปทำนอกรอบในเดือนที่มีรอบแล้วยังนับ"""
     _name = 'npd.payroll.monthly.summary'
     _description = 'รายงานสรุปรายได้ต่อเดือน'
     _auto = False
@@ -50,5 +53,8 @@ class NpdPayrollMonthlySummary(models.Model):
                        COALESCE(p.tax_monthly, 0) AS tax_monthly
                   FROM payroll_salary p
                   JOIN employee_salary e ON e.id = p.employee_id
+                 WHERE EXISTS (SELECT 1 FROM payroll_period pp
+                                WHERE pp.year = p.year AND pp.month = p.month
+                                  AND COALESCE(pp.state, '') <> 'draft')
             )
         """ % self._table)
