@@ -11,8 +11,7 @@
                 <field name="taxid"/>
                 <field name="employee_code" optional="hide"/>
                 <field name="employee_name"/>
-                <field name="total_gross" sum="รวม" optional="hide"/>
-                <field name="net_salary" sum="รวม"/>
+                <field name="net_income" sum="รวม"/>
                 <field name="sso_total" sum="รวม"/>
                 <field name="tax_monthly" sum="รวม"/>
             </tree>

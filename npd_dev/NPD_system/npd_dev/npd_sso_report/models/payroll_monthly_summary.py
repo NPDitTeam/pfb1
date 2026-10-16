@@ -26,8 +26,8 @@ class NpdPayrollMonthlySummary(models.Model):
     year = fields.Char(string='ปี', readonly=True)
     month = fields.Integer(string='เดือน', readonly=True, group_operator=False)
     period = fields.Char(string='งวด', readonly=True)
-    total_gross = fields.Float(string='รวมรายได้', readonly=True)
-    net_salary = fields.Float(string='รายได้สุทธิ', readonly=True)
+    # รายได้สุทธิ = รวมรายรับในสลิป (ก่อนหักรายการใด ๆ) ตามที่ HR กำหนด
+    net_income = fields.Float(string='รายได้สุทธิ', readonly=True)
     sso_total = fields.Float(string='ประกันสังคม', readonly=True)
     tax_monthly = fields.Float(string='ภาษี', readonly=True)
 
@@ -47,8 +47,7 @@ class NpdPayrollMonthlySummary(models.Model):
                        p.year AS year,
                        p.month AS month,
                        CONCAT(p.year, '/', LPAD(p.month::text, 2, '0')) AS period,
-                       COALESCE(p.total_gross, 0) AS total_gross,
-                       COALESCE(p.net_salary, 0) AS net_salary,
+                       COALESCE(p.total_gross, 0) AS net_income,
                        COALESCE(p.sso_total, 0) AS sso_total,
                        COALESCE(p.tax_monthly, 0) AS tax_monthly
                   FROM payroll_salary p
