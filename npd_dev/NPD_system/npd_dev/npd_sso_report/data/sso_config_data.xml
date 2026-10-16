@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ค่าตั้งต้นจากไฟล์ที่ยื่น สปส. จริง (ส.ค. 2569) — สร้างเฉพาะบริษัทที่ยังไม่มีการกำหนดค่า ไม่ทับที่ HR แก้ -->
+    <function model="npd.sso.report.config" name="_npd_setup_defaults"/>
+</odoo>
