@@ -471,8 +471,10 @@ class PayrollSalary(models.Model):
     income_fuel = fields.Float(string="อินเซนทีฟ", default=0.0)
     income_commission = fields.Float(string="ค่าคอมมิชชั่นสาขา", default=0.0)
     income_commission_sale = fields.Float(string="ค่าคอมมิชชั่นSale", default=0.0)
+    # กรอกเอง — รวมเข้า "รายได้อื่นๆ (รวมทั้งหมด)" จึงไปถึงสลิป/PHP ผ่าน income_other ไม่ต้องเพิ่มคอลัมน์ MySQL
+    income_commission_support = fields.Float(string="ค่าคอม Sales Support", default=0.0)
     income_other = fields.Float(string="รายได้อื่นๆ (รวมทั้งหมด)", default=0.0,
-                                help="ผลรวม: รายได้อื่นๆ (ใส่เพิ่ม) + ค่าตัวนักแสดง + โบนัส + เงินตกหล่น + เมนูเงินได้อื่นๆ "
+                                help="ผลรวม: รายได้อื่นๆ (ใส่เพิ่ม) + ค่าคอม Sales Support + ค่าตัวนักแสดง + โบนัส + เงินตกหล่น + เมนูเงินได้อื่นๆ "
                                      "(ใช้ในสลิปเงินเดือนเป็น line 'รายได้อื่นๆ')")
     income_other_manual = fields.Float(
         string="รายได้อื่นๆ (ใส่เพิ่ม)", default=0.0,
@@ -997,7 +999,8 @@ class PayrollSalary(models.Model):
                     'employee_id', 'ot_calculation_method', 'month', 'year', 'cutoff_day',
                     'income_allowance', 'income_food', 'income_transport',
                     'income_fuel', 'income_commission', 'income_commission_sale',
-                    'income_other_manual', 'income_bonus', 'bonus_active', 'income_missed_payment',
+                    'income_other_manual', 'income_commission_support',
+                    'income_bonus', 'bonus_active', 'income_missed_payment',
                     'expense_provident', 'expense_advance', 'expense_loan',
                     'expense_ksl', 'expense_other_manual', 'child_deduction',
                     'manual_override_tax', 'manual_override_sso',
@@ -1058,7 +1061,8 @@ class PayrollSalary(models.Model):
     @api.onchange(
         'income_allowance', 'income_food', 'income_transport',
         'income_fuel', 'income_commission', 'income_commission_sale',
-        'income_other_manual', 'income_bonus', 'bonus_active', 'income_missed_payment',
+        'income_other_manual', 'income_commission_support',
+        'income_bonus', 'bonus_active', 'income_missed_payment',
         'expense_provident', 'expense_advance', 'expense_loan',
         'expense_ksl', 'expense_other_manual', 'child_deduction',
         'manual_tax_amount', 'manual_sso_amount', 'manual_override_sso',
@@ -3020,7 +3024,7 @@ class PayrollSalary(models.Model):
     @api.depends('employee_id', 'payment_date', 'month', 'year', 'cutoff_day', 'period_id',
                  'actor_content_total',
                  'income_bonus', 'bonus_active', 'income_missed_payment',
-                 'income_other_manual', 'income_deposit_refund_total')
+                 'income_other_manual', 'income_commission_support', 'income_deposit_refund_total')
     def _compute_other_income_total(self):
         """
         ดึงยอดรวมเงินได้อื่นๆ = other.income.line + actor + bonus + missed + manual + deposit_refund
@@ -3050,7 +3054,9 @@ class PayrollSalary(models.Model):
             missed_val = rec.income_missed_payment or 0.0
             manual_val = rec.income_other_manual or 0.0
             refund_val = rec.income_deposit_refund_total or 0.0
-            total = other_income_lines_total + actor_val + bonus_val + missed_val + manual_val + refund_val
+            support_val = rec.income_commission_support or 0.0
+            total = (other_income_lines_total + actor_val + bonus_val + missed_val + manual_val
+                     + refund_val + support_val)
             rec.other_income_total = total
             rec.income_other = total
             emp_code = rec.employee_id.employee_code if rec.employee_id else '-'

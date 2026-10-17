@@ -163,6 +163,7 @@
                                     <button name="action_view_commission_sale_detail"
                                             type="object" string="🔍 ดูรายละเอียดค่าคอม Sales"
                                             class="oe_link btn-sm"/>
+                                    <field name="income_commission_support" widget="monetary"/>
                                     <field name="income_other_manual"/>
                                     <field name="income_other" readonly="1"/>
                                     <field name="income_bonus"/>
