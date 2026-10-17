@@ -472,7 +472,8 @@ class PayrollSalary(models.Model):
     income_commission = fields.Float(string="ค่าคอมมิชชั่นสาขา", default=0.0)
     income_commission_sale = fields.Float(string="ค่าคอมมิชชั่นSale", default=0.0)
     # กรอกเอง — รวมเข้า "รายได้อื่นๆ (รวมทั้งหมด)" จึงไปถึงสลิป/PHP ผ่าน income_other ไม่ต้องเพิ่มคอลัมน์ MySQL
-    income_commission_support = fields.Float(string="ค่าคอม Sales Support", default=0.0)
+    # copy=False: สร้างเดือนถัดไปไม่ยกยอดตาม (กรอกใหม่ทุกเดือน กันจ่ายซ้ำ)
+    income_commission_support = fields.Float(string="ค่าคอม Sales Support", default=0.0, copy=False)
     income_other = fields.Float(string="รายได้อื่นๆ (รวมทั้งหมด)", default=0.0,
                                 help="ผลรวม: รายได้อื่นๆ (ใส่เพิ่ม) + ค่าคอม Sales Support + ค่าตัวนักแสดง + โบนัส + เงินตกหล่น + เมนูเงินได้อื่นๆ "
                                      "(ใช้ในสลิปเงินเดือนเป็น line 'รายได้อื่นๆ')")
