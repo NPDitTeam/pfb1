@@ -19,6 +19,25 @@ class SaleOrder(models.Model):
     _inherit = "sale.order"
 
     # ------------------------------------------------------------------
+    # ใบแจ้งหนี้ที่ใช้แสดง เลขที่ / วันที่กำหนดจ่าย
+    # ------------------------------------------------------------------
+    def get_invoice_billing_sheet(self):
+        """ใบแจ้งหนี้ 1 ใบที่ใช้แสดงบนหัวเอกสาร
+
+           เดิมรายงานเรียก doc.invoice_ids.name ตรง ๆ พอ SO มีหลายใบ
+           (ใบที่ถูกยกเลิก หรือใบลดหนี้) จะ Error Expected singleton พิมพ์ไม่ได้
+           - ตัดใบลดหนี้ (out_refund) และใบที่ยกเลิกแล้วออก
+           - มีใบที่ผ่านรายการแล้ว ใช้ใบที่ผ่านรายการก่อน ไม่มีค่อยใช้ใบร่าง
+           - เหลือหลายใบ ใช้ใบล่าสุด (วันที่ใบแจ้งหนี้ แล้วตาม id)
+           - ไม่มีเลย คืนค่าว่าง รายงานจะเว้นช่องไว้"""
+        self.ensure_one()
+        invoices = self.invoice_ids.filtered(
+            lambda m: m.move_type == 'out_invoice' and m.state != 'cancel')
+        invoices = invoices.filtered(lambda m: m.state == 'posted') or invoices
+        return invoices.sorted(
+            lambda m: (m.invoice_date or m.date or fields.Date.today(), m.id))[-1:]
+
+    # ------------------------------------------------------------------
     # ยอดเงิน
     # ------------------------------------------------------------------
     def get_grand_total_billing_sheet(self):

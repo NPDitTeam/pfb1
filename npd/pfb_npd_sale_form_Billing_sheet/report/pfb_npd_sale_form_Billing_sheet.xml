@@ -133,6 +133,9 @@
              พอชื่อ/ที่อยู่ลูกค้ายาว บล็อก เลขที่/วันที่/วันที่กำหนดจ่าย จะถูกดันจนตกขอบกระดาษและถูกตัดทิ้ง
              แก้เป็นตารางเดียว ล็อกความกว้างคอลัมน์ 19/39/21/21 = 100% และให้ป้ายอยู่แถวเดียวกับค่า
              ที่อยู่ยาวจึงตัดขึ้นบรรทัดใหม่ในคอลัมน์ตัวเอง โดยป้ายยังตรงกับค่าเสมอ -->
+        <!-- SO มีได้หลายใบแจ้งหนี้ (ใบยกเลิก/ใบลดหนี้) ห้ามเรียก doc.invoice_ids.xxx ตรง ๆ
+             จะ Error Expected singleton — ใช้ใบที่ get_invoice_billing_sheet เลือกให้แทน -->
+        <t t-set="bill_inv" t-value="doc.get_invoice_billing_sheet()"/>
         <table width="100%" style="table-layout: fixed;">
             <tr>
                 <td width="19%" class="text-right text_bold b"
@@ -149,7 +152,7 @@
                 </td>
                 <td width="21%" class="text-left b"
                     style="font-size: 14px; padding-left: 0; vertical-align: top; word-wrap: break-word;">
-                    <span class="ml-1" t-esc="doc.invoice_ids.name"/>
+                    <span class="ml-1" t-esc="bill_inv.name or ''"/>
                 </td>
             </tr>
             <tr>
@@ -183,7 +186,7 @@
                 </td>
                 <td class="text-left b"
                     style="font-size: 14px; padding-left: 0; vertical-align: top; word-wrap: break-word;">
-                    <span class="ml-1" t-esc="doc.invoice_ids.invoice_date_due.strftime('%d-%m-%Y') if doc.invoice_ids.invoice_date_due else ''"/>
+                    <span class="ml-1" t-esc="bill_inv.invoice_date_due.strftime('%d-%m-%Y') if bill_inv.invoice_date_due else ''"/>
                 </td>
             </tr>
             <tr>
