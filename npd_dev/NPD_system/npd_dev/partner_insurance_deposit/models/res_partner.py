@@ -5,6 +5,11 @@
 
 from odoo import models, fields, api
 
+# บัญชีเงินประกันการเช่า/สินค้า (สำรอง ถ้าหาจากสินค้าเงินประกันไม่ได้)
+INSURANCE_ACCOUNT_CODE = '2133-01'
+# สินค้า "เงินประกันค่าเช่า" ที่ใช้ตอนรับเงินประกัน
+DEPOSIT_PRODUCT_PARAM = 'sale.deposit_default_npd_id'
+
 
 class ResPartnerInherit(models.Model):
     """
@@ -19,15 +24,14 @@ class ResPartnerInherit(models.Model):
     _inherit = 'res.partner'  # ระบุว่าจะ inherit จาก model ไหน
 
     # ฟิลด์ค่าประกันสะสม (Accumulated Insurance Deposit)
-    # ใช้ Monetary เพื่อแสดงเป็นสกุลเงิน
-    # compute: ระบุชื่อ method ที่จะใช้คำนวณค่า
     # store=False: คำนวณใหม่ทุกครั้งที่เปิดหน้า (real-time)
     accumulated_insurance_deposit = fields.Monetary(
-        string='ค่าประกันสะสม',  # label ที่แสดงในหน้าจอ
-        compute='_compute_accumulated_insurance_deposit',  # method ที่ใช้คำนวณ
-        store=False,  # ไม่เก็บค่าลงฐานข้อมูล - คำนวณใหม่ทุกครั้ง
-        currency_field='currency_id',  # ฟิลด์สกุลเงิน
-        help='ค่าประกันสะสม = ยอดรับชำระค่าประกัน - ยอดคืนเงินประกัน',
+        string='ค่าประกันสะสม',
+        compute='_compute_accumulated_insurance_deposit',
+        store=False,
+        currency_field='currency_id',
+        help='ยอดคงเหลือบัญชี 2133-01 เงินประกันการเช่า/สินค้า ของลูกค้า (เครดิต - เดบิต) '
+             'ตรงกับบัญชีแยกประเภททั่วไป: รับเงินประกัน (INS) - หักค่าเช่า/ค่าปรับหาย/ค่าปรับชำรุด - คืนเงินประกัน',
     )
     # ===== ฟิลด์ประเภทลูกค้า (Customer Status) =====
     # ดึงมาจาก crm.lead field customer_status
@@ -43,70 +47,53 @@ class ResPartnerInherit(models.Model):
         help='ประเภทลูกค้า ดึงจาก CRM Lead ล่าสุด',
     )
 
+    @api.model
+    def _insurance_accounts(self):
+        """ผังเงินประกันการเช่าของบริษัทปัจจุบัน
+        ใช้บัญชีรายได้ของสินค้า "เงินประกันค่าเช่า" (พารามิเตอร์ sale.deposit_default_npd_id
+        ตัวเดียวกับปุ่มรับเงินประกัน และเมนูตรวจสอบเงินประกันการเช่าเบิกเกิน) ถ้าไม่มีค่อยใช้เลขผัง 2133-01"""
+        company = self.env.company
+        raw = self.env['ir.config_parameter'].sudo().get_param(DEPOSIT_PRODUCT_PARAM)
+        try:
+            product = self.env['product.product'].sudo().browse(int(raw)).exists() if raw else False
+        except (TypeError, ValueError):
+            product = False
+        if product:
+            prod = product.with_company(company)
+            account = prod.property_account_income_id or prod.categ_id.property_account_income_categ_id
+            if account and account.company_id == company:
+                return account
+        return self.env['account.account'].sudo().search([
+            ('code', '=', INSURANCE_ACCOUNT_CODE), ('company_id', '=', company.id)])
+
+    def _get_insurance_deposit_balance(self, exclude_move_ids=None):
+        """
+        ยอดคงเหลือเงินประกันของลูกค้า จากบัญชี 2133-01 (เฉพาะรายการที่ลงบันทึกแล้ว)
+
+        - นับรวมผู้ติดต่อทุกคนในบริษัทเดียวกัน (commercial partner)
+        - ใช้ partner_id ของบรรทัดบัญชี (ใบ PV คืนเงินบางใบผูกผู้ติดต่อไว้ที่บรรทัด ไม่ใช่หัวเอกสาร)
+        - exclude_move_ids: ไม่นับรายการของเอกสารนั้น ๆ (ใช้ดูยอด "ก่อน" เอกสารที่กำลังเปิดอยู่)
+        """
+        self.ensure_one()
+        accounts = self._insurance_accounts()
+        if not accounts:
+            return 0.0
+        domain = [
+            ('account_id', 'in', accounts.ids),
+            ('parent_state', '=', 'posted'),
+            ('partner_id', 'child_of', self.commercial_partner_id.id),
+        ]
+        if exclude_move_ids:
+            domain.append(('move_id', 'not in', list(exclude_move_ids)))
+        res = self.env['account.move.line'].read_group(domain, ['debit', 'credit'], [])
+        if not res:
+            return 0.0
+        return (res[0].get('credit') or 0.0) - (res[0].get('debit') or 0.0)
+
     def _compute_accumulated_insurance_deposit(self):
-        """
-        Method สำหรับคำนวณยอดค่าประกันสะสม
-
-        สูตรการคำนวณ:
-        ค่าประกันสะสม = ยอดรับชำระค่าประกัน (account.payment)
-                      - ยอดคืนเงินประกัน (account.voucher)
-
-        หลักการทำงาน:
-        1. คำนวณยอดรับ: ค้นหา account.payment ที่
-           - partner_id = ลูกค้ารายนี้
-           - journal_id = "สมุดรายวันรับชำระค่าประกัน"
-           - state = 'posted'
-
-        2. คำนวณยอดคืน: ค้นหา account.voucher.line ที่
-           - voucher_id.partner_id = ลูกค้ารายนี้
-           - voucher_id.state = 'posted'
-           - product_id.name = "เงินประกันค่าเช่า"
-
-        3. ค่าประกันสะสม = ยอดรับ - ยอดคืน
-        """
-        # ====== ส่วนที่ 1: ค้นหา Journal สำหรับรับชำระค่าประกัน ======
-        insurance_journal = self.env['account.journal'].search([
-            ('name', '=', 'สมุดรายวันรับชำระค่าประกัน')
-        ], limit=1)
-
-        # ====== ส่วนที่ 2: ค้นหา Product สำหรับคืนเงินประกัน ======
-        # ค้นหา product ที่ชื่อ "เงินประกันค่าเช่า"
-        insurance_product = self.env['product.product'].search([
-            ('name', '=', 'เงินประกันค่าเช่า')
-        ], limit=1)
-
         for partner in self:
-            total_received = 0.0  # ยอดรับชำระค่าประกัน
-            total_refunded = 0.0  # ยอดคืนเงินประกัน
-
-            # ====== ส่วนที่ 3: คำนวณยอดรับชำระค่าประกัน ======
-            if insurance_journal:
-                # ค้นหา payment ที่ตรงตามเงื่อนไข
-                payments = self.env['account.payment'].search([
-                    ('partner_id', 'in', [partner.id, partner.commercial_partner_id.id]),
-                    ('journal_id', '=', insurance_journal.id),
-                    ('state', '=', 'posted'),
-                ])
-                # รวมยอดเงินจาก payment ทั้งหมด
-                total_received = sum(payments.mapped('amount'))
-
-            # ====== ส่วนที่ 4: คำนวณยอดคืนเงินประกัน ======
-            if insurance_product:
-                # ค้นหา voucher line ที่:
-                # - voucher.partner_id = ลูกค้ารายนี้
-                # - voucher.state = 'posted'
-                # - product_id = เงินประกันค่าเช่า
-                voucher_lines = self.env['account.voucher.line'].search([
-                    ('voucher_id.partner_id', 'in', [partner.id, partner.commercial_partner_id.id]),
-                    ('voucher_id.state', '=', 'posted'),
-                    ('product_id', '=', insurance_product.id),
-                ])
-                # รวมยอด price_unit จาก voucher line ทั้งหมด
-                total_refunded = sum(voucher_lines.mapped('price_unit'))
-
-            # ====== ส่วนที่ 5: คำนวณค่าประกันสะสม ======
-            # ค่าประกันสะสม = ยอดรับ - ยอดคืน
-            partner.accumulated_insurance_deposit = total_received - total_refunded
+            partner.accumulated_insurance_deposit = (
+                partner._get_insurance_deposit_balance() if partner.id else 0.0)
 
     def _compute_customer_status(self):
         """
@@ -130,5 +117,3 @@ class ResPartnerInherit(models.Model):
                 customer_status = lead.customer_status
 
             partner.customer_status = customer_status
-
-
