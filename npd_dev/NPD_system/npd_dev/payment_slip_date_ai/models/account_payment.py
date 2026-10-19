@@ -91,8 +91,11 @@ class AccountPaymentSlipDate(models.Model):
             if att.datas:
                 mime_type = att.mimetype or 'image/jpeg'
                 image_data = att.datas.decode('utf-8') if isinstance(att.datas, bytes) else att.datas
+                # ไม่ส่งชื่อไฟล์ให้ AI: รูปที่วางจากคลิปบอร์ดชื่อ image_YYYY-MM-DD_xxx.png
+                # (วันที่วาง) AI จะเอาวันที่ในชื่อไฟล์มาตอบแทนวันที่ในสลิป
+                # (พบจริง CUST.IN-261019-0001 สลิป 23 ก.ย. 69 อ่านได้ 19/10/2026)
                 parts.append({
-                    "text": "[รูปที่ %d] ชื่อไฟล์: %s" % (idx, att.name or 'unknown'),
+                    "text": "[รูปที่ %d]" % idx,
                 })
                 parts.append({
                     "inline_data": {
