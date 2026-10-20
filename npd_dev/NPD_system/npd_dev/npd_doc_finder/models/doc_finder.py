@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
 
 from odoo import api, fields, models, tools, _
@@ -8,7 +9,23 @@ from odoo.osv import expression
 _logger = logging.getLogger(__name__)
 
 # id ของแถว = res_id * ID_FACTOR + ลำดับแหล่งข้อมูล (ไม่ซ้ำกันข้ามตาราง และพอดี int4 ของ many2one)
-ID_FACTOR = 32
+ID_FACTOR = 256
+# ลำดับแหล่งข้อมูลอัตโนมัติ (โมดูลใหม่) เริ่มที่เลขนี้
+AUTO_IDX_START = 32
+
+# เอกสารหลัก/ข้อมูลตั้งต้น ไม่ใช่เลขเอกสาร: ไม่ดึงอัตโนมัติ
+AUTO_EXCLUDE = {
+    'res.partner', 'res.users', 'res.company', 'res.partner.bank', 'product.template', 'product.product',
+    'hr.employee', 'hr.department', 'hr.job', 'account.account', 'account.journal', 'account.analytic.account',
+    'account.move.line', 'stock.move', 'stock.move.line', 'stock.location', 'stock.warehouse',
+    'stock.production.lot', 'stock.lot', 'crm.lead', 'crm.team', 'mail.channel', 'discuss.channel',
+    'calendar.event', 'project.project', 'project.task', 'note.note', 'utm.campaign', 'fleet.vehicle',
+    'maintenance.equipment', 'res.branch', 'procurement.group', 'npd.doc.finder.line',
+    'fetchmail.server', 'res.currency.rate.provider', 'dms.directory', 'dms.file', 'hr.announcement',
+    'hr.contract', 'tier.correction', 'tier.definition', 'mail.mass_mailing', 'mailing.mailing',
+    'fleet.vehicle.model', 'fleet.vehicle.model.brand', 'product.category', 'iap.account', 'uom.uom',
+    'approval.type', 'partner.category', 'purchase.request.line', 'yalecom.call.log', 'npd.signature',
+}
 
 # kind -> (model, [xmlid ของเมนูที่ใช้เปิด เรียงตามลำดับที่ลอง])
 KIND_ACTIONS = {
@@ -180,8 +197,60 @@ class NpdDocFinderLine(models.Model):
                   FROM (%s) src(res_id, res_model, kind, name, menu_label, date, partner_id, company_id, state)
                """ % (ID_FACTOR, idx, body)
 
-    def init(self):
-        tools.drop_view_if_exists(self.env.cr, self._table)
+    def _menu_actions(self):
+        """res_model -> (act_window id, ชื่อเมนู) จากเมนูที่เปิดหน้ารายการของ model นั้น (เมนูแรกที่เจอ)"""
+        Menu = self.env['ir.ui.menu'].sudo().with_context(**{'ir.ui.menu.full_list': True, 'lang': 'th_TH'})
+        res = {}
+        for menu in Menu.search([('action', '!=', False)], order='id'):
+            try:
+                act = menu.action and menu.action.exists()
+            except Exception:  # เมนูชี้ไป action ที่ถูกลบ
+                continue
+            if act and act._name == 'ir.actions.act_window' and act.res_model and act.res_model not in res \
+                    and 'form' in (act.view_mode or ''):
+                res[act.res_model] = (act.id, menu.name)
+        return res
+
+    def _auto_sources(self, fixed_models):
+        """เอกสารจากโมดูลอื่น/โมดูลใหม่ที่มีเลขรัน: มีช่อง name, มีประวัติ (chatter) และมีเมนูของตัวเอง
+        กรองแถวให้เหลือค่าที่เป็นเลขเอกสาร (มีตัวเลข ไม่มีช่องว่าง) ตัดชื่อสินค้า/ชื่อคนออก"""
+        menus = self._menu_actions()
+        found = []
+        for model_name in sorted(self.env.registry.models):
+            if model_name in fixed_models or model_name in AUTO_EXCLUDE or model_name not in menus:
+                continue
+            Model = self.env[model_name]
+            name_field = Model._fields.get('name')
+            if Model._transient or Model._abstract or not Model._auto or 'message_ids' not in Model._fields \
+                    or not name_field or name_field.type != 'char' or not name_field.store \
+                    or getattr(name_field, 'translate', False):
+                continue
+            cols = self._table_columns(Model._table)
+            if 'name' not in cols:
+                continue
+            found.append((model_name, Model._table, cols) + menus[model_name])
+        parts, auto = [], {}
+        for i, (model_name, table, cols, act_id, label) in enumerate(found[:256 - AUTO_IDX_START]):
+            date_col = next((c for c in DATE_COLUMNS + ['date_order', 'scheduled_date', 'create_date'] if c in cols), None)
+            partner = 'x.partner_id' if 'partner_id' in cols and \
+                self.env[model_name]._fields.get('partner_id', fields.Char()).comodel_name == 'res.partner' else 'NULL::int'
+            body = """SELECT x.id, %s, %s, x.name, %s, %s, %s, %s, %s
+                      FROM "%s" x
+                      WHERE x.name ~ '[0-9]' AND x.name !~ '\\s' AND x.name NOT IN ('/', 'New', 'ใหม่')""" % (
+                self._quote(model_name), self._quote('auto:%d' % act_id), self._quote(label),
+                'x.%s::date' % date_col if date_col else 'NULL::date', partner,
+                'x.company_id' if 'company_id' in cols else 'NULL::int',
+                'x.state::varchar' if 'state' in cols else 'NULL::varchar', table)
+            parts.append("""SELECT (src.res_id::bigint * %d + %d) AS id, src.*
+                  FROM (%s) src(res_id, res_model, kind, name, menu_label, date, partner_id, company_id, state)
+               """ % (ID_FACTOR, AUTO_IDX_START + i, body))
+            auto[model_name] = act_id
+        return parts, auto
+
+    def _quote(self, value):
+        return self.env.cr.mogrify('%s', (value,)).decode()
+
+    def _build_view(self):
         parts = []
         for idx, table, required, sql in SOURCES:
             part = self._source_sql(idx, table, required, sql)
@@ -189,12 +258,33 @@ class NpdDocFinderLine(models.Model):
                 parts.append(part)
             else:
                 _logger.info('npd_doc_finder: ข้ามตาราง %s (ไม่มีในฐานนี้)', table)
+        fixed_models = {m for m, _x in KIND_ACTIONS.values()}
+        auto_parts, auto = self._auto_sources(fixed_models)
         self.env.cr.execute("""
             CREATE OR REPLACE VIEW %s AS (
                 SELECT u.id, u.res_id, u.res_model, u.kind, u.name, u.menu_label, u.date,
                        u.partner_id, u.company_id, u.state
                 FROM (%s) u
-            )""" % (self._table, '\nUNION ALL\n'.join(parts)))
+            )""" % (self._table, '\nUNION ALL\n'.join(parts + auto_parts)))
+        self.env['ir.config_parameter'].sudo().set_param('npd_doc_finder.auto_models', json.dumps(auto))
+        _logger.info('npd_doc_finder: เอกสารอัตโนมัติ %s ประเภท: %s', len(auto), ', '.join(sorted(auto)))
+        return auto
+
+    def init(self):
+        tools.drop_view_if_exists(self.env.cr, self._table)
+        self._build_view()
+
+    @api.model
+    def _cron_refresh_view(self):
+        # รายวัน: เพิ่มประเภทเอกสารจากโมดูลที่ติดตั้งใหม่ โดยไม่ต้องอัปเดตโมดูลนี้
+        self._build_view()
+
+    @api.model
+    def _auto_models(self):
+        try:
+            return json.loads(self.env['ir.config_parameter'].sudo().get_param('npd_doc_finder.auto_models') or '{}')
+        except ValueError:
+            return {}
 
     def name_get(self):
         res = []
@@ -207,7 +297,7 @@ class NpdDocFinderLine(models.Model):
 
     @api.model
     def _readable_models(self):
-        models_ = {m for m, _x in KIND_ACTIONS.values()}
+        models_ = {m for m, _x in KIND_ACTIONS.values()} | set(self._auto_models())
         return sorted(m for m in models_ if m in self.env
                       and self.env[m].check_access_rights('read', raise_exception=False))
 
@@ -246,6 +336,7 @@ class NpdDocFinderLine(models.Model):
         self.ensure_one()
         model, xmlids = KIND_ACTIONS.get(self.kind, (self.res_model, []))
         model = model or self.res_model
+        auto_act = int(self.kind.split(':')[1]) if (self.kind or '').startswith('auto:') else False
         if model not in self.env:
             raise UserError(_('ไม่พบประเภทเอกสาร %s ในฐานนี้') % model)
         target = self.env[model].sudo().browse(self.res_id).exists()
@@ -260,7 +351,11 @@ class NpdDocFinderLine(models.Model):
             raise UserError(_('คุณไม่มีสิทธิเปิดเอกสาร %s (%s)\nอาจเป็นเอกสารของสาขา/บริษัทที่คุณไม่ได้รับสิทธิ '
                               'ติดต่อผู้ดูแลระบบหากต้องการเข้าถึง') % (self.name, self.menu_label))
         action = None
-        for xmlid in xmlids:
+        if auto_act:
+            act = self.env['ir.actions.act_window'].sudo().browse(auto_act).exists()
+            if act and act.res_model == model:
+                action = act.read()[0]
+        for xmlid in ([] if action else xmlids):
             act = self.env.ref(xmlid, raise_if_not_found=False)
             if act and act._name == 'ir.actions.act_window' and act.res_model == model:
                 action = act.sudo().read()[0]
