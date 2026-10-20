@@ -1,0 +1,301 @@
+# -*- coding: utf-8 -*-
+import logging
+
+from odoo import api, fields, models, tools, _
+from odoo.exceptions import AccessError, UserError
+from odoo.osv import expression
+
+_logger = logging.getLogger(__name__)
+
+# id ของแถว = res_id * ID_FACTOR + ลำดับแหล่งข้อมูล (ไม่ซ้ำกันข้ามตาราง และพอดี int4 ของ many2one)
+ID_FACTOR = 32
+
+# kind -> (model, [xmlid ของเมนูที่ใช้เปิด เรียงตามลำดับที่ลอง])
+KIND_ACTIONS = {
+    'out_invoice': ('account.move', ['account.action_move_out_invoice_type']),
+    'out_debit': ('account.move', ['account.action_move_out_invoice_type']),
+    'out_refund': ('account.move', ['account.action_move_out_refund_type']),
+    'in_invoice': ('account.move', ['account.action_move_in_invoice_type']),
+    'in_debit': ('account.move', ['account.action_move_in_invoice_type']),
+    'in_refund': ('account.move', ['account.action_move_in_refund_type']),
+    'out_receipt': ('account.move', ['account.action_move_out_receipt_type']),
+    'in_receipt': ('account.move', ['account.action_move_in_receipt_type']),
+    'entry': ('account.move', ['account.action_move_journal_line']),
+    'pay_in': ('account.payment', ['account.action_account_payments']),
+    'pay_out': ('account.payment', ['account.action_account_payments_payable']),
+    'voucher_sale': ('account.voucher', ['account_voucher_npd.action_sale_receipt',
+                                         'account_voucher.action_sale_receipt']),
+    'voucher_deposit': ('account.voucher', ['account_voucher_npd.action_purchase_receipt']),
+    'voucher_purchase': ('account.voucher', ['account_voucher.action_purchase_receipt']),
+    'quotation': ('sale.order', ['sale.action_quotations_with_onboarding', 'sale.action_quotations']),
+    'sale_order': ('sale.order', ['sale.action_orders']),
+    'rfq': ('purchase.order', ['purchase.purchase_rfq']),
+    'purchase_order': ('purchase.order', ['purchase.purchase_form_action']),
+    'picking': ('stock.picking', ['stock.action_picking_tree_all']),
+    'advance_request': ('account.advance.request', ['account_advance.action_account_advance_request']),
+    'advance': ('account.advance', ['account_advance.action_account_advance']),
+    'advance_clear': ('account.advance.clear', ['account_advance.action_account_advance_clear']),
+    'wht_cert': ('withholding.tax.cert', ['l10n_th_withholding_tax_cert.action_withholding_tax_cert_menu']),
+    'refund_payment': ('refund.payment', ['custom_refund_payment.action_refund_payment_form']),
+    'cash_payment': ('cash.payment', ['custom_cash_payment.action_cash_payment_form']),
+    'scrap': ('stock.scrap', ['stock.action_stock_scrap']),
+    'purchase_request': ('purchase.request', ['purchase_request.purchase_request_form_action']),
+}
+
+MOVE_LABEL = """CASE m.move_type
+    WHEN 'out_invoice' THEN CASE WHEN {debit} THEN 'ใบเพิ่มหนี้ลูกค้า' ELSE 'ใบแจ้งหนี้ลูกค้า' END
+    WHEN 'out_refund' THEN 'ใบลดหนี้ลูกค้า'
+    WHEN 'in_invoice' THEN CASE WHEN {debit} THEN 'ใบเพิ่มหนี้ผู้ขาย' ELSE 'บิลผู้ขาย' END
+    WHEN 'in_refund' THEN 'ใบลดหนี้ผู้ขาย'
+    WHEN 'out_receipt' THEN 'ใบเสร็จขาย'
+    WHEN 'in_receipt' THEN 'ใบเสร็จซื้อ'
+    ELSE 'สมุดรายวัน: ' || COALESCE(j.name, '') END"""
+
+MOVE_KIND = """CASE WHEN m.move_type IN ('out_invoice', 'in_invoice') AND {debit}
+    THEN replace(m.move_type, 'invoice', 'debit') ELSE m.move_type END"""
+
+# แหล่งข้อมูล: (ลำดับ, ตาราง, คอลัมน์ที่ต้องมี, SQL) — ลำดับห้ามเปลี่ยนเพราะเป็นส่วนหนึ่งของ id
+SOURCES = [
+    (0, 'account_move', ['name', 'move_type', 'date', 'partner_id', 'company_id', 'state', 'journal_id'], """
+        SELECT m.id AS res_id, 'account.move' AS res_model, {kind} AS kind, m.name AS name,
+               {label} AS menu_label, m.date AS date, m.partner_id, m.company_id, m.state::varchar AS state
+        FROM account_move m LEFT JOIN account_journal j ON j.id = m.journal_id
+        WHERE m.name IS NOT NULL AND m.name <> '/' {no_payment}"""),
+    (1, 'account_payment', ['move_id', 'payment_type'], """
+        SELECT p.id, 'account.payment', CASE WHEN p.payment_type = 'inbound' THEN 'pay_in' ELSE 'pay_out' END,
+               m.name, CASE WHEN p.payment_type = 'inbound' THEN 'รับชำระเงิน' ELSE 'จ่ายชำระเงิน' END,
+               m.date, m.partner_id, m.company_id, m.state::varchar
+        FROM account_payment p JOIN account_move m ON m.id = p.move_id
+        WHERE m.name IS NOT NULL AND m.name <> '/'"""),
+    (2, 'account_voucher', ['number', 'voucher_type', 'date', 'partner_id', 'company_id', 'state'], """
+        SELECT v.id, 'account.voucher',
+               CASE WHEN v.voucher_type = 'sale' THEN 'voucher_sale'
+                    WHEN {check_show} THEN 'voucher_deposit' ELSE 'voucher_purchase' END,
+               COALESCE(NULLIF(v.number, ''), v.name),
+               CASE WHEN v.voucher_type = 'sale' THEN 'Sale Receipt'
+                    WHEN {check_show} THEN 'คืนเงินประกันค่าเช่า' ELSE 'การรับ' END,
+               v.date, v.partner_id, v.company_id, v.state::varchar
+        FROM account_voucher v
+        WHERE COALESCE(NULLIF(v.number, ''), v.name) IS NOT NULL
+          AND COALESCE(NULLIF(v.number, ''), v.name) NOT IN ('/', '')"""),
+    (3, 'sale_order', ['name', 'date_order', 'partner_id', 'company_id', 'state'], """
+        SELECT s.id, 'sale.order',
+               CASE WHEN s.state IN ('draft', 'sent', 'cancel') THEN 'quotation' ELSE 'sale_order' END,
+               s.name, CASE WHEN s.state IN ('draft', 'sent', 'cancel') THEN 'ใบเสนอราคา' ELSE 'ใบสั่งขาย' END,
+               s.date_order::date, s.partner_id, s.company_id, s.state::varchar
+        FROM sale_order s"""),
+    (4, 'purchase_order', ['name', 'date_order', 'partner_id', 'company_id', 'state'], """
+        SELECT o.id, 'purchase.order',
+               CASE WHEN o.state IN ('draft', 'sent', 'to approve') THEN 'rfq' ELSE 'purchase_order' END,
+               o.name, CASE WHEN o.state IN ('draft', 'sent', 'to approve') THEN 'ใบขอใบเสนอราคา (RFQ)'
+                            ELSE 'ใบสั่งซื้อ' END,
+               o.date_order::date, o.partner_id, o.company_id, o.state::varchar
+        FROM purchase_order o"""),
+    (5, 'stock_picking', ['name', 'scheduled_date', 'partner_id', 'company_id', 'state', 'picking_type_id'], """
+        SELECT sp.id, 'stock.picking', 'picking', sp.name, 'การโอนสินค้า: ' || COALESCE(
+                   (SELECT tr.value FROM ir_translation tr
+                     WHERE tr.name = 'stock.picking.type,name' AND tr.type = 'model' AND tr.lang = 'th_TH'
+                       AND tr.res_id = t.id AND tr.value <> '' LIMIT 1), t.name, ''),
+               COALESCE(sp.date_done, sp.scheduled_date)::date, sp.partner_id, sp.company_id, sp.state::varchar
+        FROM stock_picking sp LEFT JOIN stock_picking_type t ON t.id = sp.picking_type_id
+        WHERE sp.name IS NOT NULL AND sp.name <> '/'"""),
+    (6, 'account_advance_request', ['name', 'company_id', 'state'], """
+        SELECT a.id, 'account.advance.request', 'advance_request', a.name, 'ขอเบิกเงินทดรอง',
+               {date}, NULL::int, a.company_id, a.state::varchar
+        FROM account_advance_request a WHERE a.name IS NOT NULL AND a.name <> '/'"""),
+    (7, 'account_advance', ['name', 'company_id', 'state'], """
+        SELECT a.id, 'account.advance', 'advance', a.name, 'เงินทดรอง',
+               {date}, NULL::int, a.company_id, a.state::varchar
+        FROM account_advance a WHERE a.name IS NOT NULL AND a.name <> '/'"""),
+    (8, 'account_advance_clear', ['name', 'company_id', 'state'], """
+        SELECT a.id, 'account.advance.clear', 'advance_clear', a.name, 'เคลียร์เงินทดรอง',
+               {date}, NULL::int, a.company_id, a.state::varchar
+        FROM account_advance_clear a WHERE a.name IS NOT NULL AND a.name <> '/'"""),
+    (9, 'withholding_tax_cert', ['name', 'date', 'supplier_partner_id', 'company_id', 'state'], """
+        SELECT w.id, 'withholding.tax.cert', 'wht_cert', w.name, 'หนังสือรับรองหัก ณ ที่จ่าย',
+               w.date, w.supplier_partner_id, w.company_id, w.state::varchar
+        FROM withholding_tax_cert w WHERE w.name IS NOT NULL AND w.name <> '/'"""),
+    (10, 'refund_payment', ['name', 'state'], """
+        SELECT r.id, 'refund.payment', 'refund_payment', r.name, 'โอนคืนเงินลูกค้า',
+               {date}, {partner}, {company}, r.state::varchar
+        FROM refund_payment r WHERE r.name IS NOT NULL AND r.name <> '/'"""),
+    (11, 'cash_payment', ['name', 'state'], """
+        SELECT c.id, 'cash.payment', 'cash_payment', c.name, 'ชำระเงินสด',
+               {date}, {partner}, {company}, c.state::varchar
+        FROM cash_payment c WHERE c.name IS NOT NULL AND c.name <> '/'"""),
+    (12, 'stock_scrap', ['name', 'company_id', 'state'], """
+        SELECT x.id, 'stock.scrap', 'scrap', x.name, 'ตัดสินค้าเสีย',
+               {date}, NULL::int, x.company_id, x.state::varchar
+        FROM stock_scrap x WHERE x.name IS NOT NULL AND x.name NOT IN ('/', 'New', 'ใหม่')"""),
+    (13, 'purchase_request', ['name', 'company_id', 'state'], """
+        SELECT q.id, 'purchase.request', 'purchase_request', q.name, 'ใบขอซื้อ (PR)',
+               {date}, NULL::int, q.company_id, q.state::varchar
+        FROM purchase_request q WHERE q.name IS NOT NULL AND q.name <> '/'"""),
+]
+
+# วันที่ของตารางที่ชื่อคอลัมน์ไม่เหมือนกัน: ลองตามลำดับ
+DATE_COLUMNS = ['date', 'request_date', 'date_request', 'date_advance', 'date_clear', 'date_start',
+                'date_done', 'payment_date']
+
+
+class NpdDocFinderLine(models.Model):
+    _name = 'npd.doc.finder.line'
+    _description = 'เลขเอกสาร (ค้นหา)'
+    _auto = False
+    _order = 'date desc, id desc'
+    _rec_name = 'name'
+
+    name = fields.Char('เลขที่เอกสาร', readonly=True)
+    menu_label = fields.Char('เมนู', readonly=True)
+    kind = fields.Char('ประเภท', readonly=True)
+    res_model = fields.Char('Model', readonly=True)
+    res_id = fields.Integer('Record ID', readonly=True)
+    date = fields.Date('วันที่', readonly=True)
+    partner_id = fields.Many2one('res.partner', 'คู่ค้า', readonly=True)
+    company_id = fields.Many2one('res.company', 'บริษัท', readonly=True)
+    state = fields.Char('สถานะ', readonly=True)
+
+    def _table_columns(self, table):
+        self.env.cr.execute("SELECT column_name FROM information_schema.columns WHERE table_name = %s", (table,))
+        return {r[0] for r in self.env.cr.fetchall()}
+
+    def _source_sql(self, idx, table, required, sql):
+        cols = self._table_columns(table)
+        if not cols or not set(required) <= cols:
+            return None
+        alias = sql.split('FROM %s ' % table, 1)[1].split()[0]
+        date_col = next((c for c in DATE_COLUMNS if c in cols), None)
+        subst = {
+            'date': '%s.%s::date' % (alias, date_col) if date_col else 'NULL::date',
+            'partner': '%s.partner_id' % alias if 'partner_id' in cols else 'NULL::int',
+            'company': '%s.company_id' % alias if 'company_id' in cols else 'NULL::int',
+            'check_show': 'COALESCE(v.check_show, false)' if 'check_show' in cols else 'false',
+            'debit': 'm.debit_origin_id IS NOT NULL' if 'debit_origin_id' in cols else 'false',
+            'no_payment': 'AND m.payment_id IS NULL' if 'payment_id' in cols else '',
+        }
+        subst['label'] = MOVE_LABEL.format(**subst)
+        subst['kind'] = MOVE_KIND.format(**subst)
+        body = sql.format(**subst)
+        return """SELECT (src.res_id::bigint * %d + %d) AS id, src.*
+                  FROM (%s) src(res_id, res_model, kind, name, menu_label, date, partner_id, company_id, state)
+               """ % (ID_FACTOR, idx, body)
+
+    def init(self):
+        tools.drop_view_if_exists(self.env.cr, self._table)
+        parts = []
+        for idx, table, required, sql in SOURCES:
+            part = self._source_sql(idx, table, required, sql)
+            if part:
+                parts.append(part)
+            else:
+                _logger.info('npd_doc_finder: ข้ามตาราง %s (ไม่มีในฐานนี้)', table)
+        self.env.cr.execute("""
+            CREATE OR REPLACE VIEW %s AS (
+                SELECT u.id, u.res_id, u.res_model, u.kind, u.name, u.menu_label, u.date,
+                       u.partner_id, u.company_id, u.state
+                FROM (%s) u
+            )""" % (self._table, '\nUNION ALL\n'.join(parts)))
+
+    def name_get(self):
+        res = []
+        for rec in self:
+            label = '%s  —  %s' % (rec.name or '', rec.menu_label or '')
+            if rec.partner_id:
+                label += '  (%s)' % rec.partner_id.display_name
+            res.append((rec.id, label))
+        return res
+
+    @api.model
+    def _readable_models(self):
+        models_ = {m for m, _x in KIND_ACTIONS.values()}
+        return sorted(m for m in models_ if m in self.env
+                      and self.env[m].check_access_rights('read', raise_exception=False))
+
+    def _apply_ir_rules(self, query, mode='read'):
+        """ให้เหลือเฉพาะเอกสารที่ผู้ใช้เปิดได้จริง: สิทธิระดับเมนู + กฎของเอกสารนั้น (สาขา/บริษัท/ของตัวเอง)
+        บริษัทนับทุกบริษัทที่ผู้ใช้มีสิทธิ เพราะ widget สลับบริษัทให้ก่อนเปิด"""
+        super()._apply_ir_rules(query, mode)
+        if self.env.su:
+            return
+        user = self.env.user
+        Rule = self.env['ir.rule'].with_context(allowed_company_ids=user.company_ids.ids)
+        clauses, params = [], []
+        for model in self._readable_models():
+            clause = '"%s".res_model = %%s' % self._table
+            params.append(model)
+            rule_domain = Rule._compute_domain(model, 'read')
+            if rule_domain:
+                Model = self.env[model].sudo().with_context(active_test=False)
+                sub = Model._where_calc(rule_domain, active_test=False)
+                from_clause, where_clause, sub_params = sub.get_sql()
+                clause += ' AND "%s".res_id IN (SELECT "%s".id FROM %s WHERE %s)' % (
+                    self._table, Model._table, from_clause, where_clause or 'TRUE')
+                params.extend(sub_params)
+            clauses.append('(%s)' % clause)
+        query.add_where('(%s)' % (' OR '.join(clauses) or 'FALSE'), params)
+
+    @api.model
+    def _name_search(self, name, args=None, operator='ilike', limit=100, name_get_uid=None):
+        args = list(args or [])
+        if name:
+            # ค้นด้วยเลขเอกสารอย่างเดียว ไม่ปนชื่อเมนู/ลูกค้า; ไม่สนช่องว่างที่พิมพ์ติดมา
+            args = expression.AND([args, [('name', operator, name.strip())]])
+        return self._search(args, limit=limit, access_rights_uid=name_get_uid)
+
+    def _get_action(self):
+        self.ensure_one()
+        model, xmlids = KIND_ACTIONS.get(self.kind, (self.res_model, []))
+        model = model or self.res_model
+        if model not in self.env:
+            raise UserError(_('ไม่พบประเภทเอกสาร %s ในฐานนี้') % model)
+        target = self.env[model].sudo().browse(self.res_id).exists()
+        if not target:
+            raise UserError(_('ไม่พบเอกสาร %s (อาจถูกลบไปแล้ว)') % self.name)
+        try:
+            self.env[model].check_access_rights('read')
+            # ตรวจกฎตามบริษัทที่ผู้ใช้มีสิทธิทั้งหมด (widget จะสลับบริษัทให้เอง) เหลือแค่กฎอื่น เช่น สาขา
+            target.with_user(self.env.user).with_context(
+                allowed_company_ids=self.env.user.company_ids.ids).check_access_rule('read')
+        except AccessError:
+            raise UserError(_('คุณไม่มีสิทธิเปิดเอกสาร %s (%s)\nอาจเป็นเอกสารของสาขา/บริษัทที่คุณไม่ได้รับสิทธิ '
+                              'ติดต่อผู้ดูแลระบบหากต้องการเข้าถึง') % (self.name, self.menu_label))
+        action = None
+        for xmlid in xmlids:
+            act = self.env.ref(xmlid, raise_if_not_found=False)
+            if act and act._name == 'ir.actions.act_window' and act.res_model == model:
+                action = act.sudo().read()[0]
+                break
+        form_view = False
+        if action:
+            form_view = next((v for v, m in (action.get('views') or []) if m == 'form'), False)
+            if not form_view and action.get('view_id') and action.get('view_mode', '').startswith('form'):
+                form_view = action['view_id'][0]
+        else:
+            action = {'type': 'ir.actions.act_window', 'res_model': model, 'name': self.menu_label}
+        action.update({
+            'res_id': self.res_id,
+            'view_mode': 'form',
+            'views': [(form_view, 'form')],
+            'target': 'current',
+            # widget ใช้สลับบริษัทให้ก่อนเปิด ถ้าเอกสารอยู่บริษัทที่ยังไม่ได้ติ๊กใช้งาน
+            'npd_company_id': self.company_id.id or False,
+        })
+        action.pop('domain', None)
+        action.pop('search_view_id', None)
+        return action
+
+    def action_open(self):
+        return self._get_action()
+
+
+class NpdDocFinderWizard(models.TransientModel):
+    _name = 'npd.doc.finder.wizard'
+    _description = 'ค้นหาเลขเอกสาร'
+
+    doc_id = fields.Many2one('npd.doc.finder.line', string='เลขที่เอกสาร')
+
+    def action_open(self):
+        self.ensure_one()
+        if not self.doc_id:
+            raise UserError(_('กรุณาพิมพ์และเลือกเลขเอกสารก่อน'))
+        return self.doc_id.action_open()
