@@ -1591,7 +1591,8 @@
                                             <span style="font-size: 14px;" t-esc="line.product_uom_id.name"/>
                                         </td>
                                         <td class="text-center line_ids" style="vertical-align: middle;">
-                                            <span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(line.price_unit)"/>
+                                            <!-- ราคาต่อหน่วยให้ตรงกับหน้าจอ (ถอด VAT) เพราะคอลัมน์จำนวนเงินเป็นยอดก่อน VAT; ฐานที่ไม่มีฟิลด์นี้ใช้ราคาเดิม -->
+                                            <span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(line.price_unit_no_vat if 'price_unit_no_vat' in line else line.price_unit)"/>
                                         </td>
                                         <td class="text-right line_ids" style="vertical-align: middle;">
                                             <span style="font-size: 14px;" t-esc="'{0:,.2f}'.format(line.price_subtotal)"/>
@@ -4316,7 +4317,7 @@
                                         <br/>
                                         <strong style="font-size: 14px;">Quantity</strong>
                                     </td>
-                                    <td class="column70 text-center header3" style="vertical-align: middle;">
+                                    <td class="column50 text-center header3" style="vertical-align: middle;">
                                         <strong style="font-size: 14px;">ราคา / หน่วย</strong>
                                         <br/>
                                         <strong style="font-size: 14px;">Unit Price</strong>
@@ -4429,9 +4430,9 @@
                                                     3. บริษัทฯ ขอสงวนสิทธิ์ในการแก้ไขใบกำกับภาษีภายใน 7 วัน นับจากวันที่ระบุในใบกำกับภาษี<br/>
 
                                                     <strong style="font-size: 14px;">การชำระเงิน</strong><br/>
-                                                    <input type="checkbox" style="list-style-type: none; padding: 0; margin-left: 73px;"/> เงินสด<br/>
-                                                    <input type="checkbox" style="list-style-type: none; padding: 0; margin-left: 73px;"/> โอนเงิน
-                                                                                                    <t t-if="request.db == 'NPD_S_Group_New'">
+                                                    <input type="checkbox" style="list-style-type: none; padding: 0; margin-left: 73px;font-size: 13px;" /> เงินสด<br/>
+                                                    <input type="checkbox" style="list-style-type: none; padding: 0; margin-left: 73px;font-size: 13px;"/> โอนเงิน
+                                                                                                    <t t-if="request.db == 'NPD_S_Group_New'" >
                                                              บริษัท นภดล เอส กรุ๊ป จำกัด ธนาคารไทยพาณิชย์ เลขที่บัญชี 180-210348-2
                                                                         </t>
                                                                 <t t-if="request.db == 'NPD_S_Group_New_V2'">
@@ -4454,7 +4455,7 @@
                                                                         </t>
 
                                         <br/>
-                                                    <input type="checkbox" style="list-style-type: none; padding: 0; margin-left: 73px;"/> เช็ค
+                                                    <input type="checkbox" style="list-style-type: none; padding: 0; margin-left: 73px;font-size: 13px;"/> เช็ค
 
                                     </td>
 
