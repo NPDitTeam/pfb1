@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_npd_vat_split_fix_wizard,npd.vat.split.fix.wizard,model_npd_vat_split_fix_wizard,account.group_account_manager,1,1,1,1
+access_npd_vat_split_fix_wizard_line,npd.vat.split.fix.wizard.line,model_npd_vat_split_fix_wizard_line,account.group_account_manager,1,1,1,1
+access_npd_vat_split_fix_log,npd.vat.split.fix.log,model_npd_vat_split_fix_log,account.group_account_manager,1,0,0,0
