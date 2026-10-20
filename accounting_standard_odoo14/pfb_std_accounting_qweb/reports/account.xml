@@ -1163,7 +1163,8 @@
                                             <span t-esc="line.product_uom_id.name"/>
                                         </td>
                                         <td class="text-center line_ids" style="vertical-align: middle;">
-                                            <span t-esc="'{0:,.2f}'.format(line.price_unit)"/>
+                                            <!-- ราคาต่อหน่วยให้ตรงกับหน้าจอ (ถอด VAT) เพราะคอลัมน์จำนวนเงินเป็นยอดก่อน VAT; ฐานที่ไม่มีฟิลด์นี้ใช้ราคาเดิม -->
+                                            <span t-esc="'{0:,.2f}'.format(line.price_unit_no_vat if 'price_unit_no_vat' in line else line.price_unit)"/>
                                         </td>
                                         <td class="text-right line_ids" style="vertical-align: middle;">
                                             <span t-esc="'{0:,.2f}'.format(line.price_subtotal)"/>
