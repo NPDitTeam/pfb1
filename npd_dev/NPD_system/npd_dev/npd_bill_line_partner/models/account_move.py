@@ -61,6 +61,12 @@ class AccountMove(models.Model):
                 continue
             partners = move._npd_line_partners()
             if not partners:
+                # ยังไม่ระบุ Partner รายบรรทัด: Tax Invoice ต้องว่าง ไม่ใช้ชื่อผู้ขาย (ธนาคาร) แทน
+                if move.npd_require_line_partner:
+                    vendor = move.partner_id.commercial_partner_id
+                    for taxinv in move.tax_invoice_ids:
+                        if taxinv.partner_id and taxinv.partner_id.commercial_partner_id == vendor:
+                            taxinv.partner_id = False
                 continue
             taxinvs = move.tax_invoice_ids
             keep = taxinvs.filtered(lambda t: t.partner_id in partners)
