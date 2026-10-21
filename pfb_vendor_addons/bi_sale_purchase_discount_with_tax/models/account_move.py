@@ -171,12 +171,14 @@ class account_move(models.Model):
         res_config = self.env.company
         if res_config:
             for rec in self:
+                # NPD: คำนวณทีละใบ — เดิมใช้ self.invoice_line_ids / move / sign จากลูปก่อน ทำให้คำนวณหลายใบพร้อมกันแล้วยอดรวมข้ามใบ
+                rec_sign = 1 if (rec.move_type == 'entry' or rec.is_outbound()) else -1
                 if res_config.tax_discount_policy == 'tax':
                     if rec.discount_type == 'line':
                         rec.discount_amt = 0.00
                         total = 0
                         if self._context.get('default_move_type') in ['in_invoice', 'in_receipt', 'in_refund']:
-                            for line in self.invoice_line_ids:
+                            for line in rec.invoice_line_ids:
                                 if line.discount_method == 'per':
                                     tax = line.com_tax()
                                     total += (line.price_subtotal + tax) * (line.discount_amount / 100)
@@ -186,7 +188,7 @@ class account_move(models.Model):
                         if self._context.get('default_move_type') in ['out_invoice', 'out_receipt', 'out_refund']:
                             # if rec.discount_amount_line > 0.0:
                             # 	rec.discount_amt_line = rec.discount_amount_line
-                            for line in self.invoice_line_ids:
+                            for line in rec.invoice_line_ids:
                                 if line.discount_method == 'per':
                                     tax = line.com_tax()
                                     total += (line.price_subtotal + tax) * (line.discount_amount / 100)
@@ -212,7 +214,7 @@ class account_move(models.Model):
                     # rec.amount_total_signed = abs(rec.amount_total) if move.move_type == 'entry' else sign * (-rec.amount_total)
                     else:
                         rec.amount_total = rec.amount_tax + rec.amount_untaxed
-                        rec.amount_total_signed = abs(rec.amount_total) if move.move_type == 'entry' else sign * (
+                        rec.amount_total_signed = abs(rec.amount_total) if rec.move_type == 'entry' else rec_sign * (
                             -rec.amount_total)
 
                 elif res_config.tax_discount_policy == 'untax':
@@ -221,7 +223,7 @@ class account_move(models.Model):
                         total = 0
                         amount_price_subtotal_without_discount = 0.0
                         if self._context.get('default_move_type') in ['in_invoice', 'in_receipt', 'in_refund']:
-                            for line in self.invoice_line_ids:
+                            for line in rec.invoice_line_ids:
                                 if line.discount_method == 'per':
                                     # total += line.price_unit * (line.discount_amount / 100) * line.quantity
                                     total += (line.price_subtotal_without_discount) * (line.discount_amount / 100)
@@ -234,7 +236,7 @@ class account_move(models.Model):
                             rec.discount_amt_line = total
                             rec.amount_price_subtotal_without_discount = amount_price_subtotal_without_discount
                         if self._context.get('default_move_type') in ['out_invoice', 'out_receipt', 'out_refund']:
-                            for line in self.invoice_line_ids:
+                            for line in rec.invoice_line_ids:
                                 if line.discount_method == 'per':
                                     # total += line.price_unit * (line.discount_amount / 100) * line.quantity
                                     total += (line.price_subtotal_without_discount) * (line.discount_amount / 100)
@@ -249,7 +251,7 @@ class account_move(models.Model):
                         if total == 0:
 
                             amount_price_subtotal_without_discount = 0.0
-                            for line in self.invoice_line_ids:
+                            for line in rec.invoice_line_ids:
                                 if line.discount_method == 'per':
                                     # total += line.price_unit * (line.discount_amount / 100) * line.quantity
                                     total += (line.price_subtotal_without_discount) * (line.discount_amount / 100)
@@ -383,7 +385,7 @@ class account_move(models.Model):
                     else:
 
                         rec.amount_total = rec.amount_tax + rec.amount_untaxed - rec.discount_amt
-                        rec.amount_total_signed = abs(rec.amount_total) if move.move_type == 'entry' else sign * (
+                        rec.amount_total_signed = abs(rec.amount_total) if rec.move_type == 'entry' else rec_sign * (
                             -rec.amount_total)
                         # amount_price_subtotal_without_discount += line.price_subtotal_without_discount
                         # rec.amount_price_subtotal_without_discount = amount_price_subtotal_without_discount
@@ -391,7 +393,7 @@ class account_move(models.Model):
 
                 else:
                     rec.amount_total = rec.amount_tax + rec.amount_untaxed - rec.discount_amt
-                    rec.amount_total_signed = abs(rec.amount_total) if move.move_type == 'entry' else sign * (
+                    rec.amount_total_signed = abs(rec.amount_total) if rec.move_type == 'entry' else rec_sign * (
                         -rec.amount_total)
 
                 if rec.discount_amt_line or rec.discount_amt:
