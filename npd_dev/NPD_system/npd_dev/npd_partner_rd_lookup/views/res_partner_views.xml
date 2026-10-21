@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <template id="assets_backend" name="npd_partner_rd_lookup assets" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <script type="text/javascript" src="/npd_partner_rd_lookup/static/src/js/rd_lookup.js"/>
+        </xpath>
+    </template>
+
     <record id="view_partner_form_npd_rd_lookup" model="ir.ui.view">
         <field name="name">res.partner.form.npd.rd.lookup</field>
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
+            <!-- ปุ่ม popup ค้นหาจากกรมสรรพากร แสดงเฉพาะเมื่อเลือกเป็นบริษัท ใช้ได้ทั้งผู้ติดต่อใหม่ (ยังไม่บันทึก) และเดิม -->
             <xpath expr="//field[@name='vat']" position="after">
-                <button name="action_npd_rd_fill" type="object" string="ดึงข้อมูลกรมสรรพากร"
-                        class="oe_link" icon="fa-download" colspan="2"
-                        attrs="{'invisible': ['|', ('is_company', '=', False), ('vat', '=', False)]}"
-                        confirm="ใช้ข้อมูลจากกรมสรรพากรทับ ชื่อ สาขา และที่อยู่ ทั้งหมด?"/>
+                <widget name="npd_rd_lookup" colspan="2" attrs="{'invisible': [('is_company', '=', False)]}"/>
             </xpath>
         </field>
     </record>
