@@ -42,21 +42,50 @@ class AccountMove(models.Model):
                 ) % (number, move.partner_id.display_name, vendor.display_name,
                      ', '.join(t.tax_invoice_number or '(ไม่มีเลข)' for t in bad)))
 
-    def _npd_fill_tax_invoice_partner(self):
-        """ใบกำกับภาษีที่ยังว่างหรือเป็นชื่อผู้ขาย (ธนาคาร) ใส่ Partner ให้ ถ้าทุกบรรทัดระบุ Partner เป็นรายเดียวกัน"""
-        for move in self.filtered('npd_require_line_partner'):
-            if 'tax_invoice_ids' not in move._fields:
+    def _npd_line_partners(self):
+        """Partner รายบรรทัด เรียงตามลำดับบรรทัด ไม่ซ้ำ"""
+        self.ensure_one()
+        res = self.env['res.partner']
+        for line in self.invoice_line_ids.sorted(lambda l: (l.sequence, l.id or 0)):
+            if not line.display_type and line.npd_line_partner_id and line.npd_line_partner_id not in res:
+                res |= line.npd_line_partner_id
+        return res
+
+    def _npd_sync_tax_invoice_partner(self):
+        """Partner ที่ใส่ในรายการจากใบแจ้งหนี้ วิ่งไปที่แท็บ Tax Invoice
+        - Partner รายเดียว: ทุกบรรทัด Tax Invoice ใช้รายนั้น
+        - หลายราย: Tax Invoice ที่ยังว่าง/ยังเป็นชื่อผู้ขาย/เป็นรายที่ไม่มีในบรรทัดแล้ว ได้ Partner ที่ยังไม่ถูกใช้ตามลำดับบรรทัด
+        Tax Invoice ที่ระบุเป็น Partner ของบรรทัดอยู่แล้ว ไม่แตะ"""
+        for move in self:
+            if move.move_type not in BILL_TYPES or move.state != 'draft' or 'tax_invoice_ids' not in move._fields:
                 continue
-            partners = move.invoice_line_ids.filtered(lambda l: not l.display_type).mapped('npd_line_partner_id')
-            if len(partners) != 1:
+            partners = move._npd_line_partners()
+            if not partners:
                 continue
-            vendor = move.partner_id.commercial_partner_id
-            move.tax_invoice_ids.filtered(
-                lambda t: not t.partner_id or t.partner_id.commercial_partner_id == vendor
-            ).write({'partner_id': partners.id})
+            taxinvs = move.tax_invoice_ids
+            keep = taxinvs.filtered(lambda t: t.partner_id in partners)
+            free = [p for p in partners if p not in keep.mapped('partner_id')] or [partners[-1]]
+            for i, taxinv in enumerate(taxinvs - keep):
+                taxinv.partner_id = free[min(i, len(free) - 1)]
+
+    @api.onchange('invoice_line_ids')
+    def _onchange_npd_line_partner_to_tax_invoice(self):
+        self._npd_sync_tax_invoice_partner()
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        moves = super().create(vals_list)
+        moves._npd_sync_tax_invoice_partner()
+        return moves
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'invoice_line_ids' in vals or 'line_ids' in vals:
+            self._npd_sync_tax_invoice_partner()
+        return res
 
     def action_post(self):
-        self._npd_fill_tax_invoice_partner()
+        self._npd_sync_tax_invoice_partner()
         self._npd_check_line_partner()
         return super().action_post()
 
