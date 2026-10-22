@@ -172,7 +172,7 @@ class SaleOrderAPIController(http.Controller):
                         'product_name': line.product_id.name if line.product_id else None,
                         'product_code': line.product_id.default_code if line.product_id else None,
                         'description': line.name or '',
-                        'quantity': line.pfb_quantity if hasattr(line, 'pfb_quantity') else line.product_uom_qty,
+                        'quantity': (getattr(line, 'pfb_quantity', 0) or line.product_uom_qty),  # Quantity Rent ว่าง (เช่นเที่ยวช่วยสาขาโยกสินค้า) ใช้จำนวนจริง
                         'uom': line.product_uom.name if line.product_uom else None,
                         'price_unit': line.price_unit,
                         'discount': line.discount,
@@ -272,7 +272,7 @@ class SaleOrderAPIController(http.Controller):
                     'product_name': line.product_id.name if line.product_id else None,
                     'product_code': line.product_id.default_code if line.product_id else None,
                     'description': line.name or '',
-                    'quantity': line.pfb_quantity if hasattr(line, 'pfb_quantity') else line.product_uom_qty,
+                    'quantity': (getattr(line, 'pfb_quantity', 0) or line.product_uom_qty),  # Quantity Rent ว่าง (เช่นเที่ยวช่วยสาขาโยกสินค้า) ใช้จำนวนจริง
                     'uom': line.product_uom.name if line.product_uom else None,
                     'price_unit': line.price_unit,
                     'discount': line.discount,
