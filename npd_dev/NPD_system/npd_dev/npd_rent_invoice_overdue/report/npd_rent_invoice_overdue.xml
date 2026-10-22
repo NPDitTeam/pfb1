@@ -480,7 +480,7 @@
 <!--                        </tr>-->
                         <tr>
                             <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong>ค่าเช่าต่อวันรวม(vat)</strong></td>
-                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.2f}'.format(doc.amount_total / (doc.pfb_date_of_rent or 1))"/></strong></td>
+                            <td class="text-right" style="font-size: 14px; padding: 4px 5px;"><strong><span t-esc="'{0:,.4f}'.format(doc.amount_total / (doc.pfb_date_of_rent or 1))"/></strong></td>
                         </tr>
 
 

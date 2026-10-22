@@ -423,7 +423,7 @@
                                 <td class="text-right" style="font-size: 19px"><strong>ค่าเช่าต่อวัน :</strong></td>
                                 <t t-set="total" t-value="sum([doc.amount_total / doc.pfb_date_of_rent])"/>
     <!--                            t-value="sum([l.pfb_quantity * l.product_uom_qty for l in doc.order_line])-->
-                                <td class="text-right" style="font-size: 19px"><strong><span t-esc="'{0:,.2f}'.format(total)"/></strong></td>
+                                <td class="text-right" style="font-size: 19px"><strong><span t-esc="'{0:,.4f}'.format(total)"/></strong></td>
                             </tr>
                         </table>
                 </div>

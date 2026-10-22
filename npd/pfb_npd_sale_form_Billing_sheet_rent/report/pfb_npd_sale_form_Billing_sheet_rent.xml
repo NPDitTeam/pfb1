@@ -252,7 +252,7 @@
                                                                                 t-esc="doc.start_rent_date.strftime('%d-%m-%Y') if doc.start_rent_date else ''"/>
                             ถึงวันที่ :<span class="ml-1" t-esc="doc.end_rent_date.strftime('%d-%m-%Y') if doc.end_rent_date else ''"/></br></td>
                     <td width="15%" class="text-right" style="font-size: 14px;border-bottom:hidden;"><span
-                            t-esc="'{0:,.2f}'.format(doc.amount_total / doc.pfb_date_of_rent if doc.pfb_date_of_rent else doc.amount_total)"/></td>
+                            t-esc="'{0:,.4f}'.format(doc.amount_total / doc.pfb_date_of_rent if doc.pfb_date_of_rent else doc.amount_total)"/></td>
                     <td width="15%" class="text-right" style="font-size: 14px;border-bottom:hidden;"><span
                             t-esc="'{0:,.0f}'.format(doc.pfb_date_of_rent)"/></td>
                     <td width="15%" class="text-right" style="font-size: 14px;border-bottom:hidden;"><span

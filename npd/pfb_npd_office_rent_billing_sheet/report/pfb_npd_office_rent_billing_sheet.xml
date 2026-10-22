@@ -217,7 +217,7 @@
                         <td class="text-center" style="font-size: 14px;border-bottom:hidden;height:26px;"><span t-esc="l_index + 1"/></td>
                         <td class="text-left" style="font-size: 14px;border-bottom:hidden;height:26px;"><span t-esc="l.name or l.product_id.name"/></td>
                         <td class="text-right" style="font-size: 14px;border-bottom:hidden;height:26px;">
-                            <span t-if="l.pfb_date_of_rent" t-esc="'{0:,.2f}'.format(l.price_unit or 0)"/>
+                            <span t-if="l.pfb_date_of_rent" t-esc="'{0:,.4f}'.format(l.price_unit or 0)"/>
                         </td>
                         <td class="text-right" style="font-size: 14px;border-bottom:hidden;height:26px;"><span
                                 t-esc="'{0:,.2f}'.format(l.pfb_quantity or 0)"/></td>
