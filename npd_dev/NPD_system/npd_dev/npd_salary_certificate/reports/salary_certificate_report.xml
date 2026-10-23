@@ -48,7 +48,7 @@
                             font-family: 'THSarabun', 'Sarabun', 'TH Sarabun New', sans-serif !important;
                         }
                         .salary-cert { font-size: 17pt; color: #000; line-height: 1.55; }
-                        .salary-cert .sheet { position: relative; height: 328mm; }
+                        .salary-cert .sheet { position: relative; height: 310mm; }
                         .salary-cert .head { width: 100%; border-collapse: collapse; }
                         .salary-cert .head td { vertical-align: middle; padding: 0; }
                         .salary-cert .head .logo img { max-height: 62px; max-width: 150px; }
