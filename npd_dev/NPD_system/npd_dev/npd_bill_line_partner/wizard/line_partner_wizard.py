@@ -70,6 +70,7 @@ class NpdBillLinePartnerWizard(models.TransientModel):
                                                            tax.tax_invoice_id.partner_id.display_name or '-',
                                                            tax.partner_id.display_name or '-'))
                 tax.tax_invoice_id.partner_id = tax.partner_id
+        move._npd_apply_line_partner_to_journal()
         if changes:
             move.message_post(body=_('ระบุ Partner รายบรรทัด (หลังลงบันทึก):<br/>%s') % '<br/>'.join(changes))
         return {'type': 'ir.actions.act_window_close'}
