@@ -333,6 +333,64 @@ class InsGeneralLedger(models.TransientModel):
 
         return filters
 
+    # ------------------------------------------------------------------
+    # NPD (23 ต.ค. 2569): บรรทัดภาษีที่ผูกใบกำกับหลายใบ (เช่น ภาษีซื้อบิลบัตรน้ำมัน 1 บรรทัด = หลายปั๊ม)
+    # แตกเป็นบรรทัดละใบกำกับ ใช้ Partner/ยอดภาษีจากแท็บ Tax Invoice — เฉพาะในรายงาน ข้อมูลบัญชีไม่เปลี่ยน
+    # เปิดรายฐานด้วย ir.config_parameter npd_gl.tax_invoice_partner = True (เริ่มที่ NPD_Steeltech_New)
+    # แตกเฉพาะบรรทัดที่ยอดใบกำกับรวมเท่ายอดบรรทัด ไม่งั้นแสดงแบบเดิม
+    # ------------------------------------------------------------------
+    NPD_TAX_INVOICE_PARAM = 'npd_gl.tax_invoice_partner'
+    NPD_EXPANDED_COLUMNS = {
+        'partner_id': 'COALESCE(ti.partner_id, l.partner_id)',
+        'debit': 'CASE WHEN ti.amount IS NULL THEN l.debit WHEN l.balance >= 0 THEN ti.amount ELSE 0 END',
+        'credit': 'CASE WHEN ti.amount IS NULL THEN l.credit WHEN l.balance < 0 THEN ti.amount ELSE 0 END',
+        'balance': 'CASE WHEN ti.amount IS NULL THEN l.balance WHEN l.balance >= 0 THEN ti.amount ELSE -ti.amount END',
+        'amount_currency': ('CASE WHEN ti.amount IS NULL OR l.currency_id IS NOT NULL AND l.currency_id <> l.company_currency_id '
+                            'THEN l.amount_currency WHEN l.balance >= 0 THEN ti.amount ELSE -ti.amount END'),
+    }
+
+    def _npd_gl_source(self):
+        """ตารางบรรทัดบัญชีที่รายงานใช้: ตารางจริง หรือชุดที่แตกบรรทัดภาษีตามใบกำกับ"""
+        if self.env['ir.config_parameter'].sudo().get_param(self.NPD_TAX_INVOICE_PARAM) not in ('True', 'true', '1'):
+            return None
+        cr = self.env.cr
+        cr.execute("SELECT to_regclass('account_move_tax_invoice')")
+        if not cr.fetchone()[0]:
+            return None
+        cr.execute("""SELECT column_name FROM information_schema.columns
+                      WHERE table_name = 'account_move_line' ORDER BY ordinal_position""")
+        cols = []
+        for (col,) in cr.fetchall():
+            expr = self.NPD_EXPANDED_COLUMNS.get(col)
+            cols.append('%s AS "%s"' % (expr, col) if expr else 'l."%s"' % col)
+        return """(
+            WITH g AS (
+                SELECT move_line_id, ROUND(SUM(balance), 2) AS total
+                FROM account_move_tax_invoice WHERE move_line_id IS NOT NULL GROUP BY move_line_id
+            ), r AS (
+                -- ปัดใบละ 2 ตำแหน่ง ใบสุดท้ายรับเศษ ให้ผลรวมเท่ายอดบรรทัดจริงทุกสตางค์ (ใบกำกับบางใบมีทศนิยม 4 ตำแหน่ง)
+                SELECT t.move_line_id, t.partner_id, ROUND(t.balance, 2) AS amt, ABS(x.balance) AS line_total,
+                       ROW_NUMBER() OVER (PARTITION BY t.move_line_id ORDER BY t.id DESC) AS rn,
+                       SUM(ROUND(t.balance, 2)) OVER (PARTITION BY t.move_line_id) AS amt_total
+                FROM account_move_tax_invoice t
+                JOIN g ON g.move_line_id = t.move_line_id
+                JOIN account_move_line x ON x.id = t.move_line_id AND ROUND(ABS(x.balance), 2) = g.total
+            ), ti AS (
+                SELECT move_line_id, partner_id,
+                       CASE WHEN rn = 1 THEN amt + (line_total - amt_total) ELSE amt END AS amount
+                FROM r
+            )
+            SELECT %s
+            FROM account_move_line l
+            LEFT JOIN ti ON ti.move_line_id = l.id
+        )""" % ', '.join(cols)
+
+    def _npd_gl_sql(self, sql):
+        source = self._npd_gl_source()
+        if not source:
+            return sql
+        return sql.replace('FROM account_move_line l\n', 'FROM %s l\n' % source)
+
     def build_where_clause(self, data=False):
         if not data:
             data = self.get_filters(default_filters={})
@@ -418,7 +476,7 @@ class InsGeneralLedger(models.TransientModel):
                     JOIN account_journal j ON (l.journal_id=j.id)
                     WHERE %s
                 ''') % WHERE_INIT
-            cr.execute(sql)
+            cr.execute(self._npd_gl_sql(sql))
             row = cr.dictfetchone()
             opening_balance += row.get('balance')
 
@@ -439,7 +497,7 @@ class InsGeneralLedger(models.TransientModel):
             OFFSET %s ROWS
             FETCH FIRST %s ROWS ONLY
         ''') % (WHERE_CURRENT, ORDER_BY_CURRENT, 0, offset_count)
-        cr.execute(sql)
+        cr.execute(self._npd_gl_sql(sql))
         running_balance_list = cr.fetchall()
         for running_balance in running_balance_list:
             opening_balance += running_balance[0]
@@ -457,7 +515,7 @@ class InsGeneralLedger(models.TransientModel):
                 JOIN account_journal j ON (l.journal_id=j.id)
             WHERE %s
         ''')% (WHERE_CURRENT)
-        cr.execute(sql)
+        cr.execute(self._npd_gl_sql(sql))
         count = cr.fetchone()[0]
         if (int(offset_count / fetch_range) == 0) and data.get('initial_balance'):
             sql = ('''
@@ -475,7 +533,7 @@ class InsGeneralLedger(models.TransientModel):
                     JOIN account_journal j ON (l.journal_id=j.id)
                     WHERE %s
                 ''') % WHERE_INIT
-            cr.execute(sql)
+            cr.execute(self._npd_gl_sql(sql))
             for row in cr.dictfetchall():
                 row['move_name'] = 'Initial Balance'
                 row['account_id'] = account
@@ -519,7 +577,7 @@ class InsGeneralLedger(models.TransientModel):
                 OFFSET %s ROWS
                 FETCH FIRST %s ROWS ONLY
             ''') % (WHERE_CURRENT, ORDER_BY_CURRENT, offset_count, fetch_range)
-        cr.execute(sql)
+        cr.execute(self._npd_gl_sql(sql))
         for row in cr.dictfetchall():
             current_balance = row['balance']
             row['balance'] = opening_balance + current_balance
@@ -543,7 +601,7 @@ class InsGeneralLedger(models.TransientModel):
                     JOIN account_journal j ON (l.journal_id=j.id)
                     WHERE %s
                 ''') % WHERE_FULL
-            cr.execute(sql)
+            cr.execute(self._npd_gl_sql(sql))
             for row in cr.dictfetchall():
                 row['move_name'] = 'Ending Balance'
                 row['account_id'] = account
@@ -619,7 +677,7 @@ class InsGeneralLedger(models.TransientModel):
                     JOIN account_journal j ON (l.journal_id=j.id)
                     WHERE %s
                 ''') % WHERE_INIT
-                cr.execute(sql)
+                cr.execute(self._npd_gl_sql(sql))
                 for row in cr.dictfetchall():
                     row['move_name'] = 'Initial Balance'
                     row['account_id'] = account.id
@@ -655,7 +713,7 @@ class InsGeneralLedger(models.TransientModel):
                 --GROUP BY l.id, l.account_id, l.date, j.code, l.currency_id, l.debit_currency, l.credit_currency, l.ref, l.name, m.id, m.name, c.rounding, cc.rounding, cc.position, c.position, c.symbol, cc.symbol, p.name
                 ORDER BY %s
             ''') % (WHERE_CURRENT, ORDER_BY_CURRENT)
-            cr.execute(sql)
+            cr.execute(self._npd_gl_sql(sql))
             current_lines = cr.dictfetchall()
             for row in current_lines:
                 row['initial_bal'] = False
@@ -688,7 +746,7 @@ class InsGeneralLedger(models.TransientModel):
                 JOIN account_journal j ON (l.journal_id=j.id)
                 WHERE %s
             ''') % WHERE_FULL
-            cr.execute(sql)
+            cr.execute(self._npd_gl_sql(sql))
             for row in cr.dictfetchall():
                 if data.get('display_accounts') == 'balance_not_zero' and currency.is_zero(row['debit'] - row['credit']):
                     move_lines.pop(account.code, None)
