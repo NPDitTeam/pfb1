@@ -377,11 +377,12 @@ class InsGeneralLedger(models.TransientModel):
                 JOIN g ON g.move_line_id = t.move_line_id
                 JOIN account_move_line x ON x.id = t.move_line_id AND ROUND(ABS(x.balance), 2) = g.total
             ), ti AS (
-                SELECT move_line_id, partner_id, tax_invoice_date,
+                SELECT move_line_id, partner_id, tax_invoice_date, rn,
                        CASE WHEN rn = 1 THEN amt + (line_total - amt_total) ELSE amt END AS amount
                 FROM r
             )
-            SELECT %s, ROW_NUMBER() OVER () AS npd_row,
+            -- เลขแถวไม่ซ้ำจากรหัสบรรทัด+ลำดับใบกำกับ (ไม่ใช้ ROW_NUMBER ทั้งตาราง ซึ่งทำให้กรองช่วงวันที่ก่อนไม่ได้ ช้ามาก)
+            SELECT %s, l.id::bigint * 1000 + COALESCE(ti.rn, 0) AS npd_row,
                    COALESCE(ti.tax_invoice_date, l.date) AS npd_doc_date
             FROM account_move_line l
             LEFT JOIN ti ON ti.move_line_id = l.id
