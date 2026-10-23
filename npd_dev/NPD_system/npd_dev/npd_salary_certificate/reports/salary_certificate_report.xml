@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="paperformat_salary_certificate_a4" model="report.paperformat">
+        <field name="name">Salary Certificate A4</field>
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">12</field>
+        <field name="margin_bottom">10</field>
+        <field name="margin_left">20</field>
+        <field name="margin_right">20</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <record id="action_report_salary_certificate" model="ir.actions.report">
+        <field name="name">หนังสือรับรองเงินเดือน</field>
+        <field name="model">npd.salary.certificate</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">npd_salary_certificate.report_salary_certificate_document</field>
+        <field name="report_file">npd_salary_certificate.report_salary_certificate_document</field>
+        <field name="print_report_name">'หนังสือรับรองเงินเดือน_%s' % (object.employee_name or object.id)</field>
+        <field name="binding_model_id" ref="model_npd_salary_certificate"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="paperformat_salary_certificate_a4"/>
+    </record>
+
+    <template id="report_salary_certificate_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="c" t-value="o.company_config_id"/>
+                <div class="article salary-cert">
+                    <!-- style ต้องอยู่ใน div.article ไม่งั้น Odoo ตัดทิ้งตอนประกอบ HTML -->
+                    <style>
+                        @font-face {
+                            font-family: 'THSarabun';
+                            src: url('/employee_salary/static/src/fonts/THSarabun.ttf') format('truetype');
+                            font-weight: normal;
+                        }
+                        @font-face {
+                            font-family: 'THSarabun';
+                            src: url('/employee_salary/static/src/fonts/THSarabunBold.ttf') format('truetype');
+                            font-weight: bold;
+                        }
+                        .salary-cert, .salary-cert * {
+                            font-family: 'THSarabun', 'Sarabun', 'TH Sarabun New', sans-serif !important;
+                        }
+                        .salary-cert { font-size: 17pt; color: #000; line-height: 1.55; }
+                        .salary-cert .sheet { position: relative; height: 328mm; }
+                        .salary-cert .head { width: 100%; border-collapse: collapse; }
+                        .salary-cert .head td { vertical-align: middle; padding: 0; }
+                        .salary-cert .head .logo img { max-height: 62px; max-width: 150px; }
+                        .salary-cert .head .info { padding-left: 14px; font-size: 14pt; line-height: 1.25; color: #555; }
+                        .salary-cert .head .info b { font-size: 16pt; color: #444; }
+                        .salary-cert .rule { border-top: 1px solid #999; margin: 10px 0 0 0; }
+                        .salary-cert .title { text-align: center; font-weight: bold; font-size: 19pt; margin: 46px 0 22px 0; }
+                        .salary-cert .body { text-indent: 2.2cm; text-align: left; }
+                        .salary-cert .issued { margin: 26px 0 0 6.2cm; }
+                        .salary-cert .sign { margin: 72px 0 0 0; padding-left: 8.5cm; line-height: 1.45; }
+                        .salary-cert .sign .center { text-align: center; width: 9cm; white-space: nowrap; }
+                        .salary-cert .foot { position: absolute; bottom: 0; left: 0; right: 0;
+                                             border-top: 1px solid #999; padding-top: 4px;
+                                             font-size: 13pt; line-height: 1.25; color: #555; }
+                    </style>
+                    <div class="sheet">
+                        <table class="head">
+                            <tr>
+                                <td class="logo" style="width: 160px;">
+                                    <img t-if="c.logo" t-att-src="'data:image/png;base64,%s' % c.logo.decode()"/>
+                                </td>
+                                <td class="info">
+                                    <b t-esc="c.name"/><br/>
+                                    <t t-esc="c.address"/><br/>
+                                    <t t-if="c.phone">โทรศัพท์ <t t-esc="c.phone"/><br/></t>
+                                    <t t-if="c.email">E-mail : <t t-esc="c.email"/></t>
+                                    <t t-if="c.website">, Web Site : <t t-esc="c.website"/></t>
+                                </td>
+                            </tr>
+                        </table>
+                        <div class="rule"/>
+
+                        <div class="title">หนังสือรับรองเงินเดือน</div>
+
+                        <div class="body">
+                            หนังสือฉบับนี้ให้ไว้เพื่อรับรองว่า <t t-esc="o.employee_name"/>
+                            ปฏิบัติงานเป็นพนักงาน ในตำแหน่ง <t t-esc="o.position_name"/>
+                            <t t-esc="c.name"/> มีอัตราเงินเดือนล่าสุด
+                            <t t-esc="'{:,.0f}'.format(o.salary) if o.salary == int(o.salary) else '{:,.2f}'.format(o.salary)"/> บาท
+                            (<t t-esc="o.salary_text"/>) เริ่มทำงานตั้งแต่วันที่ <t t-esc="o.start_date_text"/>
+                            จนถึงปัจจุบัน (รวมระยะเวลา <t t-esc="o.duration"/>)
+                            ซึ่งอัตรานี้ไม่รวมค่าตอบแทน และเงินพิเศษอื่นๆ
+                        </div>
+
+                        <div class="issued">ออกให้ ณ วันที่ <t t-esc="o.issue_date_text"/></div>
+
+                        <div class="sign">
+                            ลงชื่อ ..........................................<br/>
+                            <div class="center">(<t t-esc="o.signer_id.name"/>)</div>
+                            <div class="center"><t t-esc="o.signer_id.title"/></div>
+                        </div>
+
+                        <div class="foot">
+                            <t t-esc="c.footer_text"/><br/>
+                            <t t-if="c.footer_phone">โทร. <t t-esc="c.footer_phone"/></t>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

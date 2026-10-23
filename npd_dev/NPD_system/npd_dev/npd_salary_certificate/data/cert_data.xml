@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- ผู้ลงนาม (เพิ่ม/แก้ได้ที่เมนู ผู้ลงนาม) -->
+    <record id="signer_supaporn" model="npd.salary.cert.signer">
+        <field name="sequence">10</field>
+        <field name="name">นางสาวสุภาพร ฤทธิ์คำรพ</field>
+        <field name="title">ฝ่ายบุคคล</field>
+    </record>
+    <record id="signer_suttawee" model="npd.salary.cert.signer">
+        <field name="sequence">20</field>
+        <field name="name">นายสุทธวีร์ วิญญรัตน์</field>
+        <field name="title">รักษาการแทนฝ่ายบุคคล</field>
+    </record>
+
+    <!-- หัวกระดาษ: ที่อยู่/โลโก้จาก res.company ของฐานแต่ละบริษัท (23 ต.ค. 2569)
+         โทร/อีเมล/เว็บ ตามแบบฟอร์มที่ฝ่ายบุคคลใช้ -->
+    <record id="company_sgroup" model="npd.salary.cert.company">
+        <field name="sequence">10</field>
+        <field name="company_key">นภดลเอสกรุ๊ปจำกัด</field>
+        <field name="name">บริษัท นภดล เอส กรุ๊ป จำกัด</field>
+        <field name="address">85/13-16 ถนนอรุณอมรินทร์ แขวงอรุณอมรินทร์ เขตบางกอกน้อย กรุงเทพมหานคร 10700</field>
+        <field name="phone">02-433-5556 (สำนักงานใหญ่)</field>
+        <field name="email">npd9.acc@gmail.com</field>
+        <field name="website">www.npd9.com</field>
+        <field name="logo" type="base64" file="npd_salary_certificate/static/img/logo_sgroup.png"/>
+    </record>
+    <record id="company_bangkok" model="npd.salary.cert.company">
+        <field name="sequence">20</field>
+        <field name="company_key">นภดลกรุงเทพจำกัด</field>
+        <field name="name">บริษัท นภดล กรุงเทพ จำกัด</field>
+        <field name="address">เลขที่ 36/10 หมู่ที่ 2 ต.บางเตย อ.สามพราน จ.นครปฐม 73210</field>
+        <field name="phone">02-433-5556 (สำนักงานใหญ่)</field>
+        <field name="email">npd9.acc@gmail.com</field>
+        <field name="website">www.npd9.com</field>
+        <field name="logo" type="base64" file="npd_salary_certificate/static/img/logo_bangkok.png"/>
+    </record>
+    <record id="company_intertrading" model="npd.salary.cert.company">
+        <field name="sequence">30</field>
+        <field name="company_key">นภดลอินเตอร์เทรดดิ้งจำกัด</field>
+        <field name="name">บริษัท นภดล อินเตอร์เทรดดิ้ง จำกัด</field>
+        <field name="address">85/13-16 ถนนอรุณอมรินทร์ แขวงอรุณอมรินทร์ เขตบางกอกน้อย กรุงเทพมหานคร 10700</field>
+        <field name="phone">02-433-5556 (สำนักงานใหญ่)</field>
+        <field name="email">npd9.acc@gmail.com</field>
+        <field name="website">www.npd9.com</field>
+        <field name="logo" type="base64" file="npd_salary_certificate/static/img/logo_intertrading.png"/>
+    </record>
+    <record id="company_steeltech" model="npd.salary.cert.company">
+        <field name="sequence">40</field>
+        <field name="company_key">เอ็นพีดีสตีลเทคจำกัด</field>
+        <field name="name">บริษัท เอ็นพีดี สตีลเทค จำกัด</field>
+        <field name="address">เลขที่ 47/4 หมู่ที่ 2 ต.ลาดหลุมแก้ว อ.ลาดหลุมแก้ว จ.ปทุมธานี 12140</field>
+        <field name="phone">02-433-5556 (สำนักงานใหญ่)</field>
+        <field name="email">npd9.acc@gmail.com</field>
+        <field name="website">www.npd9.com</field>
+        <field name="logo" type="base64" file="npd_salary_certificate/static/img/logo_steeltech.png"/>
+    </record>
+    <record id="company_logistics" model="npd.salary.cert.company">
+        <field name="sequence">50</field>
+        <field name="company_key">เอ็นพีดีโลจิสติกส์จำกัด</field>
+        <field name="name">บริษัท เอ็นพีดี โลจิสติกส์ จำกัด</field>
+        <field name="address">47/4 หมู่ที่ 2 ต.ลาดหลุมแก้ว อ.ลาดหลุมแก้ว จ.ปทุมธานี 12140</field>
+        <field name="phone">02-433-5556 (สำนักงานใหญ่)</field>
+        <field name="email">npd9.acc@gmail.com</field>
+        <field name="website">www.npd9.com</field>
+        <field name="logo" type="base64" file="npd_salary_certificate/static/img/logo_logistics.png"/>
+    </record>
+</odoo>

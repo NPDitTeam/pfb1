@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ออกหนังสือรับรองเงินเดือน -->
+    <record id="view_npd_salary_certificate_form" model="ir.ui.view">
+        <field name="name">npd.salary.certificate.form</field>
+        <field name="model">npd.salary.certificate</field>
+        <field name="arch" type="xml">
+            <form string="หนังสือรับรองเงินเดือน">
+                <header>
+                    <button name="action_print" type="object" string="พิมพ์หนังสือรับรอง" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="ออกหนังสือ">
+                            <field name="employee_id" options="{'no_create': True}"/>
+                            <field name="issue_date"/>
+                            <field name="signer_id" options="{'no_create': True}"/>
+                            <field name="purpose"/>
+                        </group>
+                        <group string="ข้อมูลในหนังสือ (ดึงจากข้อมูลพนักงาน แก้ได้)">
+                            <field name="company_config_id" options="{'no_create': True}"/>
+                            <field name="employee_name"/>
+                            <field name="position_name"/>
+                            <field name="salary"/>
+                            <field name="salary_text"/>
+                            <field name="start_date"/>
+                            <field name="start_date_text"/>
+                            <field name="duration"/>
+                            <field name="issue_date_text"/>
+                        </group>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_npd_salary_certificate_tree" model="ir.ui.view">
+        <field name="name">npd.salary.certificate.tree</field>
+        <field name="model">npd.salary.certificate</field>
+        <field name="arch" type="xml">
+            <tree string="หนังสือรับรองเงินเดือน">
+                <field name="issue_date"/>
+                <field name="employee_name"/>
+                <field name="position_name"/>
+                <field name="company_config_id"/>
+                <field name="salary" sum="รวม"/>
+                <field name="signer_id"/>
+                <field name="purpose"/>
+                <field name="create_uid" string="ผู้ออก"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_npd_salary_certificate_search" model="ir.ui.view">
+        <field name="name">npd.salary.certificate.search</field>
+        <field name="model">npd.salary.certificate</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="employee_name"/>
+                <field name="employee_id"/>
+                <field name="company_config_id"/>
+                <group expand="0" string="จัดกลุ่ม">
+                    <filter name="group_company" string="บริษัท" context="{'group_by': 'company_config_id'}"/>
+                    <filter name="group_signer" string="ผู้ลงนาม" context="{'group_by': 'signer_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_npd_salary_certificate" model="ir.actions.act_window">
+        <field name="name">หนังสือรับรองเงินเดือน</field>
+        <field name="res_model">npd.salary.certificate</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">ออกหนังสือรับรองเงินเดือน</p>
+            <p>กด สร้าง เลือกพนักงาน ระบบดึงชื่อ ตำแหน่ง บริษัท เงินเดือน วันเริ่มงานให้ แล้วกด พิมพ์หนังสือรับรอง</p>
+        </field>
+    </record>
+
+    <!-- ตั้งค่า: ผู้ลงนาม / หัวกระดาษบริษัท -->
+    <record id="view_npd_salary_cert_signer_tree" model="ir.ui.view">
+        <field name="name">npd.salary.cert.signer.tree</field>
+        <field name="model">npd.salary.cert.signer</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="title"/>
+                <field name="active" widget="boolean_toggle"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_npd_salary_cert_signer" model="ir.actions.act_window">
+        <field name="name">ผู้ลงนามหนังสือรับรอง</field>
+        <field name="res_model">npd.salary.cert.signer</field>
+        <field name="view_mode">tree</field>
+        <field name="context">{'active_test': False}</field>
+    </record>
+
+    <record id="view_npd_salary_cert_company_tree" model="ir.ui.view">
+        <field name="name">npd.salary.cert.company.tree</field>
+        <field name="model">npd.salary.cert.company</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="sequence" widget="handle"/>
+                <field name="company_key"/>
+                <field name="name"/>
+                <field name="phone"/>
+            </tree>
+        </field>
+    </record>
+    <record id="view_npd_salary_cert_company_form" model="ir.ui.view">
+        <field name="name">npd.salary.cert.company.form</field>
+        <field name="model">npd.salary.cert.company</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <field name="logo" widget="image" class="oe_avatar"/>
+                    <group>
+                        <field name="company_key"/>
+                        <field name="name"/>
+                        <field name="address"/>
+                        <field name="phone"/>
+                        <field name="email"/>
+                        <field name="website"/>
+                        <field name="footer_text"/>
+                        <field name="footer_phone"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_npd_salary_cert_company" model="ir.actions.act_window">
+        <field name="name">หัวกระดาษหนังสือรับรอง</field>
+        <field name="res_model">npd.salary.cert.company</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_npd_salary_certificate_root" name="หนังสือรับรองเงินเดือน"
+              parent="employee_salary.main_employee_salary_menu" sequence="95"/>
+    <menuitem id="menu_npd_salary_certificate" name="ออกหนังสือรับรองเงินเดือน"
+              parent="menu_npd_salary_certificate_root" action="action_npd_salary_certificate" sequence="10"/>
+    <menuitem id="menu_npd_salary_cert_signer" name="ผู้ลงนาม"
+              parent="menu_npd_salary_certificate_root" action="action_npd_salary_cert_signer" sequence="20"/>
+    <menuitem id="menu_npd_salary_cert_company" name="หัวกระดาษบริษัท"
+              parent="menu_npd_salary_certificate_root" action="action_npd_salary_cert_company" sequence="30"/>
+</odoo>

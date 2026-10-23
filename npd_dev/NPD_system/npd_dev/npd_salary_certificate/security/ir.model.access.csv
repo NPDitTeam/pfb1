@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_npd_salary_certificate,npd.salary.certificate,model_npd_salary_certificate,base.group_user,1,1,1,1
+access_npd_salary_cert_signer,npd.salary.cert.signer,model_npd_salary_cert_signer,base.group_user,1,1,1,1
+access_npd_salary_cert_company,npd.salary.cert.company,model_npd_salary_cert_company,base.group_user,1,1,1,1
