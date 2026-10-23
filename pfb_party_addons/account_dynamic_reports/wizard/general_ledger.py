@@ -369,18 +369,20 @@ class InsGeneralLedger(models.TransientModel):
                 FROM account_move_tax_invoice WHERE move_line_id IS NOT NULL GROUP BY move_line_id
             ), r AS (
                 -- ปัดใบละ 2 ตำแหน่ง ใบสุดท้ายรับเศษ ให้ผลรวมเท่ายอดบรรทัดจริงทุกสตางค์ (ใบกำกับบางใบมีทศนิยม 4 ตำแหน่ง)
-                SELECT t.move_line_id, t.partner_id, ROUND(t.balance, 2) AS amt, ABS(x.balance) AS line_total,
+                SELECT t.move_line_id, t.partner_id, t.tax_invoice_date, ROUND(t.balance, 2) AS amt,
+                       ABS(x.balance) AS line_total,
                        ROW_NUMBER() OVER (PARTITION BY t.move_line_id ORDER BY t.id DESC) AS rn,
                        SUM(ROUND(t.balance, 2)) OVER (PARTITION BY t.move_line_id) AS amt_total
                 FROM account_move_tax_invoice t
                 JOIN g ON g.move_line_id = t.move_line_id
                 JOIN account_move_line x ON x.id = t.move_line_id AND ROUND(ABS(x.balance), 2) = g.total
             ), ti AS (
-                SELECT move_line_id, partner_id,
+                SELECT move_line_id, partner_id, tax_invoice_date,
                        CASE WHEN rn = 1 THEN amt + (line_total - amt_total) ELSE amt END AS amount
                 FROM r
             )
-            SELECT %s, ROW_NUMBER() OVER () AS npd_row
+            SELECT %s, ROW_NUMBER() OVER () AS npd_row,
+                   COALESCE(ti.tax_invoice_date, l.date) AS npd_doc_date
             FROM account_move_line l
             LEFT JOIN ti ON ti.move_line_id = l.id
         )""" % ', '.join(cols)
@@ -392,8 +394,14 @@ class InsGeneralLedger(models.TransientModel):
         sql = sql.replace('FROM account_move_line l\n', 'FROM %s l\n' % source)
         # ตารางจริง GROUP BY l.id แล้วเลือกคอลัมน์อื่นของ l ได้ (primary key) ชุดที่แตกแล้วไม่มี PK
         # และบรรทัดที่แตกมี l.id ซ้ำกัน → group ด้วยเลขแถวแทน ไม่งั้นรวมกลับเป็นบรรทัดเดียว
-        return sql.replace('GROUP BY l.id,', 'GROUP BY l.npd_row, l.id, l.move_id, l.journal_id, l.ref, l.debit, '
-                                             'l.credit, l.balance, l.amount_currency, l.partner_id,')
+        sql = sql.replace('GROUP BY l.id,', 'GROUP BY l.npd_row, l.npd_doc_date, l.id, l.move_id, l.journal_id, '
+                                            'l.ref, l.debit, l.credit, l.balance, l.amount_currency, l.partner_id,')
+        # วันที่ในรายงาน = Tax Invoice Date ของบรรทัดที่แตกตามใบกำกับ (ผู้ใช้สั่ง 23 ต.ค. 2569) เรียงตามวันนั้นด้วย
+        # แต่กรองช่วงวันที่ยังใช้วันที่ลงบัญชี (l.date ใน WHERE) ยอดจึงตรงงบทดลอง
+        sql = sql.replace('l.date AS ldate', 'l.npd_doc_date AS ldate')
+        sql = sql.replace('GROUP BY j.code, p.name, l.date, l.move_id',
+                          'GROUP BY j.code, p.name, l.npd_doc_date, l.date, l.move_id')
+        return sql.replace('ORDER BY l.date, l.move_id', 'ORDER BY l.npd_doc_date, l.date, l.move_id')
 
     def build_where_clause(self, data=False):
         if not data:
