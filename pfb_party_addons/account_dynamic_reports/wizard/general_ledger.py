@@ -380,7 +380,7 @@ class InsGeneralLedger(models.TransientModel):
                        CASE WHEN rn = 1 THEN amt + (line_total - amt_total) ELSE amt END AS amount
                 FROM r
             )
-            SELECT %s
+            SELECT %s, ROW_NUMBER() OVER () AS npd_row
             FROM account_move_line l
             LEFT JOIN ti ON ti.move_line_id = l.id
         )""" % ', '.join(cols)
@@ -389,7 +389,11 @@ class InsGeneralLedger(models.TransientModel):
         source = self._npd_gl_source()
         if not source:
             return sql
-        return sql.replace('FROM account_move_line l\n', 'FROM %s l\n' % source)
+        sql = sql.replace('FROM account_move_line l\n', 'FROM %s l\n' % source)
+        # ตารางจริง GROUP BY l.id แล้วเลือกคอลัมน์อื่นของ l ได้ (primary key) ชุดที่แตกแล้วไม่มี PK
+        # และบรรทัดที่แตกมี l.id ซ้ำกัน → group ด้วยเลขแถวแทน ไม่งั้นรวมกลับเป็นบรรทัดเดียว
+        return sql.replace('GROUP BY l.id,', 'GROUP BY l.npd_row, l.id, l.move_id, l.journal_id, l.ref, l.debit, '
+                                             'l.credit, l.balance, l.amount_currency, l.partner_id,')
 
     def build_where_clause(self, data=False):
         if not data:
