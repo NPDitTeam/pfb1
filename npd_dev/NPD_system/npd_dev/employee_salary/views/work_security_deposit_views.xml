@@ -131,7 +131,8 @@
                                     <tree string="พนักงาน"
                                           limit="500"
                                           decoration-muted="employee_status == 'inactive'"
-                                          decoration-danger="work_status == 'resigned' and refund_status != 'refunded'"
+                                          decoration-danger="work_status == 'resigned' and refund_status not in ('refunded', 'on_hold')"
+                                          decoration-warning="refund_status == 'on_hold'"
                                           decoration-info="refund_status == 'refunded'">
                                         <field name="employee_code"/>
                                         <field name="employee_id"/>
@@ -149,6 +150,7 @@
                                         <field name="months_deducted"/>
                                         <field name="refund_amount"/>
                                         <field name="refund_status"/>
+                                        <field name="refund_hold" optional="show" string="ระงับคืน"/>
                                         <field name="refund_payroll_id" optional="hide"/>
                                         <button name="action_view_schedule"
                                                 string="ตั้งตาราง/แก้รายเดือน"
@@ -279,6 +281,17 @@
                                        attrs="{'invisible': [('work_status', '!=', 'resigned')]}"/>
                                 <field name="refund_payroll_id"
                                        attrs="{'invisible': [('refund_status', '!=', 'refunded')]}"/>
+                                <!-- ระงับการคืนเงินประกัน: ติ๊ก = ไม่คืน จนกว่าจะเอาติ๊กออก (คืนในรอบของวันที่ปลดระงับ) -->
+                                <field name="refund_hold"
+                                       attrs="{'invisible': [('work_status', '!=', 'resigned')],
+                                               'readonly': [('manual_refunded', '=', True)]}"/>
+                                <field name="refund_hold_note"
+                                       attrs="{'invisible': [('refund_hold', '=', False)]}"
+                                       placeholder="เช่น รอตรวจทรัพย์สิน/หนี้ค้างก่อนคืน"/>
+                                <field name="refund_release_date"
+                                       attrs="{'invisible': ['|', ('work_status', '!=', 'resigned'), ('refund_hold', '=', True)]}"/>
+                                <field name="refund_due_date"
+                                       attrs="{'invisible': ['|', ('work_status', '!=', 'resigned'), ('refund_hold', '=', True)]}"/>
                                 <field name="manual_refunded" invisible="1"/>
                                 <field name="manual_refunded_date"
                                        attrs="{'invisible': [('manual_refunded', '=', False)]}"/>

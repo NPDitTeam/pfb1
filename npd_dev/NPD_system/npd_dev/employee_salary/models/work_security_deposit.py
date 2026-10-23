@@ -804,8 +804,79 @@ class WorkSecurityDepositLine(models.Model):
         ('deducting', 'รอหัก'),
         ('holding', 'รอคืน'),
         ('pending', 'รอคืนเงิน (ลาออกแล้ว)'),
+        ('on_hold', 'ระงับการคืน'),
         ('refunded', 'คืนแล้ว'),
     ], string='สถานะการคืนเงิน', compute='_compute_refund_status', store=True)
+
+    # ระงับการคืนเงินประกัน (ผู้ใช้สั่ง 23 ต.ค. 2569) — ปกติคืนในรอบเงินเดือนที่วันออกจากงานตก
+    # ระงับ = ไม่คืนจนกว่าจะปลด · ปลดแล้วคืนในรอบของ "วันที่ปลดระงับ" · ไม่ตั้งอะไร = แบบเดิม
+    refund_hold = fields.Boolean(
+        string='ระงับการคืนเงินประกัน', default=False, copy=False,
+        help='ติ๊กแล้วระบบจะไม่คืนเงินประกันในรอบเงินเดือนใดเลย จนกว่าจะเอาติ๊กออก')
+    refund_hold_note = fields.Char(string='เงื่อนไข/เหตุผลที่ระงับ', copy=False)
+    refund_release_date = fields.Date(
+        string='ปลดระงับ: คืนในรอบของวันที่', copy=False,
+        help='เอาติ๊กระงับออกแล้ว ระบบคืนเงินในรอบเงินเดือนที่วันนี้ตก (ไม่ระบุ = วันที่ปลดระงับ)')
+    refund_due_date = fields.Date(
+        string='คืนในรอบของวันที่', compute='_compute_refund_due_date', store=True,
+        help='รอบเงินเดือนที่จะคืนเงินประกัน: วันที่ปลดระงับ ถ้ามี ไม่งั้นวันที่ออกจากงาน (ระงับอยู่ = ว่าง)')
+
+    @api.depends('work_status', 'resign_date', 'refund_hold', 'refund_release_date')
+    def _compute_refund_due_date(self):
+        for rec in self:
+            if rec.work_status != 'resigned' or rec.refund_hold:
+                rec.refund_due_date = False
+            else:
+                rec.refund_due_date = rec.refund_release_date or rec.resign_date
+
+    def _sd_payroll_paid(self, payroll):
+        """สลิปถึงวันจ่ายแล้ว (period.payment_date ผ่านแล้ว) = จ่ายไปแล้ว ห้ามดึงเงินคืนออก"""
+        pay_date = payroll.period_id.payment_date if payroll and payroll.period_id else False
+        return bool(pay_date and pay_date < fields.Date.context_today(self))
+
+    def _sd_payrolls_covering(self, employee, day):
+        """สลิปของพนักงานที่รอบตัด (25–24) ครอบวันที่นี้"""
+        if not employee or not day:
+            return self.env['payroll.salary']
+        Payroll = self.env['payroll.salary'].sudo()
+        cands = Payroll.search([('employee_id', '=', employee.id),
+                                ('year', 'in', [str(day.year), str(day.year + 1)])])
+        res = Payroll
+        for p in cands:
+            start, end = p._security_deposit_cycle_window()
+            if start and end and start <= day <= end:
+                res |= p
+        return res
+
+    def write(self, vals):
+        hold_keys = {'refund_hold', 'refund_release_date'}
+        if not hold_keys & set(vals):
+            return super().write(vals)
+        if vals.get('refund_hold'):
+            for rec in self.filtered('refund_payroll_id'):
+                if self._sd_payroll_paid(rec.refund_payroll_id):
+                    raise UserError(
+                        'ระงับการคืนเงินประกันของ %s ไม่ได้ เพราะคืนไปแล้วในสลิป %s (ถึงวันจ่ายแล้ว)'
+                        % (rec.employee_id.display_name, rec.refund_payroll_id.display_name))
+        elif 'refund_hold' in vals and not vals.get('refund_release_date'):
+            # ปลดระงับโดยไม่ระบุวัน = คืนในรอบเงินเดือนของวันนี้
+            vals = dict(vals, refund_release_date=fields.Date.context_today(self))
+        old_payrolls = self.mapped('refund_payroll_id')
+        res = super().write(vals)
+        if vals.get('refund_hold'):
+            self.filtered('refund_payroll_id').write({'refund_payroll_id': False})
+        # คำนวณสลิปที่เกี่ยวข้องใหม่: สลิปเดิมที่เคยคืน + สลิปของรอบที่จะคืนใหม่
+        payrolls = old_payrolls
+        for rec in self:
+            payrolls |= self._sd_payrolls_covering(rec.employee_id, rec.refund_due_date)
+        for payroll in payrolls.sudo():
+            if self._sd_payroll_paid(payroll):
+                continue
+            try:
+                payroll._populate_all_lines()
+            except Exception as e:
+                _logger.warning("refund hold: refresh payroll %s failed: %s", payroll.display_name, e)
+        return res
     manual_refunded = fields.Boolean(
         string='ปรับสถานะ "คืนแล้ว" เอง', default=False,
         help='ติ๊กเพื่อบังคับให้ refund_status = "คืนแล้ว" — ใช้กับเศษพนักงานเก่าที่ไม่ผ่านระบบทำเงินเดือน',
@@ -923,7 +994,8 @@ class WorkSecurityDepositLine(models.Model):
             rec.refund_amount = sum(paid.mapped('amount'))
 
     @api.depends('work_status', 'refund_payroll_id', 'refund_amount', 'manual_refunded',
-                 'skip_deduction', 'outstanding_amount', 'deduction_months', 'months_deducted')
+                 'skip_deduction', 'outstanding_amount', 'deduction_months', 'months_deducted',
+                 'refund_hold')
     def _compute_refund_status(self):
         for rec in self:
             if rec.manual_refunded:
@@ -942,6 +1014,8 @@ class WorkSecurityDepositLine(models.Model):
                     rec.refund_status = 'none'
             elif rec.work_status != 'resigned' or rec.refund_amount <= 0:
                 rec.refund_status = 'none'
+            elif rec.refund_hold and not rec.refund_payroll_id:
+                rec.refund_status = 'on_hold'
             elif rec.refund_payroll_id:
                 rec.refund_status = 'refunded'
             else:
@@ -1453,6 +1527,7 @@ class EmployeeSalaryInherit(models.Model):
         ('deducting', 'รอหัก'),
         ('holding', 'รอคืน'),
         ('pending', 'รอคืนเงิน (ลาออกแล้ว)'),
+        ('on_hold', 'ระงับการคืน'),
         ('refunded', 'คืนแล้ว'),
     ], string='สถานะการคืนเงิน', compute='_compute_deposit_refund_status')
 
@@ -1472,6 +1547,8 @@ class EmployeeSalaryInherit(models.Model):
             statuses = set(confirmed.mapped('refund_status'))
             if 'pending' in statuses:
                 rec.deposit_refund_status = 'pending'
+            elif 'on_hold' in statuses:
+                rec.deposit_refund_status = 'on_hold'
             elif 'refunded' in statuses:
                 rec.deposit_refund_status = 'refunded'
             elif 'holding' in statuses:
@@ -1687,7 +1764,7 @@ class PayrollSalaryInherit(models.Model):
                 #    ไม่งั้นการใส่วันที่ลาออกย้อนหลังจะทำให้คืนซ้ำในสลิปรอบนั้น
                 total_refund = 0.0
                 for line in resigned_in_period:
-                    if line.manual_refunded or (
+                    if line.refund_hold or line.manual_refunded or (
                             line.refund_payroll_id and line.refund_payroll_id.id != rec.id):
                         _logger.info(
                             "[DEPOSIT_HOOK] ข้ามคืนซ้ำ emp=%s line=%s (คืนแล้ว: %s)",
@@ -1730,7 +1807,7 @@ class PayrollSalaryInherit(models.Model):
                         to_sync.write({'is_synced': True, 'payroll_id': rec.id})
                     # mark refund_payroll_id (เฉพาะ line ที่คืนในสลิปนี้จริง ๆ)
                     lines_to_update = resigned_in_period.filtered(
-                        lambda l: not l.manual_refunded and not l.refund_payroll_id
+                        lambda l: not l.manual_refunded and not l.refund_payroll_id and not l.refund_hold
                     )
                     if lines_to_update:
                         lines_to_update.write({'refund_payroll_id': rec.id})
@@ -1829,8 +1906,8 @@ class PayrollSalaryInherit(models.Model):
                 ('employee_id', '=', rec.employee_id.id),
                 ('deposit_id.state', '=', 'confirmed'),
                 ('work_status', '=', 'resigned'),
-                ('resign_date', '>=', cyc_start),
-                ('resign_date', '<=', cyc_end),
+                ('refund_due_date', '>=', cyc_start),  # วันลาออก/วันปลดระงับ (ระงับอยู่ = ไม่คืน)
+                ('refund_due_date', '<=', cyc_end),
                 ('manual_refunded', '=', False),
             ])
             lines_to_update = resigned_lines.filtered(

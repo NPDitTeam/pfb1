@@ -3138,12 +3138,13 @@ class PayrollSalary(models.Model):
                     )
 
                     # ✅ คืนเงินประกัน: ลาออกตกรอบตัดไหน คืนรอบนั้น (ใช้ cutoff cycle เหมือนการหัก)
+                    # refund_due_date = วันที่ลาออก หรือวันที่ปลดระงับ (ระงับอยู่ = ว่าง → ไม่คืน)
                     refund_lines = DepositLine.search([
                         ('employee_id', '=', rec.employee_id.id),
                         ('deposit_id.state', '=', 'confirmed'),
                         ('work_status', '=', 'resigned'),
-                        ('resign_date', '>=', cyc_start),
-                        ('resign_date', '<=', cyc_end),
+                        ('refund_due_date', '>=', cyc_start),
+                        ('refund_due_date', '<=', cyc_end),
                         ('manual_refunded', '=', False),  # ★ ข้าม line ที่ mark คืนเองแล้ว
                     ])
                     _logger.info("[DEPOSIT_COMPUTE] emp=%s | refund_lines=%d (resigned in cycle %s..%s, ไม่รวม manual_refunded)",
