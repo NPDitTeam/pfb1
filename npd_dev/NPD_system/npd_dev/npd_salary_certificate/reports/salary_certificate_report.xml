@@ -58,8 +58,11 @@
                         .salary-cert .title { text-align: center; font-weight: bold; font-size: 19pt; margin: 46px 0 22px 0; }
                         .salary-cert .body { text-indent: 2.2cm; text-align: left; }
                         .salary-cert .issued { margin: 26px 0 0 6.2cm; }
-                        .salary-cert .sign { margin: 72px 0 0 0; padding-left: 8.5cm; line-height: 1.45; }
-                        .salary-cert .sign .center { text-align: center; width: 9cm; white-space: nowrap; }
+                        .salary-cert .sign { margin: 72px 0 0 8.3cm; border-collapse: collapse; line-height: 1.45; }
+                        .salary-cert .sign td { padding: 0; vertical-align: bottom; white-space: nowrap; }
+                        .salary-cert .sign .label { width: 1.6cm; padding-right: 6px; }
+                        .salary-cert .sign .line { width: 7.5cm; height: 1.1em; border-bottom: 1.5px dotted #000; }
+                        .salary-cert .sign .center { text-align: center; }
                         .salary-cert .foot { position: absolute; bottom: 0; left: 0; right: 0;
                                              border-top: 1px solid #999; padding-top: 4px;
                                              font-size: 13pt; line-height: 1.25; color: #555; }
@@ -97,11 +100,21 @@
 
                         <div class="issued">ออกให้ ณ วันที่ <t t-esc="o.issue_date_text"/></div>
 
-                        <div class="sign">
-                            ลงชื่อ ..........................................<br/>
-                            <div class="center">(<t t-esc="o.signer_id.name"/>)</div>
-                            <div class="center"><t t-esc="o.signer_id.title"/></div>
-                        </div>
+                        <!-- ชื่อ/ฝ่าย อยู่กึ่งกลางใต้เส้นประพอดี: เส้นประกับชื่อใช้คอลัมน์เดียวกัน -->
+                        <table class="sign">
+                            <tr>
+                                <td class="label">ลงชื่อ</td>
+                                <td class="line"/>
+                            </tr>
+                            <tr>
+                                <td/>
+                                <td class="center">(<t t-esc="o.signer_id.name"/>)</td>
+                            </tr>
+                            <tr>
+                                <td/>
+                                <td class="center"><t t-esc="o.signer_id.title"/></td>
+                            </tr>
+                        </table>
 
                         <div class="foot">
                             <t t-esc="c.footer_text"/><br/>
